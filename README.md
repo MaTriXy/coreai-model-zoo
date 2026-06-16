@@ -11,6 +11,7 @@ on-device, with the conversion code and a knowledge base. Successor to
 | **Qwen3.5-0.8B** | [🤗 qwen3.5-0.8B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreAI) | Apache-2.0 |
 | **Qwen3.5-2B** | [🤗 qwen3.5-2B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreAI) | Apache-2.0 |
 | **Qwen3.6-35B-A3B** (MoE, Mac-only) | [🤗 Qwen3.6-35B-A3B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-35B-A3B-CoreAI) | Apache-2.0 |
+| **Qwen3-Coder-Next 80B-A3B** (MoE, the local coder, Mac-only — custom `gather_qmm` kernel) | [🤗 Qwen3-Coder-Next-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-Coder-Next-CoreAI) | Apache-2.0 |
 | **Qwen3.6-27B** (dense, Mac-only) | [🤗 Qwen3.6-27B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-27B-CoreAI) | Apache-2.0 |
 | **GLM-4.7-Flash** (MoE + MLA, Mac-only — zoo's first MLA) | [🤗 GLM-4.7-Flash-CoreAI](https://huggingface.co/mlboydaisuke/GLM-4.7-Flash-CoreAI) | MIT |
 | **Gemma 4 E2B** (text, incl. official-QAT int4) | [🤗 gemma-4-E2B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI) | Gemma |
@@ -42,6 +43,7 @@ on-device, with the conversion code and a knowledge base. Successor to
 | **Gemma 4 E2B VL** (image+text, official QAT) | **25.5** | — | **82.4** |
 | **MiniCPM-V 4.6** (vision-language, sub-2B) | **53.4** | — | **224.3** |
 | **Qwen3.6-35B-A3B** (MoE, 35B/~3B active, Mac-only) | — | — | **64.9** † |
+| **Qwen3-Coder-Next 80B-A3B** (MoE, 80B/~3B active, Mac-only) | — | — | **~24** † |
 | **Qwen3.6-27B** (dense, Mac-only) | — | — | **15.9** |
 | **GLM-4.7-Flash** (MoE + MLA, 30B/~3B active, Mac-only) | — | — | **52.4** † |
 | **Gemma 4 12B** (dense, Mac-only) | — | — | **23** int8 / **33** int4 ‡ |
