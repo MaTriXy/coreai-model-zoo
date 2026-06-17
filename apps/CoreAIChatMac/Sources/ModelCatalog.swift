@@ -66,11 +66,6 @@ enum ModelCatalog {
             repo: "https://huggingface.co/mlboydaisuke/Qwen3.6-35B-A3B-CoreAI",
             remote: "gpu-pipelined/qwen3_6_35b_a3b_decode_sym8_gather", approxSizeGB: 35),
         DownloadableModel(
-            id: "qwen3-coder-next", name: "Qwen3-Coder-Next 80B-A3B",
-            detail: "MoE · 80B/~3B active · the local coder · gather_qmm",
-            repo: "https://huggingface.co/mlboydaisuke/Qwen3-Coder-Next-CoreAI",
-            remote: "gpu-pipelined/qwen3_coder_next_decode_sym8_gather", approxSizeGB: 79),
-        DownloadableModel(
             id: "qwen36-27b", name: "Qwen3.6-27B", detail: "dense · int8 == fp16 quality",
             repo: "https://huggingface.co/mlboydaisuke/Qwen3.6-27B-CoreAI",
             remote: "gpu-pipelined/qwen3_6_27b_decode_int8hu_block32_sym", approxSizeGB: 28),
