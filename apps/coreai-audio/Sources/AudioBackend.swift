@@ -29,13 +29,14 @@ final class AudioBackend: ObservableObject {
 
     private let arch = AudioArchitecture.qwen2_5Omni3B
 
+    // Documents/models/<dir> names match the HF repo leaf names (the downloader mirrors them).
     // Platform-specific decoder bundle (iOS = AOT .aimodelc, macOS = JIT .aimodel); encoder shared.
     #if os(iOS)
         private let decoderDir = "qwen2_5_omni_3b_thinker_n750_ios"
     #else
-        private let decoderDir = "qwen2_5_omni_3b_thinker_int8lin_n750_s1_bundle"
+        private let decoderDir = "qwen2_5_omni_3b_thinker_int8lin_n750_s1"
     #endif
-    private let encoderDir = "qwen2_5_omni_3b_audio_encoder_fp16_k15.aimodel"
+    private let encoderDir = "qwen2_5_omni_3b_audio_encoder_fp16_k15"
 
     private var engine: (any InferenceEngine)?
     private var tokenizer: Tokenizer?
@@ -76,9 +77,9 @@ final class AudioBackend: ObservableObject {
                 options: EngineOptions(staticInputBuffers: ["audio_embeds": StaticInputBuffer(buf)]))
             tokenizer = try await bundle.loadTokenizer()
 
-            // Audio encoder (plain .aimodel, GPU). resolveAsset takes .aimodel or .aimodelc.
+            // Audio encoder (plain .aimodel, GPU): models/<encoderDir>/<encoderDir>.aimodel.
             let encURL = models.appendingPathComponent(encoderDir)
-                .appendingPathComponent(encoderDir)
+                .appendingPathComponent("\(encoderDir).aimodel")
             var eo = SpecializationOptions(preferredComputeUnitKind: .gpu)
             eo.expectFrequentReshapes = false
             let em = try await AIModel(contentsOf: encURL, options: eo)
