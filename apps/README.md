@@ -37,6 +37,20 @@ patch stack** (the diffusion runtime is unmodified), so its build is self-contai
 overruns a 12 GB iPhone's memory limit); the iOS build runs smaller bundles (Stable
 Diffusion 0.9B) loaded via **Local…**.
 
+### Audio understanding
+
+| App | Model | Device |
+|---|---|---|
+| [`coreai-audio/`](coreai-audio/) | **Qwen2.5-Omni-3B Thinker** (audio *understanding* — describes sounds, not a transcript) — [HF bundle](https://huggingface.co/mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI) | iPhone 17 Pro + M4 Max |
+
+Record from the mic, choose a file, or use the demo clip → *"what do you hear?"*. A Whisper-style
+audio encoder (run once per clip) feeds the Qwen2.5-3B decoder on the ⚡pipelined engine; the audio
+embeds ride one `EngineOptions.staticInputBuffers` input (`<|AUDIO|>` ids rewritten to `vocab+slot`,
+no rope shift — TMRoPE collapses to 1-D), and a Swift vDSP log-mel front end (bit-exact with the HF
+extractor, cos 1.0) does the waveform→features step. iPhone uses the **AOT** decoder (`.aimodelc`,
+h18p) so the 3.9 GB graph dodges the on-device JIT jetsam (AOT weights mmap clean → ≈5.9 GB headroom
+after load). See [`coreai-audio/README.md`](coreai-audio/).
+
 ## Model delivery
 
 On first launch each app offers an **in-app download** of the published `.aimodel` set from the
