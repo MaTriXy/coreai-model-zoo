@@ -1,11 +1,19 @@
-# coreai-audio — on-device audio *understanding* (iOS + macOS)
+# coreai-audio — on-device audio *understanding* + *speech* (iOS + macOS)
 
-The zoo's first **audio** app: record from the mic, choose a file, or use the demo clip, then ask
-*"what do you hear?"* — a local **Qwen2.5-Omni Thinker** describes the **sounds** (events, texture,
-emotion), not a transcript. *"I hear a loud hissing sound."* · *"I hear a man speaking in English."*
-· *"…a series of beeps."* Everything runs on-device; nothing leaves the phone.
+Two tabs, both fully on-device:
 
-Device-verified on **iPhone 17 Pro** (A19 Pro) and **M4 Max**.
+- **Understand** — record from the mic, choose a file, or use the demo clip, then ask *"what do you
+  hear?"*: a local **Qwen2.5-Omni Thinker** describes the **sounds** (events, texture, emotion), not
+  a transcript. *"I hear a loud hissing sound."* · *"I hear a man speaking in English."*
+- **Speak** — **Kokoro-82M** (StyleTTS2 + iSTFTNet) text-to-speech on Core AI: pick a voice and a
+  phrase, hear it spoken. Three `.aimodel` bundles (predictor / prosody / vocoder) on the CPU
+  compute unit + the host DSP (alignment + hn-nsf source) in Swift; ~0.7 s/utterance, magspec-corr
+  0.999 vs the PyTorch reference. See [`zoo/kokoro-82m.md`](../../zoo/kokoro-82m.md). The demo
+  phrases are phonemized ahead of time (host-side G2P), so this build needs no MLX/espeak; the three
+  bundles come from [🤗 Kokoro-82M-CoreAI](https://huggingface.co/mlboydaisuke/Kokoro-82M-CoreAI)
+  (`KokoroAssets/` ships the voices + tokenizer; drop the `.aimodel` there or in Documents).
+
+Device-verified on **iPhone 17 Pro** (A19 Pro) and **M4 Max** (TTS verified on M4 Max).
 
 ## How it works
 

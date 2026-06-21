@@ -29,9 +29,13 @@ targets:
       macOS: "27.0"
     sources:
       - path: Sources
+        excludes:
+          - KokoroAssets   # 3 .aimodel bundles + voices, loaded from disk on the Mac dev build
     dependencies:
       - package: coreai-kit
         product: CoreAIKit
+      - package: coreai-kit
+        product: CoreAIKitVision
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.daisukemajima.coreaiaudio
