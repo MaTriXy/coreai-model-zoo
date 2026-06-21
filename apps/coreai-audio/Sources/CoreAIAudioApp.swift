@@ -1,4 +1,4 @@
-// coreai-audio — on-device audio understanding (Qwen2.5-Omni Thinker on Core AI).
+// coreai-audio — on-device audio understanding (Qwen2.5-Omni Thinker on Core AI), built on CoreAIKit.
 
 import SwiftUI
 
