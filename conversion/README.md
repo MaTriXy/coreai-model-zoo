@@ -147,6 +147,23 @@ overlay** of that package. Concretely, the additions are:
   compute units. `pip install rfdetr==1.7.1`, torch ≤ 2.11.
   See [`../zoo/rf-detr.md`](../zoo/rf-detr.md).
 
+- **Kokoro-82M (text-to-speech, the zoo's first TTS, in this dir): `export_kokoro.py`** —
+  StyleTTS2 + iSTFTNet cut into **three** fixed-bucket `.aimodel` bundles around the
+  data-dependent duration→alignment expansion: `predictor` (ids → duration/d/t_en),
+  `prosody` (+ host alignment → asr/F0/N), `vocoder` (+ host hn-nsf source `har` →
+  audio). Bundles are voice-independent (`ref_s` input); token/frame lengths are
+  buckets (default 128/512), host-padded + trimmed; G2P (misaki) and the source STFT
+  are host-side. The six bidirectional LSTMs become **masked unrolls** (fused nn.LSTM
+  leaks pads → corrupts prosody), the 58 AdaIN InstanceNorms get a **frame-masked**
+  norm (pad frames poison the L-axis stats), the hn-nsf source's STFT runs on the
+  **host** (2π phase flip at the F0→0 boundary on the engine), and weight_norm MUST be
+  folded (old hook-based → `module.weight` is random until a forward fires; the manual
+  conv stand-ins read it). `ConvTranspose1d`/`conv_transpose1d` → zero-insertion +
+  conv1d (symbolic length / all-zeros on the engine). Run on the **CPU** compute unit
+  (unrolled LSTM ~8 ms). Spectral gate (`--verify`): magspec-corr 0.999 vs torch
+  (waveform 0.98 = bounded pad-boundary effect). `pip install kokoro misaki soundfile`,
+  torch ≤ 2.11. See [`../zoo/kokoro-82m.md`](../zoo/kokoro-82m.md).
+
 ## Reproduce (env)
 
 Convert/verify needs the `coreai-core` + `coreai-torch` + `coreai-opt` Python env (macOS; the
