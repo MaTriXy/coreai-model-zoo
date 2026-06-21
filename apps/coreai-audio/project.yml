@@ -30,7 +30,10 @@ targets:
     sources:
       - path: Sources
         excludes:
-          - KokoroAssets   # 3 .aimodel bundles + voices, loaded from disk on the Mac dev build
+          - KokoroAssets       # 3 .aimodel (321 MB) — downloaded from HF at runtime (dev: from disk)
+          - KokoroResources    # added below as a folder-reference resource
+      - path: Sources/KokoroResources   # vocab/voices/l_linear/demo_phrases — bundled into the app
+        type: folder
     dependencies:
       - package: coreai-kit
         product: CoreAIKit

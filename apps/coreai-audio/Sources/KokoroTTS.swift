@@ -28,13 +28,14 @@ actor KokoroTTS {
     private let basisR: [Float]   // [FREQ*NFFT]
     private let basisI: [Float]
 
-    init(assets: URL) async throws {
-        predictor = try await GraphModel(contentsOf: assets.appendingPathComponent("kokoro_predictor.aimodel"), computeUnits: .cpu)
-        prosody = try await GraphModel(contentsOf: assets.appendingPathComponent("kokoro_prosody.aimodel"), computeUnits: .cpu)
-        vocoder = try await GraphModel(contentsOf: assets.appendingPathComponent("kokoro_vocoder.aimodel"), computeUnits: .cpu)
-        let vdata = try Data(contentsOf: assets.appendingPathComponent("vocab.json"))
+    init(predictor pURL: URL, prosody prURL: URL, vocoder vURL: URL,
+         vocab vocabURL: URL, lLinear lURL: URL) async throws {
+        predictor = try await GraphModel(contentsOf: pURL, computeUnits: .cpu)
+        prosody = try await GraphModel(contentsOf: prURL, computeUnits: .cpu)
+        vocoder = try await GraphModel(contentsOf: vURL, computeUnits: .cpu)
+        let vdata = try Data(contentsOf: vocabURL)
         vocab = try JSONDecoder().decode([String: Int].self, from: vdata)
-        llW = Self.readFloats(assets.appendingPathComponent("l_linear.bin"))
+        llW = Self.readFloats(lURL)
 
         var br = [Float](), bi = [Float]()
         br.reserveCapacity(Self.FREQ * Self.NFFT)
@@ -194,6 +195,10 @@ final class AudioPlayer {
         guard let fmt = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: sampleRate,
                                       channels: 1, interleaved: false) else { return }
         if !started {
+            #if os(iOS)
+            try? AVAudioSession.sharedInstance().setCategory(.playback)
+            try? AVAudioSession.sharedInstance().setActive(true)
+            #endif
             engine.attach(player)
             engine.connect(player, to: engine.mainMixerNode, format: fmt)
             try? engine.start()

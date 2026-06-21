@@ -2,11 +2,35 @@
 // are phonemized ahead of time (G2P is host-side; this build carries no MLX/espeak
 // dependency); the on-device pipeline (predictor/prosody/vocoder + Swift host DSP)
 // runs the rest.
+import CoreAIKit
 import SwiftUI
 
 struct DemoPhrase: Codable, Hashable {
     let text: String
     let ids: [Int]
+}
+
+enum KokoroAssets {
+    static let repo = "mlboydaisuke/Kokoro-82M-CoreAI"
+    static let bundleNames = ["kokoro_predictor.aimodel", "kokoro_prosody.aimodel", "kokoro_vocoder.aimodel"]
+
+    /// Small files (vocab/voices/…) bundled in the app; dev fallback to the source tree.
+    static var resources: URL {
+        Bundle.main.url(forResource: "KokoroResources", withExtension: nil)
+            ?? URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+                .appendingPathComponent("KokoroResources")
+    }
+
+    /// A `.aimodel` bundle: local dev copy if present, else the cached/downloaded HF copy.
+    static func bundle(_ name: String, store: ModelStore,
+                       progress: @escaping @Sendable (DownloadProgress) -> Void) async throws -> URL {
+        let dev = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appendingPathComponent("KokoroAssets").appendingPathComponent(name)
+        if FileManager.default.fileExists(atPath: dev.path) { return dev }
+        let id = ModelID(repo, path: name)
+        if let u = store.localURL(for: id) { return u }
+        return try await store.download(id, progress: progress)
+    }
 }
 
 @MainActor
@@ -19,30 +43,30 @@ final class KokoroVM: ObservableObject {
 
     private var tts: KokoroTTS?
     private let player = AudioPlayer()
-
-    // The assets (3 .aimodel bundles + voices/ + vocab.json + l_linear.bin +
-    // demo_phrases.json). On device they live in the app bundle / Documents (the
-    // small files ship in the app; the .aimodel download from the HF repo). On a
-    // dev build we fall back to the source tree (resolved relative to this file).
-    private var assets: URL {
-        if let r = Bundle.main.url(forResource: "KokoroAssets", withExtension: nil) { return r }
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("KokoroAssets")
-        if FileManager.default.fileExists(atPath: docs.path) { return docs }
-        return URL(fileURLWithPath: #filePath)          // …/Sources/KokoroView.swift
-            .deletingLastPathComponent().appendingPathComponent("KokoroAssets")
-    }
+    private let store = ModelStore()
 
     func load() async {
-        busy = true; status = "Loading bundles (CPU)…"
+        busy = true; status = "Loading…"
         do {
-            let t = try await KokoroTTS(assets: assets)
-            let vdir = assets.appendingPathComponent("voices")
+            let res = KokoroAssets.resources
+            // The 3 .aimodel bundles: dev copy if present, else download from HF (cached).
+            var urls: [URL] = []
+            for name in KokoroAssets.bundleNames {
+                let u = try await KokoroAssets.bundle(name, store: store) { p in
+                    Task { @MainActor in self.status = "Downloading \(name) — \(Int(p.fraction * 100))%" }
+                }
+                urls.append(u)
+            }
+            let t = try await KokoroTTS(
+                predictor: urls[0], prosody: urls[1], vocoder: urls[2],
+                vocab: res.appendingPathComponent("vocab.json"),
+                lLinear: res.appendingPathComponent("l_linear.bin"))
+            let vdir = res.appendingPathComponent("voices")
             for f in (try? FileManager.default.contentsOfDirectory(at: vdir, includingPropertiesForKeys: nil)) ?? []
             where f.pathExtension == "bin" {
                 await t.loadVoice(f.deletingPathExtension().lastPathComponent, url: f)
             }
-            let data = try Data(contentsOf: assets.appendingPathComponent("demo_phrases.json"))
+            let data = try Data(contentsOf: res.appendingPathComponent("demo_phrases.json"))
             phrases = try JSONDecoder().decode([DemoPhrase].self, from: data)
             voices = await t.availableVoices()
             tts = t; loaded = true
