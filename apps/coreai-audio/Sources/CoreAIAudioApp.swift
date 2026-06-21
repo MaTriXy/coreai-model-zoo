@@ -4,15 +4,6 @@ import SwiftUI
 
 @main
 struct CoreAIAudioApp: App {
-    init() {
-        if ProcessInfo.processInfo.environment["KOKORO_SELFTEST"] != nil {
-            let sem = DispatchSemaphore(value: 0)
-            Task.detached { await runKokoroSelfTest(); sem.signal() }
-            sem.wait()
-            exit(0)
-        }
-    }
-
     var body: some Scene {
         WindowGroup("coreai-audio") {
             TabView {
@@ -20,6 +11,13 @@ struct CoreAIAudioApp: App {
                     .tabItem { Label("Understand", systemImage: "ear") }
                 KokoroView()
                     .tabItem { Label("Speak", systemImage: "speaker.wave.2") }
+            }
+            // Non-blocking self-test (KOKORO_SELFTEST=1): the iOS launch watchdog
+            // kills any main-thread block, so run it as a normal async task.
+            .task {
+                if ProcessInfo.processInfo.environment["KOKORO_SELFTEST"] != nil {
+                    await runKokoroSelfTest()
+                }
             }
         }
         #if os(macOS)

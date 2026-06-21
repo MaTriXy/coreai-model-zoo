@@ -31,8 +31,9 @@ func runKokoroSelfTest() async {
         let audio = try await tts.synthesize(ids: p.ids, voice: "af_heart")
         let ms = Date().timeIntervalSince(t0) * 1000
         let out = audio.withUnsafeBytes { Data($0) }
-        try out.write(to: URL(fileURLWithPath: "/tmp/kokoro_swift.f32"))
-        NSLog("KOKORO selftest: wrote %d samples (%.0f ms)", audio.count, ms)
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        try out.write(to: docs.appendingPathComponent("kokoro_swift.f32"))
+        NSLog("KOKORO selftest: wrote %d samples (%.0f ms) to %@", audio.count, ms, docs.path)
     } catch {
         NSLog("KOKORO selftest: FAILED %@", String(describing: error))
     }
