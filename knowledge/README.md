@@ -75,6 +75,20 @@ Hard-won, verified notes on Apple's Core AI (iOS/macOS 27) — what the docs don
 - [`swift-runtime.md`](swift-runtime.md) — the Core AI Swift API, driving `.aimodel` from Swift,
   non-standard architectures, macOS/Xcode 27 setup (incl. running Xcode 27 beta without sudo).
 
+## Audio (the new modality — model-specific port notes)
+- [`qwen2.5-omni-audio-understanding.md`](qwen2.5-omni-audio-understanding.md) — Qwen2.5-Omni's
+  **Thinker** as on-device **audio understanding** (describes sounds, *not* ASR): de-dynamizing the
+  Whisper-style encoder (ragged `cu_seqlens` chunk attention → one batched fixed attention, bit-exact),
+  TMRoPE collapsing to 1-D, a bit-exact vDSP mel (DFT-as-matmul), audio embeds on a static buffer, and
+  the two payoffs — **AOT clean-mmap weights dodge the iOS jetsam dirty limit** (4.5 GB decoder, 5930 MB
+  free), and a **fixed-shape encoder runs on the ANE** (0.99 cos → byte-identical text) where the
+  dynamic decoder can't.
+- [`kokoro-tts.md`](kokoro-tts.md) — Kokoro-82M (StyleTTS2 + iSTFTNet), the zoo's first **text-to-speech**:
+  3 bundles cut at the one data-dependent length + host DSP, the `weight_norm`-random-init bug
+  (non-determinism → suspect weight loading), variable length via **masked-unrolled bi-LSTM +
+  frame-masked InstanceNorm + host STFT**, the Core AI op rewrites (ConvTranspose1d/iSTFT → zero-insert
+  + conv1d), and why an unrolled-LSTM model runs **faster on the CPU than the GPU**.
+
 Primary official sources behind these notes: the open repos (`coreai-torch`, `coreai-optimization`,
 `coreai-models` incl. its agent skills), the WWDC26 talks **324 / 325 / 326 / 330** (verbatim transcripts in
 `ondevice/_wwdc{324,325,326,330}_transcript.txt`), and `developer.apple.com/core-ai/`. Verified against
