@@ -10,6 +10,11 @@ packages:
   coreai-kit:
     url: https://github.com/john-rocky/coreai-kit
     revision: 28f6fd677f1ce893a32a201607d9dc1d3e77543b
+  # On-device English G2P for free-text TTS (made for Kokoro; pulls in MLX for the
+  # neural fallback on out-of-dictionary words).
+  MisakiSwift:
+    url: https://github.com/mlalma/MisakiSwift
+    revision: 6835a1ce4a8854075c89f18ff75c74b13ef58e15
 
 # Release: the engine's per-token host work is ~3x slower unoptimized.
 schemes:
@@ -39,6 +44,10 @@ targets:
         product: CoreAIKit
       - package: coreai-kit
         product: CoreAIKitVision
+      - package: MisakiSwift
+        product: MisakiSwift
+        embed: true
+        link: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.daisukemajima.coreaiaudio

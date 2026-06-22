@@ -34,6 +34,15 @@ func runKokoroSelfTest() async {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         try out.write(to: docs.appendingPathComponent("kokoro_swift.f32"))
         NSLog("KOKORO selftest: wrote %d samples (%.0f ms) to %@", audio.count, ms, docs.path)
+
+        // Free-text path: on-device G2P (MisakiSwift) -> phonemes -> audio.
+        let freeText = "The weather is lovely today, so let's go for a walk in the park."
+        let fids = await tts.ids(forText: freeText)
+        let t1 = Date()
+        let fa = try await tts.synthesizeText(freeText, voice: "af_bella")
+        NSLog("KOKORO selftest: free-text ids=%d audio=%d (%.0f ms)", fids.count, fa.count,
+              Date().timeIntervalSince(t1) * 1000)
+        try fa.withUnsafeBytes { Data($0) }.write(to: docs.appendingPathComponent("kokoro_freetext.f32"))
     } catch {
         NSLog("KOKORO selftest: FAILED %@", String(describing: error))
     }

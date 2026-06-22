@@ -79,12 +79,26 @@ final class KokoroVM: ObservableObject {
 
     func speak(_ p: DemoPhrase, voice: String) async {
         guard let tts else { return }
-        busy = true; status = "Synthesizing “\(p.text.prefix(28))”…"
+        await play(status: "Synthesizing “\(p.text.prefix(28))”…", voice: voice) {
+            try await tts.synthesize(ids: p.ids, voice: voice)
+        }
+    }
+
+    func speakText(_ text: String, voice: String) async {
+        guard let tts, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        await play(status: "Synthesizing…", voice: voice) {
+            try await tts.synthesizeText(text, voice: voice)   // on-device G2P + sentence split
+        }
+    }
+
+    private func play(status s: String, voice: String, _ make: () async throws -> [Float]) async {
+        busy = true; status = s
         do {
             let t0 = Date()
-            let audio = try await tts.synthesize(ids: p.ids, voice: voice)
-            let ms = Date().timeIntervalSince(t0) * 1000
-            status = String(format: "%.2f s audio in %.0f ms (%@)", Double(audio.count) / 24000, ms, voice)
+            let audio = try await make()
+            guard !audio.isEmpty else { status = "Nothing to speak (no English phonemes)."; busy = false; return }
+            status = String(format: "%.2f s audio in %.0f ms (%@)", Double(audio.count) / 24000,
+                            Date().timeIntervalSince(t0) * 1000, voice)
             player.play(audio)
         } catch {
             status = "Error: \(error)"
@@ -96,6 +110,7 @@ final class KokoroVM: ObservableObject {
 struct KokoroView: View {
     @StateObject private var vm = KokoroVM()
     @State private var voice = "af_heart"
+    @State private var text = "Type anything in English and tap Speak."
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -113,6 +128,18 @@ struct KokoroView: View {
                     ForEach(vm.voices, id: \.self) { Text($0).tag($0) }
                 }.pickerStyle(.menu)
 
+                TextField("Text", text: $text, axis: .vertical)
+                    .lineLimit(1...4)
+                    .textFieldStyle(.roundedBorder)
+                Button {
+                    Task { await vm.speakText(text, voice: voice) }
+                } label: {
+                    Label("Speak", systemImage: "play.fill").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(vm.busy)
+
+                Text("…or a demo phrase:").font(.caption).foregroundStyle(.secondary)
                 ForEach(vm.phrases, id: \.self) { p in
                     Button {
                         Task { await vm.speak(p, voice: voice) }

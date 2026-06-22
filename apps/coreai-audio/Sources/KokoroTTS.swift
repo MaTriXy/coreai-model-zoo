@@ -9,6 +9,7 @@
 import AVFoundation
 import CoreAIKitVision
 import Foundation
+import MisakiSwift
 
 actor KokoroTTS {
     static let TB = 128          // token bucket
@@ -51,10 +52,47 @@ actor KokoroTTS {
         basisR = br; basisI = bi
     }
 
+    private lazy var g2p = EnglishG2P(british: false)   // on-device English G2P
+
     func availableVoices() -> [String] { Array(voices.keys).sorted() }
 
     func loadVoice(_ name: String, url: URL) {
         voices[name] = Self.readFloats(url)         // [N, 256] flattened
+    }
+
+    /// Phonemes for a chunk -> Kokoro token ids (incl. the [0, …, 0] bounds).
+    func ids(forText text: String) -> [Int] {
+        let (phonemes, _) = g2p.phonemize(text: text)
+        return [0] + phonemes.compactMap { vocab[String($0)] } + [0]
+    }
+
+    /// Free text -> 24 kHz audio. Splits into sentences (each ≤ the token bucket),
+    /// synthesizes each, and concatenates with a short gap. G2P is on-device.
+    func synthesizeText(_ text: String, voice: String) async throws -> [Float] {
+        var audio: [Float] = []
+        for sentence in Self.splitSentences(text) {
+            let ids = ids(forText: sentence)
+            guard ids.count > 2, ids.count <= Self.TB else { continue }  // skip empty / too long
+            audio += try await synthesize(ids: ids, voice: voice)
+            audio += [Float](repeating: 0, count: 3600)                  // ~0.15 s between sentences
+        }
+        return audio
+    }
+
+    static func splitSentences(_ text: String) -> [String] {
+        var out: [String] = []
+        var cur = ""
+        for ch in text {
+            cur.append(ch)
+            if ch == "." || ch == "!" || ch == "?" {
+                let s = cur.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !s.isEmpty { out.append(s) }
+                cur = ""
+            }
+        }
+        let tail = cur.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !tail.isEmpty { out.append(tail) }
+        return out.isEmpty ? [text] : out
     }
 
     /// Synthesize from already-tokenized phoneme ids (incl. the [0, …, 0] bounds).
