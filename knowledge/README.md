@@ -83,6 +83,12 @@ Hard-won, verified notes on Apple's Core AI (iOS/macOS 27) — what the docs don
   the two payoffs — **AOT clean-mmap weights dodge the iOS jetsam dirty limit** (4.5 GB decoder, 5930 MB
   free), and a **fixed-shape encoder runs on the ANE** (0.99 cos → byte-identical text) where the
   dynamic decoder can't.
+- [`whisper-asr-fixed-decode.md`](whisper-asr-fixed-decode.md) — Whisper large-v3-turbo as on-device
+  **ASR** (the zoo's first official speech-to-text): why the official recipe's single-step `[1,1]`
+  decoder graph can't transcribe, why a dynamic-length re-export recompiles every step (~15 s/token),
+  and the fix — a **fixed 128-token decoder window** (pad, read logits at the real last position;
+  causal attention ignores the padding; constant shape compiles once → 0.18 s/token, token-exact).
+  Plus the Swift log-mel frontend (n_fft 400 = DFT-as-matmul) and single-`main`→GPU routing.
 - [`kokoro-tts.md`](kokoro-tts.md) — Kokoro-82M (StyleTTS2 + iSTFTNet), the zoo's first **text-to-speech**:
   3 bundles cut at the one data-dependent length + host DSP, the `weight_norm`-random-init bug
   (non-determinism → suspect weight loading), variable length via **masked-unrolled bi-LSTM +
@@ -92,6 +98,11 @@ Hard-won, verified notes on Apple's Core AI (iOS/macOS 27) — what the docs don
   (one-step diffusion-GAN, pruned SD-2.1 + half VAE decoder): why fp16 NaNs (SD-2.1 attention overflow,
   `upcast_attention` ignored by the SDPA processor) so **fp32 ships**, the **global** (not per-tile)
   color-match, host-side tiling with an input-size cap, and the CoreGraphics `bytesPerRow`/no-y-flip traps.
+- [`sam3-promptable-segmentation.md`](sam3-promptable-segmentation.md) — SAM 3 as on-device **text-prompt
+  segmentation** (the zoo's first official segmenter): the segmenter *bundle* format + one-call official
+  `CoreAIImageSegmenter` runtime, float16≈float32 fidelity (Δ≤1e-4) verified with the `image-segmenter`
+  CLI, redistributing a **gated** model under the SAM License (ship the LICENSE), and the platform box-origin
+  trap when compositing masks.
 
 Primary official sources behind these notes: the open repos (`coreai-torch`, `coreai-optimization`,
 `coreai-models` incl. its agent skills), the WWDC26 talks **324 / 325 / 326 / 330** (verbatim transcripts in

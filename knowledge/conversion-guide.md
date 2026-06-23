@@ -90,3 +90,26 @@ compare — DETR-family models emit near-duplicate predictions whose ranks swap 
 noise, and positional compare overflags healthy conversions. Random-noise inputs flip two-stage
 top-k proposal selection at near-ties (the detection analog of the LLM argmax margin rule) —
 use real images for the gate, noise only as an informational probe.
+
+## Publishing & fetching artifacts (HF Xet)
+
+Hugging Face now stores large LFS files in **Xet** content-addressed storage, and this bites both
+download and upload of multi-GB `.aimodel` bundles:
+
+- **`HF_HUB_DISABLE_XET=1` does NOT bypass Xet** — the `resolve/main/<file>` URL still 302-redirects
+  to the Xet bridge (`cas-bridge.xethub.hf.co`), which reconstructs cold files server-side and can
+  crawl or stall (the "stuck at a few MB" symptom).
+- **`curl -C -` (resume) HANGS the Xet bridge** — the resume request sends a `Range:` header that the
+  bridge stalls on (0 bytes forever). A **plain GET** of the same URL streams fine (measured 13 MB/s).
+  If you must curl, no `-C -`; add `--retry`/`--speed-limit` to re-roll onto a warm edge.
+- **Best for a flaky link: native `HF_XET_HIGH_PERFORMANCE=1 hf download <repo>`** — it fetches the
+  reconstruction in parallel chunks and **resumes at chunk granularity** (from `~/.cache/huggingface/xet/`),
+  so a dropped connection continues instead of restarting from 0 (which a single curl stream does).
+- **Don't mix Xet and non-Xet attempts** for the same file: the cache snapshot symlink can end up
+  pointing at a **sparse, incomplete** blob from the killed attempt (apparent size right, `du` actual
+  size small) while the good bytes land in a differently-hashed blob. `from_pretrained` then fails to
+  load it. Fix: repoint the symlink to the complete blob, or wipe `~/.cache/huggingface/hub/models--<org>--<name>`
+  and re-download cleanly.
+- **Upload:** `hf upload-large-folder <repo> . --repo-type=model` is **resumable** — kill it and re-run,
+  it continues (only un-committed files re-upload). Uploads are fast when the chunks are already in the
+  local Xet cache from a prior download.

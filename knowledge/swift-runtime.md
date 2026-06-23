@@ -90,3 +90,32 @@ A generic N-state runner built on this is in [`../swift/Sources/CoreAIRunner/`](
   dual-KV states `slidingKeyCache/slidingValueCache/fullKeyCache/fullValueCache` → `hidden`) →
   head (`hidden → logits`, tied lm_head + `tanh(z/30)·30` softcap). Core is fp16 (cast `hidden` to
   fp32 before the head); CLI-exported core's dynamic seq starts at 16 (pad short prompts).
+
+## Single-graph vision/ASR models + app-build gotchas
+
+From the SAM 3 / Whisper sample apps (`apps/CoreAISegment`, `apps/CoreAITranscribe`) — running a
+plain single-`main` bundle (not the LLM pipelined path) from a SwiftUI app:
+
+- **Load via `PreparedModel.prepare(at:)`** (CoreAIShared): it probes structure and a bundle whose
+  only graph is `main` → `.dynamic` → **GPU** (`SpecializationOptions(preferredComputeUnitKind: .gpu)`,
+  `expectFrequentReshapes`). Raw `AIModel(contentsOf:)` with default options instead defaults to the
+  **ANE and crashes** on these graphs (`Program load failure (0x10004)` → MPSGraphPackage load fail).
+- **Run:** `var out = try await fn.run(inputs: [name: NDArray])` → `out.remove(name)?.ndArray`
+  (it's `InferenceFunction.Outputs`, **not** a Dictionary — no `removeValue(forKey:)`). Build inputs
+  with `NDArray(descriptor:)` + `fillNDArray(&a, as: Float16.self, with:)` / `…as: Int32.self, count:){}`;
+  read with `flattenAsFloat(nd)` (handles fp16→Float).
+- **To get `CoreAIShared` + the `CoreAI` framework** without the heavy LM lib, depend on the
+  `CoreAISegmentation` (or `CoreAIObjectDetection`) product — both pull in `CoreAIShared`.
+- **iOS Simulator can't build** anything importing `CoreAI` — the framework is absent from the
+  simulator SDK (`Unable to resolve module dependency: 'CoreAI'`). Compile-check the iOS target
+  against the **device** SDK without signing:
+  `xcodebuild … -sdk iphoneos -destination 'generic/platform=iOS' build CODE_SIGNING_ALLOWED=NO`.
+  macOS builds fine (CoreAI is in the macOS SDK).
+- **Swift 6 strict concurrency:** `ImageSegmenter`, `InferenceFunction`, `NDArray` are **non-Sendable**
+  value/ref types. Calling their `async` methods from a `@MainActor` engine trips region isolation
+  ("sending … risks a data race"). Wrap them in a `struct … : @unchecked Sendable` whose async method
+  forwards the call — safe because the engine serializes (one inference at a time).
+- **Fixed-window autoregressive read** (Whisper): a graph with a fixed decoder length `[1, N]` is
+  driven by padding the buffer and reading `logits[0, k]` at the real last index `k` — causal
+  attention ignores the padding, the constant shape compiles once. See
+  [whisper-asr-fixed-decode.md](whisper-asr-fixed-decode.md).
