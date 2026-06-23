@@ -11,12 +11,16 @@ struct CoreAIAudioApp: App {
                     .tabItem { Label("Understand", systemImage: "ear") }
                 KokoroView()
                     .tabItem { Label("Speak", systemImage: "speaker.wave.2") }
+                VoxCPMView()
+                    .tabItem { Label("Voice", systemImage: "waveform") }
             }
-            // Non-blocking self-test (KOKORO_SELFTEST=1): the iOS launch watchdog
-            // kills any main-thread block, so run it as a normal async task.
+            // Non-blocking self-tests (the iOS launch watchdog kills any main-thread block).
             .task {
                 if ProcessInfo.processInfo.environment["KOKORO_SELFTEST"] != nil {
                     await runKokoroSelfTest()
+                }
+                if ProcessInfo.processInfo.environment["VOXCPM_SELFTEST"] != nil {
+                    await runVoxCPMSelfTest()
                 }
             }
         }

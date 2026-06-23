@@ -9,7 +9,7 @@ options:
 packages:
   coreai-kit:
     url: https://github.com/john-rocky/coreai-kit
-    revision: 28f6fd677f1ce893a32a201607d9dc1d3e77543b
+    revision: 6010439eadc2989812d2b2338ab8206020b66eaa
   # On-device English G2P for free-text TTS (made for Kokoro; pulls in MLX for the
   # neural fallback on out-of-dictionary words).
   MisakiSwift:
@@ -37,6 +37,7 @@ targets:
         excludes:
           - KokoroAssets       # 3 .aimodel (321 MB) — downloaded from HF at runtime (dev: from disk)
           - KokoroResources    # added below as a folder-reference resource
+          - VoxCPMAssets       # 5 bundles + glue + tokenizer (~1.3 GB) — dev symlink, loaded via #filePath
       - path: Sources/KokoroResources   # vocab/voices/l_linear/demo_phrases — bundled into the app
         type: folder
     dependencies:

@@ -30,3 +30,9 @@ apps/**/*.xcodeproj/
 apps/**/build/
 apps/**/build-*/
 apps/**/tokenizer.json
+
+# VoxCPM scratch experiments (not shipped)
+conversion/voxcpm/scratch_*.py
+
+# VoxCPM dev asset symlink (points at conversion artifacts; machine-specific)
+apps/coreai-audio/Sources/VoxCPMAssets
