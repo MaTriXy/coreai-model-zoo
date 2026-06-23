@@ -103,6 +103,13 @@ Hard-won, verified notes on Apple's Core AI (iOS/macOS 27) — what the docs don
   `CoreAIImageSegmenter` runtime, float16≈float32 fidelity (Δ≤1e-4) verified with the `image-segmenter`
   CLI, redistributing a **gated** model under the SAM License (ship the LICENSE), and the platform box-origin
   trap when compositing masks.
+- [`depth-anything-3-monocular-depth.md`](depth-anything-3-monocular-depth.md) — Depth Anything 3, the
+  zoo's first **depth** model (DINOv2 ViT + DPT head, single static square graph): why the input is
+  **raw [0,1]** (ImageNet norm folded in-graph) and the **double-normalization trap** that faked a
+  cos-0.9 "engine bug" / "noise" / "non-square bug" for a day; engine **cos 1.000000 at any shape**;
+  the squish + resize-back contract and why r≈0.98 vs official **is** faithful (= the model's own
+  504-vs-518 variance); the RoPE-const / cache-free / pos-embed-dtype export patches; fp16 via
+  `.half()` not autocast. Sample: [`scripts/depth_anything_3_sample.py`](scripts/depth_anything_3_sample.py).
 
 Primary official sources behind these notes: the open repos (`coreai-torch`, `coreai-optimization`,
 `coreai-models` incl. its agent skills), the WWDC26 talks **324 / 325 / 326 / 330** (verbatim transcripts in

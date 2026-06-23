@@ -33,6 +33,7 @@ on-device, with the conversion code and a knowledge base. Successor to
 | **RF-DETR nano/small/medium/large** (object detection, no NMS) | [🤗 RF-DETR-CoreAI](https://huggingface.co/mlboydaisuke/RF-DETR-CoreAI) | Apache-2.0 |
 | **RF-DETR-Seg nano→2xlarge** (instance segmentation, 6 sizes) | [🤗 RF-DETR-CoreAI](https://huggingface.co/mlboydaisuke/RF-DETR-CoreAI) | Apache-2.0 |
 | **AdcSR ×4** (super-resolution — zoo's first; one-step diffusion-GAN, on-device) | [🤗 AdcSR-CoreAI](https://huggingface.co/mlboydaisuke/AdcSR-CoreAI) | Apache-2.0 + OpenRAIL++ |
+| **Depth Anything 3** (monocular depth — zoo's first depth model; small + base, fp16/fp32) | [🤗 Depth-Anything-3-CoreAI](https://huggingface.co/mlboydaisuke/Depth-Anything-3-CoreAI) | Apache-2.0 |
 
 ### Decode throughput (tok/s, greedy; output top-1 exact vs the Hugging Face reference)
 
