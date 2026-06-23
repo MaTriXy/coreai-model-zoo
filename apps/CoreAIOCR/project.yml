@@ -1,0 +1,40 @@
+name: CoreAIOCR
+options:
+  bundleIdPrefix: com.coreai.ocr
+  deploymentTarget:
+    macOS: "27.0"
+
+packages:
+  # GraphModel (vision encoder) + TensorValue
+  coreai-kit:
+    url: https://github.com/john-rocky/coreai-kit
+    branch: main
+  # CoreAIShared: fillNDArray / readNDArray / NDArray helpers used by the stateful decoder.
+  # CoreAI itself is the system on-device runtime framework (no package).
+  coreai-models:
+    path: ../../coreai-models
+  swift-transformers:
+    url: https://github.com/huggingface/swift-transformers
+    from: "1.1.0"
+
+targets:
+  CoreAIOCR:
+    type: application
+    platform: macOS
+    deploymentTarget: "27.0"
+    sources:
+      - path: Sources
+    dependencies:
+      - package: coreai-kit
+        product: CoreAIKitVision
+      - package: coreai-models
+        product: CoreAIShared
+      - package: swift-transformers
+        product: Transformers
+    settings:
+      SWIFT_VERSION: "6.0"
+      GENERATE_INFOPLIST_FILE: YES
+      INFOPLIST_KEY_NSHumanReadableCopyright: "Unlimited-OCR (baidu, MIT) on Core AI"
+      INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.productivity"
+      PRODUCT_BUNDLE_IDENTIFIER: com.coreai.ocr.CoreAIOCR
+      # set DEVELOPMENT_TEAM for device signing

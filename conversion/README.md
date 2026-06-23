@@ -89,6 +89,15 @@ overlay** of that package. Concretely, the additions are:
   the iOS ~208 KB per-encode MPSGraph scratch heap — an engine bug, second reproducer).
   Model overlay: `models/macos/gemma4_vision.py` + the `Gemma4VLPipelined*` subclasses in
   `models/macos/gemma4_pipelined.py`. See [`../zoo/gemma4-vl.md`](../zoo/gemma4-vl.md).
+- **Unlimited-OCR — document OCR, zoo's first doc-OCR, on the STOCK runtime (no patch): [`unlimited_ocr/`](unlimited_ocr)** —
+  baidu/Unlimited-OCR (3B-A0.5B MoE, MIT) → fp16 DeepEncoder vision `.aimodel` + a sym8 DeepseekV2
+  **R-SWA** MoE decoder (unified `prefill`+`decode` bundle). Driven on `inputs_embeds` directly, so
+  no static-input patch. The novel piece = a **fully-static decode graph** (data-driven KV write +
+  full fixed-buffer R-SWA mask, `pos [1]` as a value not a shape) → no per-step recompile (a growing
+  shape *faults* on Metal 4) → **flat 12.7 ms/token**. Image→markdown (tables→HTML, formulas→LaTeX);
+  arrangement assets shipped raw for host-side assembly. App: `apps/CoreAIOCR` (drives the stock
+  runtime via `InferenceFunction.MutableViews`). See [`../zoo/unlimited-ocr.md`](../zoo/unlimited-ocr.md)
+  + [`../knowledge/unlimited-ocr-rswa-static-decode.md`](../knowledge/unlimited-ocr-rswa-static-decode.md).
 - **Qwen3.6-35B-A3B pipelined — the first MoE (in this dir): `export_qwen3_6_decode_pipelined.py [int8lin|int8hu]`** —
   Qwen3.5's hybrid decoder + a 256-expert top-8 sparse-MoE FFN (+ shared expert), 40 layers,
   GVA GatedDeltaNet (32 value / 16 key heads). Experts ride Apple's `SwitchGLU`/`GatherMM`;
