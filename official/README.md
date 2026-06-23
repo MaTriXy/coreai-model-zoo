@@ -53,6 +53,22 @@ Run it from the [CoreAISegment app](../apps/CoreAISegment/) (macOS + iOS) or
 is gated upstream and ships under Meta's SAM License (see the card); the converted bundle lets
 you run it without the gated checkpoint.
 
+## Speech-to-text
+
+Whisper ASR from Apple's official `models/whisper/export.py` recipe, on the stock runtime.
+
+| Model | Bundle | M4 Max (warm) | Download |
+|---|---|---:|---|
+| Whisper large-v3-turbo (809M) | macOS · iOS (float16, ~1.5 GB) | ~0.18 s/token | [HF](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official) |
+
+Transcribes on-device, token-for-token identical to the PyTorch reference. The stock recipe
+traces a **single** decode step (`decoder_input_ids [1,1]`, no KV cache) — which can't be
+driven autoregressively — so this bundle is the same recipe traced at a **fixed 128-token
+decoder window**: pad the buffer, read logits at the real last position (causal attention
+ignores the padding), constant shape so MPSGraph compiles once. Runs from the
+[CoreAITranscribe app](../apps/CoreAITranscribe/) (macOS + iOS, file or mic). The bundle ships
+the tokenizer + the mel filterbank for the Swift log-mel frontend.
+
 ## Why artifacts and not just recipes?
 
 The same export command can produce a 2.2× slower artifact across an OS upgrade
@@ -69,9 +85,10 @@ current toolchains can no longer reproduce.
 - CLI (segmentation): `swift run -c release image-segmenter --model <bundle-dir> --prompt "cat" --image cats.jpg`
 - Apps: [CoreAIChatMac](https://github.com/john-rocky/coreai-samples) (chat) ·
   [`apps/CoreAIImageGen`](../apps/CoreAIImageGen/) (image generation, iOS + macOS) ·
-  [`apps/CoreAISegment`](../apps/CoreAISegment/) (text-prompt segmentation, iOS + macOS)
+  [`apps/CoreAISegment`](../apps/CoreAISegment/) (text-prompt segmentation, iOS + macOS) ·
+  [`apps/CoreAITranscribe`](../apps/CoreAITranscribe/) (speech-to-text, iOS + macOS)
 - iOS bundles need AOT compilation first — see each model card.
 
 Licenses: bundles inherit their upstream model licenses (Apache-2.0 for Qwen /
-Mistral / gpt-oss / FLUX.2 klein; Gemma Terms of Use for Gemma; Meta SAM License for
-SAM 3 — see the cards).
+Mistral / gpt-oss / FLUX.2 klein / Whisper; Gemma Terms of Use for Gemma; Meta SAM License
+for SAM 3 — see the cards).

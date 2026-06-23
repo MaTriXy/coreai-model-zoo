@@ -1,0 +1,93 @@
+name: CoreAITranscribe
+options:
+  bundleIdPrefix: com.coreai
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "27.0"
+    iOS: "27.0"
+
+packages:
+  # Core AI runtime helpers (PreparedModel / NDArray / fillNDArray / flattenAsFloat live in
+  # CoreAIShared, pulled in via the CoreAISegmentation product) — plus the system CoreAI
+  # framework. No engine patch: Whisper runs on the stock runtime.
+  coreai-models:
+    url: https://github.com/apple/coreai-models
+    revision: d5804c8f6475e9e41aef08d8d2516ccf39fcbcc3
+  # The HF Whisper tokenizer (detokenize the generated ids → text).
+  swift-transformers:
+    url: https://github.com/huggingface/swift-transformers
+    from: "1.1.0"
+
+schemes:
+  CoreAITranscribe:
+    build:
+      targets: { CoreAITranscribe: all }
+    run: { config: Release }
+  CoreAITranscribeMac:
+    build:
+      targets: { CoreAITranscribeMac: all }
+    run: { config: Release }
+
+targets:
+  CoreAITranscribe:
+    type: application
+    platform: iOS
+    deploymentTarget: "27.0"
+    sources:
+      - path: Sources
+      - path: ../AppShared/ModelDownloader.swift
+    entitlements:
+      path: CoreAITranscribe-iOS.entitlements
+      properties:
+        com.apple.developer.kernel.increased-memory-limit: true
+    dependencies:
+      - package: coreai-models
+        product: CoreAISegmentation
+      - package: swift-transformers
+        product: Transformers
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.coreai.transcribe.ios
+        DEVELOPMENT_TEAM: MFN25KNUGJ
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Record audio to transcribe on-device."
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: "NO"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_APPROACHABLE_CONCURRENCY: "YES"
+
+  CoreAITranscribeMac:
+    type: application
+    platform: macOS
+    deploymentTarget: "27.0"
+    sources:
+      - path: Sources
+      - path: ../AppShared/ModelDownloader.swift
+    entitlements:
+      path: CoreAITranscribe-macOS.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.files.user-selected.read-write: true
+        com.apple.security.network.client: true
+        com.apple.security.device.audio-input: true
+    dependencies:
+      - package: coreai-models
+        product: CoreAISegmentation
+      - package: swift-transformers
+        product: Transformers
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.coreai.transcribemac
+        DEVELOPMENT_TEAM: MFN25KNUGJ
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Record audio to transcribe on-device."
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: "NO"
+        SWIFT_APPROACHABLE_CONCURRENCY: "YES"
