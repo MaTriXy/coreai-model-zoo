@@ -1,0 +1,76 @@
+name: CoreAIUpscale
+options:
+  bundleIdPrefix: com.coreai
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "27.0"
+    iOS: "27.0"
+
+# SinSR ×4 single-step diffusion super-resolution. Reuses CoreAIKit's SuperResolver (which
+# pulls the SinSR bundle from the Hub and runs the 256-px tiling pipeline). A separate app
+# from CoreAIImageGen on purpose: that one pins apple/coreai-models for the diffusion pipeline,
+# and CoreAIKit pulls the john-rocky/coreai-models fork — mixing both in one target collides on
+# the "coreai-models" package name. SR has no such runtime dependency, so it lives on its own.
+packages:
+  coreai-kit:
+    path: ../../../../coreai-kit
+
+schemes:
+  CoreAIUpscale:
+    build:
+      targets:
+        CoreAIUpscale: all
+    run:
+      config: Release
+  CoreAIUpscaleMac:
+    build:
+      targets:
+        CoreAIUpscaleMac: all
+    run:
+      config: Release
+
+targets:
+  CoreAIUpscale:
+    type: application
+    platform: iOS
+    deploymentTarget: "27.0"
+    sources:
+      - path: Sources
+    dependencies:
+      - package: coreai-kit
+        product: CoreAIKitVision
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.coreai.upscale.ios
+        DEVELOPMENT_TEAM: MFN25KNUGJ
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: "NO"
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_APPROACHABLE_CONCURRENCY: "YES"
+
+  CoreAIUpscaleMac:
+    type: application
+    platform: macOS
+    deploymentTarget: "27.0"
+    sources:
+      - path: Sources
+    dependencies:
+      - package: coreai-kit
+        product: CoreAIKitVision
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.coreai.upscale.mac
+        DEVELOPMENT_TEAM: MFN25KNUGJ
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: "YES"
+        ENABLE_APP_SANDBOX: "NO"
+        ENABLE_HARDENED_RUNTIME: "NO"
+        SWIFT_APPROACHABLE_CONCURRENCY: "YES"

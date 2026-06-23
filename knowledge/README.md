@@ -88,6 +88,10 @@ Hard-won, verified notes on Apple's Core AI (iOS/macOS 27) — what the docs don
   (non-determinism → suspect weight loading), variable length via **masked-unrolled bi-LSTM +
   frame-masked InstanceNorm + host STFT**, the Core AI op rewrites (ConvTranspose1d/iSTFT → zero-insert
   + conv1d), and why an unrolled-LSTM model runs **faster on the CPU than the GPU**.
+- [`adcsr-super-resolution.md`](adcsr-super-resolution.md) — AdcSR, the zoo's first **super-resolution**
+  (one-step diffusion-GAN, pruned SD-2.1 + half VAE decoder): why fp16 NaNs (SD-2.1 attention overflow,
+  `upcast_attention` ignored by the SDPA processor) so **fp32 ships**, the **global** (not per-tile)
+  color-match, host-side tiling with an input-size cap, and the CoreGraphics `bytesPerRow`/no-y-flip traps.
 
 Primary official sources behind these notes: the open repos (`coreai-torch`, `coreai-optimization`,
 `coreai-models` incl. its agent skills), the WWDC26 talks **324 / 325 / 326 / 330** (verbatim transcripts in
