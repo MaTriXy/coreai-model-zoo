@@ -1,0 +1,92 @@
+name: CoreAISegment
+options:
+  bundleIdPrefix: com.coreai
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "27.0"
+    iOS: "27.0"
+
+packages:
+  # The segmentation runtime (CoreAISegmentation = ImageSegmenter) lives in apple/coreai-models.
+  # This app pulls the package straight from GitHub, pinned to the revision the shipped build was
+  # verified against, and applies NO patch stack: the runtime runs unmodified on the stock engine.
+  coreai-models:
+    url: https://github.com/apple/coreai-models
+    revision: d5804c8f6475e9e41aef08d8d2516ccf39fcbcc3
+
+schemes:
+  CoreAISegment:
+    build:
+      targets:
+        CoreAISegment: all
+    run:
+      config: Release
+  CoreAISegmentMac:
+    build:
+      targets:
+        CoreAISegmentMac: all
+    run:
+      config: Release
+
+targets:
+  # iOS
+  CoreAISegment:
+    type: application
+    platform: iOS
+    deploymentTarget: "27.0"
+    sources:
+      - path: Sources
+      - path: ../AppShared/ModelDownloader.swift
+    # SAM3 fp16 is ~1.7 GB; the increased-memory-limit entitlement keeps the load + 1008×1008
+    # forward pass clear of jetsam on 12 GB devices (e.g. iPhone 17 Pro).
+    entitlements:
+      path: CoreAISegment-iOS.entitlements
+      properties:
+        com.apple.developer.kernel.increased-memory-limit: true
+    dependencies:
+      - package: coreai-models
+        product: CoreAISegmentation
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.coreai.segment.ios
+        DEVELOPMENT_TEAM: MFN25KNUGJ
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Pick an image to segment."
+        # Only HTTPS (Hugging Face downloads) — exempt from export-compliance prompts.
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: "NO"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_APPROACHABLE_CONCURRENCY: "YES"
+
+  # macOS
+  CoreAISegmentMac:
+    type: application
+    platform: macOS
+    deploymentTarget: "27.0"
+    sources:
+      - path: Sources
+      - path: ../AppShared/ModelDownloader.swift
+    entitlements:
+      path: CoreAISegment-macOS.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.files.user-selected.read-write: true
+        com.apple.security.network.client: true
+    dependencies:
+      - package: coreai-models
+        product: CoreAISegmentation
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.coreai.segmentmac
+        DEVELOPMENT_TEAM: MFN25KNUGJ
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: "NO"
+        SWIFT_APPROACHABLE_CONCURRENCY: "YES"

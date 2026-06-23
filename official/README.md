@@ -37,6 +37,22 @@ supported by the Apple stack).
 transformer) runs ~0.4 GB over a 12 GB iPhone's per-process limit even AOT-compiled, so the
 iOS bundle is not shipped. Smaller diffusion bundles (Stable Diffusion 0.9B) run fine on iOS.
 
+## Segmentation
+
+Promptable segmentation from Apple's official `models/<name>/export.py` recipes, on the stock
+`CoreAIImageSegmenter` runtime — no model-code port.
+
+| Model | Bundle | Prompt | M4 Max (warm) | Download |
+|---|---|---|---:|---|
+| SAM 3 (Meta) | macOS · iOS (float16, ~1.7 GB) | **text** (open-vocabulary) | ~0.55 s / image | [HF](https://huggingface.co/mlboydaisuke/sam3-CoreAI-official) |
+
+Give it an image and a phrase (`cat`, `the red car`) → instance masks + boxes + scores, no
+fixed class list. float16 matches the float32 reference (top scores Δ≤1e-4, masks within 1 px).
+Run it from the [CoreAISegment app](../apps/CoreAISegment/) (macOS + iOS) or
+`swift run -c release image-segmenter --model <bundle> --prompt "cat" --image cats.jpg`. SAM 3
+is gated upstream and ships under Meta's SAM License (see the card); the converted bundle lets
+you run it without the gated checkpoint.
+
 ## Why artifacts and not just recipes?
 
 The same export command can produce a 2.2× slower artifact across an OS upgrade
@@ -50,9 +66,12 @@ current toolchains can no longer reproduce.
 
 - CLI (LLM): `swift run -c release llm-runner --model <bundle-dir> --prompt "Hello"`
 - CLI (diffusion): `swift run -c release diffusion-runner --model <bundle-dir> --prompt "a cat"`
+- CLI (segmentation): `swift run -c release image-segmenter --model <bundle-dir> --prompt "cat" --image cats.jpg`
 - Apps: [CoreAIChatMac](https://github.com/john-rocky/coreai-samples) (chat) ·
-  [`apps/CoreAIImageGen`](../apps/CoreAIImageGen/) (image generation, iOS + macOS)
+  [`apps/CoreAIImageGen`](../apps/CoreAIImageGen/) (image generation, iOS + macOS) ·
+  [`apps/CoreAISegment`](../apps/CoreAISegment/) (text-prompt segmentation, iOS + macOS)
 - iOS bundles need AOT compilation first — see each model card.
 
 Licenses: bundles inherit their upstream model licenses (Apache-2.0 for Qwen /
-Mistral / gpt-oss / FLUX.2 klein; Gemma Terms of Use for Gemma — see the cards).
+Mistral / gpt-oss / FLUX.2 klein; Gemma Terms of Use for Gemma; Meta SAM License for
+SAM 3 — see the cards).
