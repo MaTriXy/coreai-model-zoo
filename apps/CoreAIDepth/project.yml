@@ -1,0 +1,76 @@
+name: CoreAIDepth
+options:
+  bundleIdPrefix: com.coreai
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "27.0"
+    iOS: "27.0"
+
+# Depth Anything 3 monocular depth (zoo's first depth model). Reuses CoreAIKit's DepthEstimator,
+# which pulls the small fp16 bundle (54 MB) from mlboydaisuke/Depth-Anything-3-CoreAI and runs the
+# 504² monocular pipeline. Two modes: a still photo from the library, or the live camera.
+packages:
+  coreai-kit:
+    path: ../../../../coreai-kit
+
+schemes:
+  CoreAIDepth:
+    build:
+      targets:
+        CoreAIDepth: all
+    run:
+      config: Release
+  CoreAIDepthMac:
+    build:
+      targets:
+        CoreAIDepthMac: all
+    run:
+      config: Release
+
+targets:
+  CoreAIDepth:
+    type: application
+    platform: iOS
+    deploymentTarget: "27.0"
+    sources:
+      - path: Sources
+    dependencies:
+      - package: coreai-kit
+        product: CoreAIKitVision
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.coreai.depth.ios
+        DEVELOPMENT_TEAM: MFN25KNUGJ
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: "NO"
+        INFOPLIST_KEY_NSCameraUsageDescription: "CoreAIDepth estimates depth from the live camera, fully on-device."
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_APPROACHABLE_CONCURRENCY: "YES"
+
+  CoreAIDepthMac:
+    type: application
+    platform: macOS
+    deploymentTarget: "27.0"
+    sources:
+      - path: Sources
+    dependencies:
+      - package: coreai-kit
+        product: CoreAIKitVision
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.coreai.depth.mac
+        DEVELOPMENT_TEAM: MFN25KNUGJ
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: "YES"
+        ENABLE_APP_SANDBOX: "NO"
+        ENABLE_HARDENED_RUNTIME: "NO"
+        INFOPLIST_KEY_NSCameraUsageDescription: "CoreAIDepth estimates depth from the live camera, fully on-device."
+        SWIFT_APPROACHABLE_CONCURRENCY: "YES"

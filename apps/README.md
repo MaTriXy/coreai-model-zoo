@@ -51,6 +51,18 @@ extractor, cos 1.0) does the waveform→features step. iPhone uses the **AOT** d
 h18p) so the 3.9 GB graph dodges the on-device JIT jetsam (AOT weights mmap clean → ≈5.9 GB headroom
 after load). See [`coreai-audio/README.md`](coreai-audio/).
 
+### Depth estimation
+
+| App | Model | Device |
+|---|---|---|
+| [`CoreAIDepth/`](CoreAIDepth/) | **Depth Anything 3** (monocular depth, the zoo's first depth model) — [HF bundle](https://huggingface.co/mlboydaisuke/Depth-Anything-3-CoreAI) | iPhone 17 Pro + M4 Max |
+
+Two modes — a still photo from the library, or live camera depth at a few FPS. Reuses CoreAIKit's
+`DepthEstimator` (DINOv2 ViT-S + DPT head, 504² monocular, small fp16 ≈ 54 MB, engine cos 1.000000
+vs torch, ~15 ms/frame on an M4 Max GPU). Depth is rendered with the DA3 colormap (inverse-depth,
+percentile-normalized, Spectral — far = red, near = blue). See [`CoreAIDepth/README.md`](CoreAIDepth/)
+and [`zoo/depth-anything-3.md`](../zoo/depth-anything-3.md).
+
 ## Model delivery
 
 On first launch each app offers an **in-app download** of the published `.aimodel` set from the
