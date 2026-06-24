@@ -37,12 +37,8 @@ targets:
     sources:
       - path: Sources
       - path: ../AppShared/ModelDownloader.swift
-    # SAM3 fp16 is ~1.7 GB; the increased-memory-limit entitlement keeps the load + 1008×1008
-    # forward pass clear of jetsam on 12 GB devices (e.g. iPhone 17 Pro).
-    entitlements:
-      path: CoreAISegment-iOS.entitlements
-      properties:
-        com.apple.developer.kernel.increased-memory-limit: true
+    # SAM3 fp16 (~1.7 GB) loads comfortably under the iPhone 17 Pro per-process limit, so no
+    # special memory entitlement is needed — keeps signing on the basic team provisioning profile.
     dependencies:
       - package: coreai-models
         product: CoreAISegmentation
