@@ -95,6 +95,7 @@ final class SegmentationEngine: ObservableObject {
     /// All segments from the last run (sorted by score); the confidence filter selects from these
     /// without re-running inference.
     private var lastSegments: [Segment] = []
+    private var renderedCount = -1   // # segments currently drawn, to skip redundant re-renders
     private(set) var confidence: Float = 0.5
 
     var canSegment: Bool { if case .ready = status { return true }; if case .segmenting = status { return false }; return segmenter != nil }
@@ -118,6 +119,7 @@ final class SegmentationEngine: ObservableObject {
         segmentCount = 0
         segmentSeconds = nil
         lastSegments = []
+        renderedCount = -1
         if case .error = status { status = segmenter != nil ? .ready : .idle }
     }
 
@@ -190,6 +192,7 @@ final class SegmentationEngine: ObservableObject {
                 try Task.checkCancellation()
                 segmentSeconds = Double(DispatchTime.now().uptimeNanoseconds - start) / 1e9
                 lastSegments = response.segments
+                renderedCount = -1            // force the first render after a new run
                 applyConfidence(self.confidence)
                 status = .ready
             } catch is CancellationError {
@@ -205,6 +208,10 @@ final class SegmentationEngine: ObservableObject {
         confidence = c
         guard let source = sourceImage, !lastSegments.isEmpty else { return }
         let kept = lastSegments.filter { $0.score >= c }
+        // Segments are sorted by score, so the kept set is the top-N — if N is unchanged the
+        // overlay is identical. Skip the full-image recomposite (avoids CPU churn while dragging).
+        if kept.count == renderedCount { return }
+        renderedCount = kept.count
         resultImage = Self.renderOverlay(base: source, segments: kept)
         segmentCount = kept.count
     }
