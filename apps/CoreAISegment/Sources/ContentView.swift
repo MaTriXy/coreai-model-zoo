@@ -13,8 +13,7 @@ struct ContentView: View {
 
     @State private var selectedModel = SegmentationEngine.catalog.first
     @State private var prompt = "apple"
-    @State private var maxSegments = 5
-    @State private var threshold: Float = 0.5
+    @State private var confidence: Float = 0.5
     @State private var showingFolderImporter = false
     @State private var showingImageImporter = false
     @FocusState private var promptFocused: Bool
@@ -95,6 +94,16 @@ struct ContentView: View {
                     .submitLabel(.go)
                     .focused($promptFocused)
                     .onSubmit(runSegment)
+            }
+            if engine.resultImage != nil {
+                HStack(spacing: 10) {
+                    Image(systemName: "dial.medium").foregroundStyle(.secondary)
+                    Slider(value: $confidence, in: 0...0.95)
+                        .onChange(of: confidence) { _, c in engine.applyConfidence(c) }
+                    Text("≥ \(String(format: "%.2f", confidence))")
+                        .font(.subheadline).monospacedDigit().foregroundStyle(.secondary)
+                        .frame(width: 64, alignment: .trailing)
+                }
             }
             Button(action: runSegment) {
                 Label("Segment", systemImage: "scribble.variable")
@@ -178,11 +187,10 @@ struct ContentView: View {
     #endif
 
     @ViewBuilder private var settingsControls: some View {
-        Stepper("Max segments: \(maxSegments)", value: $maxSegments, in: 1...20)
         VStack(alignment: .leading, spacing: 4) {
-            HStack { Text("Mask threshold"); Spacer()
-                Text(String(format: "%.2f", threshold)).monospacedDigit().foregroundStyle(.secondary) }
-            Slider(value: $threshold, in: 0.05...0.95)
+            HStack { Text("Confidence"); Spacer()
+                Text(String(format: "%.2f", confidence)).monospacedDigit().foregroundStyle(.secondary) }
+            Slider(value: $confidence, in: 0...0.95) { _ in engine.applyConfidence(confidence) }
         }
     }
 
@@ -203,7 +211,7 @@ struct ContentView: View {
 
     private func runSegment() {
         promptFocused = false   // dismiss the keyboard so the result is visible
-        engine.segment(prompt: prompt, maxSegments: maxSegments, threshold: threshold)
+        engine.segment(prompt: prompt, confidence: confidence)
     }
 
     // MARK: - Canvas (shared)

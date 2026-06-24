@@ -92,6 +92,10 @@ final class SegmentationEngine: ObservableObject {
 
     private var segmenter: SegmenterBox?
     private var work: Task<Void, Never>?
+    /// All segments from the last run (sorted by score); the confidence filter selects from these
+    /// without re-running inference.
+    private var lastSegments: [Segment] = []
+    private(set) var confidence: Float = 0.5
 
     var canSegment: Bool { if case .ready = status { return true }; if case .segmenting = status { return false }; return segmenter != nil }
     var isDownloadingOrLoading: Bool { if case .downloading = status { return true }; if case .loading = status { return true }; return false }
@@ -113,6 +117,7 @@ final class SegmentationEngine: ObservableObject {
         resultImage = nil
         segmentCount = 0
         segmentSeconds = nil
+        lastSegments = []
         if case .error = status { status = segmenter != nil ? .ready : .idle }
     }
 
@@ -167,30 +172,41 @@ final class SegmentationEngine: ObservableObject {
 
     // MARK: - Segmentation
 
-    func segment(prompt: String, maxSegments: Int, threshold: Float) {
+    func segment(prompt: String, confidence: Float) {
         guard let segmenter, let source = sourceImage else { return }
         let text = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
+        self.confidence = confidence
         work?.cancel()
         status = .segmenting
         resultImage = nil
         work = Task {
             do {
-                let params = SegmentationParameters(maskThreshold: threshold, maxSegments: maxSegments)
+                // Over-fetch candidates at a fixed pixel threshold; the confidence (score) filter
+                // below selects which to show — and can be re-applied live without re-inference.
+                let params = SegmentationParameters(maskThreshold: 0.5, maxSegments: 12)
                 let start = DispatchTime.now().uptimeNanoseconds
                 let response = try await segmenter.segment(image: source, prompt: text, parameters: params)
                 try Task.checkCancellation()
-                let secs = Double(DispatchTime.now().uptimeNanoseconds - start) / 1e9
-                let overlay = Self.renderOverlay(base: source, segments: response.segments)
-                resultImage = overlay
-                segmentCount = response.segments.count
-                segmentSeconds = secs
+                segmentSeconds = Double(DispatchTime.now().uptimeNanoseconds - start) / 1e9
+                lastSegments = response.segments
+                applyConfidence(self.confidence)
                 status = .ready
             } catch is CancellationError {
             } catch {
                 status = .error("\(error)")
             }
         }
+    }
+
+    /// Re-filter the last run's segments by score and re-render — cheap, no re-inference, so the
+    /// confidence slider updates the overlay live.
+    func applyConfidence(_ c: Float) {
+        confidence = c
+        guard let source = sourceImage, !lastSegments.isEmpty else { return }
+        let kept = lastSegments.filter { $0.score >= c }
+        resultImage = Self.renderOverlay(base: source, segments: kept)
+        segmentCount = kept.count
     }
 
     func cancel() {
