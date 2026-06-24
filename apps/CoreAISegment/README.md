@@ -33,10 +33,27 @@ xcodegen generate
 open CoreAISegment.xcodeproj
 ```
 
-- **macOS** scheme: `CoreAISegmentMac` (full resolution).
-- **iOS** scheme: `CoreAISegment`. The float16 bundle (~1.7 GB) loads under the
-  `increased-memory-limit` entitlement; large devices (e.g. iPhone 17 Pro) are fine. iOS
-  bundles generally want AOT compilation first — see the model card.
+- **macOS** scheme: `CoreAISegmentMac` (full resolution, loads the hosted JIT bundle directly).
+- **iOS** scheme: `CoreAISegment`. **iOS needs the AOT-compiled bundle** — JIT-compiling the
+  SAM 3 graph on device overruns the per-process memory budget during MPSGraph constant-folding
+  and aborts (`BumpMmapResourceAllocator` bad-alloc). Pre-compile on a Mac and use that bundle:
+
+  ```bash
+  xcrun coreai-build compile sam3_float16.aimodel --output out \
+      --platform iOS --preferred-compute gpu --architecture h18p --expect-frequent-reshapes
+  # → out/sam3_float16.h18p.aimodelc — rename to sam3_float16.aimodel and point metadata.json at it
+  ```
+
+  For debugging, sideload the AOT bundle into the app's container so "Download & Load" finds it
+  and skips the network fetch:
+
+  ```bash
+  xcrun devicectl device copy to --device <id> --domain-type appDataContainer \
+      --domain-identifier com.coreai.segment.ios \
+      --source <aot-bundle-dir> --destination "Documents/sam3-CoreAI" --remove-existing-content true
+  ```
+
+  (`h18p` = iPhone 17 Pro / A19; compile for your device's architecture.)
 
 The app pins `apple/coreai-models` to the revision its build was verified against and
 applies **no patch stack** (the segmentation runtime is unmodified upstream).

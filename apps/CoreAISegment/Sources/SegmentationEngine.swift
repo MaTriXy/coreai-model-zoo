@@ -227,15 +227,17 @@ final class SegmentationEngine: ObservableObject {
 
         for (i, seg) in segments.enumerated() where !seg.mask.isEmpty {
             let (r, g, b) = palette[i % palette.count]
-            // Render the mask into its own RGBA buffer (foreground = translucent color),
-            // then blit. The mask is row-major top-down; CGContext is bottom-up, so flip rows.
+            // Render the mask into its own RGBA buffer (foreground = translucent color), then
+            // blit. The mask is row-major top-down; `CGContext.draw` renders a top-down CGImage
+            // right-side-up (same as the base image), so keep the rows in source order — flipping
+            // them here would double-flip and the mask would come out upside-down.
             let mw = seg.maskWidth, mh = seg.maskHeight
             var pixels = [UInt8](repeating: 0, count: mw * mh * 4)
             let cr = UInt8(r * 255), cg2 = UInt8(g * 255), cb = UInt8(b * 255)
             let alpha: UInt8 = 130
             for y in 0..<mh {
                 let srcRow = y * mw
-                let dstRow = (mh - 1 - y) * mw   // flip vertically for bottom-up context
+                let dstRow = y * mw
                 for x in 0..<mw where seg.mask[srcRow + x] {
                     let p = (dstRow + x) * 4
                     // premultiplied-last: store color * alpha/255
