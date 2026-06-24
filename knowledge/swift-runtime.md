@@ -119,3 +119,9 @@ plain single-`main` bundle (not the LLM pipelined path) from a SwiftUI app:
   driven by padding the buffer and reading `logits[0, k]` at the real last index `k` — causal
   attention ignores the padding, the constant shape compiles once. See
   [whisper-asr-fixed-decode.md](whisper-asr-fixed-decode.md).
+- **A big graph may JIT-compile-abort on iOS** (SIGABRT in `MetalPerformanceShadersGraph`
+  `BumpMmapResourceAllocator`, not a clean jetsam): the on-device MPSGraph compile overruns memory
+  while folding constants. Fix = **AOT-compile on a Mac** (`xcrun coreai-build compile … --platform iOS
+  --preferred-compute gpu --architecture h18p [--expect-frequent-reshapes]`) and ship the `.aimodelc`;
+  the device mmaps the precompiled package with no JIT spike. See
+  [sam3-promptable-segmentation.md](sam3-promptable-segmentation.md) §4.

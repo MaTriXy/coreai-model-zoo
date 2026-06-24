@@ -49,9 +49,38 @@ bundle can be hosted publicly **if you ship the `LICENSE` file in the bundle** a
 on the card. Hosting the converted artifact also lets others run it **without** the gated checkpoint
 or a conversion environment — the point of the `official/` pre-converted folder.
 
-## 4. Overlay rendering: mind the box origin
+## 4. iOS needs the AOT bundle — JIT-compiling the graph aborts on device
+
+The hosted float16 bundle is a **JIT** `.aimodel`. It loads fine on macOS, but on iOS
+`ImageSegmenter(resourcesAt:)` **crashes (SIGABRT) during load** — `MetalPerformanceShadersGraph`
+JIT-compiles the SAM 3 graph and, while constant-folding a transpose for matmul canonicalization,
+`BumpMmapResourceAllocator::allocateResource` throws `bad_alloc` (the folded constant overruns the
+per-process budget) → uncaught → abort. It is **not** a clean jetsam (that would be `EXC_RESOURCE`),
+and **not** fixed by the `increased-memory-limit` entitlement reliably (and that entitlement forces a
+custom provisioning profile that fails to sign headless).
+
+**Fix: ship/sideload the AOT-compiled bundle for iOS** — compilation moves to the Mac (plenty of
+memory), the device just mmaps the precompiled MPSGraph package (no JIT spike; AOT clean-mmap also
+dodges the jetsam dirty limit):
+
+```bash
+xcrun coreai-build compile sam3_float16.aimodel --output out \
+    --platform iOS --preferred-compute gpu --architecture h18p --expect-frequent-reshapes
+```
+
+The output is `sam3_float16.h18p.aimodelc` (~3 GB — bigger than the 1.6 GB JIT bundle, but mmapped).
+Rename it to the asset name the app expects and point `metadata.json` `assets.main` at it; the
+runtime detects AOT from the inner `main-h18p.mlirb` + `…-delegates/MPSGraph/mpsExecutable.mpsgraphpackage`.
+For debugging, `devicectl device copy to --domain-type appDataContainer --domain-identifier <bundleID>
+--source <bundle> --destination Documents/<app-bundle-dir> --remove-existing-content true` lands it in
+the app's container so an in-app downloader that checks file existence skips the network fetch.
+Device-verified on iPhone 17 Pro.
+
+## 5. Overlay rendering: mask orientation + box origin
 
 `Segment.box` is in pixel coordinates with a **platform-dependent origin** — bottom-left on macOS
-(AppKit), top-left on iOS (UIKit). Compositing masks into a bottom-up `CGContext` needs the iOS box
-y-flipped and the row-major mask flipped vertically. See
-[`apps/CoreAISegment`](../apps/CoreAISegment/) (the sample app, macOS + iOS).
+(AppKit), top-left on iOS (UIKit) — so the box is y-flipped into a bottom-up `CGContext` on iOS. The
+**mask**, by contrast, must **not** be flipped: `CGContext.draw` renders a top-down `CGImage`
+right-side-up (the same way it draws the base image), so building the mask `CGImage` from the
+row-major mask in source order is correct — an extra flip double-flips and the masks come out
+upside-down. See [`apps/CoreAISegment`](../apps/CoreAISegment/).
