@@ -17,6 +17,7 @@ struct ContentView: View {
     @State private var threshold: Float = 0.5
     @State private var showingFolderImporter = false
     @State private var showingImageImporter = false
+    @FocusState private var promptFocused: Bool
     #if canImport(PhotosUI)
     @State private var photoItem: PhotosPickerItem?
     #endif
@@ -92,6 +93,7 @@ struct ContentView: View {
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
                     .submitLabel(.go)
+                    .focused($promptFocused)
                     .onSubmit(runSegment)
             }
             Button(action: runSegment) {
@@ -200,6 +202,7 @@ struct ContentView: View {
     }
 
     private func runSegment() {
+        promptFocused = false   // dismiss the keyboard so the result is visible
         engine.segment(prompt: prompt, maxSegments: maxSegments, threshold: threshold)
     }
 
