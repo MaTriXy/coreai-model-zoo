@@ -94,9 +94,19 @@ def linear_quant_config() -> dict:
     }
 
 
+def head_quant_spec() -> dict:
+    """int8 lm_head: big-vocab heads are fat-tailed -> plain symmetric (absmax), per-block-32."""
+    return {"op_state_spec": {"weight": {
+        "dtype": "int8", "qscheme": "symmetric",
+        "granularity": {"type": "per_block", "block_size": 32, "axis": 1}}},
+        "op_input_spec": None, "op_output_spec": None}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", nargs="?", default="int8lin", choices=["fp16", "int8lin"])
+    # int8hu = int8 body + UNTIED int8 head (head fp16 in int8lin = ~half the per-token read; quantizing
+    # it is the proven decode lever — iPhone 17 Pro measured +48% decode vs int8lin).
+    ap.add_argument("mode", nargs="?", default="int8hu", choices=["fp16", "int8lin", "int8hu"])
     ap.add_argument("--max-ctx", type=int, default=4096)
     args = ap.parse_args()
     name = f"minicpmv46_vlm_decode_{args.mode}"
@@ -140,11 +150,17 @@ def main() -> None:
         "k_cache": {KVCache.seq_len_dim(): k_seq}, "v_cache": {KVCache.seq_len_dim(): v_seq},
         "conv_state": None, "rec_state": None}
 
-    if args.mode == "int8lin":
+    if args.mode in ("int8lin", "int8hu"):
         from coreai_models.export.compression import quantize_pytorch_model
-        print("[quant] int8 per-block-32 ...")
+        cfg_q = linear_quant_config()
+        if args.mode == "int8hu":
+            model.lm_head.weight = torch.nn.Parameter(model.lm_head.weight.detach().clone())  # untie
+            cfg_q["module_name_configs"] = {r".*lm_head$": head_quant_spec()}
+            print("[quant] int8 per-block-32 + UNTIED int8 head (block32 symmetric) ...")
+        else:
+            print("[quant] int8 per-block-32 (fp16 tied head) ...")
         model = quantize_pytorch_model(model, tuple(reference_inputs.values()),
-                                       dynamic_shapes, linear_quant_config())
+                                       dynamic_shapes, cfg_q)
 
     specs = [s for s in _EXTERNALIZE_SPECS if s.composite_op_name != "gated_delta_update"]
     print("[export] pipelined VLM -> Core AI dialect ...")

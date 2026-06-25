@@ -15,8 +15,9 @@ qwen3.6 hybrid); only the SigLIP tower + mergers were authored fresh.
 
 **⬇️ Converted `.aimodel` bundles:
 [mlboydaisuke/MiniCPM-V-4.6-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM-V-4.6-CoreAI)** —
-`gpu-pipelined/minicpmv46_vlm_decode_int8lin/` (VLM text decoder, int8, ship config) +
-`gpu-pipelined/minicpmv46_vision/` (fixed-grid SigLIP vision encoder, fp16). Apache-2.0.
+**recommended (optimized)** `gpu-pipelined/minicpmv46_vlm_decode_int8hu/` (int8 body + untied **int8 head** →
+**+48% decode** on iPhone 17 Pro) + `gpu-pipelined/minicpmv46_vision_int8lin/` (**int8** SigLIP, ~0.6 GB, half) ;
+original `…_int8lin` decoder + fp16 `minicpmv46_vision` kept for compatibility. Apache-2.0.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/c4baa524-5217-4bb3-a23f-b0acd6249bd4" width="300" alt="MiniCPM-V 4.6 on iPhone — a fridge photo becomes recipe ideas, fully on-device in CoreAIChat">
@@ -49,10 +50,20 @@ tower is a separate plain `.aimodel` with ALL positional work (bucketized pos-em
 
 | config | bundle | platform | prefill | decode | numerics |
 |---|---:|---|---:|---:|---|
-| VLM int8 (image) | ~1.0 GB | iPhone 17 Pro | 52.3 | **51.5** | image→answer; engine reply == HF description (one int8 near-tie, reconverges) |
+| **VLM int8hu (recommended)** | ~1.2 GB | iPhone 17 Pro | **69.6** | **68.1** | **nat 24/24 + oracle 24/24**; image→"What" == HF. **int8 head = +48% decode** vs int8lin |
+| VLM int8 (image) | ~1.0 GB | iPhone 17 Pro | 47.8 | 46.1 | image→answer; engine reply == HF (baseline for the +48%) |
 | text core int8 | ~1.0 GB | iPhone 17 Pro | 53.3 | **53.4** | **nat 24/24 + oracle 24/24** (engine ≡ python ≡ HF) |
 | text core int8 | ~1.0 GB | M4 Max | 225.1 | **224.3** | `llm-benchmark` p128 g256 n3 (qwen3.5-0.8B class; VLM bundle decodes ~the same — llm-benchmark can't feed the image buffer so the text core is the Mac proxy) |
-| vision encoder fp16 | ~1.0 GB | Mac | — | per-image (one-shot) | per-token cos **1.000000** vs fp32-HF |
+| vision encoder int8 | ~0.6 GB | Mac | — | ≈fp16 (compute-bound) | per-token cos **0.99980** vs fp32-HF |
+
+**Optimization notes (2026-06-25).** ① **int8 head** (untie + quantize the 248k-vocab lm_head, block-32
+symmetric/absmax) → **+48% decode** on iPhone (the fp16 head is ~half the per-token read). ② **int8 vision**
+halves the encoder (0.6 GB); the encode is *compute-bound* so this is a size win, not speed — the ~2.7 s
+first-image latency is the SigLIP graph's **cold compile**, so warm it with a dummy encode at load (then the
+first photo is ~tens of ms). ③ **Chunked prefill** via a custom **fp32 gated-delta Metal kernel** is
+Mac-validated (chunk=63, cos 0.9998, ~21.5× prefill) but **not yet shipped on-device**: the stock pipelined
+engine binds dynamic-query bundles to S=1 and its multi-token path mis-computes for this 4-state GDN+kernel
+bundle — a runtime-specialization gap (a host-side prefill loop is correct at S=1 but hits the same S>1 wall).
 
 - **Gated end-to-end**: fp32-torch ladder EXACT (vision image_features cos 1.000000; full overlay
   logits cos 1.00004, top-5 identical to HF) → fp16/int8 `.aimodel` (Mac GPU) → **engine ≡ python**
