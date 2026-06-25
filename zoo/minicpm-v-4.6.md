@@ -50,8 +50,8 @@ tower is a separate plain `.aimodel` with ALL positional work (bucketized pos-em
 
 | config | bundle | platform | prefill | decode | numerics |
 |---|---:|---|---:|---:|---|
-| **VLM int8hu, in-app** | ~1.2 GB | iPhone 17 Pro | ~55 | **~64.6** | CoreAIChat (real app; VLM bundle binds image_embeds each step); image→answer == HF |
-| int8 head A/B (controlled) | ~1.0 GB | iPhone 17 Pro | 47.8→69.6 | 46.1→**68.1 (+48%)** | PipelinedBench text core, nat+oracle 24/24 — isolates the head's effect |
+| **VLM in-app A/B (same conditions)** | ~1.0→1.2 GB | iPhone 17 Pro | 50.6→70.4 | int8lin 51.5 → int8hu **70.0 (+36%)** | CoreAIChat, cool, back-to-back; the VLM bundle binds image_embeds each step (dilutes the head gain vs text core) |
+| int8 head A/B (text core) | ~1.0 GB | iPhone 17 Pro | 47.8→69.6 | 46.1→**68.1 (+48%)** | PipelinedBench text core, nat+oracle 24/24 — head effect without image_embeds |
 | text core int8 | ~1.0 GB | iPhone 17 Pro | 53.3 | **53.4** | **nat 24/24 + oracle 24/24** (engine ≡ python ≡ HF) |
 | text core int8 | ~1.0 GB | M4 Max | 225.1 | **224.3** | `llm-benchmark` p128 g256 n3 (qwen3.5-0.8B class; VLM bundle decodes ~the same — llm-benchmark can't feed the image buffer so the text core is the Mac proxy) |
 | vision encoder int8 | ~0.6 GB | Mac | — | ≈fp16 (compute-bound) | per-token cos **0.99980** vs fp32-HF |
