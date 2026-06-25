@@ -50,6 +50,11 @@ final class VoxCPMVM: ObservableObject {
 
     private var tts: VoxCPMTTS?
     private let player = AudioPlayer()
+    // Streaming jitter buffer: hold the first few chunks before starting playback so a momentary
+    // generation slowdown (RTF near 1.0) can't starve the player → no crackle/underrun.
+    private var preroll: [[Float]] = []
+    private var prerolling = false
+    private let prerollChunks = 2          // ~0.96 s of lead (one chunk ≈ 0.48 s)
 
     func load() async {
         busy = true; status = "Loading VoxCPM (\(lm == .fp16 ? "fp16" : "int8"))…"
@@ -72,14 +77,15 @@ final class VoxCPMVM: ObservableObject {
     func speak(_ text: String) async {
         guard let tts, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         busy = true
-        player.reset(sampleRate: Double(VoxCPMTTS.sampleRate))
         do {
             if streaming {
-                // NEW: schedule each ~0.48 s chunk as it is decoded → playback starts after ~6 frames.
+                // NEW: stream chunks as they are decoded; a small pre-roll buffer absorbs RTF jitter.
                 status = "Synthesizing (streaming)…"
+                beginPlayback()
                 let stats = try await tts.synthesizeStreaming(text) { [weak self] chunk in
                     await self?.scheduleChunk(chunk)
                 }
+                flushPreroll()
                 guard stats.samples > 0 else { status = "Nothing to speak."; busy = false; return }
                 status = String(format: "🟢 First audio %.2f s · %.2f s speech in %.2f s (RTF %.2f).",
                                 stats.firstChunkSeconds, stats.audioSeconds, stats.totalSeconds,
@@ -92,6 +98,7 @@ final class VoxCPMVM: ObservableObject {
                 let gen = Date().timeIntervalSince(t0)
                 guard !audio.isEmpty else { status = "Nothing to speak."; busy = false; return }
                 let dur = Double(audio.count) / Double(VoxCPMTTS.sampleRate)
+                player.reset(sampleRate: Double(VoxCPMTTS.sampleRate))
                 player.play(audio, sampleRate: Double(VoxCPMTTS.sampleRate))
                 status = String(format: "🔴 Silent for %.2f s, then plays · %.2f s speech (RTF %.2f).",
                                 gen, dur, dur > 0 ? gen / dur : 0)
@@ -102,9 +109,28 @@ final class VoxCPMVM: ObservableObject {
         busy = false
     }
 
-    /// Queue one streamed chunk for gapless playback (AVAudioPlayerNode schedules buffers in order).
+    /// Begin a new streamed utterance: reset the node and arm the pre-roll buffer.
+    private func beginPlayback() {
+        player.reset(sampleRate: Double(VoxCPMTTS.sampleRate))
+        preroll.removeAll(); prerolling = true
+    }
+
+    /// Queue one streamed chunk. While pre-rolling, accumulate; once `prerollChunks` are buffered,
+    /// flush them and stream the rest directly (gapless). The lead buffer absorbs RTF jitter.
     private func scheduleChunk(_ chunk: [Float]) {
-        player.play(chunk, sampleRate: Double(VoxCPMTTS.sampleRate))
+        if prerolling {
+            preroll.append(chunk)
+            if preroll.count >= prerollChunks { flushPreroll() }
+        } else {
+            player.play(chunk, sampleRate: Double(VoxCPMTTS.sampleRate))
+        }
+    }
+
+    /// Flush buffered pre-roll chunks and leave pre-roll mode (also covers clips shorter than the buffer).
+    private func flushPreroll() {
+        guard prerolling else { return }
+        for c in preroll { player.play(c, sampleRate: Double(VoxCPMTTS.sampleRate)) }
+        preroll.removeAll(); prerolling = false
     }
 
     /// One-tap OLD-vs-NEW speed comparison (same int8 model, zero quality difference — speed only):
@@ -135,10 +161,11 @@ final class VoxCPMVM: ObservableObject {
             // NEW: int8 + prefill bundle + streaming (and play it back).
             status = "Speed test — NEW (prefill + streaming)…"
             let newTTS = try await VoxCPMTTS(paths: VoxCPMAssets.paths(root: root, lm: .int8))
-            player.reset(sampleRate: sr)
+            beginPlayback()
             let stats = try await newTTS.synthesizeStreaming(text) { [weak self] chunk in
                 await self?.scheduleChunk(chunk)
             }
+            flushPreroll()
             newFirst = stats.firstChunkSeconds; newRTF = stats.realTimeFactor
         } catch { status = "NEW failed: \(error)"; busy = false; return }
         let ttfbX = newFirst > 0 ? oldFirst / newFirst : 0
