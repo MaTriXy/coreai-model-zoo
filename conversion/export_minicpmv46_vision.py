@@ -110,7 +110,8 @@ async def gate(oracle, out_dir: Path) -> bool:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", nargs="?", default="fp16", choices=["fp16", "int8lin"])
+    # default int8lin = the shipped config (~0.6 GB, half fp16; cos 0.9998). fp16 = exact reference.
+    ap.add_argument("mode", nargs="?", default="int8lin", choices=["fp16", "int8lin"])
     args = ap.parse_args()
 
     out_dir = EXPORTS / ("minicpmv46_vision" if args.mode == "fp16"

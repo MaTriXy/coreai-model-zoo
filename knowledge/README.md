@@ -20,6 +20,10 @@ Hard-won, verified notes on Apple's Core AI (iOS/macOS 27) — what the docs don
   (qwen3.5: Mac 204 tok/s, iPhone 50.3–51.5). The decode-only loop-free export, the extra-states
   engine patch, the chunk=1 / warmup-256 traps, LUT-vs-linear int8, oracle gating, and what
   fits/doesn't (Gemma 4's PLE doesn't — yet).
+- [`int8-head-and-decode-measurement.md`](int8-head-and-decode-measurement.md) — the **int8 LM head**
+  decode lever (untie + absmax int8, ~half the per-token read) and **how to measure the win honestly**:
+  controlled-bench vs in-app, VLM `image_embeds` dilution (+48% text core → +36% VLM), thermal-robust
+  ratios, and the SwiftUI O(n²) re-decode that masquerades as a slow model.
 - [`fm-provider.md`](fm-provider.md) — **zoo models behind Apple's `LanguageModelSession`**
   (WWDC 339): `CoreAILanguageModel(resourcesAt:)` = the whole integration (verified, incl.
   hybrid/SSM bundles on the patched pipelined engine), plus the own-conformance recipe that
