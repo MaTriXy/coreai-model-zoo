@@ -9,7 +9,7 @@ options:
 packages:
   coreai-kit:
     url: https://github.com/john-rocky/coreai-kit
-    revision: 6010439eadc2989812d2b2338ab8206020b66eaa
+    revision: 73e6a48121251f1323d84cee0bd6db42106a8e41
   # On-device English G2P for free-text TTS (made for Kokoro; pulls in MLX for the
   # neural fallback on out-of-dictionary words).
   MisakiSwift:

@@ -31,11 +31,11 @@ enum VoxCPMAssets {
     }
 
     /// Platform-correct bundle paths (macOS JIT `.aimodel` vs iOS AOT `.aimodelc`).
-    static func paths(root: URL) -> VoxCPMPaths {
+    static func paths(root: URL, lm: VoxCPMPaths.LMPrecision = .int8) -> VoxCPMPaths {
         #if os(macOS)
-        return .standard(artifactsRoot: root)
+        return .standard(artifactsRoot: root, lm: lm)
         #else
-        return .aot(root: root, arch: "h18p")
+        return .aot(root: root, arch: "h18p", lm: lm)
         #endif
     }
 }
@@ -45,21 +45,24 @@ final class VoxCPMVM: ObservableObject {
     @Published var status = "Tap Load to start."
     @Published var loaded = false
     @Published var busy = false
+    @Published var streaming = true          // off = old behaviour (silent until the whole clip is synthesized)
+    @Published var lm: VoxCPMPaths.LMPrecision = .int8   // iPhone: int8 = same RTF as fp16, smaller + fast load + prefill TTFB
 
     private var tts: VoxCPMTTS?
     private let player = AudioPlayer()
 
     func load() async {
-        busy = true; status = "Loading VoxCPM (5 bundles + glue)…"
+        busy = true; status = "Loading VoxCPM (\(lm == .fp16 ? "fp16" : "int8"))…"
         do {
             guard let root = VoxCPMAssets.root else {
                 status = "Model not found at \(VoxCPMAssets.location.path)."
                 busy = false; return
             }
             let t0 = Date()
-            let t = try await VoxCPMTTS(paths: VoxCPMAssets.paths(root: root))
+            let t = try await VoxCPMTTS(paths: VoxCPMAssets.paths(root: root, lm: lm))
             tts = t; loaded = true
-            status = String(format: "Ready (loaded in %.1f s).", Date().timeIntervalSince(t0))
+            status = String(format: "Ready (%@, loaded in %.1f s).", lm == .fp16 ? "fp16" : "int8",
+                            Date().timeIntervalSince(t0))
         } catch {
             status = "Load failed: \(error)"
         }
@@ -68,18 +71,79 @@ final class VoxCPMVM: ObservableObject {
 
     func speak(_ text: String) async {
         guard let tts, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        busy = true; status = "Synthesizing…"
+        busy = true
+        player.reset(sampleRate: Double(VoxCPMTTS.sampleRate))
         do {
-            let t0 = Date()
-            let audio = try await tts.synthesize(text)
-            guard !audio.isEmpty else { status = "Nothing to speak."; busy = false; return }
-            let dur = Double(audio.count) / Double(VoxCPMTTS.sampleRate)
-            let elapsed = Date().timeIntervalSince(t0)
-            status = String(format: "%.2f s audio in %.2f s (RTF %.2f).", dur, elapsed, elapsed / dur)
-            player.play(audio, sampleRate: Double(VoxCPMTTS.sampleRate))
+            if streaming {
+                // NEW: schedule each ~0.48 s chunk as it is decoded → playback starts after ~6 frames.
+                status = "Synthesizing (streaming)…"
+                let stats = try await tts.synthesizeStreaming(text) { [weak self] chunk in
+                    await self?.scheduleChunk(chunk)
+                }
+                guard stats.samples > 0 else { status = "Nothing to speak."; busy = false; return }
+                status = String(format: "🟢 First audio %.2f s · %.2f s speech in %.2f s (RTF %.2f).",
+                                stats.firstChunkSeconds, stats.audioSeconds, stats.totalSeconds,
+                                stats.realTimeFactor)
+            } else {
+                // OLD: synthesize the whole clip first, then play — silent for the full generation time.
+                status = "Synthesizing (whole clip)…"
+                let t0 = Date()
+                let audio = try await tts.synthesize(text)
+                let gen = Date().timeIntervalSince(t0)
+                guard !audio.isEmpty else { status = "Nothing to speak."; busy = false; return }
+                let dur = Double(audio.count) / Double(VoxCPMTTS.sampleRate)
+                player.play(audio, sampleRate: Double(VoxCPMTTS.sampleRate))
+                status = String(format: "🔴 Silent for %.2f s, then plays · %.2f s speech (RTF %.2f).",
+                                gen, dur, dur > 0 ? gen / dur : 0)
+            }
         } catch {
             status = "Error: \(error)"
         }
+        busy = false
+    }
+
+    /// Queue one streamed chunk for gapless playback (AVAudioPlayerNode schedules buffers in order).
+    private func scheduleChunk(_ chunk: [Float]) {
+        player.play(chunk, sampleRate: Double(VoxCPMTTS.sampleRate))
+    }
+
+    /// One-tap OLD-vs-NEW speed comparison (same int8 model, zero quality difference — speed only):
+    ///   OLD = no prefill bundle + non-streaming = the originally shipped behaviour (silent until the
+    ///         whole clip is synthesized, so first-audio == full generation time).
+    ///   NEW = int8 + q=32 prefill bundle + streaming (audio starts after the first ~0.48 s chunk; NEW is
+    ///         also played back so you hear it). Reports first-audio + RTF for both, and the TTFB speedup.
+    func compareOldVsNew(_ text: String) async {
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        guard let root = VoxCPMAssets.root else {
+            status = "Model not found at \(VoxCPMAssets.location.path)."; return
+        }
+        busy = true
+        let sr = Double(VoxCPMTTS.sampleRate)
+        var oldFirst = 0.0, oldRTF = 0.0, newFirst = 0.0, newRTF = 0.0
+        do {
+            // OLD: int8, prefill bundle disabled, non-streaming (originally shipped).
+            status = "Speed test — OLD (no prefill, non-streaming)…"
+            var oldPaths = VoxCPMAssets.paths(root: root, lm: .int8)
+            oldPaths.prefillBase = nil; oldPaths.prefillRes = nil
+            let oldTTS = try await VoxCPMTTS(paths: oldPaths)
+            let t0 = Date()
+            let audio = try await oldTTS.synthesize(text)              // first audio == full gen
+            oldFirst = Date().timeIntervalSince(t0)
+            oldRTF = oldFirst / (Double(audio.count) / sr)
+        } catch { status = "OLD failed: \(error)"; busy = false; return }
+        do {
+            // NEW: int8 + prefill bundle + streaming (and play it back).
+            status = "Speed test — NEW (prefill + streaming)…"
+            let newTTS = try await VoxCPMTTS(paths: VoxCPMAssets.paths(root: root, lm: .int8))
+            player.reset(sampleRate: sr)
+            let stats = try await newTTS.synthesizeStreaming(text) { [weak self] chunk in
+                await self?.scheduleChunk(chunk)
+            }
+            newFirst = stats.firstChunkSeconds; newRTF = stats.realTimeFactor
+        } catch { status = "NEW failed: \(error)"; busy = false; return }
+        let ttfbX = newFirst > 0 ? oldFirst / newFirst : 0
+        status = String(format: "OLD: first %.2fs · RTF %.2f  →  NEW: first %.2fs · RTF %.2f  (TTFB %.1f× faster)",
+                        oldFirst, oldRTF, newFirst, newRTF, ttfbX)
         busy = false
     }
 }
@@ -96,6 +160,12 @@ struct VoxCPMView: View {
                 .font(.callout).foregroundStyle(.secondary)
 
             if !vm.loaded {
+                Picker("Precision", selection: $vm.lm) {
+                    Text("fp16 (fast, best quality)").tag(VoxCPMPaths.LMPrecision.fp16)
+                    Text("int8 (smaller)").tag(VoxCPMPaths.LMPrecision.int8)
+                }
+                .pickerStyle(.segmented)
+                .disabled(vm.busy)
                 Button { Task { await vm.load() } } label: {
                     Label("Load model", systemImage: "arrow.down.circle")
                 }.disabled(vm.busy)
@@ -103,6 +173,12 @@ struct VoxCPMView: View {
                 TextField("Text", text: $text, axis: .vertical)
                     .lineLimit(1...5)
                     .textFieldStyle(.roundedBorder)
+                Toggle(isOn: $vm.streaming) {
+                    Text(vm.streaming ? "Streaming (play as it generates)"
+                                      : "No streaming (old: wait for whole clip)")
+                        .font(.callout)
+                }
+                .disabled(vm.busy)
                 Button {
                     Task { await vm.speak(text) }
                 } label: {
@@ -111,6 +187,14 @@ struct VoxCPMView: View {
                 .buttonStyle(.borderedProminent)
                 .disabled(vm.busy)
             }
+
+            Button {
+                Task { await vm.compareOldVsNew(text) }
+            } label: {
+                Label("Speed test: OLD vs NEW", systemImage: "stopwatch").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .disabled(vm.busy)
 
             if vm.busy { ProgressView().controlSize(.small) }
             Text(vm.status).font(.footnote).foregroundStyle(.secondary)

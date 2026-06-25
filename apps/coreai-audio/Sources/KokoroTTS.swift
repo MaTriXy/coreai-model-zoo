@@ -229,9 +229,7 @@ final class AudioPlayer {
     private let player = AVAudioPlayerNode()
     private var started = false
 
-    func play(_ samples: [Float], sampleRate: Double = 24000) {
-        guard let fmt = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: sampleRate,
-                                      channels: 1, interleaved: false) else { return }
+    private func ensureStarted(_ fmt: AVAudioFormat) {
         if !started {
             #if os(iOS)
             try? AVAudioSession.sharedInstance().setCategory(.playback)
@@ -239,9 +237,26 @@ final class AudioPlayer {
             #endif
             engine.attach(player)
             engine.connect(player, to: engine.mainMixerNode, format: fmt)
-            try? engine.start()
             started = true
         }
+        if !engine.isRunning { try? engine.start() }   // re-arm if the system stopped the engine
+    }
+
+    /// Prepare the engine for a new clip (no stop() — that wedges AVAudioPlayerNode on replay).
+    /// Buffers from a finished clip have already drained; a new utterance just schedules onto the node.
+    func reset(sampleRate: Double = 24000) {
+        guard let fmt = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: sampleRate,
+                                      channels: 1, interleaved: false) else { return }
+        ensureStarted(fmt)
+    }
+
+    /// Schedule `samples` and play. Successive calls queue gaplessly (streamed chunks play back-to-back);
+    /// across utterances the node keeps playing and new buffers render. This is the proven single-buffer
+    /// pattern (schedule then play), just called once per chunk.
+    func play(_ samples: [Float], sampleRate: Double = 24000) {
+        guard let fmt = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: sampleRate,
+                                      channels: 1, interleaved: false) else { return }
+        ensureStarted(fmt)
         guard let buf = AVAudioPCMBuffer(pcmFormat: fmt, frameCapacity: AVAudioFrameCount(samples.count)) else { return }
         buf.frameLength = AVAudioFrameCount(samples.count)
         samples.withUnsafeBufferPointer { src in

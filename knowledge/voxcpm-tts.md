@@ -29,3 +29,14 @@ Per frame: `dit = lm_to_dit(lm_h) + res_to_dit(res_h)` → `feat_decoder(dit, pr
 - iPhone 17 Pro: real-time, fits with the increased-memory entitlement. M-series Mac: RTF ~0.6 (fp16) / ~0.86 (int8 weight-only adds GPU dequant overhead — the int8 win is size/memory, not speed).
 
 Plain TTS today; VoxCPM's voice-cloning branch (prompt VAE-encode + prompt prefill) is a follow-on.
+
+## Latency: streaming + batched-prefill bundle
+
+The "too slow to generate" complaint is about *time-to-first-audio*, not throughput. Two changes fix it with zero quality change (same int8 model):
+
+- **Streaming.** `synthesizeStreaming` vocodes and emits every `vaeFrames/patch = 6` frames (one 12-column window = 0.48 s) as the AR loop runs, instead of returning only after the whole clip. AudioVAE is causal and the windows are 12-column-aligned from 0, so the streamed output is byte-identical to batched `synthesize`. Playback starts after the first chunk.
+- **Batched q=32 prefill bundle.** The bit-identical prefill-via-decode loop (above) re-reads all backbone weights once *per text token* — costly on the bandwidth-bound A19. A q=32 batched-prefill bundle seeds the KV cache in a single pass; `StatefulGraphModel.adoptState` copies that KV straight into the decode state (no fp16 round-trip). The int8 ship has a matching int8 prefill bundle (base 343 MB / res 86 MB).
+
+iPhone 17 Pro, int8, same model — OLD (no prefill bundle, non-streaming) vs NEW: **time-to-first-audio 4.2 s → 0.43 s (~10×), RTF 1.03 → 0.87** (crosses below real-time, so streamed playback never underruns).
+
+Throughput note: on the bandwidth-bound A19 the backbone q=1 GEMV is the floor, so int8 and fp16 tie on RTF — the win is first-audio + streaming, not raw tokens/s. (On M-series the picture differs — fp16 and an fp16-on-ANE backbone are faster — but those gains don't transfer to iOS: the ANE backbone path is uncompilable for h18p, and a custom Metal matvec lost to the engine's own GEMV.) A larger real-throughput win needs few-step / CFG distillation of the diffusion, which is a quality trade-off.

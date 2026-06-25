@@ -22,11 +22,16 @@ copy() {  # copy a file/dir into the container's VoxCPMAssets dir
     --domain-identifier "$BID" --source "$1" --destination "$DEST/$(basename "$1")"
 }
 
+# Bundles for both precisions (the Voice tab has an int8/fp16 picker): int8 decode (smaller fallback),
+# fp16 decode + fp16 q=32 prefill bundles (faster + higher quality), and the shared fp16 diffusion/VAE.
 for b in voxcpm_base_int8_decode_cl512 voxcpm_res_int8_decode_cl512 \
+         voxcpm_base_int8_prefill_t32 voxcpm_res_int8_prefill_t32 \
+         voxcpm_base_fp16_decode_cl512 voxcpm_res_fp16_decode_cl512 \
+         voxcpm_base_fp16_prefill_t32 voxcpm_res_fp16_prefill_t32 \
          voxcpm_feat_decoder_fp16 voxcpm_feat_encoder_fp16 voxcpm_vocoder_fp16_t12; do
   copy "$ART/ios/$b.h18p.aimodelc"
 done
 copy "$ART/voxcpm_host_glue"
 copy "$ART/tokenizer"
 
-echo "Done. Launch coreai-audio → Voice tab → Load → Speak (or set VOXCPM_SELFTEST=1 in the scheme)."
+echo "Done. Launch coreai-audio → Voice tab → pick fp16 → Load → Speak (or set VOXCPM_SELFTEST=1)."
