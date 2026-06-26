@@ -36,6 +36,7 @@ struct ChatView: View {
                 case .qwen2b: engine.mode = .qwen2b
                 case .lfm2: engine.mode = .lfm2
                 case .granite: engine.mode = .granite
+                case .minicpm5: engine.mode = .minicpm5
                 case .qwen3vl: engine.mode = .qwen3vl
                 case .qwen3vl4b: engine.mode = .qwen3vl4b
                 case .gemma4vl: engine.mode = .gemma4vl
@@ -273,6 +274,7 @@ struct ChatView: View {
                     case .qwen2b: "~2.4"
                     case .lfm2: "~1.5"
                     case .granite: "~1.2"
+                    case .minicpm5: "~2.0"
                     case .qwen3vl: "~3.1"
                     case .qwen3vl4b: "~5.5"
                     case .gemma4vl: "~4.7"

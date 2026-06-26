@@ -41,8 +41,8 @@ protocol Gemma4Backend: AnyObject {
 /// below this (gemma only — the pipelined models are GPU-only by design).
 enum ChatModel: String, CaseIterable, Identifiable {
     case gemma = "Gemma 4 E2B", qwen = "Qwen3.5 0.8B", qwen2b = "Qwen3.5 2B",
-         lfm2 = "LFM2.5 1.2B", granite = "Granite 1B", qwen3vl = "Qwen3-VL 2B",
-         qwen3vl4b = "Qwen3-VL 4B", gemma4vl = "Gemma 4 VL"
+         lfm2 = "LFM2.5 1.2B", granite = "Granite 1B", minicpm5 = "MiniCPM5 1B",
+         qwen3vl = "Qwen3-VL 2B", qwen3vl4b = "Qwen3-VL 4B", gemma4vl = "Gemma 4 VL"
     var id: String { rawValue }
 }
 
@@ -52,8 +52,8 @@ enum ChatModel: String, CaseIterable, Identifiable {
 // into ChatModel + a gemma-only GPU/ANE/⚡ segment.
 enum GemmaMode: String, CaseIterable, Identifiable {
     case gpu = "GPU", ane = "ANE", gemmaTbl = "Gemma⚡", qwen = "Qwen",
-         qwen2b = "Qwen2B", lfm2 = "LFM", granite = "Granite", qwen3vl = "Qwen3VL",
-         qwen3vl4b = "Qwen3VL4B", gemma4vl = "Gemma4VL"
+         qwen2b = "Qwen2B", lfm2 = "LFM", granite = "Granite", minicpm5 = "MiniCPM5",
+         qwen3vl = "Qwen3VL", qwen3vl4b = "Qwen3VL4B", gemma4vl = "Gemma4VL"
     var id: String { rawValue }
     /// The model family this engine mode belongs to (the picker's top level).
     var chatModel: ChatModel {
@@ -63,6 +63,7 @@ enum GemmaMode: String, CaseIterable, Identifiable {
         case .qwen2b: .qwen2b
         case .lfm2: .lfm2
         case .granite: .granite
+        case .minicpm5: .minicpm5
         case .qwen3vl: .qwen3vl
         case .qwen3vl4b: .qwen3vl4b
         case .gemma4vl: .gemma4vl
@@ -78,6 +79,7 @@ enum GemmaMode: String, CaseIterable, Identifiable {
         case .qwen2b: "Qwen3.5 2B"
         case .lfm2: "LFM2.5 1.2B"
         case .granite: "Granite 4.0-H 1B"
+        case .minicpm5: "MiniCPM5 1B"
         case .qwen3vl: "Qwen3-VL 2B (vision)"
         case .qwen3vl4b: "Qwen3-VL 4B (vision)"
         case .gemma4vl: "Gemma 4 E2B VL (vision)"
@@ -91,6 +93,7 @@ enum GemmaMode: String, CaseIterable, Identifiable {
         case .qwen2b: PipelinedBackend.qwen2b
         case .lfm2: PipelinedBackend.lfm2
         case .granite: PipelinedBackend.granite
+        case .minicpm5: PipelinedBackend.minicpm5
         case .gpu, .ane, .qwen3vl, .qwen3vl4b, .gemma4vl: nil  // the VLMs drive their own backends
         }
     }
@@ -134,6 +137,7 @@ final class Gemma4ChatEngine: ObservableObject {
         case "qwen2b": mode = .qwen2b
         case "lfm2", "lfm": mode = .lfm2
         case "granite": mode = .granite
+        case "minicpm5", "mc5": mode = .minicpm5
         case "qwen3vl", "vl": mode = .qwen3vl
         case "qwen3vl4b", "vl4b": mode = .qwen3vl4b
         case "gemma4vl", "gvl": mode = .gemma4vl
@@ -154,6 +158,7 @@ final class Gemma4ChatEngine: ObservableObject {
         case .qwen2b: "https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreAI"
         case .lfm2: "https://huggingface.co/mlboydaisuke/LFM2.5-1.2B-CoreAI"
         case .granite: "https://huggingface.co/mlboydaisuke/granite-4.0-h-CoreAI"
+        case .minicpm5: "https://huggingface.co/mlboydaisuke/MiniCPM5-1B-CoreAI"
         case .qwen3vl: "https://huggingface.co/mlboydaisuke/Qwen3-VL-2B-CoreAI"
         case .qwen3vl4b: "https://huggingface.co/mlboydaisuke/Qwen3-VL-4B-CoreAI"
         case .gpu, .ane, .gemmaTbl, .gemma4vl: "https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI"
@@ -167,7 +172,7 @@ final class Gemma4ChatEngine: ObservableObject {
     // Every (repo subpath -> name under Documents/models) artifact a mode needs, present or not.
     private func modelPaths(for mode: GemmaMode) -> [(remote: String, local: String)] {
         switch mode {
-        case .qwen, .qwen2b, .lfm2, .granite:
+        case .qwen, .qwen2b, .lfm2, .granite, .minicpm5:
             let spec = mode.pipelinedSpec!
             return [(spec.hfRemotePath, spec.bundleName)]
         case .qwen3vl, .qwen3vl4b:
@@ -279,12 +284,20 @@ final class Gemma4ChatEngine: ObservableObject {
         while loading { try? await Task.sleep(nanoseconds: 100_000_000) }
         if loadedMode == mode, ready { return }
         loading = true; ready = false
-        status = "loading \(mode.rawValue) engine…"
         // Free the previous mode's models BEFORE loading the next set (jetsam headroom).
         backend = nil; pipelined?.unload(); pipelined = nil
         vl?.unload(); vl = nil; gvl?.unload(); gvl = nil
         vlImageAttached = false; loadedMode = nil
         let target = mode
+        // Files for this mode aren't on disk yet — don't attempt a load that can only fail with a
+        // confusing "load error"; leave the download panel up with a clear status instead. (Called
+        // again after the download completes, when the files are present.)
+        guard installedForCurrentMode else {
+            status = "\(target.downloadLabel) — tap Download to install"
+            loading = false
+            return
+        }
+        status = "loading \(target.rawValue) engine…"
         do {
             let tLoad = Date()
             if let vlSpec = target.qwen3vlSpec {

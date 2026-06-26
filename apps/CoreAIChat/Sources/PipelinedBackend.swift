@@ -103,6 +103,18 @@ final class PipelinedBackend {
                            "ple_scale": "embed_per_layer.scale.f32"],
         stopTokens: [106])
 
+    // MiniCPM5-1B (OpenBMB, Apache-2.0) — a plain LlamaForCausalLM exported with
+    // the stock `coreai.llm.export` (FM-format, NOT a gpu-pipelined static-decode
+    // bundle). It still rides this pipelined engine: verified the FM bundle runs
+    // under `coreai-pipelined` + COREAI_CHUNK_THRESHOLD=1 (Paris, 218 tok/s). Chat
+    // eos is <|im_end|> (130073); the ChatML default fallback matches its template.
+    nonisolated static let minicpm5 = Spec(
+        bundleName: "minicpm5_1b",
+        hfRemotePath: "int8",
+        label: "MiniCPM5 ⚡pipelined",
+        warmupToken: 5000,
+        stopTokens: [130073])
+
     let spec: Spec
     private var engine: (any InferenceEngine)?
     private var tokenizer: Tokenizer?
