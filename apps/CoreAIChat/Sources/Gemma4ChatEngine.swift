@@ -380,6 +380,10 @@ final class Gemma4ChatEngine: ObservableObject {
             var gen: [Int] = []
             var pos = ids.count
             let tDec = Date()
+            // Throttle the live re-decode + view update to ~25 fps and exclude its time
+            // from the decode timer (re-decoding the whole token list every token is O(n²)).
+            var uiSec = 0.0
+            var lastEmit = tDec
             if last != eosId && last != EOT {
                 gen.append(last)
                 output = tokenizer.decode(tokens: gen, skipSpecialTokens: true)
@@ -390,9 +394,17 @@ final class Gemma4ChatEngine: ObservableObject {
                 pos += 1
                 if last == eosId || last == EOT { break }
                 gen.append(last)
-                output = tokenizer.decode(tokens: gen, skipSpecialTokens: true)  // live stream
+                if Date().timeIntervalSince(lastEmit) >= 0.04 {
+                    let u = Date()
+                    output = tokenizer.decode(tokens: gen, skipSpecialTokens: true)  // live stream
+                    uiSec += -u.timeIntervalSinceNow
+                    lastEmit = Date()
+                }
             }
-            let decSec = -tDec.timeIntervalSinceNow
+            let uF = Date()
+            output = tokenizer.decode(tokens: gen, skipSpecialTokens: true)  // final flush
+            uiSec += -uF.timeIntervalSinceNow
+            let decSec = -tDec.timeIntervalSinceNow - uiSec
             let full = pos >= be.ctx ? " · ctx full" : ""
             stats = String(format: "%@ · prefill %d tok %.1f tok/s | decode %d tok %.1f tok/s%@ | %@",
                            be.modeLabel,

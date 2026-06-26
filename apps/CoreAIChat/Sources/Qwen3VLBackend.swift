@@ -279,19 +279,32 @@ final class Qwen3VLBackend {
         var gen: [Int] = []
         let t0 = SuspendingClock.now
         var tGen = t0
+        // Throttle live UI to ~25 fps + exclude the UI-callback time from the decode
+        // timer (the whole-list re-decode + view update is O(n²) and serializes the loop).
+        var uiSec = 0.0
+        var lastEmit = t0
         for try await step in stream {
             if stats.prefillSec == 0 {
                 stats.prefillSec = Self.seconds(since: t0)
                 tGen = SuspendingClock.now
+                lastEmit = tGen
             }
             let tok = Int(step.tokenId)
             stats.decodeTok += 1
             if let eos, tok == eos { break }
             if tok == 151_645 { break }  // <|im_end|>
             gen.append(tok)
-            onText(gen)
+            let now = SuspendingClock.now
+            if now - lastEmit >= .milliseconds(40) {
+                onText(gen)
+                uiSec += Self.seconds(since: now)
+                lastEmit = SuspendingClock.now
+            }
         }
-        stats.decodeSec = Self.seconds(since: tGen)
+        let tFlush = SuspendingClock.now
+        onText(gen)
+        uiSec += Self.seconds(since: tFlush)
+        stats.decodeSec = Self.seconds(since: tGen) - uiSec
         return stats
     }
 
