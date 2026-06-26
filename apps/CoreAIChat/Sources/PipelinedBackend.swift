@@ -224,19 +224,37 @@ final class PipelinedBackend {
         var gen: [Int] = []
         let t0 = SuspendingClock.now
         var tGen = t0
+        // Throttle the live UI refresh to ~25 fps and EXCLUDE the UI-callback time
+        // from the decode timer. Re-decoding the whole token list + pushing a SwiftUI
+        // view update on every token is O(n²) and serializes against the model loop,
+        // dragging both the measured and experienced rate below the model's true
+        // decode speed (worse the longer the output). After this, in-app decode ≈
+        // PipelinedBench. (Incremental per-token decode would be O(1) but risks `�`
+        // mid-character glitches for CJK, so throttle is the safe pick.)
+        var uiSec = 0.0
+        var lastEmit = t0
         for try await step in stream {
             if stats.prefillSec == 0 {
                 stats.prefillSec = Self.seconds(since: t0)
                 tGen = SuspendingClock.now
+                lastEmit = tGen
             }
             let tok = Int(step.tokenId)
             stats.decodeTok += 1
             if let eos, tok == eos { break }
             if spec.stopTokens.contains(tok) { break }
             gen.append(tok)
-            onText(gen)
+            let now = SuspendingClock.now
+            if now - lastEmit >= .milliseconds(40) {
+                onText(gen)
+                uiSec += Self.seconds(since: now)
+                lastEmit = SuspendingClock.now
+            }
         }
-        stats.decodeSec = Self.seconds(since: tGen)
+        let tFlush = SuspendingClock.now   // final flush (the throttle may skip the tail)
+        onText(gen)
+        uiSec += Self.seconds(since: tFlush)
+        stats.decodeSec = Self.seconds(since: tGen) - uiSec
         return stats
     }
 
