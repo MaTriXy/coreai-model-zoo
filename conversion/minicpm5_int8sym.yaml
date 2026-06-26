@@ -1,0 +1,21 @@
+# Clean weight-only INT8 for MiniCPM5-1B: symmetric per-channel (absmax, NO
+# clipping — clipping craters big-vocab head rows; absmax keeps cos ~0.9999).
+# Mirrors the proven VoxCPM INT8_CFG and the zoo "sym8" recipe. torch pre-export
+# quantization via coreai-opt; SDPA/RoPE/RMSNorm stay full precision.
+quantization_config:
+  execution_mode: eager
+  global_config:
+    op_state_spec:
+      weight:
+        dtype: int8
+        qscheme: symmetric
+        granularity:
+          type: per_channel
+          axis: 0
+    op_input_spec: null
+    op_output_spec: null
+  module_type_configs:
+    coreai_models.primitives.macos.sdpa.SDPA: null
+    coreai_models.primitives.macos.rope.RoPE: null
+    coreai_models.primitives.macos.rms_norm.RMSNorm: null
+    coreai_models.primitives.macos.rms_norm.RMSNormPlusOne: null
