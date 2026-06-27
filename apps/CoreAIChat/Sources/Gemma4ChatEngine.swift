@@ -42,7 +42,9 @@ protocol Gemma4Backend: AnyObject {
 enum ChatModel: String, CaseIterable, Identifiable {
     case gemma = "Gemma 4 E2B", qwen = "Qwen3.5 0.8B", qwen2b = "Qwen3.5 2B",
          lfm2 = "LFM2.5 1.2B", granite = "Granite 1B", minicpm5 = "MiniCPM5 1B",
-         qwen3vl = "Qwen3-VL 2B", qwen3vl4b = "Qwen3-VL 4B", gemma4vl = "Gemma 4 VL"
+         fastcontext = "FastContext 4B",
+         qwen3vl = "Qwen3-VL 2B", qwen3vl4b = "Qwen3-VL 4B", gemma4vl = "Gemma 4 VL",
+         holo2vl = "Holo2 4B"
     var id: String { rawValue }
 }
 
@@ -53,7 +55,9 @@ enum ChatModel: String, CaseIterable, Identifiable {
 enum GemmaMode: String, CaseIterable, Identifiable {
     case gpu = "GPU", ane = "ANE", gemmaTbl = "Gemma⚡", qwen = "Qwen",
          qwen2b = "Qwen2B", lfm2 = "LFM", granite = "Granite", minicpm5 = "MiniCPM5",
-         qwen3vl = "Qwen3VL", qwen3vl4b = "Qwen3VL4B", gemma4vl = "Gemma4VL"
+         fastcontext = "FastContext",
+         qwen3vl = "Qwen3VL", qwen3vl4b = "Qwen3VL4B", gemma4vl = "Gemma4VL",
+         holo2vl = "Holo2VL"
     var id: String { rawValue }
     /// The model family this engine mode belongs to (the picker's top level).
     var chatModel: ChatModel {
@@ -64,9 +68,11 @@ enum GemmaMode: String, CaseIterable, Identifiable {
         case .lfm2: .lfm2
         case .granite: .granite
         case .minicpm5: .minicpm5
+        case .fastcontext: .fastcontext
         case .qwen3vl: .qwen3vl
         case .qwen3vl4b: .qwen3vl4b
         case .gemma4vl: .gemma4vl
+        case .holo2vl: .holo2vl
         }
     }
     /// User-facing label for the download panel (model, plus unit where it matters).
@@ -80,9 +86,11 @@ enum GemmaMode: String, CaseIterable, Identifiable {
         case .lfm2: "LFM2.5 1.2B"
         case .granite: "Granite 4.0-H 1B"
         case .minicpm5: "MiniCPM5 1B"
+        case .fastcontext: "FastContext 4B"
         case .qwen3vl: "Qwen3-VL 2B (vision)"
         case .qwen3vl4b: "Qwen3-VL 4B (vision)"
         case .gemma4vl: "Gemma 4 E2B VL (vision)"
+        case .holo2vl: "Holo2 4B (GUI grounding)"
         }
     }
     /// Non-nil for the modes that ride the coreai-pipelined engine.
@@ -94,7 +102,8 @@ enum GemmaMode: String, CaseIterable, Identifiable {
         case .lfm2: PipelinedBackend.lfm2
         case .granite: PipelinedBackend.granite
         case .minicpm5: PipelinedBackend.minicpm5
-        case .gpu, .ane, .qwen3vl, .qwen3vl4b, .gemma4vl: nil  // the VLMs drive their own backends
+        case .fastcontext: PipelinedBackend.fastcontext
+        case .gpu, .ane, .qwen3vl, .qwen3vl4b, .gemma4vl, .holo2vl: nil  // the VLMs drive their own backends
         }
     }
     /// Non-nil for the Qwen3-VL modes (own backend with a fixed-grid vision tower).
@@ -102,11 +111,12 @@ enum GemmaMode: String, CaseIterable, Identifiable {
         switch self {
         case .qwen3vl: Qwen3VLBackend.qwen3vl2b
         case .qwen3vl4b: Qwen3VLBackend.qwen3vl4b
+        case .holo2vl: Qwen3VLBackend.holo2
         default: nil
         }
     }
     /// VLM modes (photo picker + image attach surface).
-    var isVL: Bool { self == .qwen3vl || self == .qwen3vl4b || self == .gemma4vl }
+    var isVL: Bool { self == .qwen3vl || self == .qwen3vl4b || self == .gemma4vl || self == .holo2vl }
 }
 
 @MainActor
@@ -138,9 +148,11 @@ final class Gemma4ChatEngine: ObservableObject {
         case "lfm2", "lfm": mode = .lfm2
         case "granite": mode = .granite
         case "minicpm5", "mc5": mode = .minicpm5
+        case "fastcontext", "fc": mode = .fastcontext
         case "qwen3vl", "vl": mode = .qwen3vl
         case "qwen3vl4b", "vl4b": mode = .qwen3vl4b
         case "gemma4vl", "gvl": mode = .gemma4vl
+        case "holo2", "holo2vl", "holo": mode = .holo2vl
         default: mode = .gpu
         }
     }
@@ -159,8 +171,10 @@ final class Gemma4ChatEngine: ObservableObject {
         case .lfm2: "https://huggingface.co/mlboydaisuke/LFM2.5-1.2B-CoreAI"
         case .granite: "https://huggingface.co/mlboydaisuke/granite-4.0-h-CoreAI"
         case .minicpm5: "https://huggingface.co/mlboydaisuke/MiniCPM5-1B-CoreAI"
+        case .fastcontext: "https://huggingface.co/mlboydaisuke/FastContext-1.0-4B-CoreAI"
         case .qwen3vl: "https://huggingface.co/mlboydaisuke/Qwen3-VL-2B-CoreAI"
         case .qwen3vl4b: "https://huggingface.co/mlboydaisuke/Qwen3-VL-4B-CoreAI"
+        case .holo2vl: "https://huggingface.co/mlboydaisuke/Holo2-4B-CoreAI"
         case .gpu, .ane, .gemmaTbl, .gemma4vl: "https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI"
         }
     }
@@ -172,10 +186,10 @@ final class Gemma4ChatEngine: ObservableObject {
     // Every (repo subpath -> name under Documents/models) artifact a mode needs, present or not.
     private func modelPaths(for mode: GemmaMode) -> [(remote: String, local: String)] {
         switch mode {
-        case .qwen, .qwen2b, .lfm2, .granite, .minicpm5:
+        case .qwen, .qwen2b, .lfm2, .granite, .minicpm5, .fastcontext:
             let spec = mode.pipelinedSpec!
             return [(spec.hfRemotePath, spec.bundleName)]
-        case .qwen3vl, .qwen3vl4b:
+        case .qwen3vl, .qwen3vl4b, .holo2vl:
             let spec = mode.qwen3vlSpec!
             return [(spec.hfDecoderPath, spec.decoderBundle),
                     (spec.hfVisionPath, spec.visionDir)]
@@ -368,8 +382,9 @@ final class Gemma4ChatEngine: ObservableObject {
                 output = "prompt (\(ids.count) tok) does not fit ctx \(be.ctx)"; return
             }
             // Same budget rule as the CoreML-LLM chat app: spend the remaining ctx,
-            // soft-capped to avoid long hangs.
-            let budget = maxNew ?? min(be.ctx - ids.count - 1, 1024)
+            // soft-capped to avoid long hangs. Cap is generous so a Think-mode answer
+            // (the reasoning trace alone can run several hundred tokens) isn't truncated.
+            let budget = maxNew ?? min(be.ctx - ids.count - 1, 4096)
             be.reset()
             let tPre = Date(); var last = 0
             for (pos, t) in ids.enumerated() {
@@ -423,7 +438,7 @@ final class Gemma4ChatEngine: ObservableObject {
         busy = true; output = ""; stats = ""
         defer { busy = false }
         do {
-            let st = try await pb.generate(prompt, maxNew: maxNew ?? 1024) { [weak self] text in
+            let st = try await pb.generate(prompt, maxNew: maxNew ?? 4096) { [weak self] text in
                 self?.output = text  // live stream
             }
             stats = st.summary
@@ -438,11 +453,11 @@ final class Gemma4ChatEngine: ObservableObject {
         do {
             let st: PipelinedBackend.GenStats
             if let vl {
-                st = try await vl.generate(prompt, maxNew: maxNew ?? 1024) { [weak self] text in
+                st = try await vl.generate(prompt, maxNew: maxNew ?? 4096) { [weak self] text in
                     self?.output = text
                 }
             } else if let gvl {
-                st = try await gvl.generate(prompt, maxNew: maxNew ?? 1024) { [weak self] text in
+                st = try await gvl.generate(prompt, maxNew: maxNew ?? 4096) { [weak self] text in
                     self?.output = text
                 }
             } else { return }

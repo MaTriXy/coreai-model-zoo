@@ -20,6 +20,26 @@ overlay** of that package. Concretely, the additions are:
 
 ## Scripts (current locations, to be consolidated here)
 
+- **FastContext-1.0-4B-SFT (STOCK — no re-authoring): `coreai.llm.export fastcontext-4b`** —
+  Microsoft's Qwen3-4B-arch repo-exploration agent is byte-identical to `Qwen/Qwen3-4B`, so it
+  rides the stock `coreai_models` `qwen3` graph unchanged (GQA, q/k-norm, tied embeddings all
+  handled). The *only* additions are a `model_registry.py` short-name preset (`fastcontext-4b` —
+  macOS 4bit + iOS palettized, both reuse the `qwen3-4b` recipe) + an `export/metadata.py` entry;
+  no decoder code. macOS GPU 4-bit linear-INT4, parity **23/24 argmax (ppl 1.41)** vs HF fp16.
+  On-device the 4B graph can't specialize, so ship the **AOT** bundle:
+  `coreai-build compile exports/fastcontext_4b_dynamic/*.aimodel --platform iOS --preferred-compute gpu --architecture h18p`
+  → the `gpu/` `.aimodelc` (see [`../knowledge/aot-and-specialization.md`](../knowledge/aot-and-specialization.md)
+  and [`../zoo/fastcontext.md`](../zoo/fastcontext.md)). The zoo's first stock-architecture model —
+  the template for "drop-in any HF model the stock exporter already supports."
+- **Holo2-4B (STOCK Qwen3-VL drop-in): `export_qwen3_vl_pipelined.py int8lin --hf-id Hcompany/Holo2-4B`** —
+  H Company's GUI-grounding / computer-use VLM is byte-identical to Qwen3-VL-4B, so the zoo's Qwen3-VL
+  pipeline converts it with just an HF-id swap (no model code). Emits decoder + `_s1` gate twin + fp16
+  vision tower. Parity (vs fp32 HF, GPU engine): **vision cos 0.9999, decoder S=1 4/4 + 16/16 decode
+  steps token-exact**. The decode `_s1` is a STATIC graph → specializes on-device, no AOT (unlike a
+  dense 4B *dynamic* bundle). Gate harness for tf-4.57: `_smoke/qwen3vl_capture_ref.py` +
+  `test_qwen3vl_aimodel_gate.py` patched (rope_scaling/get_image_features-tuple/get_rope_index sig;
+  `QWEN3VL_MID`/`QWEN3VL_REF`/`QWEN3VL_NLAYERS=36` envs). See [`../zoo/holo2.md`](../zoo/holo2.md). The
+  VLM analogue of the FastContext stock-drop-in template.
 - Gemma 4: `convert.py` / `convert_palettize.py` (int8 `all8`) / `convert_stateful*.py` (stateful +
   ring) / `convert_head.py` / `check_pipeline.py` / `verify_*` — the full convert+verify harness.
 - Qwen3.5: parity ladder + fp16/int8 + head-split + stateful-palettize harnesses.

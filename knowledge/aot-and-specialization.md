@@ -45,6 +45,20 @@ model**; the device then only finishes the (much smaller) device-specific specia
 and finishes significantly faster… generates one or more compiled models targeting specific device
 architectures… a background asset for each compiled model."*
 
+### The 4B wall — large decoders MUST ship AOT, not as a portable IR
+Small decoders (≤~1–2B, e.g. MiniCPM5-1B) ship as a portable `.aimodel` IR and specialize on-device
+fine. A **4B** decoder does **not** — verified on `FastContext-1.0-4B` (Qwen3-4B), iPhone 17 Pro / iOS 27:
+- a **macOS-tagged** IR has no iOS delegates to load → on-device load fails `NSPOSIXErrorDomain Code=2`;
+- an **iOS-tagged palettized** IR's on-device GPU specialization exhausts the device's scratch disk
+  mid-compile → `LLVM ERROR: No space left on device` (a 4B graph's specialization scratch is huge).
+
+So 4B-class GPU bundles must be **AOT-compiled per device class** and shipped as `.aimodelc`
+(`xcrun coreai-build compile … --preferred-compute gpu --architecture h18p`) — the same reason the
+Gemma-4B zoo bundle ships `…aotc_h18p`. **ANE is worse at this size:** the FastContext ANE bundle
+static-loads (31 ANE regions, ~518 s cold) but the warmup **inference** dies with
+`com.apple.appleneuralengine` / `ANECompilerService` `Code=4097` ("ANE compile failed"), so the GPU
+AOT bundle is the only on-device path. (Source: `project_fastcontext_4b_coreai` on-device runs, 2026-06-27.)
+
 ### Tool naming — RESOLVED (corrects the earlier "aimodelc not coreai-build" note)
 - **CLI command you invoke = `xcrun coreai-build compile`.** Confirmed: `models/README.md:157`
   (*"Run `xcrun coreai-build compile --help` for usage"*), `ModelBundle.swift:101`, WWDC 326 verbatim

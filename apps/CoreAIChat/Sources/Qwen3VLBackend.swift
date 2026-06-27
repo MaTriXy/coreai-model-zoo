@@ -56,6 +56,14 @@ final class Qwen3VLBackend {
         hfDecoderPath: "gpu-pipelined/qwen3_vl_4b_instruct_decode_int8hu_s1",
         hfVisionPath: "gpu-pipelined/qwen3_vl_4b_instruct_vision",
         label: "Qwen3-VL 4B ⚡pipelined", hid: 2560)
+    // Holo2-4B (H Company GUI-grounding / computer-use VLM) — Qwen3-VL-4B backbone,
+    // rides this same backend. int8lin body (vs the qwen *_int8hu* ship config).
+    nonisolated static let holo2 = Spec(
+        decoderBundle: "holo2_4b_decode_int8lin_s1",
+        visionDir: "holo2_4b_vision",
+        hfDecoderPath: "gpu-pipelined/holo2_4b_decode_int8lin_s1",
+        hfVisionPath: "gpu-pipelined/holo2_4b_vision",
+        label: "Holo2-4B ⚡pipelined", hid: 2560)
 
     let spec: Spec
     init(spec: Spec) { self.spec = spec }

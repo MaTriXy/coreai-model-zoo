@@ -115,6 +115,16 @@ final class PipelinedBackend {
         warmupToken: 5000,
         stopTokens: [130073])
 
+    // FastContext-1.0-4B-SFT (Microsoft, MIT) — Qwen3-4B-arch long-context repo
+    // exploration agent. Stock coreai.llm.export GPU bundle riding the pipelined
+    // engine (same as minicpm5). ChatML default fallback; Qwen3 eos <|im_end|> = 151645.
+    nonisolated static let fastcontext = Spec(
+        bundleName: "fastcontext_4b_gpu",
+        hfRemotePath: "gpu",
+        label: "FastContext-4B ⚡pipelined",
+        warmupToken: 9707,
+        stopTokens: [151645])
+
     let spec: Spec
     private var engine: (any InferenceEngine)?
     private var tokenizer: Tokenizer?

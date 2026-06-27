@@ -1,12 +1,39 @@
 import PhotosUI
 import SwiftUI
 
+/// Animated grounding marker: a spring "pop" landing + a repeating radar ping ring,
+/// so the located UI element is obvious in a demo video.
+struct GroundMarker: View {
+    @State private var ping = false
+    @State private var landed = false
+    var body: some View {
+        ZStack {
+            // expanding radar ping (repeats forever)
+            Circle().stroke(.red, lineWidth: 3).frame(width: 50, height: 50)
+                .scaleEffect(ping ? 2.8 : 0.6)
+                .opacity(ping ? 0 : 0.85)
+            // solid crosshair + ring
+            Circle().stroke(.red, lineWidth: 4).frame(width: 50, height: 50)
+            Rectangle().fill(.red).frame(width: 3, height: 40)
+            Rectangle().fill(.red).frame(width: 40, height: 3)
+        }
+        .shadow(color: .black.opacity(0.6), radius: 2)
+        .scaleEffect(landed ? 1 : 0.2)
+        .opacity(landed ? 1 : 0)
+        .onAppear {
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.5)) { landed = true }
+            withAnimation(.easeOut(duration: 1.2).repeatForever(autoreverses: false)) { ping = true }
+        }
+    }
+}
+
 struct Turn: Identifiable {
     let id = UUID()
     let role: String      // "user" | "model"
     var text: String
     var stats: String = ""
     var image: UIImage? = nil
+    var point: CGPoint? = nil   // normalized 0..1 grounding marker (Holo2 GUI grounding)
 }
 
 struct ChatView: View {
@@ -37,8 +64,10 @@ struct ChatView: View {
                 case .lfm2: engine.mode = .lfm2
                 case .granite: engine.mode = .granite
                 case .minicpm5: engine.mode = .minicpm5
+                case .fastcontext: engine.mode = .fastcontext
                 case .qwen3vl: engine.mode = .qwen3vl
                 case .qwen3vl4b: engine.mode = .qwen3vl4b
+                case .holo2vl: engine.mode = .holo2vl
                 case .gemma4vl: engine.mode = .gemma4vl
                 }
             })
@@ -162,10 +191,19 @@ struct ChatView: View {
             if turn.role == "user" { Spacer(minLength: 40) }
             VStack(alignment: turn.role == "user" ? .trailing : .leading, spacing: 4) {
                 if let image = turn.image {
+                    // Grounded result images (with a marker) render larger for clarity.
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFit()
-                        .frame(maxHeight: 340)
+                        .frame(maxHeight: turn.point != nil ? 560 : 340)
+                        .overlay {
+                            if let p = turn.point {
+                                GeometryReader { geo in
+                                    GroundMarker()
+                                        .position(x: p.x * geo.size.width, y: p.y * geo.size.height)
+                                }
+                            }
+                        }
                         .clipShape(RoundedRectangle(cornerRadius: 18))
                 }
                 if turn.image == nil || !turn.text.isEmpty {
@@ -239,7 +277,44 @@ struct ChatView: View {
         inputFocused = false
         turns.append(Turn(role: "user", text: prompt))
         await engine.generate(prompt)
-        turns.append(Turn(role: "model", text: engine.output, stats: engine.stats))
+        var clean = engine.output
+        if let r = clean.range(of: "(?s)<think>.*?</think>", options: .regularExpression) {
+            clean.removeSubrange(r)
+            clean = clean.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        var t = Turn(role: "model", text: clean, stats: engine.stats)
+        // Holo2 / VL grounding: if the reply carries a click point and an image is
+        // attached, show the screenshot with a marker on the grounded element.
+        if engine.mode.isVL, let img = attachedThumb, let pt = Self.parseHoloPoint(engine.output) {
+            t.image = img
+            t.point = pt
+        }
+        turns.append(t)
+    }
+
+    /// Parse Holo2's grounding output into a 0..1 fraction for overlaying a marker.
+    /// Coords are normalized 0..1000; the model emits them in varied framing depending on the
+    /// prompt: `<point x=471 y=507>`, `{374, 375}`, `(x, y)`, `[x, y]`. We strip the <think>
+    /// block, prefer an explicit coordinate group, then take the first two numbers.
+    static func parseHoloPoint(_ s: String) -> CGPoint? {
+        var t = s
+        if let r = t.range(of: "(?s)<think>.*?</think>", options: .regularExpression) {
+            t.removeSubrange(r)
+        }
+        var scope = Substring(t)
+        for p in ["<point[^>]*>", "\\{[^}]*\\}", "\\([^)]*\\)", "\\[[^\\]]*\\]"] {
+            if let r = t.range(of: p, options: .regularExpression) { scope = t[r]; break }
+        }
+        var nums: [Double] = []
+        var rest = scope
+        while let r = rest.range(of: "-?[0-9]+(?:\\.[0-9]+)?", options: .regularExpression) {
+            if let v = Double(rest[r]) { nums.append(v) }
+            rest = rest[r.upperBound...]
+            if nums.count >= 2 { break }
+        }
+        guard nums.count >= 2 else { return nil }
+        func frac(_ v: Double) -> Double { let f = v > 1.0 ? v / 1000.0 : v; return min(max(f, 0), 1) }
+        return CGPoint(x: frac(nums[0]), y: frac(nums[1]))
     }
 
     // MARK: model delivery (published artifact set from the Hugging Face repo)
@@ -275,8 +350,10 @@ struct ChatView: View {
                     case .lfm2: "~1.5"
                     case .granite: "~1.2"
                     case .minicpm5: "~2.0"
+                    case .fastcontext: "~2.1"
                     case .qwen3vl: "~3.1"
                     case .qwen3vl4b: "~5.5"
+                    case .holo2vl: "~5.2"
                     case .gemma4vl: "~4.7"
                     }
                     Label("Download \(engine.mode.downloadLabel) set (\(size) GB)",
