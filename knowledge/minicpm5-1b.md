@@ -50,3 +50,18 @@ set the bundle's tokenizer `eos_token` to `<|im_end|>` (as Qwen ships) or genera
 iPhone 17 Pro (`PipelinedBench`): **int8 decode 66.8 / prefill 68.0 tok/s, 24/24 token-exact vs HF
 fp32 (lossless), 1.0 GB** — ~2.2× fp16 (decode is bandwidth-bound → half the weight read ≈ double
 throughput) at no quality cost. 🤗 `mlboydaisuke/MiniCPM5-1B-CoreAI`.
+
+**Mac is the opposite.** On a compute-rich M4 Max int8 is ~59 tok/s vs fp16's ~208 — when bandwidth
+isn't the bottleneck the per-channel dequant overhead dominates. int8 is an **iPhone** win, not a
+Mac one; ship int8 for the phone, keep fp16 if you ever want the fastest Mac path.
+
+## App integration (CoreAIChat — applies to any Think-mode model)
+
+- **Generation budget.** MiniCPM5 is hybrid Think/No-Think and the `<think>` trace alone can run
+  several hundred tokens, so a small `maxNew` cap (the app shipped 1024) truncates the answer
+  mid-stream. Cap generously (4096) — the model emits its own eos well before that.
+- **Decode-rate measurement.** The chat loop must NOT re-decode the whole token list + push a
+  SwiftUI update on every token (O(n²)) *inside* the decode timer — it drags both the measured and
+  the experienced rate below the true model rate (in-app read ~59 vs the 66.8 bench). Throttle the
+  live refresh to ~25 fps and **exclude the UI-callback time from the decode timer**; after that the
+  in-app rate matches `PipelinedBench`. Full write-up: `int8-head-and-decode-measurement.md`.
