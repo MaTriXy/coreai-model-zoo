@@ -28,7 +28,8 @@ and fails at engine-create. See ../knowledge/minicpm5-1b.md for the full rationa
 
     python conversion/export_minicpm5.py [OUT_DIR]
 
-then verify greedy parity vs HF fp32 (token-exact) before shipping.
+then verify greedy parity vs HF fp32 (token-exact) before shipping —
+`conversion/verify_minicpm5.py` (the shipped int8 bundle scores 24/24 = lossless).
 """
 import json
 import subprocess
