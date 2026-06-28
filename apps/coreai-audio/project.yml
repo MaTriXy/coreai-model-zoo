@@ -7,9 +7,10 @@ options:
 # swift-transformers / swift-crypto resource bundles so they code-sign cleanly on device — the
 # self-contained raw-deps build hit "code object is not signed at all" on those bundles.
 packages:
+  # KitWhisperModel + KitASRModel (Whisper + Qwen3-ASR for the Transcribe tab).
   coreai-kit:
     url: https://github.com/john-rocky/coreai-kit
-    revision: 73e6a48121251f1323d84cee0bd6db42106a8e41
+    revision: 72d66c18ffaf0b253becdb7893e3935cb3a809ac
   # On-device English G2P for free-text TTS (made for Kokoro; pulls in MLX for the
   # neural fallback on out-of-dictionary words).
   MisakiSwift:

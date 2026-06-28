@@ -96,3 +96,18 @@ should be **token-for-token identical** (greedy is deterministic). Gotcha: macOS
 auto-detected as Japanese (katakana transcript). Use `say -v Alex` and force `language="en"`.
 
 float16 ships (~1.5 GB, iOS-friendly); it matched the float32 reference here.
+
+## 8. Now a CoreAIKit model: `KitWhisperModel`
+
+The same bundle is wired into **CoreAIKit** as `KitWhisperModel` (driving the stateless graph through
+`GraphModel` — no LLM engine), so the [`coreai-audio`](../apps/coreai-audio/) **Transcribe** tab offers
+it alongside Qwen3-ASR via a picker. The kit reuses its bundled `mel_filters.f32` for the log-mel
+front end instead of shipping `mel_filters_128.npy` again — that file is **bit-exact** with the HF
+`mel_filters_128.npy` (max abs diff 0.0 in `[201,128]` C-order), so the result stays token-exact. The
+fixed-128 decode loop and the `<sot><lang><transcribe><notimestamps>` prefix (auto-detect = argmax
+right after `<sot>`) live in `WhisperRuntime`.
+
+```swift
+let whisper = try await KitWhisperModel(model: .largeV3Turbo)
+let result  = try await whisper.transcribe(samples: pcm16kMono)   // Transcription(language, text)
+```

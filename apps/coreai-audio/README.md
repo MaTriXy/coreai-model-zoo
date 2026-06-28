@@ -1,10 +1,19 @@
-# coreai-audio — on-device audio *understanding* + *speech* (iOS + macOS)
+# coreai-audio — on-device audio *understanding* + *transcription* + *speech* (iOS + macOS)
 
-Two tabs, both fully on-device:
+Four tabs, all fully on-device:
 
 - **Understand** — record from the mic, choose a file, or use the demo clip, then ask *"what do you
   hear?"*: a local **Qwen2.5-Omni Thinker** describes the **sounds** (events, texture, emotion), not
   a transcript. *"I hear a loud hissing sound."* · *"I hear a man speaking in English."*
+- **Transcribe** — speech → **text**, with a choice of two Core AI ASR models (segmented picker):
+  - **Whisper large-v3-turbo** — the Apple-recipe export on the **stock runtime** (fixed-128-token
+    decoder window), via CoreAIKit's `KitWhisperModel`. 100 languages, ≤30 s, auto language-detect.
+    Downloads from [🤗 whisper-large-v3-turbo-CoreAI-official](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official)
+    on both platforms. See [`knowledge/whisper-asr-fixed-decode.md`](../../knowledge/whisper-asr-fixed-decode.md).
+  - **Qwen3-ASR-1.7B** — the zoo's first ASR (AuT encoder + Qwen3 decoder on the pipelined engine),
+    via `KitASRModel`. 52 languages, ≤30 s. See [`zoo/qwen3-asr.md`](../../zoo/qwen3-asr.md).
+- **Voice** — **VoxCPM-0.5B** diffusion text-to-speech (MiniCPM4 LM + LocDiT flow-matching +
+  AudioVAE), streaming int8. See [🤗 VoxCPM-0.5B-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM-0.5B-CoreAI).
 - **Speak** — **Kokoro-82M** (StyleTTS2 + iSTFTNet) text-to-speech on Core AI: pick a voice and a
   phrase, hear it spoken. Three `.aimodel` bundles (predictor / prosody / vocoder) on the CPU
   compute unit + the host DSP (alignment + hn-nsf source) in Swift; ~0.7 s/utterance, magspec-corr
@@ -37,6 +46,16 @@ let answer = try await LanguageModelSession(model: model).respond(to: "What do y
 iPhone downloads the **AOT** decoder (`.aimodelc`) so the 3.9 GB graph dodges the on-device JIT
 jetsam (the AOT weights mmap as clean pages → comfortable headroom). Needs the
 `com.apple.developer.kernel.increased-memory-limit` entitlement.
+
+**Transcribe** rides CoreAIKit's ASR models. Whisper is one stateless graph (no LLM engine) driven
+through `GraphModel`; the same `mel_filters.f32` powers it (bit-exact with the HF `mel_filters_128.npy`),
+so no extra resource ships:
+
+```swift
+let whisper = try await KitWhisperModel(model: .largeV3Turbo)   // downloads .aimodel + tokenizer
+let result  = try await whisper.transcribe(samples: pcm16kMono) // -> Transcription(language, text)
+// or: let asr = try await KitASRModel(model: .qwen3ASR1_7B); try await asr.transcribe(samples:)
+```
 
 ## Run
 
