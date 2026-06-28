@@ -1,0 +1,59 @@
+name: MiniCPMVisualIntel
+options:
+  bundleIdPrefix: com.daisukemajima
+  createIntermediateGroups: true
+  deploymentTarget:
+    iOS: "27.0"
+packages:
+  # CoreAIShared (NDArray helpers) + CoreAILM (EngineFactory / LanguageBundle pipelined engine).
+  # Requires apps/coreai-pipelined-static-inputs.patch + coreai-pipelined-extra-states.patch on the
+  # coreai-models clone (MiniCPM-V rides the static image_embeds buffer + the qwen3.5-hybrid states).
+  coreai-models:
+    path: ../../coreai-models
+  swift-transformers:
+    url: https://github.com/huggingface/swift-transformers
+    from: "1.3.3"
+settings:
+  base:
+    DEVELOPMENT_TEAM: MFN25KNUGJ
+    SWIFT_VERSION: "6.0"
+schemes:
+  MiniCPMVisualIntel:
+    build:
+      targets:
+        MiniCPMVisualIntel: all
+    run:
+      config: Release
+targets:
+  MiniCPMVisualIntel:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      # Shared HF model delivery (range-chunked, resumable) used by the zoo sample apps.
+      - path: ../AppShared/ModelDownloader.swift
+    dependencies:
+      - package: coreai-models
+        product: CoreAIShared
+      - package: coreai-models
+        product: CoreAILM
+      - package: swift-transformers
+        product: Tokenizers
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.daisukemajima.MiniCPMVisualIntel
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: MiniCPMVisualIntel.entitlements
+        # The app only uses HTTPS (Hugging Face downloads) — exempt from export-compliance prompts.
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        # User-facing app name = the label of our tab in the system Visual Intelligence UI
+        # (and "More results from <name>"). Name it after the model that's actually running.
+        INFOPLIST_KEY_CFBundleDisplayName: "MiniCPM-V"
+        INFOPLIST_KEY_CFBundleName: "MiniCPM-V"
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
