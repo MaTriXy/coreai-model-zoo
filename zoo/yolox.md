@@ -91,11 +91,11 @@ stays OpenCV-free.
 
 ## ⬇️ Bundle
 
-> **HF upload pending.** The fp32 `.aimodel` is gated and measured on Mac **and
-> device-verified on iPhone 17 Pro** (live in the DetectCamera app — 6/6 gate detections
-> match the Mac oracle). The one open follow-up is HF distribution (intended
-> `mlboydaisuke/YOLOX-CoreAI` — `yolox-s_float32.aimodel`); until then the app sideloads
-> the bundle into `Documents/Models/`.
+**[mlboydaisuke/YOLOX-CoreAI](https://huggingface.co/mlboydaisuke/YOLOX-CoreAI)** —
+`yolox-s_float32.aimodel` (36 MB, fp32). Apache-2.0. CoreAIKit drop-in: `YOLOXDetector`
+(`detect(in: pixelBuffer)` → `[Detection]`); the **DetectCamera** app downloads it on first
+run. Gated fp32-clean on Mac and **device-verified on iPhone 17 Pro** (live in DetectCamera —
+6/6 gate detections match the Mac oracle).
 
 Convert yourself: [`conversion/export_yolox.py`](../conversion/export_yolox.py) —
 `--variant s --yolox-repo <YOLOX checkout> --weights yolox_s.pth`, gated
