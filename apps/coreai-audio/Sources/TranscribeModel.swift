@@ -14,18 +14,20 @@ import Foundation
 final class TranscribeModel: ObservableObject {
     /// The selectable transcription engines.
     enum Engine: String, CaseIterable, Identifiable {
-        case whisper, qwen3ASR
+        case whisper, qwen3ASR, parakeet
         var id: String { rawValue }
         var title: String {
             switch self {
             case .whisper: return "Whisper large-v3-turbo"
             case .qwen3ASR: return "Qwen3-ASR-1.7B"
+            case .parakeet: return "Parakeet TDT 0.6B"
             }
         }
         var blurb: String {
             switch self {
             case .whisper: return "OpenAI Whisper on Core AI (stock runtime). 100 languages, ≤30 s."
             case .qwen3ASR: return "The zoo's first ASR. 52 languages, ≤30 s."
+            case .parakeet: return "NVIDIA FastConformer transducer — the zoo's first TDT/RNN-T. 25 EU languages, ≤30 s."
             }
         }
     }
@@ -41,6 +43,7 @@ final class TranscribeModel: ObservableObject {
 
     private var whisper: KitWhisperModel?
     private var asr: KitASRModel?
+    private var parakeet: KitParakeetModel?
     private var samples: [Float]?
     private let recorder = MicRecorder()
 
@@ -73,6 +76,15 @@ final class TranscribeModel: ObservableObject {
                             progress.fraction * 100)
                     }
                 }
+            case .parakeet:
+                parakeet = try await KitParakeetModel(model: .parakeetTDT) { progress in
+                    Task { @MainActor [weak self] in
+                        self?.status = String(
+                            format: "Downloading %@ — %.0f%%",
+                            (progress.currentFile as NSString).lastPathComponent,
+                            progress.fraction * 100)
+                    }
+                }
             }
             loaded = true
             status = "Model ready. Record / Choose / Demo, then Transcribe."
@@ -86,6 +98,7 @@ final class TranscribeModel: ObservableObject {
     private func unload() {
         whisper = nil
         asr = nil
+        parakeet = nil
         loaded = false
         transcript = ""; language = ""
         status = "Engine: \(engine.title). Tap “Load model”."
@@ -138,16 +151,30 @@ final class TranscribeModel: ObservableObject {
         transcript = ""; language = ""
         let clip = Array(samples.prefix(16000 * maxClipSeconds))
         status = "Transcribing… (on-device)"
+        // Stream the running transcript into the UI as the decoder emits it. The callback fires off
+        // the main actor, so hop back; the length guard keeps a late-arriving partial from
+        // overwriting the final text with an earlier (shorter) snapshot.
+        let onPartial: @Sendable (String) -> Void = { [weak self] partial in
+            Task { @MainActor in
+                guard let self else { return }
+                if partial.count >= self.transcript.count { self.transcript = partial }
+            }
+        }
         do {
             let result: Transcription
             switch engine {
             case .whisper:
                 guard let whisper else { busy = false; return }
-                result = try await whisper.transcribe(samples: clip)
+                result = try await whisper.transcribe(samples: clip, onPartial: onPartial)
             case .qwen3ASR:
                 guard let asr else { busy = false; return }
+                status = "Encoding audio…"
                 try await asr.attach(samples: clip)  // mel → AuT encoder → static buffer
-                result = try await asr.transcribe()
+                status = "Transcribing… (on-device)"
+                result = try await asr.transcribe(onPartial: onPartial)
+            case .parakeet:
+                guard let parakeet else { busy = false; return }
+                result = try await parakeet.transcribe(samples: clip, onPartial: onPartial)
             }
             transcript = result.text
             language = result.language
