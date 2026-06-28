@@ -5,8 +5,7 @@
 //     KitWhisperModel) — published, downloads from the Hub on both platforms.
 //   • Qwen3-ASR-1.7B (the zoo's first ASR, via CoreAIKit's KitASRModel).
 //
-// macOS dev loads Qwen3-ASR straight from the local conversion artifacts; iOS uses the bundles
-// sideloaded into the app container until that HF repo is published. Whisper uses the Hub on both.
+// Both models download from the Hugging Face Hub on first load (iOS + macOS) and cache on-device.
 
 import CoreAIKit
 import Foundation
@@ -48,10 +47,6 @@ final class TranscribeModel: ObservableObject {
     /// Both bundles transcribe ≤30 s clips; cap to the encoder/decoder window.
     private let maxClipSeconds = 30
 
-    // macOS dev: the local Qwen3-ASR conversion artifacts (no HF repo yet). Adjust if your checkout differs.
-    private let macArtifacts =
-        "/Users/majimadaisuke/code/coreai/coreai-models-community/conversion/qwen3_asr/artifacts"
-
     // MARK: - Loading
 
     func load() async {
@@ -70,22 +65,14 @@ final class TranscribeModel: ObservableObject {
                     }
                 }
             case .qwen3ASR:
-                #if os(macOS)
-                    let dir = URL(filePath: macArtifacts)
-                    asr = try await KitASRModel(
-                        decoderBundleAt: dir.appending(path: "qwen3_asr_1.7b_decode_int8hu_n390_s1"),
-                        encoderModelAt: dir.appending(path: "qwen3_asr_1.7b_audio_encoder_fp16_k30.aimodel"),
-                        arch: .qwen3ASR1_7B)
-                #else
-                    asr = try await KitASRModel(model: .qwen3ASR1_7B) { progress in
-                        Task { @MainActor [weak self] in
-                            self?.status = String(
-                                format: "Downloading %@ — %.0f%%",
-                                (progress.currentFile as NSString).lastPathComponent,
-                                progress.fraction * 100)
-                        }
+                asr = try await KitASRModel(model: .qwen3ASR1_7B) { progress in
+                    Task { @MainActor [weak self] in
+                        self?.status = String(
+                            format: "Downloading %@ — %.0f%%",
+                            (progress.currentFile as NSString).lastPathComponent,
+                            progress.fraction * 100)
                     }
-                #endif
+                }
             }
             loaded = true
             status = "Model ready. Record / Choose / Demo, then Transcribe."

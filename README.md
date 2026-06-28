@@ -29,6 +29,8 @@ on-device, with the conversion code and a knowledge base. Successor to
 | **Gemma 4 E2B vision (VL)** (image+text) | `vl/` in [🤗 gemma-4-E2B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI) | Gemma |
 | **Unlimited-OCR** (document OCR → markdown: tables→HTML, formulas→LaTeX; zoo's first doc-OCR — **stock runtime, no patch**, flat-latency R-SWA) | [🤗 Unlimited-OCR-CoreAI](https://huggingface.co/mlboydaisuke/Unlimited-OCR-CoreAI) | MIT |
 | **Qwen2.5-Omni-3B Audio** (audio *understanding* — describes sounds, not a transcript; iPhone + Mac, zoo's first audio model) | [🤗 Qwen2.5-Omni-3B-Audio-CoreAI](https://huggingface.co/mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI) | Apache-2.0 |
+| **Whisper large-v3-turbo** (speech→text — 100 languages, auto-detect; stock runtime, iPhone AOT + Mac) | [🤗 whisper-large-v3-turbo-CoreAI-official](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official) | MIT |
+| **Qwen3-ASR-1.7B** (speech→text — the zoo's first ASR; AuT encoder + Qwen3 decoder, 52 languages; iPhone + Mac) | [🤗 Qwen3-ASR-1.7B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-ASR-1.7B-CoreAI) | Apache-2.0 |
 | **Kokoro-82M** (text-to-speech — zoo's first TTS; StyleTTS2 + iSTFTNet, 28 English voices, runs on any text) | [🤗 Kokoro-82M-CoreAI](https://huggingface.co/mlboydaisuke/Kokoro-82M-CoreAI) | Apache-2.0 |
 | **VoxCPM-0.5B** (text-to-speech — diffusion TTS: MiniCPM4 LM + LocDiT flow-matching + AudioVAE; iPhone + Mac, int8 LM) | [🤗 VoxCPM-0.5B-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM-0.5B-CoreAI) | Apache-2.0 |
 | **EmbeddingGemma 300M** (text embeddings — on-device RAG / semantic search) | [🤗 embeddinggemma-300m-CoreAI](https://huggingface.co/mlboydaisuke/embeddinggemma-300m-CoreAI) | Gemma |
