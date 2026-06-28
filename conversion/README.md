@@ -176,6 +176,21 @@ overlay** of that package. Concretely, the additions are:
   compute units. `pip install rfdetr==1.7.1`, torch ≤ 2.11.
   See [`../zoo/rf-detr.md`](../zoo/rf-detr.md).
 
+- **YOLOX (single-stage anchor-free detection, in this dir): `export_yolox.py --variant s`** —
+  the zoo's first YOLO-family / dense detector (CNN counterpart to RF-DETR's DETR):
+  static graph `image [1,3,640,640]` BGR 0-255 letterboxed → `preds [1,8400,85]`
+  (grid+stride DECODED cxcywh pixels + obj + 80 sigmoid class scores, all in-graph),
+  host does `score=obj·cls` + **per-class NMS** (the DETR family needs none). A plain
+  conv graph — Focus strided-slice stem, SPP maxpools, decoupled head, in-graph decode
+  — converts with **zero coreai-torch workarounds** (unlike RF-DETR's four); the only
+  trick is a one-line `cv2` stub so the model builds from `yolox.models` without OpenCV.
+  fp32 ship (fp16 is no faster on GPU and adds near-tie noise — same call as RF-DETR):
+  M4 Max GPU **4.80 ms / 208 FPS**, head cosine **1.000000** + detections IoU **1.000**
+  cpu+gpu vs torch fp32. `--variant {nano,tiny,s,m,l,x}`, `--verify-image <img> --unit
+  {cpu,gpu}` gates end-to-end. Needs a
+  [YOLOX](https://github.com/Megvii-BaseDetection/YOLOX) checkout + `yolox_s.pth` +
+  `pip install loguru`, torch ≤ 2.11. See [`../zoo/yolox.md`](../zoo/yolox.md).
+
 - **Kokoro-82M (text-to-speech, the zoo's first TTS, in this dir): `export_kokoro.py`** —
   StyleTTS2 + iSTFTNet cut into **three** fixed-bucket `.aimodel` bundles around the
   data-dependent duration→alignment expansion: `predictor` (ids → duration/d/t_en),
