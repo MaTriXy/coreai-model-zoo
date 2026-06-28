@@ -10,7 +10,7 @@ packages:
   # KitWhisperModel + KitASRModel (Whisper + Qwen3-ASR for the Transcribe tab).
   coreai-kit:
     url: https://github.com/john-rocky/coreai-kit
-    revision: 72d66c18ffaf0b253becdb7893e3935cb3a809ac
+    revision: 9f97c9fc0372ea9bfe60368122f9a1dd0406dc6e
   # On-device English G2P for free-text TTS (made for Kokoro; pulls in MLX for the
   # neural fallback on out-of-dictionary words).
   MisakiSwift:
