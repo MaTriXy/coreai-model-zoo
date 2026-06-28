@@ -33,6 +33,7 @@ on-device, with the conversion code and a knowledge base. Successor to
 | **Qwen3-ASR-1.7B** (speech→text — the zoo's first ASR; AuT encoder + Qwen3 decoder, 52 languages; iPhone + Mac) | [🤗 Qwen3-ASR-1.7B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-ASR-1.7B-CoreAI) | Apache-2.0 |
 | **Kokoro-82M** (text-to-speech — zoo's first TTS; StyleTTS2 + iSTFTNet, 28 English voices, runs on any text) | [🤗 Kokoro-82M-CoreAI](https://huggingface.co/mlboydaisuke/Kokoro-82M-CoreAI) | Apache-2.0 |
 | **VoxCPM-0.5B** (text-to-speech — diffusion TTS: MiniCPM4 LM + LocDiT flow-matching + AudioVAE; iPhone + Mac, int8 LM) | [🤗 VoxCPM-0.5B-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM-0.5B-CoreAI) | Apache-2.0 |
+| **VoxCPM2 2B** (text-to-speech — 2B successor at 48 kHz: MiniCPM4 28L LM + LocDiT-12L flow-matching + 48 kHz AudioVAE; iPhone + Mac, int8 LM) | [🤗 VoxCPM2-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM2-CoreAI) | Apache-2.0 |
 | **EmbeddingGemma 300M** (text embeddings — on-device RAG / semantic search) | [🤗 embeddinggemma-300m-CoreAI](https://huggingface.co/mlboydaisuke/embeddinggemma-300m-CoreAI) | Gemma |
 | **Qwen3-Embedding 0.6B** (multilingual text embeddings, last-token pooling + MRL) | [🤗 Qwen3-Embedding-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI) | Apache-2.0 |
 | **Qwen3-Reranker 0.6B** (cross-encoder reranker — yes/no relevance score) | [🤗 Qwen3-Reranker-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI) | Apache-2.0 |

@@ -13,6 +13,8 @@ struct CoreAIAudioApp: App {
                     .tabItem { Label("Speak", systemImage: "speaker.wave.2") }
                 VoxCPMView()
                     .tabItem { Label("Voice", systemImage: "waveform") }
+                VoxCPM2View()
+                    .tabItem { Label("Voice 2B", systemImage: "waveform.badge.plus") }
             }
             // Non-blocking self-tests (the iOS launch watchdog kills any main-thread block).
             .task {
@@ -21,6 +23,9 @@ struct CoreAIAudioApp: App {
                 }
                 if ProcessInfo.processInfo.environment["VOXCPM_SELFTEST"] != nil {
                     await runVoxCPMSelfTest()
+                }
+                if ProcessInfo.processInfo.environment["VOXCPM2_SELFTEST"] != nil {
+                    await runVoxCPM2SelfTest()
                 }
             }
         }

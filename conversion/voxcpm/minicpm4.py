@@ -51,9 +51,30 @@ class MiniCPM4Cfg:
         49.551246643066406, 49.69068145751953, 49.78697967529297, 49.85338592529297,
     ]
 
-    def __init__(self, num_hidden_layers: int, vocab_size: int):
+    no_rope = False  # residual_lm in VoxCPM2 has no positional embedding
+
+    def __init__(self, num_hidden_layers: int, vocab_size: int, *,
+                 hidden_size: int | None = None, intermediate_size: int | None = None,
+                 num_attention_heads: int | None = None, num_key_value_heads: int | None = None,
+                 head_dim: int | None = None, short_factor: list | None = None,
+                 no_rope: bool | None = None):
         self.num_hidden_layers = num_hidden_layers
         self.vocab_size = vocab_size
+        # optional overrides (defaults = VoxCPM-0.5B class attrs above; VoxCPM2 passes 2B values)
+        if hidden_size is not None:
+            self.hidden_size = hidden_size
+        if intermediate_size is not None:
+            self.intermediate_size = intermediate_size
+        if num_attention_heads is not None:
+            self.num_attention_heads = num_attention_heads
+        if num_key_value_heads is not None:
+            self.num_key_value_heads = num_key_value_heads
+        if head_dim is not None:
+            self.head_dim = head_dim
+        if short_factor is not None:
+            self.short_factor = short_factor
+        if no_rope is not None:
+            self.no_rope = no_rope
 
 
 def make_rope_tables(cfg: MiniCPM4Cfg, buf: int, dtype=torch.float32):
@@ -165,9 +186,14 @@ class MiniCPM4Backbone(nn.Module):
         self.layers = nn.ModuleList([Layer(cfg) for _ in range(cfg.num_hidden_layers)])
         self.norm = RMSNorm(cfg.hidden_size, cfg.rms_norm_eps)
         self.sdpa = SDPA(is_causal=False)  # explicit mask
-        cos, sin = make_rope_tables(cfg, buf)
-        self.register_buffer("cos_table", cos, persistent=False)
-        self.register_buffer("sin_table", sin, persistent=False)
+        self.no_rope = getattr(cfg, "no_rope", False)  # residual_lm (VoxCPM2) has no positional emb
+        if self.no_rope:
+            self.cos_table = None
+            self.sin_table = None
+        else:
+            cos, sin = make_rope_tables(cfg, buf)
+            self.register_buffer("cos_table", cos, persistent=False)
+            self.register_buffer("sin_table", sin, persistent=False)
 
     def _attn(self, attn: Attention, x, q_pos, write_start, mask, k_cache, v_cache, li):
         b, q, _ = x.shape
@@ -175,9 +201,10 @@ class MiniCPM4Backbone(nn.Module):
         query = attn.q_proj(x).reshape(b, q, nh, hd).permute(0, 2, 1, 3)
         key = attn.k_proj(x).reshape(b, q, nkv, hd).permute(0, 2, 1, 3)
         value = attn.v_proj(x).reshape(b, q, nkv, hd).permute(0, 2, 1, 3)
-        cos = self.cos_table.index_select(0, q_pos.reshape(-1)).reshape(1, 1, q, hd)
-        sin = self.sin_table.index_select(0, q_pos.reshape(-1)).reshape(1, 1, q, hd)
-        query, key = apply_rope(query, key, cos, sin)
+        if not self.no_rope:
+            cos = self.cos_table.index_select(0, q_pos.reshape(-1)).reshape(1, 1, q, hd)
+            sin = self.sin_table.index_select(0, q_pos.reshape(-1)).reshape(1, 1, q, hd)
+            query, key = apply_rope(query, key, cos, sin)
         write_kv_range(k_cache, li, write_start, key)
         write_kv_range(v_cache, li, write_start, value)
         full_k = k_cache.narrow(0, li, 1).squeeze(0)
@@ -212,9 +239,12 @@ def build_kv_state(cfg: MiniCPM4Cfg, buf: int, dtype=torch.float32):
 
 
 def load_backbone(state_dict: dict, prefix: str, num_layers: int, vocab_size: int, buf: int,
-                  dtype=torch.float32) -> MiniCPM4Backbone:
-    """Load base_lm.* / residual_lm.* weights from the VoxCPM checkpoint into a backbone."""
-    cfg = MiniCPM4Cfg(num_hidden_layers=num_layers, vocab_size=vocab_size)
+                  dtype=torch.float32, **cfg_kwargs) -> MiniCPM4Backbone:
+    """Load base_lm.* / residual_lm.* weights from the VoxCPM checkpoint into a backbone.
+
+    cfg_kwargs (hidden_size/head_dim/intermediate_size/num_*_heads/short_factor/no_rope) override the
+    VoxCPM-0.5B defaults — VoxCPM2 passes the 2B values + no_rope=True for the residual_lm."""
+    cfg = MiniCPM4Cfg(num_hidden_layers=num_layers, vocab_size=vocab_size, **cfg_kwargs)
     m = MiniCPM4Backbone(cfg, buf).to(dtype).eval()
     own = m.state_dict()
     sub = {}
