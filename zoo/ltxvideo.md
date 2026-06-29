@@ -15,6 +15,15 @@ compression, 32× spatial / 8× temporal; also performs the final denoise via ti
 conditioning at `decode_timestep=0.05`). At `guidance_scale=1` (distilled) CFG is off
 and `stg_scale=0`, so the DiT runs batch-1, single-conditioning.
 
+## Sample
+
+512×768 · 49 frames · 8 steps · **~14 s on a Mac GPU**. Prompt: *"A clear glass of water on a
+wooden table, slow motion droplet falling into it creating ripples, cinematic."*
+([`ltxvideo_sample.mp4`](ltxvideo_sample.mp4) · also on the
+[🤗 repo](https://huggingface.co/mlboydaisuke/LTX-Video-2B-CoreAI))
+
+<video controls autoplay loop muted src="https://huggingface.co/mlboydaisuke/LTX-Video-2B-CoreAI/resolve/main/sample.mp4"></video>
+
 ## Graph contracts (demo 512×768, 49 frames)
 
 ```
