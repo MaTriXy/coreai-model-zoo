@@ -40,3 +40,27 @@ The "too slow to generate" complaint is about *time-to-first-audio*, not through
 iPhone 17 Pro, int8, same model — OLD (no prefill bundle, non-streaming) vs NEW: synthesis emits its first chunk at **~0.43 s** (vs ~4.2 s for the whole clip) and runs at **RTF ~0.9** (just below real-time). Because RTF sits close to 1.0, the app holds a small **pre-roll jitter buffer (~2 chunks ≈ 1 s)** before starting playback, so a momentary generation slowdown can't starve the player (audible crackle/underrun). Net *perceived* time-to-first-audio is **~0.9 s** — still ~5× better than the ~4 s whole-clip wait — with smooth, gapless playback.
 
 Throughput note: on the bandwidth-bound A19 the backbone q=1 GEMV is the floor, so int8 and fp16 tie on RTF — the win is first-audio + streaming, not raw tokens/s. (On M-series the picture differs — fp16 and an fp16-on-ANE backbone are faster — but those gains don't transfer to iOS: the ANE backbone path is uncompilable for h18p, and a custom Metal matvec lost to the engine's own GEMV.) A larger real-throughput win needs few-step / CFG distillation of the diffusion, which is a quality trade-off.
+
+# VoxCPM2 (2B, 48 kHz) on Core AI
+
+[OpenBMB VoxCPM2](https://huggingface.co/openbmb/VoxCPM2) — the 2B, 48 kHz successor — is the zoo's first **2B on-device TTS**. Same five-bundle + host-glue shape as the 0.5B, scaled up and re-architected in a few places. Swift host = `VoxCPM2TTS`; demo = `apps/coreai-audio` "Voice 2B" tab. Weights: [🤗 mlboydaisuke/VoxCPM2-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM2-CoreAI). Conversion = `conversion/voxcpm/*_v2.py` (+ `pipeline_v2.py`, a self-contained generator that loads only from the raw checkpoint = the Swift-host reference).
+
+## What changed vs 0.5B
+
+- **Scale.** base_lm 28L, residual_lm 8L (`no_rope: true`), hidden 2048, head_dim 128 (= `kv_channels`, **not** hidden/heads), 16q/2kv, ffn 6144. feat_decoder LocDiT **12L**, feat_encoder LocEnc **12L** (1024h / 4096ffn / 128hd). patch 4 (was 2), FSQ latent 512 (was 256).
+- **Dataflow deltas — the easy place to get a silently-wrong port.** (1) `mu = concat(lm_to_dit(lm_h), res_to_dit(res_h))` → 2048, reshaped to **two** 1024-dim DiT tokens (0.5B *added* them into one). (2) In LocDiT the timestep token is **separate** from mu: `seq = [mu(2), t(1), cond(P), x(P)]`. (3) The residual-LM input is `fusion_concat_proj(cat(A, B))` where A=`fsq(lm_h)`|prefill-base-out, B=`curr_embed`|0 (0.5B just added lm_h + curr). In zero-shot prefill the residual input is `fusion(cat(base_out, 0))` per position — asymmetric with the loop.
+- **AudioVAE v2 = 48 kHz.** Decoder rates `[8,6,5,2,2,2]` = **1920×** (25 Hz latent → 48 kHz), **depthwise** convs, and a `SampleRateConditionLayer` (scale_bias) before every upsample block. The output rate is fixed (48000 → `bucketize([20000,30000,40000]) = 3`), so the per-channel scale/bias embeddings are **baked into constant buffers at load** — no embedding lookup in the graph. weight_norm folded as usual.
+
+## Verification (the oracle)
+
+Reassemble the official VoxCPM2 source into its expected package layout (`_ref_v2/voxref/`, with a no-op LoRA stub) so the full `VoxCPM2Model` instantiates on CPU = a true oracle. Then: per-component gates (backbone / feat_decoder / feat_encoder) **cos 1.0** vs the official modules loaded from the real checkpoint; an e2e gate replays the official CFM noise through my overlays and matches latents (cos 0.997) + full-chain 48 kHz **magspec 0.996**; every exported bundle engine-gated **cos ≥ 0.9999**.
+
+## On-device (iPhone 17 Pro)
+
+- **Depthwise grouped Conv1d + ConvTranspose + baked SR-cond AOT-compile clean for h18p** (0 `failedToSpecialize`) — the one thing the 0.5B never exercised; it just works.
+- int8 backbone (base 1.2 GB / res 360 MB each for decode + prefill) + fp16 feat_decoder/encoder/vocoder + glue ≈ **4.9 GB** `.aimodelc`, fits with the increased-memory entitlement (no jetsam). A `MINIMAL` set (drop the two prefill bundles → prefill-via-decode, bit-exact) is 3.3 GB.
+- int8 + int8-prefill + streaming: **first-audio 0.65 s, RTF ~1.19, 48 kHz**. The 2B is ~4× the 0.5B, so RTF sits *above* 1.0 — streaming falls behind by ~10 %, so the app needs a **3-chunk pre-roll** (not 2) to avoid crackle. Below-real-time needs diffusion distillation (quality trade). Mac RTF (~0.97) does not transfer (A19 is bandwidth-bound).
+
+## Gotcha
+
+Uploading the large Core AI bundles to the Hub: the **xet** transfer backend panics mid-file on the multi-GB `.mlirb`/`.aimodelc` blobs (`assertion left == right ... not fully completed`). Set **`HF_HUB_DISABLE_XET=1`** (classic LFS path); `upload_folder` is idempotent, so a re-run skips completed files and finishes clean.
