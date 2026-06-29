@@ -37,6 +37,17 @@ patch stack** (the diffusion runtime is unmodified), so its build is self-contai
 overruns a 12 GB iPhone's memory limit); the iOS build runs smaller bundles (Stable
 Diffusion 0.9B) loaded via **Local…**.
 
+### Video generation
+
+| App | Model | Video @ 8 steps |
+|---|---|---|
+| [`CoreAIVideo/`](CoreAIVideo/) | **LTX-Video 2B distilled** (text→video, **macOS**) — [card](../zoo/ltxvideo.md) · [HF bundle](https://huggingface.co/mlboydaisuke/LTX-Video-2B-CoreAI) | macOS 512×768 × 49f ≈ 14 s |
+
+The zoo's first **video** app — a SwiftUI front-end over a resident Python backend that runs all
+three nets (T5 + DiT + causal video VAE) as Core AI bundles; only LTX's FlowMatch sampler is on
+host. Mac-host pattern (like `TripoSplatMac`): the app launches the proven pipeline and plays the
+result. See [`CoreAIVideo/README.md`](CoreAIVideo/).
+
 ### Audio (understanding · transcription · speech)
 
 | App | Models | Device |
