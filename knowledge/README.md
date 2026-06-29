@@ -7,6 +7,10 @@ Hard-won, verified notes on Apple's Core AI (iOS/macOS 27) — what the docs don
   format, the PyTorch → `.aimodel` → Swift-runtime pipeline.
 - [`conversion-guide.md`](conversion-guide.md) — converting a PyTorch model to `.aimodel`: the
   canonical `TorchConverter` API + the gotchas that cost real time.
+- [`ship-playbook.md`](ship-playbook.md) — **the end-to-end runbook**: converted `.aimodel` →
+  CoreAIKit Swift engine → app → on-device (AOT + sideload + headless self-test for RTF) → publish
+  (HF + zoo + post). The stage checklist + cross-cutting traps (gate-before-port, JIT→AOT, tokenizer
+  retag), validated shipping Parakeet in one session.
 - [`compute-units-and-authoring.md`](compute-units-and-authoring.md) — **ANE vs GPU vs CPU**: the
   static/BC1S/Conv2d/per-head/fp16 ANE rules vs the dynamic/fused/custom-kernel GPU rules, the
   macOS↔iOS export split, and the PSNR verification gates. Read this to choose a target.
