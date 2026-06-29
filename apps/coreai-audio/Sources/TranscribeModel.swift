@@ -77,12 +77,19 @@ final class TranscribeModel: ObservableObject {
                     }
                 }
             case .parakeet:
-                parakeet = try await KitParakeetModel(model: .parakeetTDT) { progress in
-                    Task { @MainActor [weak self] in
-                        self?.status = String(
-                            format: "Downloading %@ — %.0f%%",
-                            (progress.currentFile as NSString).lastPathComponent,
-                            progress.fraction * 100)
+                // Prefer a sideloaded bundle (AOT-compiled encoder) — the 1.2 GB encoder's on-device
+                // JIT specialization stalls, so on iPhone we ship a precompiled `.aimodelc`.
+                if let local = Self.sideloadedParakeetBundle() {
+                    status = "Loading Parakeet (sideloaded)…"
+                    parakeet = try await KitParakeetModel(bundleAt: local)
+                } else {
+                    parakeet = try await KitParakeetModel(model: .parakeetTDT) { progress in
+                        Task { @MainActor [weak self] in
+                            self?.status = String(
+                                format: "Downloading %@ — %.0f%%",
+                                (progress.currentFile as NSString).lastPathComponent,
+                                progress.fraction * 100)
+                        }
                     }
                 }
             }
@@ -92,6 +99,22 @@ final class TranscribeModel: ObservableObject {
             status = "Load failed: \(error.localizedDescription)"
         }
         busy = false
+    }
+
+    /// A sideloaded Parakeet bundle in `Documents/Models/Parakeet` — the AOT-encoder path for iPhone,
+    /// where the 1.2 GB encoder's on-device JIT specialization stalls. Returns the directory if it
+    /// holds an encoder graph (`.aimodelc` AOT or `.aimodel`), else nil (→ Hub download).
+    private static func sideloadedParakeetBundle() -> URL? {
+        let fm = FileManager.default
+        let dir = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appending(path: "Models/Parakeet")
+        guard let entries = try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)
+        else { return nil }
+        let hasEncoder = entries.contains {
+            $0.lastPathComponent.lowercased().contains("encoder")
+                && ($0.pathExtension == "aimodelc" || $0.pathExtension == "aimodel")
+        }
+        return hasEncoder ? dir : nil
     }
 
     /// Drop the loaded model(s) — called when the engine selection changes.

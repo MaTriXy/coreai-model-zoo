@@ -54,7 +54,15 @@ exported, and gated on Core AI **GPU**. Then the **Swift** path (`KitParakeetMod
 → the three graphs → host TDT loop → swift-transformers detokenize) reproduced the same 77 tokens
 **token-exact on Mac GPU** — the engine is a CoreAIKit drop-in, no Python at inference.
 
-## The port in three lessons
+## Speed (on-device, iPhone 17 Pro / iOS 27, Release, GPU)
+
+Device-verified end-to-end (the AOT-compiled encoder bundle, token-exact): a **14.84 s** clip
+transcribes in **0.31 s** (warm; 0.40 s cold) — **47.9× real-time**. Encoder bundle **load 3.9 s**
+(one-time, the `.h18p.aimodelc` mmaps its precompiled MPSGraph; the un-compiled 1.2 GB `.aimodel`
+JIT-specializes for minutes/stalls on-device — see lesson 4). The whole transducer (encoder one-shot
++ a host greedy loop over 361 frames) is why decode is near-instant.
+
+## The port in four lessons
 
 1. **The joint activation is ReLU, not the encoder's SiLU.** The joint uses the top-level
    `config.hidden_act` (relu); wiring the encoder's silu there silently garbles the transcript.
@@ -66,15 +74,35 @@ exported, and gated on Core AI **GPU**. Then the **Swift** path (`KitParakeetMod
    instead makes the decoder hallucinate extra tokens over the tail.
 3. **fp16 encoder, fp32 decoder, all on GPU.** The 24-layer FastConformer ships fp16 (GPU cos
    0.999995; CPU fp16 is noisier, min ~0.95). The small predictor/joint stay fp32.
+4. **iOS ships the AOT-compiled encoder; the tokenizer is retagged for swift-transformers.** The
+   1.2 GB encoder's on-device JIT specialization stalls (minutes / no progress), so iPhone loads a
+   `coreai-build compile … --platform iOS --architecture h18p --preferred-compute gpu` `.aimodelc`
+   (2.3 GB, embeds the precompiled MPSGraph) — load drops to ~3.9 s. The small predict/joint JIT
+   fine and ship as portable `.aimodel`. Separately, swift-transformers rejects
+   `tokenizer_class:"ParakeetTokenizer"` (`unsupportedTokenizer`); the bundle retags it to
+   `"PreTrainedTokenizer"` (→ BPETokenizer; decode is driven by tokenizer.json's Metaspace decoder,
+   so it stays exact).
 
 ## ⬇️ Bundle
 
-**`mlboydaisuke/Parakeet-TDT-0.6B-CoreAI`** *(upload pending)* — `encoder` (fp16, 1.2 GB) +
-`predict` (fp32, 49 MB) + `joint` (fp32, 21 MB) `.aimodel`s + `tokenizer.json`. cc-by-4.0. CoreAIKit
-drop-in: `KitParakeetModel` (`transcribe(samples:onPartial:)`). In the **coreai-audio** app's
-Transcribe tab as "Parakeet TDT 0.6B".
+**[mlboydaisuke/Parakeet-TDT-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Parakeet-TDT-0.6B-CoreAI)**
+— `parakeet_encoder_float16_L2885.aimodel` (fp16, 1.2 GB) + `parakeet_predict_float32.aimodel`
+(49 MB) + `parakeet_joint_float32.aimodel` (21 MB) + `tokenizer.json`/`tokenizer_config.json` +
+`mel_filters_128x257_f32.bin`. cc-by-4.0. CoreAIKit drop-in: `KitParakeetModel`
+(`transcribe(samples:onPartial:)`). In the **coreai-audio** app's Transcribe tab as "Parakeet
+TDT 0.6B". For iPhone, AOT-compile the encoder to `.h18p.aimodelc` and sideload the bundle into
+`Documents/Models/Parakeet/` (the app prefers it over the Hub download).
 
-Convert yourself: [`conversion/parakeet/`](../conversion/parakeet/) — `gen_oracle.py` (golden, in an
-isolated transformers-5.x env) → `export_encoder.py` (FastConformer re-author) → `export_decoder.py`
-(predictor + joint) → `gate_e2e.py` (full pipeline) and `gate_mel_swift.py` (the Swift mel recipe,
-gated token-exact e2e).
+Convert yourself — [`conversion/parakeet/`](../conversion/parakeet/), two venvs (an isolated
+transformers-5.x for the golden, the main coreai-torch venv for export/gate; `_GPU_LOCK` before any
+Mac-GPU run):
+- `gen_oracle.py` — golden oracle from `ParakeetForTDT` (`--seconds 16 --pad-seconds 14` → the 30 s
+  bucket); also asserts the hand-rolled TDT loop == `model.generate()`.
+- `export_encoder.py` — re-author the FastConformer (Transformer-XL rel-pos, depthwise conv,
+  BatchNorm fold) + projector from safetensors → fp16 `.aimodel`, per-token cosine gate vs golden.
+- `export_decoder.py` — re-author the embedding + 2-layer LSTM + joint (ReLU) → fp32 `.aimodel`s.
+- `gate_e2e.py` — full pipeline (mel → encoder → host TDT loop), token-exact vs the golden.
+- `gate_mel_swift.py` / `mel_swift_sim.py` / `diff_swift_mel.py` — pin the Swift mel recipe: a manual
+  cos/sin-DFT reimplementation (what `ParakeetMelPreprocessor.swift` runs) gated token-exact e2e and
+  diffed against the golden `input_features`. This is what caught the normalization bug (lesson 2).
+- `_parakeet_hf_upload.py` — stage + upload the bundle (also retags `tokenizer_class`, lesson 4).
