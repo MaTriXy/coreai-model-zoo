@@ -1,0 +1,12 @@
+# weights, reference clone, exported bundles, ship dirs, caches, audio — never committed (CLAUDE.md)
+_ref/
+artifacts/
+ship_macos/
+t5_tokenizer/
+__pycache__/
+model.safetensors
+*.ckpt
+*.pt
+*.wav
+*.f32
+*.log
