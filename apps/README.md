@@ -52,16 +52,18 @@ result. See [`CoreAIVideo/README.md`](CoreAIVideo/).
 
 | App | Models | Device |
 |---|---|---|
-| [`coreai-audio/`](coreai-audio/) | **Understand:** Qwen2.5-Omni-3B Thinker · **Transcribe:** Whisper large-v3-turbo *or* Qwen3-ASR-1.7B (selectable) · **Voice:** VoxCPM-0.5B · **Speak:** Kokoro-82M | iPhone 17 Pro + M4 Max |
+| [`coreai-audio/`](coreai-audio/) | **Understand:** Qwen2.5-Omni-3B Thinker · **Transcribe:** Whisper large-v3-turbo *·* Qwen3-ASR-1.7B *·* Parakeet-TDT-0.6B (selectable) · **Voice:** VoxCPM-0.5B · **Speak:** Kokoro-82M | iPhone 17 Pro + M4 Max |
 
 Four tabs, all on-device. **Understand** → *"what do you hear?"*: a Whisper-style audio encoder (run
 once per clip) feeds the Qwen2.5-3B decoder on the ⚡pipelined engine; the audio embeds ride one
 `EngineOptions.staticInputBuffers` input (`<|AUDIO|>` ids rewritten to `vocab+slot`, no rope shift —
 TMRoPE collapses to 1-D), and a Swift vDSP log-mel front end (bit-exact with the HF extractor, cos
 1.0) does the waveform→features step. iPhone uses the **AOT** decoder (`.aimodelc`, h18p) so the
-3.9 GB graph dodges the on-device JIT jetsam. **Transcribe** turns speech → text with a choice of two
+3.9 GB graph dodges the on-device JIT jetsam. **Transcribe** turns speech → text with a choice of three
 ASR models: Whisper large-v3-turbo (stock-runtime fixed-128 graph via `KitWhisperModel`, 100 langs,
-auto-detect) or Qwen3-ASR-1.7B (the zoo's first ASR, via `KitASRModel`, 52 langs). **Voice** /
+auto-detect), Qwen3-ASR-1.7B (the zoo's first ASR, via `KitASRModel`, 52 langs), or Parakeet-TDT-0.6B
+(the zoo's first transducer / TDT, via `KitParakeetModel`, 25 EU langs, iPhone 47.9× real-time).
+**Voice** /
 **Speak** are diffusion (VoxCPM) and StyleTTS2 (Kokoro) text-to-speech. See
 [`coreai-audio/README.md`](coreai-audio/).
 

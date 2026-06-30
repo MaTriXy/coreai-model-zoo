@@ -1,11 +1,12 @@
 // TranscribeModel — view model for the Transcribe tab. Turns a recorded/chosen/demo clip into TEXT
-// (speech-to-text) with a CHOICE of two Core AI ASR models, distinct from the Understand tab (which
+// (speech-to-text) with a CHOICE of three Core AI ASR models, distinct from the Understand tab (which
 // describes sounds):
 //   • Whisper large-v3-turbo (Apple-recipe export on the stock runtime, via CoreAIKit's
 //     KitWhisperModel) — published, downloads from the Hub on both platforms.
 //   • Qwen3-ASR-1.7B (the zoo's first ASR, via CoreAIKit's KitASRModel).
+//   • Parakeet-TDT-0.6B (the zoo's first transducer / TDT, via CoreAIKit's KitParakeetModel).
 //
-// Both models download from the Hugging Face Hub on first load (iOS + macOS) and cache on-device.
+// All three models download from the Hugging Face Hub on first load (iOS + macOS) and cache on-device.
 
 import CoreAIKit
 import Foundation
