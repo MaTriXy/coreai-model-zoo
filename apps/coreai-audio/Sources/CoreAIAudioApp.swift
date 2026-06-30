@@ -20,6 +20,9 @@ struct CoreAIAudioApp: App {
         if ProcessInfo.processInfo.environment["PARAKEET_SELFTEST"] != nil {
             Task.detached { await runParakeetSelfTest() }
         }
+        if ProcessInfo.processInfo.environment["MUSIC_SELFTEST"] != nil {
+            Task.detached { await runMusicSelfTest() }
+        }
     }
 
     var body: some Scene {
@@ -35,6 +38,8 @@ struct CoreAIAudioApp: App {
                     .tabItem { Label("Voice", systemImage: "waveform") }
                 VoxCPM2View()
                     .tabItem { Label("Voice 2B", systemImage: "waveform.badge.plus") }
+                MusicGenView()
+                    .tabItem { Label("Music", systemImage: "music.note") }
             }
             // Non-blocking self-test (KOKORO_SELFTEST=1): the iOS launch watchdog
             // kills any main-thread block, so run it as a normal async task.
