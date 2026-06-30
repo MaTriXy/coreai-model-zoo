@@ -62,6 +62,7 @@ final class ChatEngine: ObservableObject {
 
     private var engine: (any InferenceEngine)?
     private var tokenizer: (any Tokenizer)?
+    private var llada: LLaDAEngine?           // set instead of `engine` for diffusion-LM bundles
     private var generationTask: Task<Void, Never>?
     private var genSeq = 0              // identifies the latest turn (stale tasks don't touch status)
     private var stopRequested = false   // user pressed Stop — stop displaying, keep draining
@@ -114,6 +115,7 @@ final class ChatEngine: ObservableObject {
             generationTask = nil
             engine = nil
             tokenizer = nil
+            llada = nil
             selectedModel = nil
             messages = []
             stats = LiveStats()
@@ -133,9 +135,21 @@ final class ChatEngine: ObservableObject {
         stats = LiveStats()
         engine = nil
         tokenizer = nil
+        llada = nil
 
         Task {
             do {
+                // Diffusion-LM bundles (kind "dllm") use a host denoising loop, not the AR engine.
+                if LLaDAEngine.isDLLM(bundleURL: entry.url) {
+                    let start = SuspendingClock.now
+                    let loaded = try await LLaDAEngine(bundleURL: entry.url)
+                    self.llada = loaded
+                    self.stats.loadSeconds = Self.seconds(from: start, to: .now)
+                    self.stats.footprintBytes = Self.physFootprint()
+                    self.status = .ready
+                    return
+                }
+
                 let bundle = try LanguageBundle(from: entry.url.path)
                 let engineConfig = ModelConfig(
                     name: bundle.name,
@@ -176,9 +190,11 @@ final class ChatEngine: ObservableObject {
     // MARK: - Chat
 
     func send(_ text: String) {
-        guard let engine, let tokenizer, status == .ready else { return }
+        guard status == .ready else { return }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        if llada != nil { sendDLLM(trimmed); return }
+        guard let engine, let tokenizer else { return }
 
         messages.append(ChatMessage(role: .user, content: trimmed))
         var reply = ChatMessage(role: .assistant, isStreaming: true)
@@ -266,6 +282,72 @@ final class ChatEngine: ObservableObject {
     private func finalize(_ reply: inout ChatMessage, _ id: UUID, _ seq: Int) {
         reply.isStreaming = false
         update(id, with: reply)
+        if seq == genSeq {
+            status = .ready
+            stats.footprintBytes = Self.physFootprint()
+        }
+    }
+
+    // MARK: - Diffusion-LM chat (LLaDA / d3LLM)
+
+    // A diffusion LM denoises the whole canvas in parallel — there is no AR token stream. We run the
+    // host loop and stream the decoded canvas after each denoising step (the masks fill in). Unlike
+    // the AR engine, this loop completes promptly (distillation keeps the step count low) and needs no
+    // drain hack — but we still serialize turns through `generationTask`.
+    private func sendDLLM(_ trimmed: String) {
+        guard let llada else { return }
+        messages.append(ChatMessage(role: .user, content: trimmed))
+        let reply = ChatMessage(role: .assistant, isStreaming: true)
+        let replyID = reply.id
+        messages.append(reply)
+        status = .generating
+        stats.ttftSeconds = nil
+        stats.generatedTokens = 0
+        stats.tokensPerSecond = nil
+        stopRequested = false
+        genSeq += 1
+        let seq = genSeq
+
+        let history: [[String: any Sendable]] = messages.dropLast().map {
+            ["role": $0.role == .user ? "user" : "assistant", "content": $0.content]
+        }
+
+        let previous = generationTask
+        generationTask = Task {
+            await previous?.value
+            do {
+                if let ids = try? llada.promptIds(history: history), seq == self.genSeq {
+                    self.stats.promptTokens = ids.count
+                }
+                let requestStart = SuspendingClock.now
+                let result = try await llada.generate(history: history) { info in
+                    guard !self.stopRequested else { return }
+                    if seq == self.genSeq, self.stats.ttftSeconds == nil {
+                        self.stats.ttftSeconds = Self.seconds(from: requestStart, to: .now)
+                    }
+                    self.setContent(replyID, info.text)
+                    if seq == self.genSeq {
+                        self.stats.generatedTokens = info.committed
+                        let elapsed = Self.seconds(from: requestStart, to: .now)
+                        if elapsed > 0 { self.stats.tokensPerSecond = Double(info.committed) / elapsed }
+                    }
+                }
+                if !self.stopRequested { self.setContent(replyID, result.text) }
+                if seq == self.genSeq { self.stats.generatedTokens = result.committed }
+                self.finalizeByID(replyID, seq)
+            } catch {
+                self.setContent(replyID, "(generation failed: \(error))")
+                self.finalizeByID(replyID, seq)
+            }
+        }
+    }
+
+    private func setContent(_ id: UUID, _ text: String) {
+        if let i = messages.firstIndex(where: { $0.id == id }) { messages[i].content = text }
+    }
+
+    private func finalizeByID(_ id: UUID, _ seq: Int) {
+        if let i = messages.firstIndex(where: { $0.id == id }) { messages[i].isStreaming = false }
         if seq == genSeq {
             status = .ready
             stats.footprintBytes = Self.physFootprint()

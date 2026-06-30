@@ -61,6 +61,12 @@ enum ModelCatalog {
             repo: "https://huggingface.co/mlboydaisuke/gpt-oss-20b-CoreAI-official",
             remote: "macos", approxSizeGB: 13, localName: "gpt_oss_20b_official"),
         // ── Zoo community ports (engine patches / custom Metal kernels) ──
+        // Diffusion LM (zoo's first): masked-diffusion decode via a host loop over a static
+        // bidirectional forward (LLaDAEngine), NOT the AR runtime. int4 body + int8 head ~4.9 GB.
+        DownloadableModel(
+            id: "llada-8b-dllm", name: "LLaDA-8B (diffusion)", detail: "dLLM · d3LLM distilled · parallel denoising · int4",
+            repo: "https://huggingface.co/mlboydaisuke/LLaDA-8B-dLLM-CoreAI",
+            remote: "macos", approxSizeGB: 5, localName: "llada8b_dllm"),
         DownloadableModel(
             id: "qwen36-35b", name: "Qwen3.6-35B-A3B", detail: "MoE · 35B/~3B active · gather_qmm",
             repo: "https://huggingface.co/mlboydaisuke/Qwen3.6-35B-A3B-CoreAI",

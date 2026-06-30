@@ -1,0 +1,6 @@
+# weights, reference clones, exported bundles, caches — never committed (CLAUDE.md)
+artifacts/
+d3LLM_LLaDA/
+_ref/
+__pycache__/
+*.log
