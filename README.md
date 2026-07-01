@@ -4,50 +4,59 @@ LLMs converted to Apple **Core AI** (`.aimodel`, iOS 27 / macOS 27) — download
 on-device, with the conversion code and a knowledge base. Successor to
 [`CoreML-Models`](https://github.com/john-rocky/CoreML-Models).
 
+**Run any model on device.** Every row below links a ready-to-build app — in this repo's
+[`apps/`](apps) or a [CoreAIKit example](https://github.com/john-rocky/coreai-kit/tree/main/Examples)
+(marked ↗). To embed a model in your own app instead, add
+[**CoreAIKit**](https://github.com/john-rocky/coreai-kit) and load it by its catalog id.
+
 ## Models
 
-| Model | Download (`.aimodel`) | License |
-|---|---|---|
-| **Qwen3.5-0.8B** | [🤗 qwen3.5-0.8B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreAI) | Apache-2.0 |
-| **Qwen3.5-2B** | [🤗 qwen3.5-2B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreAI) | Apache-2.0 |
-| **Qwen3.6-35B-A3B** (MoE, Mac-only) | [🤗 Qwen3.6-35B-A3B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-35B-A3B-CoreAI) | Apache-2.0 |
-| **Qwen3.6-27B** (dense, Mac-only) | [🤗 Qwen3.6-27B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-27B-CoreAI) | Apache-2.0 |
-| **GLM-4.7-Flash** (MoE + MLA, Mac-only — zoo's first MLA) | [🤗 GLM-4.7-Flash-CoreAI](https://huggingface.co/mlboydaisuke/GLM-4.7-Flash-CoreAI) | MIT |
-| **Gemma 4 E2B** (text, incl. official-QAT int4) | [🤗 gemma-4-E2B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI) | Gemma |
-| **Gemma 4 E4B** (text, official-QAT int4) | [🤗 gemma-4-E4B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E4B-CoreAI) | Gemma |
-| **Gemma 4 12B** (dense, Mac-only — custom flash-decode kernel ‡) | [🤗 Gemma-4-12B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-12B-CoreAI) | Gemma |
-| **Gemma 4 31B** (dense, Mac-only — custom flash-decode kernel ‡) | [🤗 Gemma-4-31B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-31B-CoreAI) | Gemma |
-| **LFM2.5-1.2B-Instruct** | [🤗 LFM2.5-1.2B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-1.2B-CoreAI) | LFM Open License v1.0 |
-| **LFM2.5-8B-A1B** (MoE, custom `gather_qmm` kernel — first iPhone MoE) | [🤗 LFM2.5-8B-A1B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-8B-A1B-CoreAI) | LFM Open License v1.0 |
-| **Granite 4.0-H 1B / 350M** | [🤗 granite-4.0-h-CoreAI](https://huggingface.co/mlboydaisuke/granite-4.0-h-CoreAI) | Apache-2.0 |
-| **Nanbeige4.1-3B** (dense reasoning/agentic, iPhone — 32B-class @ 3.93B) | [🤗 Nanbeige4.1-3B-CoreAI](https://huggingface.co/mlboydaisuke/Nanbeige4.1-3B-CoreAI) | Apache-2.0 |
-| **MiniCPM5-1B** (1B-class on-device LLM, hybrid Think/No-Think, 128K, OpenBMB) | [🤗 MiniCPM5-1B-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM5-1B-CoreAI) | Apache-2.0 |
-| **FastContext-1.0-4B** (repo-exploration agent — first-turn search / multi-turn evidence / file:line citation; Qwen3-4B arch, iPhone GPU, AOT h18p; Microsoft) | [🤗 FastContext-1.0-4B-CoreAI](https://huggingface.co/mlboydaisuke/FastContext-1.0-4B-CoreAI) | MIT |
-| **BitCPM-8B** (zoo's first **1.58-bit ternary** LLM — every weight is {-1,0,+1}; MiniCPM4-8B arch, custom 2-bit packed-GEMM Metal kernel; 8B running in ~2.1 GB on iPhone GPU; OpenBMB) | [🤗 BitCPM-8B-CoreAI](https://huggingface.co/mlboydaisuke/BitCPM-8B-CoreAI) | Apache-2.0 |
-| **LLaDA-8B dLLM** (zoo's first **diffusion LLM** — masked-diffusion decode: fills a canvas of `[MASK]` tokens **in parallel**, not left-to-right AR; bidirectional LLaMA-dense 8B, [d3LLM](https://huggingface.co/d3LLM/d3LLM_LLaDA)-distilled; int4 ~4.9 GB, Mac) | [🤗 LLaDA-8B-dLLM-CoreAI](https://huggingface.co/mlboydaisuke/LLaDA-8B-dLLM-CoreAI) | Other |
-| **BitVLA** (zoo's first **Vision-Language-Action / robotics** model + first ternary multimodal — image+instruction → 7-DoF robot action; **1.58-bit** BitNet-2B LLM + BitSigLIP vision, shared ternary kernel; runs on iPhone GPU; arXiv 2506.07530) | [🤗 BitVLA-CoreAI](https://huggingface.co/mlboydaisuke/BitVLA-CoreAI) | MIT |
-| **Qwen3-VL** (vision-language) | [🤗 2B](https://huggingface.co/mlboydaisuke/Qwen3-VL-2B-CoreAI) · [4B](https://huggingface.co/mlboydaisuke/Qwen3-VL-4B-CoreAI) · [8B](https://huggingface.co/mlboydaisuke/Qwen3-VL-8B-CoreAI) | Apache-2.0 |
-| **Holo2-4B** (GUI-grounding / computer-use VLM — screenshot + instruction → click coordinates; Qwen3-VL-4B backbone, H Company; zoo's first computer-use model) | [🤗 Holo2-4B-CoreAI](https://huggingface.co/mlboydaisuke/Holo2-4B-CoreAI) | Apache-2.0 |
-| **MiniCPM-V 4.6** (vision-language, sub-2B — strongest tiny VLM) | [🤗 MiniCPM-V-4.6-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM-V-4.6-CoreAI) | Apache-2.0 |
-| **Gemma 4 E2B vision (VL)** (image+text) | `vl/` in [🤗 gemma-4-E2B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI) | Gemma |
-| **Unlimited-OCR** (document OCR → markdown: tables→HTML, formulas→LaTeX; zoo's first doc-OCR — **stock runtime, no patch**, flat-latency R-SWA) | [🤗 Unlimited-OCR-CoreAI](https://huggingface.co/mlboydaisuke/Unlimited-OCR-CoreAI) | MIT |
-| **Qwen2.5-Omni-3B Audio** (audio *understanding* — describes sounds, not a transcript; iPhone + Mac, zoo's first audio model) | [🤗 Qwen2.5-Omni-3B-Audio-CoreAI](https://huggingface.co/mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI) | Apache-2.0 |
-| **Whisper large-v3-turbo** (speech→text — 100 languages, auto-detect; stock runtime, iPhone AOT + Mac) | [🤗 whisper-large-v3-turbo-CoreAI-official](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official) | MIT |
-| **Qwen3-ASR-1.7B** (speech→text — the zoo's first ASR; AuT encoder + Qwen3 decoder, 52 languages; iPhone + Mac) | [🤗 Qwen3-ASR-1.7B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-ASR-1.7B-CoreAI) | Apache-2.0 |
-| **Parakeet-TDT-0.6B** (speech→text — zoo's first **transducer / TDT (RNN-T)**; NVIDIA FastConformer + LSTM predictor + joint, 3 graphs + host greedy loop, 25 EU languages; iPhone 47.9× real-time) | [🤗 Parakeet-TDT-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Parakeet-TDT-0.6B-CoreAI) | CC-BY-4.0 |
-| **Kokoro-82M** (text-to-speech — zoo's first TTS; StyleTTS2 + iSTFTNet, 28 English voices, runs on any text) | [🤗 Kokoro-82M-CoreAI](https://huggingface.co/mlboydaisuke/Kokoro-82M-CoreAI) | Apache-2.0 |
-| **VoxCPM-0.5B** (text-to-speech — diffusion TTS: MiniCPM4 LM + LocDiT flow-matching + AudioVAE; iPhone + Mac, int8 LM) | [🤗 VoxCPM-0.5B-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM-0.5B-CoreAI) | Apache-2.0 |
-| **VoxCPM2 2B** (text-to-speech — 2B successor at 48 kHz: MiniCPM4 28L LM + LocDiT-12L flow-matching + 48 kHz AudioVAE; iPhone + Mac, int8 LM) | [🤗 VoxCPM2-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM2-CoreAI) | Apache-2.0 |
-| **Stable Audio Open Small** (text → **music / audio** — the zoo's first **generative audio**; latent diffusion: T5 encoder + DiT (8-step rectified-flow) + Oobleck VAE, ~11s 44.1 kHz stereo; fp16 ~1 GB, **~0.4 s / 11 s on M4 Max ≈ 30× real-time**; Stability AI + Arm) | [🤗 Stable-Audio-Open-Small-CoreAI](https://huggingface.co/mlboydaisuke/Stable-Audio-Open-Small-CoreAI) | Stability Community |
-| **EmbeddingGemma 300M** (text embeddings — on-device RAG / semantic search) | [🤗 embeddinggemma-300m-CoreAI](https://huggingface.co/mlboydaisuke/embeddinggemma-300m-CoreAI) | Gemma |
-| **Qwen3-Embedding 0.6B** (multilingual text embeddings, last-token pooling + MRL) | [🤗 Qwen3-Embedding-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI) | Apache-2.0 |
-| **Qwen3-Reranker 0.6B** (cross-encoder reranker — yes/no relevance score) | [🤗 Qwen3-Reranker-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI) | Apache-2.0 |
-| **RF-DETR nano/small/medium/large** (object detection, no NMS) | [🤗 RF-DETR-CoreAI](https://huggingface.co/mlboydaisuke/RF-DETR-CoreAI) | Apache-2.0 |
-| **RF-DETR-Seg nano→2xlarge** (instance segmentation, 6 sizes) | [🤗 RF-DETR-CoreAI](https://huggingface.co/mlboydaisuke/RF-DETR-CoreAI) | Apache-2.0 |
-| **AdcSR ×4** (super-resolution — zoo's first; one-step diffusion-GAN, on-device) | [🤗 AdcSR-CoreAI](https://huggingface.co/mlboydaisuke/AdcSR-CoreAI) | Apache-2.0 + OpenRAIL++ |
-| **Depth Anything 3** (monocular depth — zoo's first depth model; small + base, fp16/fp32) | [🤗 Depth-Anything-3-CoreAI](https://huggingface.co/mlboydaisuke/Depth-Anything-3-CoreAI) | Apache-2.0 |
-| **TripoSplat** (single image → **3D Gaussian splats** — the zoo's first 3D; DINOv3 ViT-H + 20-step flow-matching DiT + octree sampler + Gaussian decoder, Mac GPU ~1 min; `.ply`/`.splat` → RealityKit / [MetalSplatter](https://github.com/scier/MetalSplatter); VAST) | [🤗 TripoSplat-CoreAI](https://huggingface.co/mlboydaisuke/TripoSplat-CoreAI) | MIT |
-| **LTX-Video 2B distilled** (text → **video** — the zoo's first video model; T5-XXL + 8-step flow-matching DiT + causal video VAE, host FlowMatch sampler; 512×768×49f ~14 s Mac GPU; Lightricks) | [🤗 LTX-Video-2B-CoreAI](https://huggingface.co/mlboydaisuke/LTX-Video-2B-CoreAI) | Other (LTXV) |
+| Model | Download (`.aimodel`) | Run in app | License |
+|---|---|---|---|
+| **Qwen3.5-0.8B** | [🤗 qwen3.5-0.8B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
+| **Qwen3.5-2B** | [🤗 qwen3.5-2B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
+| **Qwen3.6-35B-A3B** (MoE, Mac-only) | [🤗 Qwen3.6-35B-A3B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-35B-A3B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | Apache-2.0 |
+| **Qwen3.6-27B** (dense, Mac-only) | [🤗 Qwen3.6-27B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-27B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | Apache-2.0 |
+| **GLM-4.7-Flash** (MoE + MLA, Mac-only — zoo's first MLA) | [🤗 GLM-4.7-Flash-CoreAI](https://huggingface.co/mlboydaisuke/GLM-4.7-Flash-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | MIT |
+| **Gemma 4 E2B** (text, incl. official-QAT int4) | [🤗 gemma-4-E2B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Gemma |
+| **Gemma 4 E4B** (text, official-QAT int4) | [🤗 gemma-4-E4B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E4B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Gemma |
+| **Gemma 4 12B** (dense, Mac-only — custom flash-decode kernel ‡) | [🤗 Gemma-4-12B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-12B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | Gemma |
+| **Gemma 4 31B** (dense, Mac-only — custom flash-decode kernel ‡) | [🤗 Gemma-4-31B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-31B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | Gemma |
+| **LFM2.5-1.2B-Instruct** | [🤗 LFM2.5-1.2B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-1.2B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | LFM Open License v1.0 |
+| **LFM2.5-8B-A1B** (MoE, custom `gather_qmm` kernel — first iPhone MoE) | [🤗 LFM2.5-8B-A1B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-8B-A1B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | LFM Open License v1.0 |
+| **Granite 4.0-H 1B / 350M** | [🤗 granite-4.0-h-CoreAI](https://huggingface.co/mlboydaisuke/granite-4.0-h-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
+| **Nanbeige4.1-3B** (dense reasoning/agentic, iPhone — 32B-class @ 3.93B) | [🤗 Nanbeige4.1-3B-CoreAI](https://huggingface.co/mlboydaisuke/Nanbeige4.1-3B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Apache-2.0 |
+| **MiniCPM5-1B** (1B-class on-device LLM, hybrid Think/No-Think, 128K, OpenBMB) | [🤗 MiniCPM5-1B-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM5-1B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
+| **FastContext-1.0-4B** (repo-exploration agent — first-turn search / multi-turn evidence / file:line citation; Qwen3-4B arch, iPhone GPU, AOT h18p; Microsoft) | [🤗 FastContext-1.0-4B-CoreAI](https://huggingface.co/mlboydaisuke/FastContext-1.0-4B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | MIT |
+| **BitCPM-8B** (zoo's first **1.58-bit ternary** LLM — every weight is {-1,0,+1}; MiniCPM4-8B arch, custom 2-bit packed-GEMM Metal kernel; 8B running in ~2.1 GB on iPhone GPU; OpenBMB) | [🤗 BitCPM-8B-CoreAI](https://huggingface.co/mlboydaisuke/BitCPM-8B-CoreAI) | [CoreAIChat](apps/CoreAIChat) ‡ | Apache-2.0 |
+| **LLaDA-8B dLLM** (zoo's first **diffusion LLM** — masked-diffusion decode: fills a canvas of `[MASK]` tokens **in parallel**, not left-to-right AR; bidirectional LLaMA-dense 8B, [d3LLM](https://huggingface.co/d3LLM/d3LLM_LLaDA)-distilled; int4 ~4.9 GB, Mac) | [🤗 LLaDA-8B-dLLM-CoreAI](https://huggingface.co/mlboydaisuke/LLaDA-8B-dLLM-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | Other |
+| **BitVLA** (zoo's first **Vision-Language-Action / robotics** model + first ternary multimodal — image+instruction → 7-DoF robot action; **1.58-bit** BitNet-2B LLM + BitSigLIP vision, shared ternary kernel; runs on iPhone GPU; arXiv 2506.07530) | [🤗 BitVLA-CoreAI](https://huggingface.co/mlboydaisuke/BitVLA-CoreAI) | [CoreAIChat](apps/CoreAIChat) ‡ | MIT |
+| **Qwen3-VL** (vision-language) | [🤗 2B](https://huggingface.co/mlboydaisuke/Qwen3-VL-2B-CoreAI) · [4B](https://huggingface.co/mlboydaisuke/Qwen3-VL-4B-CoreAI) · [8B](https://huggingface.co/mlboydaisuke/Qwen3-VL-8B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
+| **Holo2-4B** (GUI-grounding / computer-use VLM — screenshot + instruction → click coordinates; Qwen3-VL-4B backbone, H Company; zoo's first computer-use model) | [🤗 Holo2-4B-CoreAI](https://huggingface.co/mlboydaisuke/Holo2-4B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
+| **MiniCPM-V 4.6** (vision-language, sub-2B — strongest tiny VLM) | [🤗 MiniCPM-V-4.6-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM-V-4.6-CoreAI) | [MiniCPMVisualIntel](apps/MiniCPMVisualIntel) | Apache-2.0 |
+| **Gemma 4 E2B vision (VL)** (image+text) | `vl/` in [🤗 gemma-4-E2B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Gemma |
+| **Unlimited-OCR** (document OCR → markdown: tables→HTML, formulas→LaTeX; zoo's first doc-OCR — **stock runtime, no patch**, flat-latency R-SWA) | [🤗 Unlimited-OCR-CoreAI](https://huggingface.co/mlboydaisuke/Unlimited-OCR-CoreAI) | [CoreAIOCR](apps/CoreAIOCR) | MIT |
+| **Qwen2.5-Omni-3B Audio** (audio *understanding* — describes sounds, not a transcript; iPhone + Mac, zoo's first audio model) | [🤗 Qwen2.5-Omni-3B-Audio-CoreAI](https://huggingface.co/mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI) | [coreai-audio](apps/coreai-audio) | Apache-2.0 |
+| **Whisper large-v3-turbo** (speech→text — 100 languages, auto-detect; stock runtime, iPhone AOT + Mac) | [🤗 whisper-large-v3-turbo-CoreAI-official](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official) | [coreai-audio](apps/coreai-audio) | MIT |
+| **Qwen3-ASR-1.7B** (speech→text — the zoo's first ASR; AuT encoder + Qwen3 decoder, 52 languages; iPhone + Mac) | [🤗 Qwen3-ASR-1.7B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-ASR-1.7B-CoreAI) | [coreai-audio](apps/coreai-audio) | Apache-2.0 |
+| **Parakeet-TDT-0.6B** (speech→text — zoo's first **transducer / TDT (RNN-T)**; NVIDIA FastConformer + LSTM predictor + joint, 3 graphs + host greedy loop, 25 EU languages; iPhone 47.9× real-time) | [🤗 Parakeet-TDT-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Parakeet-TDT-0.6B-CoreAI) | [coreai-audio](apps/coreai-audio) | CC-BY-4.0 |
+| **Kokoro-82M** (text-to-speech — zoo's first TTS; StyleTTS2 + iSTFTNet, 28 English voices, runs on any text) | [🤗 Kokoro-82M-CoreAI](https://huggingface.co/mlboydaisuke/Kokoro-82M-CoreAI) | [coreai-audio](apps/coreai-audio) | Apache-2.0 |
+| **VoxCPM-0.5B** (text-to-speech — diffusion TTS: MiniCPM4 LM + LocDiT flow-matching + AudioVAE; iPhone + Mac, int8 LM) | [🤗 VoxCPM-0.5B-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM-0.5B-CoreAI) | [coreai-audio](apps/coreai-audio) | Apache-2.0 |
+| **VoxCPM2 2B** (text-to-speech — 2B successor at 48 kHz: MiniCPM4 28L LM + LocDiT-12L flow-matching + 48 kHz AudioVAE; iPhone + Mac, int8 LM) | [🤗 VoxCPM2-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM2-CoreAI) | [coreai-audio](apps/coreai-audio) | Apache-2.0 |
+| **Stable Audio Open Small** (text → **music / audio** — the zoo's first **generative audio**; latent diffusion: T5 encoder + DiT (8-step rectified-flow) + Oobleck VAE, ~11s 44.1 kHz stereo; fp16 ~1 GB, **~0.4 s / 11 s on M4 Max ≈ 30× real-time**; Stability AI + Arm) | [🤗 Stable-Audio-Open-Small-CoreAI](https://huggingface.co/mlboydaisuke/Stable-Audio-Open-Small-CoreAI) | [coreai-audio](apps/coreai-audio) | Stability Community |
+| **EmbeddingGemma 300M** (text embeddings — on-device RAG / semantic search) | [🤗 embeddinggemma-300m-CoreAI](https://huggingface.co/mlboydaisuke/embeddinggemma-300m-CoreAI) | [DocChat ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/DocChat) | Gemma |
+| **Qwen3-Embedding 0.6B** (multilingual text embeddings, last-token pooling + MRL) | [🤗 Qwen3-Embedding-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI) | [DocChat ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/DocChat) | Apache-2.0 |
+| **Qwen3-Reranker 0.6B** (cross-encoder reranker — yes/no relevance score) | [🤗 Qwen3-Reranker-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI) | [DocChat ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/DocChat) | Apache-2.0 |
+| **RF-DETR nano/small/medium/large** (object detection, no NMS) | [🤗 RF-DETR-CoreAI](https://huggingface.co/mlboydaisuke/RF-DETR-CoreAI) | [DetectCamera ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/DetectCamera) | Apache-2.0 |
+| **RF-DETR-Seg nano→2xlarge** (instance segmentation, 6 sizes) | [🤗 RF-DETR-CoreAI](https://huggingface.co/mlboydaisuke/RF-DETR-CoreAI) | [DetectCamera ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/DetectCamera) | Apache-2.0 |
+| **AdcSR ×4** (super-resolution — zoo's first; one-step diffusion-GAN, on-device) | [🤗 AdcSR-CoreAI](https://huggingface.co/mlboydaisuke/AdcSR-CoreAI) | [CoreAIUpscale](apps/CoreAIUpscale) | Apache-2.0 + OpenRAIL++ |
+| **Depth Anything 3** (monocular depth — zoo's first depth model; small + base, fp16/fp32) | [🤗 Depth-Anything-3-CoreAI](https://huggingface.co/mlboydaisuke/Depth-Anything-3-CoreAI) | [CoreAIDepth](apps/CoreAIDepth) | Apache-2.0 |
+| **TripoSplat** (single image → **3D Gaussian splats** — the zoo's first 3D; DINOv3 ViT-H + 20-step flow-matching DiT + octree sampler + Gaussian decoder, Mac GPU ~1 min; `.ply`/`.splat` → RealityKit / [MetalSplatter](https://github.com/scier/MetalSplatter); VAST) | [🤗 TripoSplat-CoreAI](https://huggingface.co/mlboydaisuke/TripoSplat-CoreAI) | [TripoSplatMac](apps/TripoSplatMac) | MIT |
+| **LTX-Video 2B distilled** (text → **video** — the zoo's first video model; T5-XXL + 8-step flow-matching DiT + causal video VAE, host FlowMatch sampler; 512×768×49f ~14 s Mac GPU; Lightricks) | [🤗 LTX-Video-2B-CoreAI](https://huggingface.co/mlboydaisuke/LTX-Video-2B-CoreAI) | [CoreAIVideo](apps/CoreAIVideo) | Other (LTXV) |
+
+▸ **Run in app** — apps in [`apps/`](apps) live in this repo; **↗** links a
+[CoreAIKit example app](https://github.com/john-rocky/coreai-kit/tree/main/Examples); **‡** = app
+wiring in progress. Full app list: [`apps/README.md`](apps/README.md).
 
 ### Decode throughput (tok/s, greedy; output top-1 exact vs the Hugging Face reference)
 
