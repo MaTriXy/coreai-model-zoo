@@ -92,6 +92,52 @@ vs torch, ~15 ms/frame on an M4 Max GPU). Depth is rendered with the DA3 colorma
 percentile-normalized, Spectral — far = red, near = blue). See [`CoreAIDepth/README.md`](CoreAIDepth/)
 and [`zoo/depth-anything-3.md`](../zoo/depth-anything-3.md).
 
+### Vision-language (VLM)
+
+| App | Model | Device |
+|---|---|---|
+| [`MiniCPMVisualIntel/`](MiniCPMVisualIntel/) | **MiniCPM-V 4.6** (sub-2B VLM — photo + question → answer) — [HF bundle](https://huggingface.co/mlboydaisuke/MiniCPM-V-4.6-CoreAI) | iPhone 17 Pro |
+
+Photo-attach visual Q&A on the strongest tiny VLM. (Qwen3-VL and Gemma 4 E2B VL are also reachable
+from CoreAIChat's vision modes.)
+
+### Document OCR
+
+| App | Model | Device |
+|---|---|---|
+| [`CoreAIOCR/`](CoreAIOCR/) | **Unlimited-OCR** (3B-A0.5B MoE — document → structured markdown: tables → HTML, formulas → LaTeX) — [HF bundle](https://huggingface.co/mlboydaisuke/Unlimited-OCR-CoreAI) | macOS |
+
+Drop a document image, get markdown. Stock `coreai.runtime`, no engine patch (DeepEncoder vision
+`.aimodel` + an `inputs_embeds`-driven decoder). See [`CoreAIOCR/README.md`](CoreAIOCR/).
+
+### Segmentation
+
+| App | Model | Device |
+|---|---|---|
+| [`CoreAISegment/`](CoreAISegment/) | **SAM 3** (text-prompt image segmentation — type `the red car`) — Apple stock `CoreAIImageSegmenter` | iPhone + macOS |
+
+Pick an image, type what to segment. Stock runtime, no patch. (The zoo's own **RF-DETR-Seg** runs via
+the CoreAIKit [`DetectCamera`](https://github.com/john-rocky/coreai-kit/tree/main/Examples/DetectCamera)
+example.) See [`CoreAISegment/README.md`](CoreAISegment/).
+
+### Super-resolution
+
+| App | Model | Device |
+|---|---|---|
+| [`CoreAIUpscale/`](CoreAIUpscale/) | **AdcSR ×4** (one-step diffusion-GAN SR, CVPR 2025 — the zoo's first SR) — [HF bundle](https://huggingface.co/mlboydaisuke/AdcSR-CoreAI) | iPhone + macOS |
+
+Pick a photo, get a 4× sharper version on-device — one step (pruned SD2.1 UNet + half VAE decoder), no
+iterative denoising. See [`CoreAIUpscale/README.md`](CoreAIUpscale/).
+
+### Transcription (standalone)
+
+| App | Model | Device |
+|---|---|---|
+| [`CoreAITranscribe/`](CoreAITranscribe/) | **Whisper large-v3-turbo** (speech → text, 100 languages) — [HF bundle](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official) | iPhone + macOS |
+
+A single-model transcriber (also available as a tab in [`coreai-audio`](coreai-audio/) alongside
+Qwen3-ASR and Parakeet). Stock runtime, one 30 s window. See [`CoreAITranscribe/README.md`](CoreAITranscribe/).
+
 ## Model delivery
 
 On first launch each app offers an **in-app download** of the published `.aimodel` set from the
