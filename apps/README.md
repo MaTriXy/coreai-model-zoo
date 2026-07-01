@@ -48,6 +48,19 @@ three nets (T5 + DiT + causal video VAE) as Core AI bundles; only LTX's FlowMatc
 host. Mac-host pattern (like `TripoSplatMac`): the app launches the proven pipeline and plays the
 result. See [`CoreAIVideo/README.md`](CoreAIVideo/).
 
+### 3D generation
+
+| App | Model | Gen @ 20 steps |
+|---|---|---|
+| [`TripoSplatMac/`](TripoSplatMac/) | **TripoSplat** (single image → 3D Gaussian splats, **macOS**) — [HF bundle](https://huggingface.co/mlboydaisuke/TripoSplat-CoreAI) · [conversion](../conversion/triposplat) | macOS GPU ≈ 1 min |
+
+The zoo's first **3D** app — a SwiftUI front-end over the Python backend that runs the four heavy
+nets (DINOv3 ViT-H + Flux2-VAE + flow-matching DiT + Gaussian decoder) as Core AI bundles; octree
+sampling stays on host. Same Mac-host pattern as `CoreAIVideo`. In-app preview is a SceneKit point
+cloud; export the `.splat` and open it in [MetalSplatter](https://github.com/scier/MetalSplatter)
+for true splat rendering — including on iPhone / iPad / Vision Pro, since generation is macOS-only.
+See [`TripoSplatMac/README.md`](TripoSplatMac/).
+
 ### Audio (understanding · transcription · speech)
 
 | App | Models | Device |

@@ -49,9 +49,11 @@ artifact). Octree decoder: int64 `l` (resolution) input → CoreAIError 3 at run
 - **Mac**: `_run_coreai.py` (or `app_backend.py --input <img>`) loads the bundles via coreai.runtime
   (`SpecializationOptions.default()` = GPU; ~1 min/gen at 20 steps, full quality). End-to-end latent
   gate vs torch-DiT: **cos 0.999999**.
-- **Mac app / iPhone client**: `apps/` — `TripoSplatMac` (standalone) and `TripoSplatPhone`
-  (capture on iPhone → Mac server `server.py` → view splats in
-  [MetalSplatter](https://github.com/scier/MetalSplatter) / RealityKit).
+- **Mac app**: [`apps/TripoSplatMac`](../../apps/TripoSplatMac) — SwiftUI front-end over
+  `app_backend.py` (SceneKit point-cloud preview, exports `.splat`/`.ply`). Generation is
+  macOS-only. To **view** the result on iPhone / iPad / Vision Pro, open the exported `.splat` in
+  the [MetalSplatter](https://github.com/scier/MetalSplatter) app — no viewer app ships here.
+  (`server.py` is an optional HTTP backend if you want to build your own remote client.)
 
 ## On-device note
 
