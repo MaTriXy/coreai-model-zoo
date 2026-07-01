@@ -41,6 +41,16 @@ reach the new silicon. ⚗️ Expected shape of the win: prefill/TTFT, not decod
 Metal docs per dtype before assuming a layout. ⚠️ Zoo models that must run on OS 26 cannot use the
 27-only column; gate kernels accordingly.
 
+> **📅 OS27 runtime now on-device (2026-07-01).** macOS 27 dev **beta 2** (`26A5368g`, 2026-06-22)
+> is shipping and installed on this machine (`Darwin 27.0.0`). The **27** rows above move from
+> "announced at WWDC26 330" to **runtime present** — the fp4/fp8/int2, MX·E8M0 scale-plane, and
+> coop-tensor-as-matmul-input paths can now be **RUN** on device, not just compiled (compile was
+> already confirmed 2026-07-01 with Metal Toolchain v27.1 — see §"The real `matmul2d` API"). ⇒ the
+> A19/M5 A/B for the neural-accelerator **prefill lever** and the **fp4 `matmul2d` dequant** is
+> **unblocked** — bench via `ondevice/PipelinedBench`. ⚠️ **Runtime / AOT-compile only on 27**; keep
+> the *convert* box on **macOS 26.4** (the `coreai-core` wheel mis-converts on 27). This is the OS
+> half of Stream D's FP4-runtime gate — now satisfied; its remaining blocker is the kernel work here.
+
 ## Scale planes: one MTLTensor = data + scales (OS 27)
 
 In OS 27 a single `MTLTensor` carries the quantized data plane **plus an auxiliary scale plane**
@@ -113,3 +123,60 @@ is needed to ship a TensorOps kernel inside a `.aimodel`.
   prefill attention, or shapes where the packed-state RMW tax killed the stateful-kernel monolith.
 - **Start from the TensorOps sample code** [15:53] + MPP programming guide — captions omit the
   on-screen code, so exact signatures come from there, not from the transcript.
+
+## The real `matmul2d` API (extracted from the SDK headers, 2026-07-01)
+
+The signatures the transcript omits are **shipped in the Metal Toolchain 27 / iPhoneOS 27 SDK**, not
+just in a sample download. Authoritative source on this machine:
+`…/iPhoneOS27.0.sdk/System/Library/Frameworks/MetalPerformancePrimitives.framework/Headers/`
+→ `MPPTensorOpsMatMul2d.h` (+ `MPPTensorOpsConvolution2d.h` for encoder Conv, + `__impl/*Impl.h`).
+Header guard: `#if defined(__METAL_VERSION__) && defined(__HAVE_TENSOR__)`, inside
+`#pragma METAL internals : enable`, namespace `mpp::tensor_ops`. Verbatim API:
+
+```cpp
+// descriptor: output tile m×n, k=dynamic_extent => read K from the tensor; transpose flags pick NN/NT/TN/TT
+constexpr auto desc = matmul2d_descriptor(64, 32, /*k=*/static_cast<int>(dynamic_extent),
+                                          /*transpose_left=*/false, /*transpose_right=*/false,
+                                          /*relaxed_precision=*/false);   // mode: multiply | multiply_accumulate
+matmul2d<desc, execution_simdgroups<4>> op;                 // 4 SIMD-groups cooperate per threadgroup
+auto mA = A.slice(0, tgid.y*64);                            // tensor<device half, dextents<int32_t,2>>
+auto mB = B.slice(tgid.x*32, 0);
+auto mC = C.slice(tgid.x*32, tgid.y*64);                    // C must be zero-initialized (computes C = A*B + C)
+op.run(mA, mB, mC);                                         // static_slice<…> on inside tiles skips bounds checks
+// dispatch: threadgroups=((M+63)/64,(N+31)/32,1), threadsPerTG=(threadExecutionWidth*4,1,1)
+```
+
+**The dtype table is the headline for this zoo** (left=activations, right=weights, dest=accum). Native
+in-kernel dequant — pass the quantized tensor straight in as the right operand:
+- `half × int8_t → half|float`, `half × int4b_format → half|float`  ⇐ **LLaDA / FLUX / any int4-or-int8
+  weight × fp16 activation is a single matmul2d** (the zoo's whole quantized-prefill class).
+- `half × metal_fp4_e2m1_format → half|float`, `half × metal_fp8_e4m3/e5m2 → half|float` (OS27) — the
+  FP4/FP8 path Stream D needs, same op, just a different right-operand dtype.
+- `int8 × int4b_format → int32`, `int2b_format`, all-fp4/all-fp8 — full sub-byte matrix present.
+
+**Toolchain compile facts (validated on this machine 2026-07-01, Metal Toolchain v27.1.5194.15,
+`metalfe-32023.917`, target air64-darwin27)** — `xcrun -sdk iphoneos metal -std=… -c` on a kernel that
+includes the umbrella header and runs `matmul2d`:
+- **`__HAVE_TENSOR__` (tensors at all) requires `-std=metal4.0`** — OFF at metal3.2. So any TensorOps
+  kernel must be compiled at metal4.0+.
+- **`matmul2d` + single-plane quantized operands compile at metal4.0**: both `half × half → float` and
+  **`half × int4b_format → half`** (LLaDA's int4 weight × fp16 activation) produced AIR cleanly. Kernel
+  shape = the header example verbatim (descriptor `matmul2d_descriptor(64,32,dynamic_extent)`,
+  `matmul2d<desc, execution_simdgroups<4>>`, `A.slice(...)`/`B.slice(...)`/`C.slice(...)`, `op.run`).
+  `int4b_format` = `metal::int4b_format` (sub-byte std type); `using namespace mpp::tensor_ops;`.
+- **Block-wise scales (the per-block-32 int4 LLaDA actually ships) need `-std=metal4.1`**:
+  `__HAVE_TENSOR_MULTIPLANE__` is **OFF at 4.0, ON at 4.1**. The scale-carrying MSL type is
+  `metal::tensor_blockwise<PlaneTag, ElementType, BlockSizes...>` (MPPTensorOpsTraits.h, multiplane
+  guard). So: bare `int4b_format` (uniform, no per-block scale) = 4.0; **blockwise-int4 / MX·E8M0 block
+  scales = 4.1 + `tensor_blockwise`.** LLaDA = the 4.1 path.
+
+**Open integration question to prototype on Mac (before the A19 A/B)**: the op consumes Metal
+`tensor<device T, dextents<int32_t,2>>` (or `tensor_blockwise`) operands, but `TorchMetalKernel`
+auto-generates a *plain buffer-pointer* signature. So the MSL body must build the operands from the raw
+pointers — the `tensor_inline`-from-raw-pointer+metadata path the §330 talk mentions — inside
+`helper_src`/`src`, with the MPP includes. **AND** coreai-torch must compile that embedded MSL at
+**metal4.1** (else the blockwise scale plane won't be available) — confirm the embedded-kernel std
+version is settable. That wrapper (raw `device half*` + int4 blocks + fp16 scales + shape → tensors →
+`matmul2d`) is the reusable scaffolding to write and numerically-validate on M4 (correctness is
+HW-independent; the neural-accel *speedup* only appears on M5/A19), then graft into the LLaDA forward
+and A/B on device.
