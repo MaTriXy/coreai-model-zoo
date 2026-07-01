@@ -70,8 +70,15 @@ experts int8→int4 AND dense int8→int4 on top of gather_qmm.
   (the quick Mac driver produced garbage for BOTH int8 and int4 = a driver bug, not int4). So the 2.18×
   is a **speed win at a known int4 quality cost**.
 - **The quality-safe path to the flagship speedup = FP4 (E2M1) or QAT-int4** (the "int4 answer" —
-  int4-speed at int8-quality). FP4 runtime depends on Stream B TensorOps (A19/OS27); QAT-int4 is
-  OS26-shippable. That's Stream D/B's lane (separate sessions; B is actively running on the A19).
+  int4-speed at int8-quality; fp4 numerics de-risked: fp4 ≈ int8 perplexity, `project_quant_d_port`).
+  **CORRECTION (per [`tensorops-quantized-kernels.md`](tensorops-quantized-kernels.md) §"A19 DEVICE A/B"
+  + §"fp8/fp4"):** FP4's flagship win is DECODE-bandwidth (¼ the weight bytes, like this int4 lever), which
+  **rides an fp4/int4 MATVEC kernel (like `int4km`), NOT the TensorOps `matmul2d`** — so it is **NOT
+  blocked** by the A19 refutation of the matmul2d *prefill* speed lever (default MPSGraph already ≈6 TFLOP/s
+  there; the "3–4× prefill" was an M5 claim that doesn't hold on A19). fp8/fp4 matvec is **UNVERIFIED
+  on-device** (numerics de-risked, on-device speed/integration not measured yet). Concretely: **swap the
+  int4km matvec for an fp4-E2M1 matvec in this same dense-coverage lever** → same ~2× decode bandwidth win,
+  int8-like quality. That + QAT-int4 (OS26-shippable) is Stream D's lane (separate sessions).
 
 ## 6. Also-measured this session
 - **Prefill FlashAttention is a Stream-B (TensorOps) problem, not a pure-MSL Mac win**: MPSGraph prefill
