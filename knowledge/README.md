@@ -36,6 +36,13 @@ Hard-won, verified notes on Apple's Core AI (iOS/macOS 27) — what the docs don
 - [`custom-metal-kernels.md`](custom-metal-kernels.md) — `TorchMetalKernel` (WWDC 325): the API, the
   register-then-add order, MSL embedded in the `.aimodel`, GPU-only, what to (and not to) kernelize.
   Still the tool when a model CAN'T ride the pipelined engine (e.g. Gemma 4).
+- [`rwkv7-recurrent-linear-attention-coreai.md`](rwkv7-recurrent-linear-attention-coreai.md) — the
+  **no-KV playbook** for pure-recurrent / linear-attention LLMs (RWKV-7, Mamba-2, gated-delta-net):
+  the matrix-state decode recurrence lowers to **standard ops** (no custom kernel); **O(1) fixed-size
+  states, no KV cache** wired via `SSMState` + fused end-of-step writes; the **pipelined engine can't
+  drive a no-KV model** (positional keyCache/valueCache) → a custom backend binding states BY NAME
+  (like BitVLA); the recurrence-protecting quant recipe (`int8keepproj`); teacher-forced gating.
+  Shipped RWKV-7 1.5B, iPhone 17 Pro 25.2 tok/s.
 - [`tensorops-quantized-kernels.md`](tensorops-quantized-kernels.md) — the layer UNDER custom kernels
   (WWDC 330): TensorOps quantized matmul (int4/int8 = OS 26; fp4/fp8/int2 + E8M0 scale planes = OS 27),
   cooperative tensors, the FlashAttention recipe, and the M5/A19 GPU **neural accelerator** — the
