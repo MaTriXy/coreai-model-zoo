@@ -46,7 +46,7 @@ on-device, with the conversion code and a knowledge base. Successor to
 | **RF-DETR-Seg nano→2xlarge** (instance segmentation, 6 sizes) | [🤗 RF-DETR-CoreAI](https://huggingface.co/mlboydaisuke/RF-DETR-CoreAI) | Apache-2.0 |
 | **AdcSR ×4** (super-resolution — zoo's first; one-step diffusion-GAN, on-device) | [🤗 AdcSR-CoreAI](https://huggingface.co/mlboydaisuke/AdcSR-CoreAI) | Apache-2.0 + OpenRAIL++ |
 | **Depth Anything 3** (monocular depth — zoo's first depth model; small + base, fp16/fp32) | [🤗 Depth-Anything-3-CoreAI](https://huggingface.co/mlboydaisuke/Depth-Anything-3-CoreAI) | Apache-2.0 |
-| **TripoSplat** (single image → **3D Gaussian splats** — the zoo's first 3D; DINOv3 ViT-H + 20-step flow-matching DiT + octree sampler + Gaussian decoder, Mac GPU ~1 min; `.ply`/`.splat` → RealityKit / MetalSplatter; VAST) | [🤗 TripoSplat-CoreAI](https://huggingface.co/mlboydaisuke/TripoSplat-CoreAI) | MIT |
+| **TripoSplat** (single image → **3D Gaussian splats** — the zoo's first 3D; DINOv3 ViT-H + 20-step flow-matching DiT + octree sampler + Gaussian decoder, Mac GPU ~1 min; `.ply`/`.splat` → RealityKit / [MetalSplatter](https://github.com/scier/MetalSplatter); VAST) | [🤗 TripoSplat-CoreAI](https://huggingface.co/mlboydaisuke/TripoSplat-CoreAI) | MIT |
 | **LTX-Video 2B distilled** (text → **video** — the zoo's first video model; T5-XXL + 8-step flow-matching DiT + causal video VAE, host FlowMatch sampler; 512×768×49f ~14 s Mac GPU; Lightricks) | [🤗 LTX-Video-2B-CoreAI](https://huggingface.co/mlboydaisuke/LTX-Video-2B-CoreAI) | Other (LTXV) |
 
 ### Decode throughput (tok/s, greedy; output top-1 exact vs the Hugging Face reference)
