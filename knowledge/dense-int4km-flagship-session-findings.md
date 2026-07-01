@@ -81,7 +81,15 @@ experts int8→int4 AND dense int8→int4 on top of gather_qmm.
   int8-like quality. That + QAT-int4 (OS26-shippable) is Stream D's lane (separate sessions).
 
 ## 6. Also-measured this session
-- **Prefill FlashAttention is a Stream-B (TensorOps) problem, not a pure-MSL Mac win**: MPSGraph prefill
+- **⚠️ CORRECTION — prefill/FlashAttention is A19-specific, OPEN on Mac.** The claim below over-generalized
+  from A19. On **M4 Max, MPSGraph prefill SDPA is only ~22% of the fp16 peak (~6.4 TFLOP/s @ S=4096)** —
+  i.e. ~78% HEADROOM, NOT near-ceiling. A custom prefill kernel (simdgroup_matrix / fused FlashAttention)
+  on Mac is **UNTESTED** (only the MPSGraph baseline was measured; no custom Mac prefill kernel was run).
+  The A19 matmul2d refutation (`tensorops-quantized-kernels.md` §"A19 DEVICE A/B") is A19-only — the doc
+  itself says "M5 desktop may show the gain." So **Mac prefill FlashAttention = a genuine open lever** (do
+  the de-risk on a clean Mac-GPU window: matmul2d/simdgroup_matrix vs MPSGraph matmul at S² shapes, then a
+  fused FlashAttention if the matrix path beats the default). De-risk scaffold: `_tensorops_proto/m4_speed_ab.py`.
+- **The below applies to A19 (iPhone) only**: MPSGraph prefill
   SDPA is compute-bound (~22% of M4 fp16 peak, clean S² scaling, no crash); scalar q=1-decode kernels
   can't beat a matrix-tuned baseline. Needs simdgroup_matrix / cooperative-tensor. `ondevice/_prefill_sdpa_baseline.py`.
 
