@@ -74,6 +74,10 @@ step → ~15 s/token; this is 0.18 s/token). Full write-up:
 [`conversion/export_whisper_fixed.py`](../conversion/export_whisper_fixed.py) · hashes + export
 environment: the [HF card](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official).
 
+Driving the raw graph yourself (no kit)? [`apps/CoreAITranscribe`](../apps/CoreAITranscribe/)
+implements this exact decode loop + the log-mel frontend from scratch (macOS + iOS, file or mic)
+— the reference if you're porting to another language or runtime.
+
 ## Related
 
 - Same runner, same 3 lines — change the id: [`qwen3-asr.md`](qwen3-asr.md) (52 languages,
