@@ -169,6 +169,44 @@ config comparison (lower = better; S=1 greedy decode proxy ≈ 135 ms/tok):
   `qwen3_5_0_8b_verify_s{9,13,17}_int8lin`. Harness: `--ref-cache` added (greedy-ref
   is K-independent; cached per prompt+S).
 
+## DRAFT SELECTION A/B (2026-07-02 night) — 0.8B-int4 wins; no training needed to wire
+
+Question: is the 0.8B-int8 draft the best off-the-shelf choice? Constraint: the draft
+must share the target's tokenizer (vocab 248320) — Qwen3.5-0.8B is the smallest such
+model; Qwen3.5-2B is the next size. Draft quality only affects α (lossless is
+verify-guaranteed), so quantizing the draft can only cost acceptance, not correctness.
+6 runs (2 drafts × 3 prompts, S=9 K=6, same 27B target), all **LOSSLESS 48/48 PASS**:
+
+| draft | free α / draft-med | code α / draft-med | rag α / draft-med |
+|---|---|---|---|
+| 0.8B int8lin (baseline) | 1.40 / 18 ms | 3.55 / 23 ms | 2.71 / 20 ms |
+| **0.8B int4lin** | **1.53 / 16 ms** | **4.00 / 18 ms** | **2.86 / 18 ms** |
+| 2B int8lin | 1.82 / 25 ms | 4.00 / 25 ms | 3.33 / 25 ms |
+
+- **int4 holds α completely** (matches or edges int8 on all three prompts — within
+  single-run noise, i.e. no measurable degradation) at half the bytes (0.45 GB).
+  The int4-RTN quality collapse that matters for a *shipping* model is irrelevant
+  for a draft: the 27B verify filters every token.
+- **2B raises α as expected (free 1.40→1.82) but its per-forward cost eats the
+  gain**: in-harness cost/tok — free 88.1 / code 84.4 / rag 94.8 vs int4's
+  **83.3 / 77.9 / 95.6**. Swift-projection (target ≈63 ms engine decode, draft
+  ≈4 ms int4 vs ≈7 ms 2B) keeps int4-0.8B ahead everywhere:
+  **free ~1.9× / code ~2.1× / rag ~1.7×**. 2B also costs 2.5 GB resident next to a
+  28 GB target. → 2B dropped.
+- **Training verdict: NOT needed for wiring.** Lossless never depends on the draft;
+  the only training-worthy lever is **EAGLE-3 (C3)** to lift free-form α beyond the
+  off-the-shelf ceiling (~1.5-1.8 accepted/round) — parallel-session scope, does not
+  block the engine wiring. Cheaper fine-tunes (distilling 0.8B toward 27B outputs,
+  layer-truncated drafts) are dominated by EAGLE-3 and not worth a session.
+- **Wiring config frozen: target 27B int8hu S=9 (+S=13 code-mode option) ×
+  draft 0.8B int4lin** (`exports/qwen3_5_0_8b_verify_s9_int4lin`).
+
+Ops addendum: the mid-run disk-full class is TRANSIENT — in-run respecialization temp
+(mpsgraph under /var/folders) that APFS reclaims minutes after process exit; df lags
+the reclaim, so disk guards must retry (see `_spec_draft_ab3.sh` wait_disk). Persistent
+cache = one ~28 GB entry per 27B verify graph in `~/Library/Caches/coreai-cache`
+(S=17's entry deleted with the config).
+
 ## Status / next
 
 - [x] 0.8B mini pipeline: exports + parity + runtime gates (above).
@@ -180,6 +218,9 @@ config comparison (lower = better; S=1 greedy decode proxy ≈ 135 ms/tok):
       economics above — table is the deliverable.
 - [x] S/K sweep: S∈{9,13,17} × K∈{6..16} — c_v cliff after S=13; configs frozen
       (general S=9 K=6, code S=13 K=8; S=17 dropped). Table above.
+- [x] Draft A/B: 0.8B-int4 ≥ 0.8B-int8 on α at half the bytes; 2B dropped (cost eats
+      its α gain). Wiring draft = `qwen3_5_0_8b_verify_s9_int4lin`. No training
+      needed to wire; EAGLE-3 (C3) is the only training lever, separate session.
 - [ ] CoreAIChatMac wiring (next session): verify bundle → HF repo side-by-side,
       `SpecDecodeEngine.swift` (LLaDAEngine is the bespoke-engine precedent),
       catalog `qwen36-27b` + ⚡Spec toggle, `expectFrequentReshapes=true` on load.
