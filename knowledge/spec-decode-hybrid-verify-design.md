@@ -129,6 +129,46 @@ death; a straight GPU run dies after ~12 tokens, CPU specialization won't load).
   `~/Library/Caches/coreai-cache`; the first attempt died on a FULL DISK (which also
   took down the CLI session). Keep ≳100 GB free for 27B reload runs.
 
+## S/K SWEEP (2026-07-02 late) — window cost curve + optimal configs
+
+15 runs total, S∈{9,13,17} × K∈{6,8,12,16} (S=13 at K=8 only), all **LOSSLESS 48/48
+PASS** — the snapshot/tail/exact-S re-anchor discipline is solid at every window size.
+
+**c_v(S) is NOT linear — compute cliff between S=13 and S=17** (27B int8hu, M4Max GPU,
+greedy-ref medians): **135 ms @ S=9 → 143 ms @ S=13 (+6%) → 197 ms @ S=17 (+38%)**.
+Growing the window is nearly free up to S=13, then hits a kernel/tiling cliff.
+
+Acceptance does rise with the window (code acc/round 3.55 @ S9K6 → 6.71 @ S17K8 →
+9.33 @ S17K16) but K>8 never pays: α saturates while draft forwards keep costing
+~21-24 ms each (r≈0.15 in this harness).
+
+Cost per token = (target_fwds × greedy-med + draft_fwds × draft-med)/48, baseline-free
+config comparison (lower = better; S=1 greedy decode proxy ≈ 135 ms/tok):
+
+| config | free | code | rag |
+|---|---|---|---|
+| S=9 K=6 | **89.6** | 86.3 | **97.3** |
+| S=13 K=8 | 105.6 | **72.7** | 103.3 |
+| S=17 K=6 | 112.4 | 92.3 | 116.5 |
+| S=17 K=8 | 111.3 | 75.9 | 111.3 |
+| S=17 K=12 | 124.8 | 80.3 | 122.3 |
+| S=17 K=16 | 130.3 | 80.6 | 130.7 |
+
+**Verdict:**
+- **General/chat default = S=9, K=6** (~1.5× free, ~1.4× rag vs S=1 proxy). Bigger
+  windows lose on low-α prompts: the extra verify cost + wasted draft forwards
+  outweigh the acceptance gain.
+- **Code/structured = S=13, K=8** (72.7 ms/tok ≈ **1.86×**, 16% faster than S9K6).
+  S=17 is dominated by S=13 everywhere (the c_v cliff) — drop S=17.
+- **Next bottleneck is the draft, not the window**: at 22 ms/forward the 0.8B draft
+  is ~15% of a target forward in python (roofline says ~2 ms). In the Swift engine
+  a ~7 ms draft would put free-form at ~73 ms/tok (**~1.85×**) with S=9 K=6 alone.
+  Window tuning is done; the remaining upside is engine wiring + a better drafter
+  (EAGLE-3, C3).
+- Bundles on disk: `qwen3_6_27b_verify_s{9,13,17}_int8hu_block32_sym` +
+  `qwen3_5_0_8b_verify_s{9,13,17}_int8lin`. Harness: `--ref-cache` added (greedy-ref
+  is K-independent; cached per prompt+S).
+
 ## Status / next
 
 - [x] 0.8B mini pipeline: exports + parity + runtime gates (above).
@@ -138,11 +178,15 @@ death; a straight GPU run dies after ~12 tokens, CPU specialization won't load).
 - [x] 27B weights re-download (55.6 GB) → verify+decode int8hu `--head-sym` exports.
 - [x] 27B × 0.8B two-model run: **LOSSLESS 48/48 on all three prompts**, α and
       economics above — table is the deliverable.
+- [x] S/K sweep: S∈{9,13,17} × K∈{6..16} — c_v cliff after S=13; configs frozen
+      (general S=9 K=6, code S=13 K=8; S=17 dropped). Table above.
 - [ ] CoreAIChatMac wiring (next session): verify bundle → HF repo side-by-side,
       `SpecDecodeEngine.swift` (LLaDAEngine is the bespoke-engine precedent),
       catalog `qwen36-27b` + ⚡Spec toggle, `expectFrequentReshapes=true` on load.
-- [ ] Optional squeeze before wiring: S=17 verify export + K sweep (code prompt
-      suggests window-limited acceptance), EAGLE-3 head later (C3).
+      Draft-side per-forward overhead is the top engine-side win (22 ms → target
+      <10 ms); optional second graph S=13 K=8 as a code-mode toggle.
+- [ ] EAGLE-3 head (C3, separate session) to lift free-form α — window tuning is
+      exhausted, drafter quality is the remaining α lever.
 
 Conventions: GPU-SOLO `_GPU_LOCK`; push/HF/card USER-GATED; no "claude" in commits;
 explicit paths only; coreml bundles never committed.
