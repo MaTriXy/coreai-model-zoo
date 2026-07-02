@@ -37,6 +37,51 @@
 > (`com.daisukemajima.CoreAIChat` → Documents/models/qwen3_4b_gpu); HF bundle upload + commit are
 > user-gated. Headless A/B: `GEMMA_ENGINE=spec GEMMA_SPEC=0|1 GEMMA_PROMPT=… GEMMA_N=…`.
 
+## → EAGLE-3 + TREE SESSION: START HERE (handoff 2026-07-02)
+
+**Decision:** spec-decode's outward ship is GATED on your EAGLE-3+tree validation. n-gram is NOT
+shipping standalone (marginal for chat — user confirmed on-device: "count 100" felt no faster;
+n-gram only wins where output echoes input = extractive/code-only). Ship spec-decode ONCE, as the
+version that's broadly fast on free-form. If EAGLE-3+tree lands → ship that. Else fall back to
+draft-model (C2, 27B). n-gram stays as plumbing.
+
+**Reusable substrate already built (this session) — plug EAGLE into it, don't rebuild:**
+- `apps/CoreAIChat/Sources/SpecDecodeBackend.swift` — the driver you extend. It already does:
+  stateful dense-AOT load (`expectFrequentReshapes=true` + `.gpu` — REQUIRED, else ANECompile→MTL4
+  death on OS27), a **verify-forward** (S=K+1 → per-position argmax), free KV rollback via
+  `processed`, greedy accept/reject (indexing proven lossless 3000/3000 in
+  `_smoke/specdecode_reference.py`), no-think ChatML pre-seed, streaming, hit-rate gate. **For
+  EAGLE: swap the drafter — instead of n-gram/`draft()`, run the EAGLE head to propose a TREE, and
+  replace the linear verify loop with tree-mask verification.** UI: `GemmaMode.qwen3spec` +
+  ⚡Spec/Greedy toggle already wired in `Gemma4ChatEngine.swift` + `ChatView.swift`. **App code is
+  UNCOMMITTED on purpose (entangled with other sessions' RWKV7/BitVLA); leave it, extend it.**
+- `ondevice/PipelinedBench/Sources/SpeculativeDecoder.swift` — the same algorithm as a headless
+  probe (`PB_SPEC=1`; `PB_DRAFT=<dir>` = draft-model path; `PB_PROMPT_IDS` = real BPE prompt).
+  Fastest place to measure EAGLE α before touching the app.
+
+**De-risk numbers to beat (this session):** draft-model 1.7B→8B on free-form = **accepted/round
+1.4–1.9** (n-gram ≈0 there). EAGLE-3+tree should beat this. Cost model: net speedup needs the draft
+cheap vs target — on a 27B target a small head/draft (2–6%) → ~1.8–2.3× even at these α; a tree
+lifts α further. Real α table (n-gram): 4B code 2.12/RAG 2.08×, 8B collapses.
+
+**Infra you can use here (no 26.4 box needed):** **coreai conversion RUNS on macOS 27** — verified
+this session: `export_qwen3_5_decode_pipelined.py int8lin` produced weights BIT-IDENTICAL to the
+shipped bundle. So you can build the **EAGLE head + a 27B dense DYNAMIC verify bundle on this
+machine** (the shipped Qwen3.6-27B Mac bundle is decode-only static S=1 — you need a multi-shape
+prefill/decode/verify export, then `xcrun coreai-build compile … --platform macOS`). ⚠️ Spot-check
+the **4bit** path numerically first (int8lin verified; 4bit not — no shipped ref to diff → use a
+forward-vs-HF gate). Broken draft trap: `qwen3_0_6b_gpu` is an OLD (06-09, fp16) export whose graph
+contract differs → garbage from prefill; use same-generation 4bit/06-18 bundles (`qwen3_1_7b_gpu` OK).
+
+**Caveat that applies to tree too:** "lossless" is exact only in real arithmetic; fp16 batched
+verify (S>1) vs sequential decode (S=1) can flip a near-tie argmax → free-form output can differ
+from plain greedy by one valid token (measured: 66/96 on free-form; 96/96 on confident/extractive).
+Tree verify (even wider S) will see the same. Frame it as "greedy-lossless, fp16 near-tie aside."
+
+**Device note (2026-07-02):** iPhone 17 Pro `--console` capture dropped ~5× this session (device
+stayed listed as connected but the stream stalled mid-generation). If probes hang with only load
+lines, it's the console tunnel, not your code — retry / reconnect.
+
 ## HANDOFF — reproduce + next (read first)
 
 **What exists & works:** a self-contained greedy n-gram spec-decode prototype driving a stateful
@@ -75,8 +120,22 @@ cd ../.. && PB_GEN=96 ./ondevice/_spec_device_probe.sh spec qwen3_4b_gpu
    (α≈0). Added `PB_PROMPT_IDS` (real BPE prompt ids) to `SpeculativeDecoder.swift` + probe; host
    pre-tokenizer `_smoke/specdecode_pretokenize_realprompt.py`. Gating (n-gram OFF on low hit-rate)
    is still TODO in the app integration. **Now shipping the 4B win as a CoreAIChat fast mode.**
-2. **Vanilla draft** (a small draft model) then **EAGLE-3 head** (Red Hat Speculators) for the
-   high-α general (non-input-grounded) case — task C3.
+2. **Vanilla draft (C2) — MECHANISM DE-RISKED GREEN (2026-07-01).** Added `PB_DRAFT=<dir>` to
+   `SpeculativeDecoder.swift`: a small draft model proposes K greedy tokens (own KV), the target
+   verifies all K in one S=K+1 forward (same accept/reject indexing as the proven n-gram path).
+   On a FREE-FORM prompt (where n-gram α≈0), **draft=1.7B → target=8B gives accepted/round 1.4–1.9**
+   (r0 accepted 6/6) — model-drafting wins on free-form, the whole point of C2. LOSSLESS 64/64.
+   BUT net speedup was only ~1.0× because the draft (1.7B) is 21% of the target (8B): the K draft
+   forwards eat the gain (K-sweep 4/6/8 all ~1×, ratio-bound not K-bound). Cost model → on a 27B
+   target a small draft (0.6–1.7B = 2–6%) makes draft cost negligible ⇒ ~1.8–2.3× on free-form.
+   **⚠️ gotcha found: `qwen3_0_6b_gpu` is a BROKEN draft — an OLD export (compression:null, 2026-06-09)
+   whose graph contract differs from the 2026-06-18 4bit dense-dynamic bundles; it produces garbage
+   from prefill (draft_arg=33067 vs target 785, then degenerate repeats). Use a same-generation
+   bundle (`qwen3_1_7b_gpu` = 4bit 06-18 works: draft_arg=785 matches).** Remaining for the real
+   win (Qwen3.6-27B dense on CoreAIChatMac): export+Mac-AOT a dense DYNAMIC verify bundle for the
+   27B (current Mac bundle is decode-only static S=1) + a same-generation small draft (needs the
+   26.4 convert box), then a two-model SpecDecodeBackend in CoreAIChatMac. Then **EAGLE-3 head**
+   (Red Hat Speculators) for even higher α — task C3.
 3. Optional perf: batched GPU argmax (currently CPU argmax on `[1,K,vocab]`), and moving off the
    host-driven loop onto the pipelined engine if the sync per-round overhead matters.
 

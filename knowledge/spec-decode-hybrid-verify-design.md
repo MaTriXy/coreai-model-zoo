@@ -221,11 +221,20 @@ cache = one ~28 GB entry per 27B verify graph in `~/Library/Caches/coreai-cache`
 - [x] Draft A/B: 0.8B-int4 ≥ 0.8B-int8 on α at half the bytes; 2B dropped (cost eats
       its α gain). Wiring draft = `qwen3_5_0_8b_verify_s9_int4lin`. No training
       needed to wire; EAGLE-3 (C3) is the only training lever, separate session.
-- [ ] CoreAIChatMac wiring (next session): verify bundle → HF repo side-by-side,
-      `SpecDecodeEngine.swift` (LLaDAEngine is the bespoke-engine precedent),
-      catalog `qwen36-27b` + ⚡Spec toggle, `expectFrequentReshapes=true` on load.
-      Draft-side per-forward overhead is the top engine-side win (22 ms → target
-      <10 ms); optional second graph S=13 K=8 as a code-mode toggle.
+- [x] CoreAIChatMac wiring (commit f574c75): `SpecDecodeEngine.swift` — two-model
+      WindowedModel port (S=9, K=6, snapshot/tail/exact-S re-anchor), draft
+      auto-pairs via bundle metadata `spec_draft`, ⚡Spec lossless toggle + α
+      stats in the statsbar, catalog entries for the verify pair,
+      `expectFrequentReshapes=true` on both loads (replaces the python
+      harness's reload-every crutch). Bundles symlinked into
+      `~/Library/Application Support/CoreAIChatMac/models`. UNTESTED on the
+      real app yet (build + a code-prompt ON/OFF byte-compare are the
+      acceptance gate). HF upload of the verify pair: user-gated.
+      Found & fixed on the way: the harness anchor bootstrap read a PAD row
+      whenever prompt length ≡ 0 (mod S) — rag (72 tok) was affected; lossless
+      gate couldn't see it (both sides shared the bootstrap). Harness now
+      holds the last prompt token back and peeks it (always-correct anchor);
+      stale _spec_ref_* caches deleted.
 - [ ] EAGLE-3 head (C3, separate session) to lift free-form α — window tuning is
       exhausted, drafter quality is the remaining α lever.
 

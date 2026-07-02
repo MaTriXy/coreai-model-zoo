@@ -86,6 +86,21 @@
   only on a degenerate loop-y prompt; the gather kernel's QUALITY is set by the expert quant
   scheme, not the gather.)** `llm-benchmark` drives the bundle; `llm-runner`'s gen path hard-asserts
   on the 3-state (KV+conv) layout (CLI limit).
+  ⚠️ **REFINEMENT — "sym8 not k-means" holds for top-k≥4, REVERSES for top-1** (ZAYA1-8B,
+  `ZAYA1_8B_CCA_VALIDATED_UNSHIPPED.md`, 2026-06-22). The sym8-wins result was measured on top-4
+  (LFM) / top-8 (Qwen3.6) MoE, where each token's FFN output is a weighted sum of k experts so
+  expert-quant error AVERAGES (~/√k) and even crude linear int8 survives. **ZAYA is top-1 of 16:
+  one token → one expert, error NOT averaged → `sym8` (linear) collapses** (engine skips the
+  reasoning block + emits `<pad>`; diverges from fp16 at token 1), while **`km8` (k-means int8,
+  256-entry codebook) recovers fp16 quality** (matched fp16 29 tokens token-exact). So: **top-k≥4 →
+  sym8; top-1/low-k → km8** (k-means fits outlier expert weights that linear int8 clips). Two km8
+  gotchas hit on the way: (a) **`moe_metal.py` `_proj` had a km8 bug** — `k_pad = qp.shape[2] *
+  (4 if sym8 else 8)` lumped km8 (4 bytes/uint32, like sym8) with km4 (8 nibbles) → K_pad=2K einsum
+  mismatch; FIX = `(4 if scheme in ("sym8","km8") else 8)` (km8 was unusable zoo-wide before this).
+  (b) `MetalSwitchGLU`'s eager torch path is unreliable (garbage on MPS) — judge schemes ONLY via a
+  real export + engine run, never eager-MPS. Best-quality fallback when even km8 is risky and the
+  model is Mac-only: **skip metalize entirely → plain fp16 SwitchGLU / dense GatherMM** (runs on the
+  pipelined engine, no ANE-abort; ZAYA 27 tok/s vs km8 49, zero quant loss = the Mac quality ceiling).
 - **Memory-efficient load** (7B+): meta-device init + `load_state_dict(assign=True)` + per-layer streaming. `gpu_rules.md:279-297`.
 
 ## macOS vs iOS export (the official split)

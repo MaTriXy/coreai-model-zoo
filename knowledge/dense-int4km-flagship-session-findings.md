@@ -107,3 +107,89 @@ cd coreai-models && .venv/bin/python ../coreai-models-community/conversion/expor
 ```
 bundles are coreml (NOT committed); `ondevice/` isn't a git repo (scripts live there, documented here).
 Nothing pushed to HF — USER-GATED.
+
+---
+
+## 8. FP4 (E2M1) dense matvec — the quality-safe twin (built + measured, 2026-07-02)
+
+Executing §5's plan: swap the int4km dense matvec for an **fp4-E2M1** matvec — same ¼ weight bytes
+(~2× decode bandwidth), E2M1 numerics → int8-level quality (fixes int4's flagship cliff). This is a
+DECODE-bandwidth hand-rolled matvec, NOT TensorOps `matmul2d` (the A19-refuted *prefill* lever), so it
+runs on the Mac GPU today and needs no OS27.
+
+**Files (additive, isolated):**
+- Kernel + quant + `MetalFP4Linear` + `metalize_dense_fp4`:
+  `coreai_models/models/macos/gemma4_metal_mlp_fp4.py` (twin of `gemma4_metal_mlp.py`'s int4km).
+- Export: `conversion/export_qwen3_6_moe_dense_fp4_decode_pipelined.py` (int4km export, dense→fp4).
+- Microbench: `ondevice/_dense_fp4_microbench.py`.
+
+**What differs from int4km (everything else identical — packing 8 codes/uint32, R/SGY tiling, dispatch):**
+the dequant. int4km gathers a per-output-group 16-entry k-means codebook; fp4 maps the 4-bit code
+through the FIXED universal E2M1 grid (16 constants staged in tg memory) × a per-K-block **e8m0**
+power-of-2 scale (block 32). So the kernel is the AFFINE-int4 structure (scale along K) minus the bias.
+
+**Numerics — bit-identical to the de-risked fp4:** `quantize_fp4_e2m1` uses e8m0 scale
+`2^(floor(log2|amax|)-2)` + torchao `f32_to_f4_unpacked`; reconstruction `max|W_mine − torchao_fp4| =
+0.0`. The Metal kernel matches its torch reference `cosKern = 1.0000` at every flagship shape.
+
+**Speed (per-op q=1 decode, Mac M4 Max, random weights, `_dense_fp4_microbench.py`):**
+
+| shape | K | N | fp16 ms | int4km ms | fp4 ms | fp4/fp16 | **fp4/int4km** | cos(fp4,fp16) |
+|---|---|---|---|---|---|---|---|---|
+| q_proj | 2048 | 4096 | 0.482 | 0.509 | 0.524 | 0.92× | 0.97× | 0.9926 |
+| o_proj | 4096 | 2048 | 0.470 | 0.512 | 0.502 | 0.94× | 1.02× | 0.9919 |
+| **lm_head** | 2048 | 248320 | 3.358 | 1.972 | 1.951 | **1.72×** | **1.01×** | 0.9930 |
+
+**Result: fp4 == int4km speed (1.01× at the flagship lm_head shape)** — the ¼-byte decode-bandwidth win
+is fully inherited. (Small shapes sit under the ~0.35 ms round-trip floor, so <1× vs fp16 there — the Mac
+ALU-bound regime, same as int4km; lm_head is the real signal. Absolute fp16-relative numbers are noisy
+run-to-run per §4; the same-run fp4-vs-int4km equivalence is the robust claim.)
+
+**Key kernel lesson:** a naive `const float FP4[16]` indexed by a runtime code spills to stack on Apple
+GPUs and made fp4 ~1.4× SLOWER than int4km (0.70× at lm_head). **Staging the 16-entry grid into
+threadgroup memory** (as int4km does its codebook) turns the lookup into a fast tg-mem gather → fp4 back
+to int4km speed. Extra fp4 cost vs int4km = the per-K-block scale read (~12% traffic), absorbed.
+
+**Quality:** inherited from the de-risked fp4 (fp4 ≈ int8 perplexity, [[project_quant_d_port]]); the
+kernel reproduces those numerics bit-for-bit, so the flagship dense path gets int8-level quality where
+int4km flips ~12/41 tokens.
+
+**Gate status:** kernel correctness + fp4==int4km speed ✅ (microbench, real coreai export + Mac GPU).
+Wiring `metalize_dense_fp4` ✅ (synthetic + real-weight truncated run through metalize). Full 35B
+export/decode-bench = the remaining crank (source `Qwen/Qwen3.6-35B-A3B` is local; baselines
+`..._int4km_gather_dense_int4km` and `..._sym8_gather` already in `exports/`). Reproduce:
+```
+cd coreai-models && .venv/bin/python \
+  ../coreai-models-community/conversion/export_qwen3_6_moe_dense_fp4_decode_pipelined.py int4km
+# bench fp4 vs the existing int4km (isolates dense fp4-vs-int4km) and sym8 (fp4-vs-shipped):
+.venv/bin/python ../ondevice/_qwen36_mac_bench.py exports/qwen3_6_35b_a3b_decode_int4km_gather_dense_fp4
+```
+⚠️ truncated `--num-layers 2` export fails with a `state_names 4 vs graph 2` mismatch (the first layers
+are linear-attn → no KV state); NOT fp4-related (int4km export shares it). Use the full model.
+
+### 8b. QUALITY — the honest result: **fp4 does NOT beat int4km on the flagship dense path**
+
+The premise ("swap int4km→fp4 for int8-level quality") came from the fp4-vs-int4-**RTN** de-risk
+([[project_quant_d_port]]: fp4 +1.0% vs int4-RTN +10.2% ppl). But the flagship dense bundle uses int4-**km**
+(k-means, `palettize_grouped` n_bits=4), which is already outlier-robust. Measured on the REAL flagship
+weights (`conversion/quant_fp4/flagship_dense_fp4_vs_int4km_quality.py`, no forward — weights loaded from
+the safetensors shards; lm_head top-1 flip on embed-rows-through-final-RMSNorm hidden proxy, S=512):
+
+| | int8km | int4km | fp4 (e8m0) | fp4 (fp16 scale) |
+|---|---|---|---|---|
+| lm_head weight rel-err | 0.032 | 0.124 | 0.115 | 0.102 |
+| **lm_head top-1 flip vs fp16** | **32/512** | **104/512** | **104/512** | 117/512 |
+
+**fp4 ≈ int4km in quality (identical 104/512 flip for e8m0; fp16-scale fp4 has LOWER weight error yet
+MORE flips — weight-RMSE is a misleading proxy in both directions).** Neither 4-bit scheme approaches
+int8km (32 flips). **Conclusion: fp4 gives no quality advantage over int4km on the dense path** — same
+¼-byte speed (§8), same ~4-bit quality. The int4 flagship cliff is a 4-bit-capacity gap vs int8, NOT an
+RTN-vs-fp4 issue (k-means already fixed the RTN part). So **int4km→fp4 is a no-op** (nothing gained).
+
+**The actual quality-safe paths to the flagship dense speedup** (unchanged from §5's other options):
+(a) keep the dense path **int8** (int8km: 6% flip, ~half the byte win), or (b) **QAT-int4** (train the
+4-bit to recover — the real "int4 answer", OS26-shippable, [[project_quant_d_port]] D2). fp4's genuine
+edge is only when the neural accelerator dequants it for free (TensorOps) — which is decode-irrelevant
+(BW-bound) and A19-refuted for prefill. ⚠️ Caveat: flip measured on a hidden-state PROXY (embed rows via
+RMSNorm), not real decode hidden; real-hidden confirmation needs a 35B forward or an on-device LFM-8B run.
+But the proxy-free weight rel-err (fp4 ≈ int4km, both 3.6× int8km) already carries the conclusion.
