@@ -349,6 +349,72 @@
       "takeHomeNote": "Multi-turn? Hold the `ChatSession` and call `respond(to:)` per turn — it keeps the\nconversation history; `streamResponse(to:)` yields tokens as they decode.",
       "checklistInfoPlist": "Info.plist: none needed",
       "checklistEntitlements": "Entitlements: none needed (macOS)"
+    },
+    "lfm2.5-8b-a1b": {
+      "zooCard": "zoo/lfm2.5-8b-a1b-moe.md",
+      "runner": {
+        "dir": "Examples/ChatDemo",
+        "xcodeproj": "ChatDemo.xcodeproj",
+        "scheme": "ChatDemo",
+        "cliTarget": "chat-cli",
+        "cliArgs": "--prompt \"What can you do, offline?\"",
+        "blurb": "GUI + CLI, one app for every chat model in the catalog"
+      },
+      "quickstart": "Examples/ChatDemo/Sources/QuickStart.swift",
+      "product": "CoreAIKit",
+      "snippetImport": "CoreAIKit",
+      "snippetFreeVars": {
+        "prompt": "String"
+      },
+      "snippetResultComment": "// reply: the answer, generated fully on-device",
+      "takeHomeTagline": "— this exact code as one typed function, no UI; the CLI is an argument shell over it, and\nthe GUI drives the same `ChatSession` across turns for its transcript.",
+      "takeHomeNote": "Multi-turn? Hold the `ChatSession` and call `respond(to:)` per turn — it keeps the\nconversation history; `streamResponse(to:)` yields tokens as they decode.",
+      "checklistInfoPlist": "Info.plist: none needed",
+      "checklistEntitlements": "Entitlements: none needed (macOS)"
+    },
+    "qwen3.6-35b-a3b": {
+      "zooCard": "zoo/qwen3.6.md",
+      "runner": {
+        "dir": "Examples/ChatDemo",
+        "xcodeproj": "ChatDemo.xcodeproj",
+        "scheme": "ChatDemo",
+        "cliTarget": "chat-cli",
+        "cliArgs": "--prompt \"What can you do, offline?\"",
+        "blurb": "GUI + CLI, one app for every chat model in the catalog"
+      },
+      "quickstart": "Examples/ChatDemo/Sources/QuickStart.swift",
+      "product": "CoreAIKit",
+      "snippetImport": "CoreAIKit",
+      "snippetFreeVars": {
+        "prompt": "String"
+      },
+      "snippetResultComment": "// reply: the answer, generated fully on-device",
+      "takeHomeTagline": "— this exact code as one typed function, no UI; the CLI is an argument shell over it, and\nthe GUI drives the same `ChatSession` across turns for its transcript.",
+      "takeHomeNote": "Multi-turn? Hold the `ChatSession` and call `respond(to:)` per turn — it keeps the\nconversation history; `streamResponse(to:)` yields tokens as they decode.",
+      "checklistInfoPlist": "Info.plist: none needed",
+      "checklistEntitlements": "Entitlements: none needed (macOS)"
+    },
+    "glm-4.7-flash": {
+      "zooCard": "zoo/glm-4.7-flash.md",
+      "runner": {
+        "dir": "Examples/ChatDemo",
+        "xcodeproj": "ChatDemo.xcodeproj",
+        "scheme": "ChatDemo",
+        "cliTarget": "chat-cli",
+        "cliArgs": "--prompt \"What can you do, offline?\"",
+        "blurb": "GUI + CLI, one app for every chat model in the catalog"
+      },
+      "quickstart": "Examples/ChatDemo/Sources/QuickStart.swift",
+      "product": "CoreAIKit",
+      "snippetImport": "CoreAIKit",
+      "snippetFreeVars": {
+        "prompt": "String"
+      },
+      "snippetResultComment": "// reply: the answer, generated fully on-device",
+      "takeHomeTagline": "— this exact code as one typed function, no UI; the CLI is an argument shell over it, and\nthe GUI drives the same `ChatSession` across turns for its transcript.",
+      "takeHomeNote": "Multi-turn? Hold the `ChatSession` and call `respond(to:)` per turn — it keeps the\nconversation history; `streamResponse(to:)` yields tokens as they decode.",
+      "checklistInfoPlist": "Info.plist: none needed",
+      "checklistEntitlements": "Entitlements: none needed (macOS)"
     }
   }
 }
