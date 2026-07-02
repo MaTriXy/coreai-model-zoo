@@ -1,0 +1,5 @@
+artifacts/
+ship_macos/
+*.npy
+*.log
+__pycache__/
