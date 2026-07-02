@@ -208,6 +208,10 @@ def render_block(model_id: str, entry: dict, cfg: dict, top: dict,
         parts.append(doors["green"] + "\n")
 
     if doors["runner"]:
+        # The GUI hint after "Run": defaults to the catalog picker convention; a runner
+        # whose picker labels differ (or that auto-loads its single model) overrides it
+        # with `runner.pickNote` — the line must match what the app actually shows.
+        pick = r.get("pickNote", f"Run, then pick \"{entry['name']}\" in the model picker")
         parts.append(
             f"▶️ **Run it (source)** — the [{runner_name} runner]({kit_url}/tree/main/{r['dir']})\n"
             f"({r['blurb']}):\n"
@@ -215,7 +219,7 @@ def render_block(model_id: str, entry: dict, cfg: dict, top: dict,
             "```bash\n"
             f"git clone {kit_url}\n"
             f"open {clone}/{r['dir']}/{r['xcodeproj']}\n"
-            f"# → Run, then pick \"{entry['name']}\" in the model picker\n"
+            f"# → {pick}\n"
             "\n"
             "# agents / headless (macOS):\n"
             f"cd {clone}/{r['dir']}\n"

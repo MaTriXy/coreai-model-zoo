@@ -20,6 +20,49 @@ eliminated by `optimize()` because only `depth`/`depth_conf` are graph outputs.
 | base | DINOv2 ViT-B | 135.4M | DualDPT | depth + confidence |
 | mono-large | DINOv2 ViT-L | 334.2M | DPT | depth (pure monocular) |
 
+<!-- gen-cards:use-it begin id=depth-anything-3-small (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+## Use it
+
+▶️ **Run it (source)** — the [DepthCamera runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/DepthCamera)
+(live camera depth, one app for every depth model in the catalog):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/DepthCamera/DepthCamera.xcodeproj
+# → Run, then pick "Depth Anything 3 Small" in the model picker
+
+# agents / headless (macOS):
+cd coreai-kit/Examples/DepthCamera
+swift run depth-cli --model depth-anything-3-small --image sample.jpg --output depth.png
+```
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKitVision
+
+let estimator = try await DepthEstimator(catalog: "depth-anything-3-small")
+let image = try ImageFile.load(imageURL)  // any image file → CGImage + EXIF orientation
+let depth = try await estimator.estimateDepth(for: image.cgImage)
+// depth: DepthMap — .cgImage() renders it, .values are the raw floats
+```
+
+The take-home is [`Examples/DepthCamera/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/DepthCamera/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; the CLI is an argument shell over it, and
+the GUI runs the same estimator on every camera frame (`CameraFeed`, ~10 lines).
+Live camera? `CameraFeed` (kit API) streams frames — feed each one to
+`estimateDepth(for:)`; the camera permission prompt is your app's own chrome.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKitVision**
+- Info.plist: `NSCameraUsageDescription` — only for the live camera; the snippet needs none
+- Entitlements: none needed
+- First run downloads the model — 0.1 GB (Mac) / 0.1 GB (iPhone) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
+
 ## Graph contract
 
 ```

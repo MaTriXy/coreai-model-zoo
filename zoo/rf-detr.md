@@ -20,6 +20,49 @@ the architecture — only resolution, decoder depth and window count change:
 | medium | 576² | 33.7M | 4 | 121 MB |
 | large | 704² | 33.9M | 4 | 122 MB |
 
+<!-- gen-cards:use-it begin id=rf-detr (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+## Use it
+
+▶️ **Run it (source)** — the [DetectCamera runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/DetectCamera)
+(real-time object detection on the zero-copy camera path):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/DetectCamera/DetectCamera.xcodeproj
+# → Run, then pick "Nano" in the model picker
+
+# agents / headless (macOS):
+cd coreai-kit/Examples/DetectCamera
+swift run detect-cli --model rf-detr --image Resources/gate_image.jpg
+```
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKitVision
+
+let detector = try await ObjectDetector(catalog: "rf-detr")
+let image = try ImageFile.load(imageURL)  // any image file → CGImage + EXIF orientation
+let detections = try await detector.detect(in: image.cgImage)
+// detections: [Detection] — label, score, normalized box (top-left origin)
+```
+
+The take-home is [`Examples/DetectCamera/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/DetectCamera/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; the CLI is an argument shell over it, and
+the GUI runs the same detector per camera frame on a zero-copy pixel-buffer fast path.
+Real time? Use `detect(in: CVPixelBuffer)` — vImage scales the frame with no CGImage
+round-trip; `CameraFeed` (kit API) streams the buffers.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKitVision**
+- Info.plist: `NSCameraUsageDescription` — only for the live camera; the snippet needs none
+- Entitlements: none needed
+- First run downloads the model — 0.1 GB (Mac) / 0.1 GB (iPhone) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
+
 ## Graph contract
 
 ```

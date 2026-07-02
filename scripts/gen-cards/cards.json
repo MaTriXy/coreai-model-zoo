@@ -492,6 +492,73 @@
       "takeHomeNote": "Multi-turn about the same image? Hold the `LanguageModelSession` and call `respond(to:)`\nper turn. The photo picker / file chooser is your app's own chrome — `ImageFile.load`\n(kit API) turns any image file into model input.",
       "checklistInfoPlist": "Info.plist: `NSPhotoLibraryUsageDescription` — only if you use PhotosPicker",
       "checklistEntitlements": "Entitlements: none needed (macOS)"
+    },
+    "depth-anything-3-small": {
+      "zooCard": "zoo/depth-anything-3.md",
+      "runner": {
+        "dir": "Examples/DepthCamera",
+        "xcodeproj": "DepthCamera.xcodeproj",
+        "scheme": "DepthCamera",
+        "cliTarget": "depth-cli",
+        "cliArgs": "--image sample.jpg --output depth.png",
+        "blurb": "live camera depth, one app for every depth model in the catalog"
+      },
+      "quickstart": "Examples/DepthCamera/Sources/QuickStart.swift",
+      "product": "CoreAIKitVision",
+      "snippetImport": "CoreAIKitVision",
+      "snippetFreeVars": {
+        "imageURL": "URL"
+      },
+      "snippetResultComment": "// depth: DepthMap — .cgImage() renders it, .values are the raw floats",
+      "takeHomeTagline": "— this exact code as one typed function, no UI; the CLI is an argument shell over it, and\nthe GUI runs the same estimator on every camera frame (`CameraFeed`, ~10 lines).",
+      "takeHomeNote": "Live camera? `CameraFeed` (kit API) streams frames — feed each one to\n`estimateDepth(for:)`; the camera permission prompt is your app's own chrome.",
+      "checklistInfoPlist": "Info.plist: `NSCameraUsageDescription` — only for the live camera; the snippet needs none",
+      "checklistEntitlements": "Entitlements: none needed"
+    },
+    "rf-detr": {
+      "zooCard": "zoo/rf-detr.md",
+      "runner": {
+        "dir": "Examples/DetectCamera",
+        "xcodeproj": "DetectCamera.xcodeproj",
+        "scheme": "DetectCamera",
+        "cliTarget": "detect-cli",
+        "cliArgs": "--image Resources/gate_image.jpg",
+        "blurb": "real-time object detection on the zero-copy camera path",
+        "pickNote": "Run, then pick \"Nano\" in the model picker"
+      },
+      "quickstart": "Examples/DetectCamera/Sources/QuickStart.swift",
+      "product": "CoreAIKitVision",
+      "snippetImport": "CoreAIKitVision",
+      "snippetFreeVars": {
+        "imageURL": "URL"
+      },
+      "snippetResultComment": "// detections: [Detection] — label, score, normalized box (top-left origin)",
+      "takeHomeTagline": "— this exact code as one typed function, no UI; the CLI is an argument shell over it, and\nthe GUI runs the same detector per camera frame on a zero-copy pixel-buffer fast path.",
+      "takeHomeNote": "Real time? Use `detect(in: CVPixelBuffer)` — vImage scales the frame with no CGImage\nround-trip; `CameraFeed` (kit API) streams the buffers.",
+      "checklistInfoPlist": "Info.plist: `NSCameraUsageDescription` — only for the live camera; the snippet needs none",
+      "checklistEntitlements": "Entitlements: none needed"
+    },
+    "adcsr-x4": {
+      "runner": {
+        "dir": "Examples/UpscaleDemo",
+        "xcodeproj": "UpscaleDemo.xcodeproj",
+        "scheme": "UpscaleDemo",
+        "cliTarget": "upscale-cli",
+        "cliArgs": "--image sample_small.png --output big.png",
+        "blurb": "pick a photo, upscale it ×4 on-device",
+        "pickNote": "Run, pick a photo — the app loads AdcSR ×4 (the catalog's superResolution entry) automatically"
+      },
+      "quickstart": "Examples/UpscaleDemo/Sources/QuickStart.swift",
+      "product": "CoreAIKitVision",
+      "snippetImport": "CoreAIKitVision",
+      "snippetFreeVars": {
+        "imageURL": "URL"
+      },
+      "snippetResultComment": "// upscaled: CGImage — 4× the input's pixels",
+      "takeHomeTagline": "— this exact code as one typed function, no UI; the CLI is an argument shell over it, and\nthe GUI runs the same resolver on the photo you pick.",
+      "takeHomeNote": "Big photos? Inputs are tiled and feather-blended internally; `maxInputSide` (default 512)\ncaps the input first so a full-res phone photo can't produce a gigapixel result.",
+      "checklistInfoPlist": "Info.plist: none needed",
+      "checklistEntitlements": "Entitlements: none needed"
     }
   }
 }
