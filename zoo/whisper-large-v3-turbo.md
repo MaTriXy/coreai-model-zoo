@@ -9,6 +9,7 @@ Bundle: [🤗 mlboydaisuke/whisper-large-v3-turbo-CoreAI-official](https://huggi
 — macOS (~1.6 GB fp16) + iOS (~3.2 GB, AOT-precompiled for iPhone). Catalog id:
 **`whisper-large-v3-turbo`**.
 
+<!-- gen-cards:use-it begin id=whisper-large-v3-turbo (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
 ## Use it
 
 ▶️ **Run it (source)** — the [Transcribe runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/Transcribe)
@@ -30,7 +31,7 @@ swift run transcribe-cli --model whisper-large-v3-turbo --audio sample.wav
 import CoreAIKit
 
 let transcriber = try await KitTranscriber(catalog: "whisper-large-v3-turbo")
-let samples = try AudioFile.pcm16kMono(url)   // any wav/m4a/mp3 → 16 kHz mono Float
+let samples = try AudioFile.pcm16kMono(url)  // any wav/m4a/mp3 → 16 kHz mono Float
 let result = try await transcriber.transcribe(samples: samples)
 // result.text, result.language ("en", "ja", … auto-detected)
 ```
@@ -48,6 +49,7 @@ button and permission prompt are your app's own chrome.
 - First run downloads the model — 1.6 GB (Mac) / 3.2 GB (iPhone) — then it loads from the
   local cache (Application Support; progress via the `downloadProgress` callback)
 - Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
 
 ## Measured (M4 Max, GPU)
 

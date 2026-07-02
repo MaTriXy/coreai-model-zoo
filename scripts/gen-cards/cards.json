@@ -1,0 +1,25 @@
+{
+  "kitURL": "https://github.com/john-rocky/coreai-kit",
+  "cloneDirName": "coreai-kit",
+  "variantLabels": { "macos": "Mac", "ios": "iPhone" },
+  "models": {
+    "whisper-large-v3-turbo": {
+      "zooCard": "zoo/whisper-large-v3-turbo.md",
+      "runner": {
+        "dir": "Examples/Transcribe",
+        "xcodeproj": "Transcribe.xcodeproj",
+        "scheme": "Transcribe",
+        "cliTarget": "transcribe-cli",
+        "cliArgs": "--audio sample.wav",
+        "blurb": "GUI + CLI, one app for every speech-to-text model in the catalog"
+      },
+      "quickstart": "Examples/Transcribe/Sources/QuickStart.swift",
+      "product": "CoreAIKit",
+      "snippetImport": "CoreAIKit",
+      "snippetResultComment": "// result.text, result.language (\"en\", \"ja\", … auto-detected)",
+      "takeHomeNote": "Recording? `MicRecorder` (kit API) captures mic audio as 16 kHz mono `[Float]` — the record\nbutton and permission prompt are your app's own chrome.",
+      "checklistInfoPlist": "Info.plist: `NSMicrophoneUsageDescription` — only if you record",
+      "checklistEntitlements": "Entitlements (iOS): `com.apple.developer.kernel.increased-memory-limit`"
+    }
+  }
+}
