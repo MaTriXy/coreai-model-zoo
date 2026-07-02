@@ -17,6 +17,9 @@ ships the upstream LFM Open License v1.0 LICENSE file).
 state is one fixed-shape conv buffer `[10, 1, 2048, 2]` — well inside the
 extra-states patch budget (≤2). No engine changes needed beyond the existing patch stack.
 
+<!-- gen-cards:use-it begin id=lfm2.5-1.2b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+<!-- gen-cards:use-it end -->
+
 ## Measured (macOS + iOS 27 beta, release builds, p=128 g=256, `COREAI_CHUNK_THRESHOLD=1`)
 
 | config | bundle | prefill tok/s | decode tok/s | numerics |

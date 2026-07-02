@@ -4,6 +4,9 @@
 
 OpenBMB's 1.08B on-device LLM (hybrid Think / No-Think reasoning, 128K context, 1B-class open-source SOTA), converted to Apple **Core AI** and running fully on-device on iPhone via the pipelined engine.
 
+<!-- gen-cards:use-it begin id=minicpm5-1b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+<!-- gen-cards:use-it end -->
+
 ## On-device (iPhone 17 Pro, A19 Pro — `PipelinedBench`, random 128-tok prompt, greedy)
 
 | bundle | decode | prefill | quality | size |

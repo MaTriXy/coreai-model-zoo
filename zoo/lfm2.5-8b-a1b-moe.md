@@ -12,6 +12,9 @@ Mac-only** (the clean `sym8` int8 bundle): the int4 bundle that fits the iPhone 
 run on device* (first MoE on the phone) but is **not shipped** — non-QAT int4 doesn't hold quality
 (see below).
 
+<!-- gen-cards:use-it begin id=lfm2.5-8b-a1b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+<!-- gen-cards:use-it end -->
+
 ## The `gather_qmm` kernel — the MoE-decode fix
 
 MoE FFN decode normally lowers through the `SwitchGLU`/`GatherMM` composite, whose matmul — as

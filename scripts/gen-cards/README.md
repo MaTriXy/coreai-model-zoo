@@ -35,6 +35,8 @@ Exit 0 = all cards clean. Exit 1 = drift (rerun with `--write`) or a gate failur
    (see Examples/Transcribe — the convention: one typed function, no UI).
 2. Add the model to `cards.json` (runner, product, checklist lines, take-home note).
 3. Add the begin/end markers around the card's Use-it section by hand once, both surfaces.
+   Models without a `zoo/<id>.md` (official ports): omit `zooCard` — the generator skips
+   the zoo surface and manages the HF README only.
 4. Run the generator; it owns the block from then on.
 
 Snippet specialization is deliberately minimal and compile-guarded: dedent, `catalog: id` →

@@ -34,6 +34,9 @@ Mixture-of-Experts FFN** (DeepSeek-V3 style):
 tokenizer; decode-only loop-free for the [pipelined engine](../knowledge/pipelined-engine.md)).
 Convert with [`conversion/export_glm47_moe_metal_decode_pipelined.py`](../conversion/export_glm47_moe_metal_decode_pipelined.py).
 
+<!-- gen-cards:use-it begin id=glm-4.7-flash (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+<!-- gen-cards:use-it end -->
+
 ## Measured (macOS 27 beta, M4 Max 128 GB, release `llm-benchmark`, `COREAI_CHUNK_THRESHOLD=1`)
 
 | config | bundle | prefill tok/s | decode tok/s | numerics |

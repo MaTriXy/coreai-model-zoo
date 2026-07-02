@@ -21,6 +21,9 @@ flash-decode kernel (`_g8`).
 > pipelined engine. **The 31B has 4 global KV heads** (vs the 12B's 1), so the kernel does block
 > GQA over the unified cache (validated bit-exact vs ground-truth GQA).
 
+<!-- gen-cards:use-it begin id=gemma-4-31b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+<!-- gen-cards:use-it end -->
+
 ## Architecture (config + checkpoint verified) — clean dense, no PLE
 
 Top `model_type: gemma4`; text `gemma4_text`. Like the 12B and unlike the on-device E2B/E4B, it

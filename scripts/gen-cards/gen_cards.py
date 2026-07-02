@@ -335,16 +335,19 @@ def main() -> int:
 
         block = render_block(model_id, entry, cfg, top, snippet or "", doors)
 
-        # zoo surface
-        zoo_card = ZOO / cfg["zooCard"]
-        old = zoo_card.read_text()
-        new = replace_region(old, model_id, block, str(cfg["zooCard"]))
-        if new is not None:
-            if show_diff(old, new, f"zoo:{cfg['zooCard']}"):
-                drift = True
-                if args.write:
-                    zoo_card.write_text(new)
-                    log("write", f"updated {cfg['zooCard']}")
+        # zoo surface (optional — official models have no zoo/<id>.md, HF surface only)
+        if cfg.get("zooCard") is None:
+            log("info", "no zooCard configured — zoo surface skipped (HF-only enrollment)")
+        else:
+            zoo_card = ZOO / cfg["zooCard"]
+            old = zoo_card.read_text()
+            new = replace_region(old, model_id, block, str(cfg["zooCard"]))
+            if new is not None:
+                if show_diff(old, new, f"zoo:{cfg['zooCard']}"):
+                    drift = True
+                    if args.write:
+                        zoo_card.write_text(new)
+                        log("write", f"updated {cfg['zooCard']}")
 
         # HF surface
         try:

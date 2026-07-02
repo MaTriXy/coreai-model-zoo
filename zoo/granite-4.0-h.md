@@ -26,6 +26,9 @@ GPU-delegate workaround was needed here (per-layer `SSMState` writes compile fin
 the multi-write drop is pattern-dependent — and NoPE attention without q/k-norm gains
 shows no fp16-matmul amplification; the SSM step itself computes in fp32 in-graph).
 
+<!-- gen-cards:use-it begin id=granite-4.0-h-1b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+<!-- gen-cards:use-it end -->
+
 ## Measured (macOS 27 beta, M4 Max, release builds, p=128 g=256, `COREAI_CHUNK_THRESHOLD=1`)
 
 | config | bundle | prefill tok/s | decode tok/s | numerics |

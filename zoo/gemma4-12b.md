@@ -19,6 +19,9 @@ the 12B run on the engine at all (see *Throughput* below).
 > replace that op on the full layers with a custom Metal flash-decode kernel. Use the `_msdpa`
 > bundles — the plain (non-kernel) bundles still crash on the current engine.
 
+<!-- gen-cards:use-it begin id=gemma-4-12b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+<!-- gen-cards:use-it end -->
+
 ## Architecture (config + checkpoint verified) — clean dense, no PLE
 
 Top `model_type: gemma4_unified` (the text decoder of the multimodal wrapper). Unlike the

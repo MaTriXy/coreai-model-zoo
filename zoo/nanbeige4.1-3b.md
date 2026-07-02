@@ -17,6 +17,9 @@ it reuses `qwen3.py` MINUS the q/k-norm (qwen3 already has a bias-free fused QKV
 existing overlay with one norm removed — see `models/macos/llama.py`. Pure-attention, KV-only state
 (no conv / recurrent), so it needs no engine patch beyond the base stack.
 
+<!-- gen-cards:use-it begin id=nanbeige4.1-3b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+<!-- gen-cards:use-it end -->
+
 ## Measured (macOS + iOS 27 beta, release builds, p=128 g=256, `COREAI_CHUNK_THRESHOLD=1`)
 
 | config | bundle | prefill tok/s | decode tok/s | numerics |

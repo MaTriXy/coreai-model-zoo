@@ -22,20 +22,20 @@ ready-to-build app — in this repo's [`apps/`](apps) or a
 
 | Model | Download (`.aimodel`) | Run in app | License |
 |---|---|---|---|
-| **Qwen3.5-0.8B** | [🤗 qwen3.5-0.8B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
+| [**Qwen3.5-0.8B**](zoo/qwen3.5.md) | [🤗 qwen3.5-0.8B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
 | [**Qwen3.5-2B**](zoo/qwen3.5.md) | [🤗 qwen3.5-2B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Apache-2.0 |
-| **Qwen3.6-35B-A3B** (MoE, Mac-only) | [🤗 Qwen3.6-35B-A3B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-35B-A3B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | Apache-2.0 |
-| **Qwen3.6-27B** (dense, Mac-only) | [🤗 Qwen3.6-27B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-27B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | Apache-2.0 |
-| **GLM-4.7-Flash** (MoE + MLA, Mac-only — zoo's first MLA) | [🤗 GLM-4.7-Flash-CoreAI](https://huggingface.co/mlboydaisuke/GLM-4.7-Flash-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | MIT |
+| [**Qwen3.6-35B-A3B**](zoo/qwen3.6.md) (MoE, Mac-only) | [🤗 Qwen3.6-35B-A3B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-35B-A3B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | Apache-2.0 |
+| [**Qwen3.6-27B**](zoo/qwen3.6-27b.md) (dense, Mac-only) | [🤗 Qwen3.6-27B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-27B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Apache-2.0 |
+| [**GLM-4.7-Flash**](zoo/glm-4.7-flash.md) (MoE + MLA, Mac-only — zoo's first MLA) | [🤗 GLM-4.7-Flash-CoreAI](https://huggingface.co/mlboydaisuke/GLM-4.7-Flash-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | MIT |
 | **Gemma 4 E2B** (text, incl. official-QAT int4) | [🤗 gemma-4-E2B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Gemma |
 | **Gemma 4 E4B** (text, official-QAT int4) | [🤗 gemma-4-E4B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E4B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Gemma |
-| **Gemma 4 12B** (dense, Mac-only — custom flash-decode kernel ‡) | [🤗 Gemma-4-12B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-12B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | Gemma |
-| **Gemma 4 31B** (dense, Mac-only — custom flash-decode kernel ‡) | [🤗 Gemma-4-31B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-31B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | Gemma |
-| **LFM2.5-1.2B-Instruct** | [🤗 LFM2.5-1.2B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-1.2B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | LFM Open License v1.0 |
-| **LFM2.5-8B-A1B** (MoE, custom `gather_qmm` kernel — first iPhone MoE) | [🤗 LFM2.5-8B-A1B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-8B-A1B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | LFM Open License v1.0 |
-| **Granite 4.0-H 1B / 350M** | [🤗 granite-4.0-h-CoreAI](https://huggingface.co/mlboydaisuke/granite-4.0-h-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
-| **Nanbeige4.1-3B** (dense reasoning/agentic, iPhone — 32B-class @ 3.93B) | [🤗 Nanbeige4.1-3B-CoreAI](https://huggingface.co/mlboydaisuke/Nanbeige4.1-3B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Apache-2.0 |
-| **MiniCPM5-1B** (1B-class on-device LLM, hybrid Think/No-Think, 128K, OpenBMB) | [🤗 MiniCPM5-1B-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM5-1B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
+| [**Gemma 4 12B**](zoo/gemma4-12b.md) (dense, Mac-only — custom flash-decode kernel) | [🤗 Gemma-4-12B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-12B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | Gemma |
+| [**Gemma 4 31B**](zoo/gemma4-31b.md) (dense, Mac-only — custom flash-decode kernel) | [🤗 Gemma-4-31B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-31B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | Gemma |
+| [**LFM2.5-1.2B-Instruct**](zoo/lfm2.5.md) | [🤗 LFM2.5-1.2B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-1.2B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | LFM Open License v1.0 |
+| [**LFM2.5-8B-A1B**](zoo/lfm2.5-8b-a1b-moe.md) (MoE, custom `gather_qmm` kernel — first iPhone MoE) | [🤗 LFM2.5-8B-A1B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-8B-A1B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | LFM Open License v1.0 |
+| [**Granite 4.0-H 1B / 350M**](zoo/granite-4.0-h.md) | [🤗 granite-4.0-h-CoreAI](https://huggingface.co/mlboydaisuke/granite-4.0-h-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
+| [**Nanbeige4.1-3B**](zoo/nanbeige4.1-3b.md) (dense reasoning/agentic, iPhone — 32B-class @ 3.93B) | [🤗 Nanbeige4.1-3B-CoreAI](https://huggingface.co/mlboydaisuke/Nanbeige4.1-3B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Apache-2.0 |
+| [**MiniCPM5-1B**](zoo/minicpm5-1b.md) (1B-class on-device LLM, hybrid Think/No-Think, 128K, OpenBMB) | [🤗 MiniCPM5-1B-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM5-1B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
 | **FastContext-1.0-4B** (repo-exploration agent — first-turn search / multi-turn evidence / file:line citation; Qwen3-4B arch, iPhone GPU, AOT h18p; Microsoft) | [🤗 FastContext-1.0-4B-CoreAI](https://huggingface.co/mlboydaisuke/FastContext-1.0-4B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | MIT |
 | **BitCPM-8B** (zoo's first **1.58-bit ternary** LLM — every weight is {-1,0,+1}; MiniCPM4-8B arch, custom 2-bit packed-GEMM Metal kernel; 8B running in ~2.1 GB on iPhone GPU; OpenBMB) | [🤗 BitCPM-8B-CoreAI](https://huggingface.co/mlboydaisuke/BitCPM-8B-CoreAI) | [CoreAIChat](apps/CoreAIChat) ‡ | Apache-2.0 |
 | **LLaDA-8B dLLM** (zoo's first **diffusion LLM** — masked-diffusion decode: fills a canvas of `[MASK]` tokens **in parallel**, not left-to-right AR; bidirectional LLaMA-dense 8B, [d3LLM](https://huggingface.co/d3LLM/d3LLM_LLaDA)-distilled; int4 ~4.9 GB, Mac) | [🤗 LLaDA-8B-dLLM-CoreAI](https://huggingface.co/mlboydaisuke/LLaDA-8B-dLLM-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | Other |

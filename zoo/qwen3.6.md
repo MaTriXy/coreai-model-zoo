@@ -24,6 +24,9 @@ heads** (GVA: each k/q head is shared across two value heads) and every FFN is a
 tokenizer; decode-only loop-free for the [pipelined engine](../knowledge/pipelined-engine.md)).
 Convert with [`conversion/export_qwen3_6_moe_metal_decode_pipelined.py`](../conversion/export_qwen3_6_moe_metal_decode_pipelined.py).
 
+<!-- gen-cards:use-it begin id=qwen3.6-35b-a3b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+<!-- gen-cards:use-it end -->
+
 ## Measured (macOS 27 beta, M4 Max 128 GB, release `llm-benchmark`, `COREAI_CHUNK_THRESHOLD=1`)
 
 | config | bundle | prefill tok/s | decode tok/s | numerics (teacher-forced vs bf16 HF oracle) |
