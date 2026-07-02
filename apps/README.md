@@ -1,5 +1,14 @@
 # On-device Core AI sample apps (iOS 27 / macOS 27)
 
+> **These are engine showcases, not starter examples.** The apps here exist for models that
+> need a hand-tuned backend the generic path can't drive yet (custom Metal kernels, the
+> `coreai-models` patch stack: BitCPM ternary, RWKV-7, LLaDA diffusion decode, spec-decode, …)
+> — and they are the device-verification bench behind the zoo's published numbers. If you just
+> want to **run a model** or copy working integration code, start from the
+> [CoreAIKit examples ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples)
+> (per-capability runners: chat, transcribe, vision, …) and the model's card in
+> [`zoo/`](../zoo/).
+
 SwiftUI sample apps that run models **on device** via Core AI. The chat apps are verified
 greedy-exact (top-1 vs the HF eager reference) on an iPhone 17 Pro running the iOS 27 beta:
 

@@ -65,9 +65,11 @@ Transcribes on-device, token-for-token identical to the PyTorch reference. The s
 traces a **single** decode step (`decoder_input_ids [1,1]`, no KV cache) — which can't be
 driven autoregressively — so this bundle is the same recipe traced at a **fixed 128-token
 decoder window**: pad the buffer, read logits at the real last position (causal attention
-ignores the padding), constant shape so MPSGraph compiles once. Runs from the
-[CoreAITranscribe app](../apps/CoreAITranscribe/) (macOS + iOS, file or mic). The bundle ships
-the tokenizer + the mel filterbank for the Swift log-mel frontend.
+ignores the padding), constant shape so MPSGraph compiles once. **Card with the runnable
+snippet + integration checklist: [`zoo/whisper-large-v3-turbo.md`](../zoo/whisper-large-v3-turbo.md)**;
+run it from the [Transcribe example ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/Transcribe)
+(GUI + CLI) or the [CoreAITranscribe app](../apps/CoreAITranscribe/) (macOS + iOS, file or mic).
+The bundle ships the tokenizer + the mel filterbank for the Swift log-mel frontend.
 
 ## Why artifacts and not just recipes?
 

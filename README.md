@@ -4,10 +4,19 @@ LLMs converted to Apple **Core AI** (`.aimodel`, iOS 27 / macOS 27) — download
 on-device, with the conversion code and a knowledge base. Successor to
 [`CoreML-Models`](https://github.com/john-rocky/CoreML-Models).
 
-**Run any model on device.** Every row below links a ready-to-build app — in this repo's
-[`apps/`](apps) or a [CoreAIKit example](https://github.com/john-rocky/coreai-kit/tree/main/Examples)
-(marked ↗). To embed a model in your own app instead, add
-[**CoreAIKit**](https://github.com/john-rocky/coreai-kit) and load it by its catalog id.
+**The `from_pretrained` of Core AI** — one line, any zoo model, via
+[**CoreAIKit**](https://github.com/john-rocky/coreai-kit) (SPM):
+
+```swift
+let chat = try await ChatSession(catalog: "qwen3.5-2b")   // downloads once, then cached
+let reply = try await chat.respond(to: "What can you do, offline?")
+```
+
+Same gesture for every capability — `KitTranscriber(catalog: "whisper-large-v3-turbo")` is
+speech-to-text in 3 lines ([card](zoo/whisper-large-v3-turbo.md)). Each model's card carries the
+complete copy-paste snippet and its integration checklist. Every row below also links a
+ready-to-build app — in this repo's [`apps/`](apps) or a
+[CoreAIKit example](https://github.com/john-rocky/coreai-kit/tree/main/Examples) (marked ↗).
 
 ## Models
 
@@ -37,9 +46,10 @@ on-device, with the conversion code and a knowledge base. Successor to
 | **Gemma 4 E2B vision (VL)** (image+text) | `vl/` in [🤗 gemma-4-E2B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Gemma |
 | **Unlimited-OCR** (document OCR → markdown: tables→HTML, formulas→LaTeX; zoo's first doc-OCR — **stock runtime, no patch**, flat-latency R-SWA) | [🤗 Unlimited-OCR-CoreAI](https://huggingface.co/mlboydaisuke/Unlimited-OCR-CoreAI) | [CoreAIOCR](apps/CoreAIOCR) | MIT |
 | **Qwen2.5-Omni-3B Audio** (audio *understanding* — describes sounds, not a transcript; iPhone + Mac, zoo's first audio model) | [🤗 Qwen2.5-Omni-3B-Audio-CoreAI](https://huggingface.co/mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI) | [coreai-audio](apps/coreai-audio) | Apache-2.0 |
-| **Whisper large-v3-turbo** (speech→text — 100 languages, auto-detect; stock runtime, iPhone AOT + Mac) | [🤗 whisper-large-v3-turbo-CoreAI-official](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official) | [coreai-audio](apps/coreai-audio) | MIT |
-| **Qwen3-ASR-1.7B** (speech→text — the zoo's first ASR; AuT encoder + Qwen3 decoder, 52 languages; iPhone + Mac) | [🤗 Qwen3-ASR-1.7B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-ASR-1.7B-CoreAI) | [coreai-audio](apps/coreai-audio) | Apache-2.0 |
-| **Parakeet-TDT-0.6B** (speech→text — zoo's first **transducer / TDT (RNN-T)**; NVIDIA FastConformer + LSTM predictor + joint, 3 graphs + host greedy loop, 25 EU languages; iPhone 47.9× real-time) | [🤗 Parakeet-TDT-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Parakeet-TDT-0.6B-CoreAI) | [coreai-audio](apps/coreai-audio) | CC-BY-4.0 |
+| [**Whisper large-v3-turbo**](zoo/whisper-large-v3-turbo.md) (speech→text — 100 languages, auto-detect; stock runtime, iPhone AOT + Mac) | [🤗 whisper-large-v3-turbo-CoreAI-official](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official) | [Transcribe ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/Transcribe) | MIT |
+| **Qwen3-ASR-1.7B** (speech→text — the zoo's first ASR; AuT encoder + Qwen3 decoder, 52 languages; iPhone + Mac) | [🤗 Qwen3-ASR-1.7B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-ASR-1.7B-CoreAI) | [Transcribe ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/Transcribe) | Apache-2.0 |
+| **Parakeet-TDT-0.6B** (speech→text — zoo's first **transducer / TDT (RNN-T)**; NVIDIA FastConformer + LSTM predictor + joint, 3 graphs + host greedy loop, 25 EU languages; iPhone 47.9× real-time) | [🤗 Parakeet-TDT-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Parakeet-TDT-0.6B-CoreAI) | [Transcribe ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/Transcribe) | CC-BY-4.0 |
+| **Nemotron 3.5 ASR Streaming 0.6B** (speech→text — the zoo's first **STREAMING ASR**: live-mic transcription in 320 ms chunks, cache-aware FastConformer + pure RNN-T with explicit KV/conv cache I/O; 40 locales in one checkpoint via a run-time language input, punctuation built in, any-length audio) | [🤗 Nemotron-3.5-ASR-Streaming-CoreAI](https://huggingface.co/mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI) | [coreai-audio](apps/coreai-audio) | OpenMDW-1.1 |
 | **Kokoro-82M** (text-to-speech — zoo's first TTS; StyleTTS2 + iSTFTNet, 28 English voices, runs on any text) | [🤗 Kokoro-82M-CoreAI](https://huggingface.co/mlboydaisuke/Kokoro-82M-CoreAI) | [coreai-audio](apps/coreai-audio) | Apache-2.0 |
 | **VoxCPM-0.5B** (text-to-speech — diffusion TTS: MiniCPM4 LM + LocDiT flow-matching + AudioVAE; iPhone + Mac, int8 LM) | [🤗 VoxCPM-0.5B-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM-0.5B-CoreAI) | [coreai-audio](apps/coreai-audio) | Apache-2.0 |
 | **VoxCPM2 2B** (text-to-speech — 2B successor at 48 kHz: MiniCPM4 28L LM + LocDiT-12L flow-matching + 48 kHz AudioVAE; iPhone + Mac, int8 LM) | [🤗 VoxCPM2-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM2-CoreAI) | [coreai-audio](apps/coreai-audio) | Apache-2.0 |
@@ -99,7 +109,10 @@ kernel — the stock MPSGraph SDPA crashes on the ≥16-head × 512 Q (a GPU scr
 - **Try the app** (iOS 27 / macOS 27 beta; the model downloads in-app):
   - **Demo app, no build** → Mac: [**.dmg**](https://github.com/john-rocky/coreai-model-zoo/releases/download/mac-v1.0/CoreAI-Zoo-for-Mac.dmg) (notarized, runs the Mac-only bundles) · iPhone: CoreAIChat on TestFlight (coming soon)
   - **Build it** → [`apps/`](apps/) — Xcode 27 beta + xcodegen, the `coreai-models` patch stack + `tokenizer.json`
-- **Run a model in your own app** → [`knowledge/swift-runtime.md`](knowledge/swift-runtime.md) + the model card
+- **Use a model in your own app** → add [**CoreAIKit**](https://github.com/john-rocky/coreai-kit)
+  (SPM) and load the catalog id; the model's card has the complete snippet + a 5-line
+  integration checklist (golden example: [`zoo/whisper-large-v3-turbo.md`](zoo/whisper-large-v3-turbo.md)).
+  Engine-level deep-dive: [`knowledge/swift-runtime.md`](knowledge/swift-runtime.md)
 - **Convert a model** → [`knowledge/conversion-guide.md`](knowledge/conversion-guide.md)
 - **Compress** → [`knowledge/compression.md`](knowledge/compression.md)
 - **Make it fast** → [`knowledge/custom-metal-kernels.md`](knowledge/custom-metal-kernels.md) · [`knowledge/performance-ceiling.md`](knowledge/performance-ceiling.md)
@@ -109,11 +122,12 @@ kernel — the stock MPSGraph SDPA crashes on the ≥16-head × 512 Q (a GPU scr
 
 | Dir | What |
 |---|---|
+| [**coreai-kit** ↗](https://github.com/john-rocky/coreai-kit) | (sibling repo) The Swift package that runs this zoo: 1-line `catalog:` APIs (`ChatSession`, `KitTranscriber`, …), model download + cache, and per-kind example apps in [`Examples/`](https://github.com/john-rocky/coreai-kit/tree/main/Examples) — the cards' ▶️ / 💻 doors point there. |
 | [`zoo/`](zoo/) | Model cards — configurations, sizes, parity, measured throughput. |
 | [`knowledge/`](knowledge/) | Verified notes on the framework: conversion, compression, stateful KV, custom Metal kernels, AOT, compute-unit rules, the Swift runtime. |
 | [`conversion/`](conversion/) | Re-authored models + convert / verify / compress scripts (PyTorch → `.aimodel`). |
 | [`swift/`](swift/) | `CoreAIRunner` — a Swift package that drives `.aimodel` LLM bundles, including architectures beyond the standard runtime. |
-| [`apps/`](apps/) | SwiftUI on-device chat apps (iOS 27): CoreAIChat (Gemma 4 E2B GPU/ANE/⚡ + Qwen3.5 / Qwen3.5-2B / LFM2.5 / Granite ⚡pipelined, one picker) + QwenChatFast (Qwen3.5 static kernels) with in-app model download. |
+| [`apps/`](apps/) | **Engine showcases** — apps for models that need a hand-tuned backend (custom Metal kernels, patch stack: BitCPM, RWKV-7, LLaDA, …) and the device-verification bench behind the published numbers. Want to *just run a model*? Use the [kit examples ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples) instead. |
 
 ## License
 
