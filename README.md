@@ -107,7 +107,7 @@ kernel — the stock MPSGraph SDPA crashes on the ≥16-head × 512 Q (a GPU scr
 ## Start here
 
 - **Try the app** (iOS 27 / macOS 27 beta; the model downloads in-app):
-  - **Demo app, no build** → Mac: [**.dmg**](https://github.com/john-rocky/coreai-model-zoo/releases/download/mac-v1.0/CoreAI-Zoo-for-Mac.dmg) (notarized, runs the Mac-only bundles) · iPhone: CoreAIChat on TestFlight (coming soon)
+  - **Demo app, no build** → Mac: [**.dmg**](https://github.com/john-rocky/coreai-model-zoo/releases/download/mac-v1.0/CoreAI-Zoo-for-Mac.dmg) (notarized, runs the Mac-only bundles) · iPhone: [**CoreAIChat on TestFlight**](https://testflight.apple.com/join/bK4P7xby)
   - **Build it** → [`apps/`](apps/) — Xcode 27 beta + xcodegen, the `coreai-models` patch stack + `tokenizer.json`
 - **Use a model in your own app** → add [**CoreAIKit**](https://github.com/john-rocky/coreai-kit)
   (SPM) and load the catalog id; the model's card has the complete snippet + a 5-line
