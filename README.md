@@ -23,7 +23,7 @@ ready-to-build app — in this repo's [`apps/`](apps) or a
 | Model | Download (`.aimodel`) | Run in app | License |
 |---|---|---|---|
 | **Qwen3.5-0.8B** | [🤗 qwen3.5-0.8B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
-| **Qwen3.5-2B** | [🤗 qwen3.5-2B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
+| [**Qwen3.5-2B**](zoo/qwen3.5.md) | [🤗 qwen3.5-2B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Apache-2.0 |
 | **Qwen3.6-35B-A3B** (MoE, Mac-only) | [🤗 Qwen3.6-35B-A3B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-35B-A3B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | Apache-2.0 |
 | **Qwen3.6-27B** (dense, Mac-only) | [🤗 Qwen3.6-27B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-27B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | Apache-2.0 |
 | **GLM-4.7-Flash** (MoE + MLA, Mac-only — zoo's first MLA) | [🤗 GLM-4.7-Flash-CoreAI](https://huggingface.co/mlboydaisuke/GLM-4.7-Flash-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | MIT |

@@ -128,9 +128,12 @@ def extract_snippet(kit: Path, cfg: dict, model_id: str) -> str | None:
     return f"import {cfg['snippetImport']}\n\n{body}\n{cfg['snippetResultComment']}"
 
 
-def gate_snippet_compiles(snippet: str, kit_url: str, local_kit: Path | None) -> bool:
+def gate_snippet_compiles(snippet: str, kit_url: str, local_kit: Path | None,
+                          free_vars: dict) -> bool:
     """Compile the extracted snippet in a scratch package against kit (url-dep by default) —
-    catches the "compiles in the runner, not in the reader's app" class."""
+    catches the "compiles in the runner, not in the reader's app" class. `free_vars` names the
+    reader-supplied inputs the snippet references (e.g. {"url": "URL"} / {"prompt": "String"});
+    they become parameters of the wrapper function."""
     scratch = HERE / ".scratch" / "SnippetCheck"
     src = scratch / "Sources" / "SnippetCheck"
     src.mkdir(parents=True, exist_ok=True)
@@ -150,8 +153,11 @@ let package = Package(
     body = [l for l in snippet.split("\n") if not l.startswith("import ")]
     if "import Foundation" not in imports:
         imports.append("import Foundation")
-    wrapped = "\n".join(imports) + "\n\nfunc __snippet(url: URL) async throws {\n" + \
-        "\n".join(("    " + l).rstrip() for l in body) + "\n    _ = result\n}\n"
+    params = ", ".join(f"{n}: {t}" for n, t in free_vars.items())
+    lets = re.findall(r"^let (\w+)", "\n".join(body), re.M)
+    tail = f"    _ = {lets[-1]}\n" if lets else ""
+    wrapped = "\n".join(imports) + f"\n\nfunc __snippet({params}) async throws {{\n" + \
+        "\n".join(("    " + l).rstrip() for l in body) + f"\n{tail}}}\n"
     (src / "main.swift").write_text(wrapped)
     r = run(["swift", "build", "--package-path", str(scratch)])
     if r.returncode != 0:
@@ -224,7 +230,9 @@ def render_block(model_id: str, entry: dict, cfg: dict, top: dict,
             "```\n"
             "\n"
             f"The take-home is [`{cfg['quickstart']}`]({kit_url}/blob/main/{cfg['quickstart']})\n"
-            "— this exact code as one typed function, no UI; both the runner's GUI and its CLI call it.\n"
+            + cfg.get("takeHomeTagline",
+                      "— this exact code as one typed function, no UI; both the runner's GUI "
+                      "and its CLI call it.") + "\n"
             f"{cfg['takeHomeNote']}\n"
             "\n"
             "**Integration checklist**\n"
@@ -313,7 +321,8 @@ def main() -> int:
             doors["runner"] = ok
             snippet = extract_snippet(kit, cfg, model_id)
             doors["snippet"] = snippet is not None and gate_snippet_compiles(
-                snippet, top["kitURL"], kit if args.local_kit_dep else None)
+                snippet, top["kitURL"], kit if args.local_kit_dep else None,
+                cfg.get("snippetFreeVars", {"url": "URL"}))
 
         if cfg.get("testflightURL") or cfg.get("dmgURL"):
             fail("green door configured but its template is not implemented yet")
@@ -360,8 +369,8 @@ def main() -> int:
                 else:
                     log("push", f"HF README updated: {entry['repo']}")
 
-    log("info", "zoo README model-table regen: skipped (1 enrolled model; lands when cards "
-        "roll wider) — Run-in-app cells are still hand-maintained")
+    log("info", f"zoo README model-table regen: not implemented ({len(ids)} enrolled) — "
+        "Run-in-app cells are still hand-maintained")
 
     if failures:
         print(f"\n{'!' * 70}\n{len(failures)} gate failure(s) — doors were dropped or output "

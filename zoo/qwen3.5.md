@@ -14,6 +14,48 @@ fp16 monolith 27.7), `ios-ane/` + `macos/` (dynamic int8, 14.7 / 58.5 tok/s).
 To our knowledge this is the first hybrid linear-attention (SSM) LLM running on Core AI —
 including on the iPhone **Neural Engine**.
 
+<!-- gen-cards:use-it begin id=qwen3.5-2b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+## Use it
+
+▶️ **Run it (source)** — the [ChatDemo runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo)
+(GUI + CLI, one app for every chat model in the catalog):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/ChatDemo/ChatDemo.xcodeproj
+# → Run, then pick "Qwen3.5 2B" in the model picker
+
+# agents / headless (macOS):
+cd coreai-kit/Examples/ChatDemo
+swift run chat-cli --model qwen3.5-2b --prompt "What can you do, offline?"
+```
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKit
+
+let chat = try await ChatSession(catalog: "qwen3.5-2b")
+let reply = try await chat.respond(to: prompt)
+// reply: the answer, generated fully on-device
+```
+
+The take-home is [`Examples/ChatDemo/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/ChatDemo/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; the CLI is an argument shell over it, and
+the GUI drives the same `ChatSession` across turns for its transcript.
+Multi-turn? Hold the `ChatSession` and call `respond(to:)` per turn — it keeps the
+conversation history; `streamResponse(to:)` yields tokens as they decode.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKit**
+- Info.plist: none needed
+- Entitlements (iOS): `com.apple.developer.kernel.increased-memory-limit`
+- First run downloads the model — 2.4 GB (Mac) / 2.4 GB (iPhone) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
+
 ## On-device status (iOS/macOS 27 beta — measured, greedy)
 
 <!-- Mac numbers RELEASE-VERIFIED by R2 2026-06-10 (ondevice/MACOS_RELEASE_README.md);
