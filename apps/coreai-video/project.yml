@@ -1,0 +1,48 @@
+name: coreai-video
+options:
+  bundleIdPrefix: com.daisukemajima
+  createIntermediateGroups: true
+
+# CoreAIKitVision only (GraphModel — V-JEPA is one stateless graph, no tokenizer), so the app can
+# pin the released kit directly; no dev-path entanglement.
+packages:
+  coreai-kit:
+    url: https://github.com/john-rocky/coreai-kit
+    revision: 7ddc5cce7770a4d283e15c8b191ce5584936f1b4
+
+# Release: preprocessing (16-frame CI render + normalize) is per-inference host work.
+schemes:
+  coreai-video:
+    build:
+      targets:
+        coreai-video: all
+    run:
+      config: Release
+
+targets:
+  coreai-video:
+    type: application
+    supportedDestinations: [iOS, macOS]
+    deploymentTarget:
+      iOS: "27.0"
+      macOS: "27.0"
+    sources:
+      - path: Sources
+        excludes:
+          - VJEPAAssets        # fp16 bundle + labels (~675 MB) — dev symlink, loaded via #filePath
+    dependencies:
+      - package: coreai-kit
+        product: CoreAIKitVision
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.daisukemajima.coreaivideo
+        DEVELOPMENT_TEAM: MFN25KNUGJ
+        CODE_SIGN_STYLE: Automatic
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+        INFOPLIST_KEY_NSCameraUsageDescription: "coreai-video runs a local video model on the camera feed to recognize actions. Nothing leaves your device."
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        SWIFT_VERSION: "6.0"
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
