@@ -559,6 +559,27 @@
       "takeHomeNote": "Big photos? Inputs are tiled and feather-blended internally; `maxInputSide` (default 512)\ncaps the input first so a full-res phone photo can't produce a gigapixel result.",
       "checklistInfoPlist": "Info.plist: none needed",
       "checklistEntitlements": "Entitlements: none needed"
+    },
+    "voxcpm-0.5b": {
+      "runner": {
+        "dir": "Examples/Speak",
+        "xcodeproj": "Speak.xcodeproj",
+        "scheme": "Speak",
+        "cliTarget": "speak-cli",
+        "cliArgs": "--text \"Hello from Core AI.\" --output hello.wav",
+        "blurb": "GUI + CLI, one app for every text-to-speech model in the catalog"
+      },
+      "quickstart": "Examples/Speak/Sources/QuickStart.swift",
+      "product": "CoreAIKit",
+      "snippetImport": "CoreAIKit",
+      "snippetFreeVars": {
+        "text": "String"
+      },
+      "snippetResultComment": "// audio.samples: 16 kHz mono PCM in [-1, 1] — play it or write a WAV",
+      "takeHomeTagline": "— this exact code as one typed function, no UI; the CLI is an argument shell over it, and\nthe GUI drives the same `KitSpeaker(catalog:)` and plays the samples.",
+      "takeHomeNote": "Live playback? `synthesizeStreaming(_:onChunk:)` hands you ~0.5 s chunks as they decode,\nso audio starts before the whole clip exists. The WAV container is your app's territory\n(the runner ships a 20-line writer).",
+      "checklistInfoPlist": "Info.plist: none needed",
+      "checklistEntitlements": "Entitlements: none needed"
     }
   }
 }
