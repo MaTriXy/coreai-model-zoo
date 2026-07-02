@@ -125,7 +125,11 @@ def extract_snippet(kit: Path, cfg: dict, model_id: str) -> str | None:
     if lines and lines[-1].startswith("return "):
         lines[-1] = "let result = " + lines[-1][len("return "):]
     body = "\n".join(lines)
-    return f"import {cfg['snippetImport']}\n\n{body}\n{cfg['snippetResultComment']}"
+    imports = cfg["snippetImport"]
+    if isinstance(imports, str):
+        imports = [imports]
+    header = "\n".join(f"import {m}" for m in imports)
+    return f"{header}\n\n{body}\n{cfg['snippetResultComment']}"
 
 
 def gate_snippet_compiles(snippet: str, kit_url: str, local_kit: Path | None,

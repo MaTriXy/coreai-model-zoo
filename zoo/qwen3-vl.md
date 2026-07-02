@@ -38,6 +38,58 @@ bundles convert from the same recipe (`--hf-id Qwen/Qwen3-VL-4B-Instruct` /
 
 <p align="center"><img src="https://huggingface.co/mlboydaisuke/Qwen3-VL-2B-CoreAI/resolve/main/demo.gif" width="300" alt="CoreAIChat Qwen3-VL demo on iPhone 17 Pro"></p>
 
+<!-- gen-cards:use-it begin id=qwen3-vl-2b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+![Qwen3-VL 2B demo](https://huggingface.co/mlboydaisuke/Qwen3-VL-2B-CoreAI/resolve/main/demo.gif)
+*Qwen3-VL 2B on iPhone 17 Pro — in the zoo's CoreAIChat app, real speed.*
+
+## Use it
+
+▶️ **Run it (source)** — the [VLChat runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/VLChat)
+(GUI + CLI, one app for every vision-language model in the catalog):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/VLChat/VLChat.xcodeproj
+# → Run, then pick "Qwen3-VL 2B" in the model picker
+
+# agents / headless (macOS):
+cd coreai-kit/Examples/VLChat
+swift run vlchat-cli --model qwen3-vl-2b --image sample.jpg --prompt "What is in this image?"
+```
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKit
+import FoundationModels
+
+let vlm = try await KitVisionModel(catalog: "qwen3-vl-2b")
+let session = LanguageModelSession(model: vlm)
+let image = try ImageFile.load(imageURL)  // any image file → CGImage + EXIF orientation
+let reply = try await session.respond(to: Prompt {
+    prompt
+    Attachment(image.cgImage, orientation: image.orientation)
+})
+// reply.content: the answer about the image, generated fully on-device
+```
+
+The take-home is [`Examples/VLChat/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/VLChat/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; the CLI is an argument shell over it, and
+the GUI drives the same `KitVisionModel(catalog:)` behind a `LanguageModelSession`.
+Multi-turn about the same image? Hold the `LanguageModelSession` and call `respond(to:)`
+per turn. The photo picker / file chooser is your app's own chrome — `ImageFile.load`
+(kit API) turns any image file into model input.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKit**
+- Info.plist: `NSPhotoLibraryUsageDescription` — only if you use PhotosPicker
+- Entitlements (iOS): `com.apple.developer.kernel.increased-memory-limit`
+- First run downloads the model — 3.3 GB (Mac) / 3.3 GB (iPhone) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
+
 ## How a VLM rides a text-only engine
 
 The pipelined engine knows nothing about images. The whole multimodal state
