@@ -18,6 +18,45 @@ existing overlay with one norm removed — see `models/macos/llama.py`. Pure-att
 (no conv / recurrent), so it needs no engine patch beyond the base stack.
 
 <!-- gen-cards:use-it begin id=nanbeige4.1-3b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+## Use it
+
+▶️ **Run it (source)** — the [ChatDemo runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo)
+(GUI + CLI, one app for every chat model in the catalog):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/ChatDemo/ChatDemo.xcodeproj
+# → Run, then pick "Nanbeige4.1 3B" in the model picker
+
+# agents / headless (macOS):
+cd coreai-kit/Examples/ChatDemo
+swift run chat-cli --model nanbeige4.1-3b --prompt "What can you do, offline?"
+```
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKit
+
+let chat = try await ChatSession(catalog: "nanbeige4.1-3b")
+let reply = try await chat.respond(to: prompt)
+// reply: the answer, generated fully on-device
+```
+
+The take-home is [`Examples/ChatDemo/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/ChatDemo/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; the CLI is an argument shell over it, and
+the GUI drives the same `ChatSession` across turns for its transcript.
+Multi-turn? Hold the `ChatSession` and call `respond(to:)` per turn — it keeps the
+conversation history; `streamResponse(to:)` yields tokens as they decode.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKit**
+- Info.plist: none needed
+- Entitlements (iOS): `com.apple.developer.kernel.increased-memory-limit`
+- First run downloads the model — 3.9 GB (Mac) / 3.9 GB (iPhone) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
 <!-- gen-cards:use-it end -->
 
 ## Measured (macOS + iOS 27 beta, release builds, p=128 g=256, `COREAI_CHUNK_THRESHOLD=1`)
