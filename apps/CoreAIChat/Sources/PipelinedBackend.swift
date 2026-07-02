@@ -125,6 +125,16 @@ final class PipelinedBackend {
         warmupToken: 9707,
         stopTokens: [151645])
 
+    // BitCPM-CANN-8B (OpenBMB, Apache-2.0) — zoo's first 1.58-bit ternary LLM. MiniCPM4-8B arch,
+    // the 7 per-layer linears run a custom 2-bit ternary packed-GEMM Metal kernel (embed Q4_K +
+    // head Q6_K stay fp16). AOT h18p .aimodelc (8B GPU graph). ChatML; eos <|im_end|> 73440.
+    nonisolated static let bitcpm = Spec(
+        bundleName: "bitcpm_8b_decode_ternary_s1",
+        hfRemotePath: "gpu-pipelined/bitcpm_8b_decode_ternary_s1",
+        label: "BitCPM-8B ⚡1.58bit",
+        warmupToken: 5000,
+        stopTokens: [73440])
+
     let spec: Spec
     private var engine: (any InferenceEngine)?
     private var tokenizer: Tokenizer?

@@ -50,6 +50,7 @@ struct ChatView: View {
     @State private var photoItem: PhotosPickerItem?
     @State private var attachedThumb: UIImage?
     @State private var showDeleteConfirm = false
+    @State private var showVLA = false           // BitVLA (image+instruction -> 7-DoF) sheet
 
     // Two-level selection over the flat engine mode: model (menu) x unit
     // (gemma-only segment).
@@ -69,6 +70,8 @@ struct ChatView: View {
                 case .qwen3vl4b: engine.mode = .qwen3vl4b
                 case .holo2vl: engine.mode = .holo2vl
                 case .gemma4vl: engine.mode = .gemma4vl
+                case .rwkv7: engine.mode = .rwkv7
+                case .qwen3spec: engine.mode = .qwen3spec
                 }
             })
     }
@@ -133,6 +136,7 @@ struct ChatView: View {
         } message: {
             Text("Frees space on this iPhone. You can download it again anytime.")
         }
+        .sheet(isPresented: $showVLA) { BitVLAView() }
     }
 
     private var topBar: some View {
@@ -149,17 +153,36 @@ struct ChatView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 10) {
-            Text("CoreAIChat").font(.headline)
-            // Model first (a menu scales as the zoo grows) ...
-            Picker("Model", selection: modelSelection) {
-                ForEach(ChatModel.allCases) { m in Text(m.rawValue).tag(m) }
+        // Two rows: a title/model/status row that never compresses (fixedSize keeps the title and
+        // the .menu picker label on one line — a squeezed .menu label wraps a char per line), and a
+        // secondary full-width segmented row for the modes that have a sub-choice. Keeping the wide
+        // segmented control out of the top row is what stops the overflow.
+        VStack(spacing: 6) {
+            HStack(spacing: 10) {
+                Text("CoreAIChat").font(.headline).fixedSize()
+                // Model menu (scales as the zoo grows); fixedSize so its label never wraps.
+                Picker("Model", selection: modelSelection) {
+                    ForEach(ChatModel.allCases) { m in Text(m.rawValue).tag(m) }
+                }
+                .pickerStyle(.menu)
+                .fixedSize()
+                .disabled(engine.busy || engine.loading)
+                Spacer(minLength: 8)
+                Text(engine.status)
+                    .font(.caption).foregroundStyle(engine.ready ? .green : .secondary)
+                    .lineLimit(1).truncationMode(.tail)
+                // Free this model's files from the device (re-downloadable). Only when installed.
+                if engine.installedForCurrentMode {
+                    Button(role: .destructive) { showDeleteConfirm = true } label: {
+                        Image(systemName: "trash")
+                    }
+                    .disabled(engine.busy || engine.loading)
+                }
+                // BitVLA: zoo's first on-device VLA (image+instruction -> 7-DoF action).
+                Button { showVLA = true } label: { Image(systemName: "hand.raised.fingers.spread") }
             }
-            .pickerStyle(.menu)
-            .disabled(engine.busy || engine.loading)
-            Spacer()
-            // ... then the engine, only where there is a choice (gemma:
-            // GPU kernel monolith / ANE chunks / ⚡pipelined static-table).
+            // Secondary control: the engine (gemma GPU/ANE/⚡), or the spec-decode ⚡Spec/Greedy
+            // toggle (lossless — same output, only tok/s changes). Full width, own row.
             if engine.mode.chatModel == .gemma {
                 Picker("Compute", selection: unitSelection) {
                     Text("GPU").tag(GemmaMode.gpu)
@@ -167,17 +190,13 @@ struct ChatView: View {
                     Text("⚡").tag(GemmaMode.gemmaTbl)
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 148)
                 .disabled(engine.busy || engine.loading)
-            }
-            Text(engine.status)
-                .font(.caption).foregroundStyle(engine.ready ? .green : .secondary)
-                .lineLimit(1)
-            // Free this model's files from the device (re-downloadable). Only when it's installed.
-            if engine.installedForCurrentMode {
-                Button(role: .destructive) { showDeleteConfirm = true } label: {
-                    Image(systemName: "trash")
+            } else if engine.mode == .qwen3spec {
+                Picker("Spec", selection: $engine.specDecodeOn) {
+                    Text("⚡ Spec").tag(true)
+                    Text("Greedy").tag(false)
                 }
+                .pickerStyle(.segmented)
                 .disabled(engine.busy || engine.loading)
             }
         }
@@ -350,11 +369,13 @@ struct ChatView: View {
                     case .lfm2: "~1.5"
                     case .granite: "~1.2"
                     case .minicpm5: "~2.0"
-                    case .fastcontext: "~2.1"
+                    case .fastcontext: "~3.0"
                     case .qwen3vl: "~3.1"
                     case .qwen3vl4b: "~5.5"
                     case .holo2vl: "~5.2"
                     case .gemma4vl: "~4.7"
+                    case .rwkv7: "~2.0"
+                    case .qwen3spec: "~2.1"
                     }
                     Label("Download \(engine.mode.downloadLabel) set (\(size) GB)",
                           systemImage: "arrow.down.circle")

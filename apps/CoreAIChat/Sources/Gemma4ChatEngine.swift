@@ -42,9 +42,9 @@ protocol Gemma4Backend: AnyObject {
 enum ChatModel: String, CaseIterable, Identifiable {
     case gemma = "Gemma 4 E2B", qwen = "Qwen3.5 0.8B", qwen2b = "Qwen3.5 2B",
          lfm2 = "LFM2.5 1.2B", granite = "Granite 1B", minicpm5 = "MiniCPM5 1B",
-         fastcontext = "FastContext 4B",
+         fastcontext = "BitCPM-8B 1.58bit",
          qwen3vl = "Qwen3-VL 2B", qwen3vl4b = "Qwen3-VL 4B", gemma4vl = "Gemma 4 VL",
-         holo2vl = "Holo2 4B"
+         holo2vl = "Holo2 4B", rwkv7 = "RWKV-7 1.5B", qwen3spec = "Qwen3-4B ⚡Spec"
     var id: String { rawValue }
 }
 
@@ -55,9 +55,9 @@ enum ChatModel: String, CaseIterable, Identifiable {
 enum GemmaMode: String, CaseIterable, Identifiable {
     case gpu = "GPU", ane = "ANE", gemmaTbl = "Gemma⚡", qwen = "Qwen",
          qwen2b = "Qwen2B", lfm2 = "LFM", granite = "Granite", minicpm5 = "MiniCPM5",
-         fastcontext = "FastContext",
+         fastcontext = "BitCPM",
          qwen3vl = "Qwen3VL", qwen3vl4b = "Qwen3VL4B", gemma4vl = "Gemma4VL",
-         holo2vl = "Holo2VL"
+         holo2vl = "Holo2VL", rwkv7 = "RWKV7", qwen3spec = "Qwen3Spec"
     var id: String { rawValue }
     /// The model family this engine mode belongs to (the picker's top level).
     var chatModel: ChatModel {
@@ -73,6 +73,8 @@ enum GemmaMode: String, CaseIterable, Identifiable {
         case .qwen3vl4b: .qwen3vl4b
         case .gemma4vl: .gemma4vl
         case .holo2vl: .holo2vl
+        case .rwkv7: .rwkv7
+        case .qwen3spec: .qwen3spec
         }
     }
     /// User-facing label for the download panel (model, plus unit where it matters).
@@ -86,11 +88,13 @@ enum GemmaMode: String, CaseIterable, Identifiable {
         case .lfm2: "LFM2.5 1.2B"
         case .granite: "Granite 4.0-H 1B"
         case .minicpm5: "MiniCPM5 1B"
-        case .fastcontext: "FastContext 4B"
+        case .fastcontext: "BitCPM-8B"
         case .qwen3vl: "Qwen3-VL 2B (vision)"
         case .qwen3vl4b: "Qwen3-VL 4B (vision)"
         case .gemma4vl: "Gemma 4 E2B VL (vision)"
         case .holo2vl: "Holo2 4B (GUI grounding)"
+        case .rwkv7: "RWKV-7 Goose 1.5B (recurrent)"
+        case .qwen3spec: "Qwen3-4B ⚡Spec (lossless spec-decode)"
         }
     }
     /// Non-nil for the modes that ride the coreai-pipelined engine.
@@ -102,8 +106,8 @@ enum GemmaMode: String, CaseIterable, Identifiable {
         case .lfm2: PipelinedBackend.lfm2
         case .granite: PipelinedBackend.granite
         case .minicpm5: PipelinedBackend.minicpm5
-        case .fastcontext: PipelinedBackend.fastcontext
-        case .gpu, .ane, .qwen3vl, .qwen3vl4b, .gemma4vl, .holo2vl: nil  // the VLMs drive their own backends
+        case .fastcontext: PipelinedBackend.bitcpm  // DEMO: fastcontext mode repurposed for BitCPM-8B ternary
+        case .gpu, .ane, .qwen3vl, .qwen3vl4b, .gemma4vl, .holo2vl, .rwkv7, .qwen3spec: nil  // VLMs + RWKV-7 + spec-decode drive their own backends
         }
     }
     /// Non-nil for the Qwen3-VL modes (own backend with a fixed-grid vision tower).
@@ -133,6 +137,9 @@ final class Gemma4ChatEngine: ObservableObject {
     private var pipelined: PipelinedBackend?  // .qwen / .lfm2 (pipelined engine, own loop)
     private var vl: Qwen3VLBackend?           // .qwen3vl (pipelined engine + vision tower)
     private var gvl: Gemma4VLBackend?         // .gemma4vl (provider mode + vision tower)
+    private var rwkv7: RWKV7Backend?          // .rwkv7 (custom no-KV recurrent backend, own loop)
+    private var specDecode: SpecDecodeBackend?  // .qwen3spec (greedy n-gram spec-decode, own loop)
+    @Published var specDecodeOn = true          // .qwen3spec: ⚡Spec (n-gram verify) vs plain greedy
     @Published var vlImageAttached = false
     private var loadedMode: GemmaMode?  // mode the current backend was loaded for
     private var tokenizer: Tokenizer!
@@ -153,6 +160,8 @@ final class Gemma4ChatEngine: ObservableObject {
         case "qwen3vl4b", "vl4b": mode = .qwen3vl4b
         case "gemma4vl", "gvl": mode = .gemma4vl
         case "holo2", "holo2vl", "holo": mode = .holo2vl
+        case "rwkv7", "rwkv": mode = .rwkv7
+        case "qwen3spec", "spec": mode = .qwen3spec
         default: mode = .gpu
         }
     }
@@ -175,6 +184,9 @@ final class Gemma4ChatEngine: ObservableObject {
         case .qwen3vl: "https://huggingface.co/mlboydaisuke/Qwen3-VL-2B-CoreAI"
         case .qwen3vl4b: "https://huggingface.co/mlboydaisuke/Qwen3-VL-4B-CoreAI"
         case .holo2vl: "https://huggingface.co/mlboydaisuke/Holo2-4B-CoreAI"
+        case .rwkv7: "https://huggingface.co/mlboydaisuke/RWKV7-Goose-1.5B-CoreAI"
+        // Dense AOT verify bundle (sideloaded for now; HF repo TBD on ship).
+        case .qwen3spec: "https://huggingface.co/mlboydaisuke/Qwen3-4B-CoreAI"
         case .gpu, .ane, .gemmaTbl, .gemma4vl: "https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI"
         }
     }
@@ -189,6 +201,13 @@ final class Gemma4ChatEngine: ObservableObject {
         case .qwen, .qwen2b, .lfm2, .granite, .minicpm5, .fastcontext:
             let spec = mode.pipelinedSpec!
             return [(spec.hfRemotePath, spec.bundleName)]
+        case .rwkv7:
+            // Custom backend: one bundle dir (AOT .aimodelc + rwkv_vocab.tsv). In-app Download
+            // pulls it from h18p/<dir> in the HF repo -> Documents/models/<dir>.
+            return [("h18p/" + RWKV7Backend.modelDir, RWKV7Backend.modelDir)]
+        case .qwen3spec:
+            // Spec-decode: one dense AOT bundle dir (verify graph + tokenizer); sideloaded.
+            return [(SpecDecodeBackend.modelDir, SpecDecodeBackend.modelDir)]
         case .qwen3vl, .qwen3vl4b, .holo2vl:
             let spec = mode.qwen3vlSpec!
             return [(spec.hfDecoderPath, spec.decoderBundle),
@@ -279,6 +298,8 @@ final class Gemma4ChatEngine: ObservableObject {
         pipelined?.unload(); pipelined = nil
         vl?.unload(); vl = nil
         gvl?.unload(); gvl = nil
+        rwkv7?.unload(); rwkv7 = nil
+        specDecode?.unload(); specDecode = nil
         vlImageAttached = false
         loadedMode = nil
         ready = false
@@ -301,6 +322,8 @@ final class Gemma4ChatEngine: ObservableObject {
         // Free the previous mode's models BEFORE loading the next set (jetsam headroom).
         backend = nil; pipelined?.unload(); pipelined = nil
         vl?.unload(); vl = nil; gvl?.unload(); gvl = nil
+        rwkv7?.unload(); rwkv7 = nil
+        specDecode?.unload(); specDecode = nil
         vlImageAttached = false; loadedMode = nil
         let target = mode
         // Files for this mode aren't on disk yet — don't attempt a load that can only fail with a
@@ -335,6 +358,20 @@ final class Gemma4ChatEngine: ObservableObject {
                 loadedMode = target
                 ready = true
                 status = "\(spec.label) ready · ctx \(pb.ctx)"
+            } else if target == .rwkv7 {
+                let b = RWKV7Backend()
+                try await b.load()
+                rwkv7 = b
+                loadedMode = target
+                ready = true
+                status = "\(RWKV7Backend.label) ready · O(1) decode, no KV cache"
+            } else if target == .qwen3spec {
+                let b = SpecDecodeBackend()
+                try await b.load()
+                specDecode = b
+                loadedMode = target
+                ready = true
+                status = "\(SpecDecodeBackend.label) ready · lossless · ctx \(b.ctx)"
             } else {
                 let be: Gemma4Backend = (target == .gpu) ? Gemma4MonolithBackend() : Gemma4ChunkBackend()
                 try await be.load()
@@ -371,6 +408,14 @@ final class Gemma4ChatEngine: ObservableObject {
         }
         if mode.pipelinedSpec != nil {
             await generatePipelined(prompt, maxNew: maxNew)
+            return
+        }
+        if mode == .rwkv7 {
+            await generateRWKV7(prompt, maxNew: maxNew)
+            return
+        }
+        if mode == .qwen3spec {
+            await generateSpec(prompt, maxNew: maxNew)
             return
         }
         guard let be = backend else { return }
@@ -439,6 +484,45 @@ final class Gemma4ChatEngine: ObservableObject {
         defer { busy = false }
         do {
             let st = try await pb.generate(prompt, maxNew: maxNew ?? 4096) { [weak self] text in
+                self?.output = text  // live stream
+            }
+            stats = st.summary
+        } catch {
+            output = "generation error: \(error.localizedDescription)"
+        }
+    }
+
+    // RWKV-7 path: a custom no-KV recurrent backend (the pipelined engine can't drive it —
+    // it has no keyCache/valueCache). The backend streams decoded text deltas; we accumulate.
+    private func generateRWKV7(_ prompt: String, maxNew: Int?) async {
+        guard let rb = rwkv7 else { return }
+        busy = true; output = ""; stats = ""
+        defer { busy = false }
+        do {
+            var acc = ""
+            let st = try await rb.generate(prompt: prompt, maxNewTokens: maxNew ?? 512) { [weak self] delta in
+                acc += delta
+                self?.output = acc  // live stream
+            }
+            let dtps = Double(st.decodeTok) / max(st.decodeSec, 1e-6)
+            stats = String(format: "RWKV-7 1.5B · O(1) decode (no KV) · prefill %.2fs | decode %d tok %.1f tok/s",
+                           st.prefillSec, st.decodeTok, dtps)
+        } catch {
+            output = "generation error: \(error.localizedDescription)"
+        }
+    }
+
+    // Spec-decode path (qwen3spec): greedy n-gram speculative decoding on a dense AOT bundle,
+    // driven directly (own loop, like RWKV-7). `specDecodeOn` flips the drafter on/off — output is
+    // byte-identical either way (lossless greedy), only the tok/s changes. Streams decoded text.
+    private func generateSpec(_ prompt: String, maxNew: Int?) async {
+        guard let sd = specDecode else { return }
+        busy = true; output = ""; stats = ""
+        defer { busy = false }
+        // Headless A/B override: GEMMA_SPEC=0 forces plain greedy, =1 forces spec — else the UI toggle.
+        let specOn = ProcessInfo.processInfo.environment["GEMMA_SPEC"].map { $0 != "0" } ?? specDecodeOn
+        do {
+            let st = try await sd.generate(prompt, spec: specOn, maxNew: maxNew ?? 1024) { [weak self] text in
                 self?.output = text  // live stream
             }
             stats = st.summary

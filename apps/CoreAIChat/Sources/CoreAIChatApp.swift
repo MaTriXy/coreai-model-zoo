@@ -40,6 +40,11 @@ struct CoreAIChatApp: App {
                         await SliceANETest.run()
                         return
                     }
+                    // BITVLA_TEST=1: zoo's first VLA — 1.58-bit BitVLA image+instruction -> 7-DoF on the GPU.
+                    if ProcessInfo.processInfo.environment["BITVLA_TEST"] == "1" {
+                        await BitVLATest.run()
+                        return
+                    }
                     // Session B's host-cache core (no state / no in-graph indexed write) on device.
                     if ProcessInfo.processInfo.environment["GEMMA_HOSTCACHE_TEST"] == "1" {
                         await HostCacheTest.run()
