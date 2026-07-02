@@ -113,7 +113,10 @@ kernel — the stock MPSGraph SDPA crashes on the ≥16-head × 512 Q (a GPU scr
   (SPM) and load the catalog id; the model's card has the complete snippet + a 5-line
   integration checklist (golden example: [`zoo/whisper-large-v3-turbo.md`](zoo/whisper-large-v3-turbo.md)).
   Engine-level deep-dive: [`knowledge/swift-runtime.md`](knowledge/swift-runtime.md)
-- **Convert a model** → [`knowledge/conversion-guide.md`](knowledge/conversion-guide.md)
+- **Port a model, end to end** → [**`PORTING.md`**](PORTING.md) — the complete walk from HF
+  checkpoint to a verified `.aimodel` on iPhone (oracle → export → gates → device → publish),
+  with a vision and an LLM worked example. Start here to contribute a port.
+- **Convert a model** (export API + gotchas) → [`knowledge/conversion-guide.md`](knowledge/conversion-guide.md)
 - **Compress** → [`knowledge/compression.md`](knowledge/compression.md)
 - **Make it fast** → [`knowledge/custom-metal-kernels.md`](knowledge/custom-metal-kernels.md) · [`knowledge/performance-ceiling.md`](knowledge/performance-ceiling.md)
 - **Known beta issue** (in-graph KV-write crash; workarounds + the input-mask escape) → [`knowledge/coreai-beta-mpsgraph-kvwrite-bug.md`](knowledge/coreai-beta-mpsgraph-kvwrite-bug.md) — FB23024751 / [apple/coreai-models#5](https://github.com/apple/coreai-models/issues/5)
