@@ -35,6 +35,7 @@ struct LiveStats: Equatable {
     var generatedTokens: Int = 0
     var tokensPerSecond: Double?
     var footprintBytes: UInt64 = 0
+    var specNote: String?       // spec-decode acceptance line (⚡Spec models only)
 }
 
 @MainActor
@@ -63,6 +64,9 @@ final class ChatEngine: ObservableObject {
     private var engine: (any InferenceEngine)?
     private var tokenizer: (any Tokenizer)?
     private var llada: LLaDAEngine?           // set instead of `engine` for diffusion-LM bundles
+    private var spec: SpecDecodeEngine?       // set instead of `engine` for ⚡Spec verify bundles
+    @Published var specOn = true              // lossless toggle: OFF = same output, no drafts
+    var specLoaded: Bool { spec != nil }
     private var generationTask: Task<Void, Never>?
     private var genSeq = 0              // identifies the latest turn (stale tasks don't touch status)
     private var stopRequested = false   // user pressed Stop — stop displaying, keep draining
@@ -116,6 +120,7 @@ final class ChatEngine: ObservableObject {
             engine = nil
             tokenizer = nil
             llada = nil
+            spec = nil
             selectedModel = nil
             messages = []
             stats = LiveStats()
@@ -136,6 +141,7 @@ final class ChatEngine: ObservableObject {
         engine = nil
         tokenizer = nil
         llada = nil
+        spec = nil
 
         Task {
             do {
@@ -144,6 +150,23 @@ final class ChatEngine: ObservableObject {
                     let start = SuspendingClock.now
                     let loaded = try await LLaDAEngine(bundleURL: entry.url)
                     self.llada = loaded
+                    self.stats.loadSeconds = Self.seconds(from: start, to: .now)
+                    self.stats.footprintBytes = Self.physFootprint()
+                    self.status = .ready
+                    return
+                }
+
+                // ⚡Spec verify bundles (static S-window graph + paired small draft) run the
+                // lossless speculative-decoding loop, not the AR engine.
+                if SpecDecodeEngine.isSpecVerify(bundleURL: entry.url) {
+                    guard let draftURL = SpecDecodeEngine.findDraft(for: entry.url) else {
+                        throw NSError(domain: "ChatEngine", code: 2, userInfo: [
+                            NSLocalizedDescriptionKey:
+                                "no draft bundle next to \(entry.name) — download the ⚡Spec draft too"])
+                    }
+                    let start = SuspendingClock.now
+                    let loaded = try await SpecDecodeEngine(targetURL: entry.url, draftURL: draftURL)
+                    self.spec = loaded
                     self.stats.loadSeconds = Self.seconds(from: start, to: .now)
                     self.stats.footprintBytes = Self.physFootprint()
                     self.status = .ready
@@ -194,6 +217,7 @@ final class ChatEngine: ObservableObject {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         if llada != nil { sendDLLM(trimmed); return }
+        if spec != nil { sendSpec(trimmed); return }
         guard let engine, let tokenizer else { return }
 
         messages.append(ChatMessage(role: .user, content: trimmed))
@@ -334,6 +358,63 @@ final class ChatEngine: ObservableObject {
                 }
                 if !self.stopRequested { self.setContent(replyID, result.text) }
                 if seq == self.genSeq { self.stats.generatedTokens = result.committed }
+                self.finalizeByID(replyID, seq)
+            } catch {
+                self.setContent(replyID, "(generation failed: \(error))")
+                self.finalizeByID(replyID, seq)
+            }
+        }
+    }
+
+    // MARK: - Speculative-decoding chat (⚡Spec verify bundles)
+
+    // Greedy two-model spec-decode: the loop is synchronous per round (draft → one verify
+    // forward → commit), streams the committed text, and finishes promptly — no drain hack.
+    // `specOn` is read per turn, so the toggle A/Bs lossless speed on the same conversation.
+    private func sendSpec(_ trimmed: String) {
+        guard let spec else { return }
+        messages.append(ChatMessage(role: .user, content: trimmed))
+        let reply = ChatMessage(role: .assistant, isStreaming: true)
+        let replyID = reply.id
+        messages.append(reply)
+        status = .generating
+        stats.ttftSeconds = nil
+        stats.generatedTokens = 0
+        stats.tokensPerSecond = nil
+        stats.specNote = nil
+        stopRequested = false
+        genSeq += 1
+        let seq = genSeq
+        let useSpec = specOn
+
+        let history: [[String: any Sendable]] = messages.dropLast().map {
+            ["role": $0.role == .user ? "user" : "assistant", "content": $0.content]
+        }
+
+        let previous = generationTask
+        generationTask = Task {
+            await previous?.value
+            do {
+                let requestStart = SuspendingClock.now
+                let result = try await spec.generate(history: history, specOn: useSpec) { text, st in
+                    guard !self.stopRequested else { return }
+                    if seq == self.genSeq, self.stats.ttftSeconds == nil {
+                        self.stats.ttftSeconds = Self.seconds(from: requestStart, to: .now)
+                        self.stats.promptTokens = st.promptTokens
+                    }
+                    self.setContent(replyID, text)
+                    if seq == self.genSeq {
+                        self.stats.generatedTokens = st.generated
+                        self.stats.specNote = useSpec ? st.note : nil
+                        let elapsed = Self.seconds(from: requestStart, to: .now)
+                        if elapsed > 0 { self.stats.tokensPerSecond = Double(st.generated) / elapsed }
+                    }
+                }
+                if !self.stopRequested { self.setContent(replyID, result.text) }
+                if seq == self.genSeq {
+                    self.stats.generatedTokens = result.stats.generated
+                    self.stats.specNote = useSpec ? result.stats.note : nil
+                }
                 self.finalizeByID(replyID, seq)
             } catch {
                 self.setContent(replyID, "(generation failed: \(error))")

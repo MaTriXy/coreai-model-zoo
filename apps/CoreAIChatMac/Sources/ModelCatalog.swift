@@ -75,6 +75,17 @@ enum ModelCatalog {
             id: "qwen36-27b", name: "Qwen3.6-27B", detail: "dense · int8 == fp16 quality",
             repo: "https://huggingface.co/mlboydaisuke/Qwen3.6-27B-CoreAI",
             remote: "gpu-pipelined/qwen3_6_27b_decode_int8hu_block32_sym", approxSizeGB: 28),
+        // ⚡Spec pair: the 27B verify graph (static S=9 window) + its 0.8B int4 draft.
+        // Lossless speculative decoding via SpecDecodeEngine — download BOTH; selecting
+        // the 27B ⚡Spec bundle auto-pairs the draft from the same models folder.
+        DownloadableModel(
+            id: "qwen36-27b-spec", name: "Qwen3.6-27B ⚡Spec", detail: "dense · lossless spec-decode · needs the 0.8B draft",
+            repo: "https://huggingface.co/mlboydaisuke/Qwen3.6-27B-CoreAI",
+            remote: "gpu-pipelined/qwen3_6_27b_verify_s9_int8hu_block32_sym", approxSizeGB: 28),
+        DownloadableModel(
+            id: "qwen35-08b-draft", name: "Qwen3.5-0.8B (⚡Spec draft)", detail: "int4 draft for Qwen3.6-27B ⚡Spec",
+            repo: "https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreAI",
+            remote: "gpu-pipelined/qwen3_5_0_8b_verify_s9_int4lin", approxSizeGB: 1),
         DownloadableModel(
             id: "glm47", name: "GLM-4.7-Flash", detail: "MoE + MLA · 30B/~3B active",
             repo: "https://huggingface.co/mlboydaisuke/GLM-4.7-Flash-CoreAI",

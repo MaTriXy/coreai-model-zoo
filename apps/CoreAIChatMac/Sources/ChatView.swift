@@ -249,7 +249,17 @@ struct ChatView: View {
                      ByteCountFormatter.string(
                         fromByteCount: Int64(engine.stats.footprintBytes), countStyle: .memory))
             }
+            if let note = engine.stats.specNote, !note.isEmpty {
+                stat("checkmark.seal", note)   // lossless: ON/OFF outputs are byte-identical
+            }
             Spacer()
+            if engine.specLoaded {
+                Toggle("⚡Spec", isOn: $engine.specOn)
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+                    .disabled(engine.status == .generating)
+                    .help("Speculative decoding (lossless — same output, fewer big-model forwards)")
+            }
             Text("Apple coreai-models · official runtime")
                 .font(.caption2).foregroundStyle(.tertiary)
         }
