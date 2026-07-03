@@ -102,6 +102,12 @@ enum ModelCatalog {
             id: "gemma4-31b", name: "Gemma 4 31B", detail: "dense · int4 QAT · flash-decode kernel",
             repo: "https://huggingface.co/mlboydaisuke/Gemma-4-31B-CoreAI",
             remote: "gpu-pipelined/gemma4_31b_qat_decode_int4linsym_msdpa_g8", approxSizeGB: 18),
+        // Agentic coder (DeepReinforce, Qwen3.5 hybrid arch). int8 gate: 24/24 exact vs
+        // fp32 oracle; 48.3 tok/s on M4 Max. int4lin sibling (58.9) also on the repo.
+        DownloadableModel(
+            id: "ornith-9b", name: "Ornith-1.0-9B", detail: "agentic coder · dense int8 · 48 tok/s",
+            repo: "https://huggingface.co/mlboydaisuke/Ornith-1.0-9B-CoreAI",
+            remote: "gpu-pipelined/ornith_1_0_9b_decode_int8hu_block32_sym", approxSizeGB: 10),
     ]
 }
 

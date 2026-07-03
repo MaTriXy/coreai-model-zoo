@@ -203,7 +203,15 @@ per-block-32 was top-1 EXACT on gemma4** (8/8) but **qwen3.5 is int4-NO-GO at ev
 tried**: k-means g32 and g8+int8-rescue on the 0.8B, and linear per-block-32 on the 2B
 (gate 10/16 and it fails even the cache-seeded single step — transformer/SSM-in_proj damage,
 not head damage; also only 156 tok/s vs int8hu's 159, int4-linear dequant underuses BW).
-Quantization sensitivity is a model property — gate it per model. **LFM2.5-1.2B is also
+Quantization sensitivity is a model property — gate it per model.
+**Ornith-1.0-9B is the qwen3.5-family int4 COUNTEREXAMPLE** (2026-07-03): the same
+linear per-block-32 int4 that fails the 0.8B and 2B gates **24/24 exact** on this
+RL-trained 9B (fp32-oracle eager teacher-forced rig, incl. 0.205/0.058-margin knife
+edges; engine greedy 12/12 ≡ oracle) and measures **58.9 tok/s vs int8hu's 48.3 on
+M4 Max (+22%, 7.5 vs 9.8 GB)** — this shape sits in the gemma4/LFM
+int4-linear-wins class, not the qwen-2B flat class. Short-context instruments only
+(48 gated tokens): per the gemma4-VL 272-token lesson, int8hu keeps the quality
+claim until a long-context gate clears int4. **LFM2.5-1.2B is also
 int4-NO-GO** (3-probe bisect, 2026-06-11): pure int4lin g32 = 14/16; +int8-linear rescue of
 the conv-mixer projections fixes the mid-position flip (15/16) but a **short-context flip at
 oracle position 1 survives** conv rescue, early-layer-MLP rescue AND per-block-16 (cos climbs

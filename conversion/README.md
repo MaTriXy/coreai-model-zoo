@@ -141,6 +141,18 @@ overlay** of that package. Concretely, the additions are:
   confident oracle disagreement is an fp16-identical bf16 artifact). Mac-only (28 GB > iPhone
   jetsam). No MoE files — reuses `models/macos/qwen3_5.py` directly. See
   [`../zoo/qwen3.6-27b.md`](../zoo/qwen3.6-27b.md).
+- **Ornith-1.0-9B (agentic coding) pipelined — reuse the qwen3.5 script: `export_qwen3_5_decode_pipelined.py int8hu --head-sym --hf-id deepreinforce-ai/Ornith-1.0-9B --max-ctx 8192`** —
+  DeepReinforce's self-scaffolding agentic coder is a **stock Qwen3.5 hybrid decoder**
+  (`model_type qwen3_5`, 32 layers, GVA 32v/16k, GQA 16/4 hd256, untied 248320 head at the
+  checkpoint root, `model.visual.*` skipped, no MTP weights) — **zero new export code**.
+  `int8hu --head-sym` = **9.8 GB bundle, 48.3 tok/s decode / 48.5 prefill on M4 Max** (ship);
+  `int4lin` = **7.5 GB, 58.9 tok/s (+22%)** and — a family first — ALSO gates 24/24 exact
+  (0.8B/2B int4 NO-GO, 27B borderline; short-context gate only, see the card).
+  Gate: fp32-oracle (margin-validated, min 0.205) eager teacher-forced **24/24 exact** for
+  fp16, int8hu AND int4lin; release `llm-runner` greedy on raw prompt ids **12/12 ≡ oracle** (both bundles).
+  Oracle/gate scripts: [`../_smoke/gen_ornith9b_ref.py`](../_smoke/gen_ornith9b_ref.py) +
+  [`../_smoke/test_ornith9b_eager_gate.py`](../_smoke/test_ornith9b_eager_gate.py).
+  Mac ship (9.8 GB > iPhone jetsam). See [`../zoo/ornith-1.0-9b.md`](../zoo/ornith-1.0-9b.md).
 - **Gemma 4 12B (dense) pipelined (in this dir): `export_gemma4_12b_decode_pipelined.py [int4lin|int8lin|fp16] [--lin-sym] [--metal-sdpa]`** —
   the 12B-class **clean dense** Gemma 4 (`gemma4_unified`): no PLE/AltUp/Laurel/MoE/KV-sharing,
   48 layers, dual head_dim 256/512, dual KV-head count via `attention_k_eq_v` (full layers = 1 KV
