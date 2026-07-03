@@ -98,7 +98,10 @@ xcodebuild -exportArchive \
   -authenticationKeyIssuerID "$ASC_ISSUER_ID"
 
 # 6. Validate, then upload to TestFlight. altool reads the key from ~/.appstoreconnect/private_keys.
-mkdir -p ~/.appstoreconnect/private_keys && cp -f "$ASC_KEY_P8" ~/.appstoreconnect/private_keys/
+#    cp exits 1 when source and destination are the same file (key already in place) — don't let
+#    that abort the upload under set -e.
+mkdir -p ~/.appstoreconnect/private_keys
+cp -f "$ASC_KEY_P8" ~/.appstoreconnect/private_keys/ 2>/dev/null || true
 echo "==> Validating"
 xcrun altool --validate-app -f "$BUILD/export/CoreAIChat.ipa" -t ios \
   --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
