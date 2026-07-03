@@ -12,6 +12,51 @@ pair, both the next token and **how many frames to skip** (the "duration" head �
 over vanilla RNN-T). Blanks advance time; non-blank tokens advance the predictor. Fulfills
 apple/coreai-models issue **#7**.
 
+<!-- gen-cards:use-it begin id=parakeet-tdt-0.6b-v3 (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+![Parakeet-TDT 0.6B v3 demo](https://huggingface.co/mlboydaisuke/Parakeet-TDT-0.6B-CoreAI/resolve/main/demo.gif)
+*Parakeet-TDT 0.6B on iPhone 17 Pro — the zoo's coreai-audio app, real speed.*
+
+## Use it
+
+▶️ **Run it (source)** — the [Transcribe runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/Transcribe)
+(GUI + CLI, one app for every speech-to-text model in the catalog):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/Transcribe/Transcribe.xcodeproj
+# → Run, then pick "Parakeet-TDT 0.6B v3" in the model picker
+
+# agents / headless (macOS):
+cd coreai-kit/Examples/Transcribe
+swift run transcribe-cli --model parakeet-tdt-0.6b-v3 --audio sample.wav
+```
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKit
+
+let transcriber = try await KitTranscriber(catalog: "parakeet-tdt-0.6b-v3")
+let samples = try AudioFile.pcm16kMono(url)  // any wav/m4a/mp3 → 16 kHz mono Float
+let result = try await transcriber.transcribe(samples: samples)
+// result.text (25 EU languages)
+```
+
+The take-home is [`Examples/Transcribe/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/Transcribe/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; both the runner's GUI and its CLI call it.
+Recording? `MicRecorder` (kit API) captures mic audio as 16 kHz mono `[Float]` — the record
+button and permission prompt are your app's own chrome.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKit**
+- Info.plist: `NSMicrophoneUsageDescription` — only if you record
+- Entitlements: none needed (macOS)
+- First run downloads the model — 1.3 GB (Mac) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
+
 ## Pipeline
 
 ```

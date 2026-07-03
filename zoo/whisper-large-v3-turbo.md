@@ -10,6 +10,9 @@ Bundle: [🤗 mlboydaisuke/whisper-large-v3-turbo-CoreAI-official](https://huggi
 **`whisper-large-v3-turbo`**.
 
 <!-- gen-cards:use-it begin id=whisper-large-v3-turbo (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+![Whisper large-v3-turbo demo](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official/resolve/main/demo.gif)
+*Whisper large-v3-turbo on iPhone 17 Pro — the zoo's coreai-audio app, real speed.*
+
 ## Use it
 
 ▶️ **Run it (source)** — the [Transcribe runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/Transcribe)

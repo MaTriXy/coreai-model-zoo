@@ -8,6 +8,7 @@
   "models": {
     "whisper-large-v3-turbo": {
       "zooCard": "zoo/whisper-large-v3-turbo.md",
+      "mediaCaption": "Whisper large-v3-turbo on iPhone 17 Pro — the zoo's coreai-audio app, real speed.",
       "runner": {
         "dir": "Examples/Transcribe",
         "xcodeproj": "Transcribe.xcodeproj",
@@ -561,6 +562,7 @@
       "checklistEntitlements": "Entitlements: none needed"
     },
     "voxcpm-0.5b": {
+      "mediaCaption": "VoxCPM 0.5B on iPhone 17 Pro — the zoo's coreai-audio app, real speed.",
       "runner": {
         "dir": "Examples/Speak",
         "xcodeproj": "Speak.xcodeproj",
@@ -580,6 +582,49 @@
       "takeHomeNote": "Live playback? `synthesizeStreaming(_:onChunk:)` hands you ~0.5 s chunks as they decode,\nso audio starts before the whole clip exists. The WAV container is your app's territory\n(the runner ships a 20-line writer).",
       "checklistInfoPlist": "Info.plist: none needed",
       "checklistEntitlements": "Entitlements: none needed"
+    },
+    "qwen3-asr-1.7b": {
+      "zooCard": "zoo/qwen3-asr.md",
+      "runner": {
+        "dir": "Examples/Transcribe",
+        "xcodeproj": "Transcribe.xcodeproj",
+        "scheme": "Transcribe",
+        "cliTarget": "transcribe-cli",
+        "cliArgs": "--audio sample.wav",
+        "blurb": "GUI + CLI, one app for every speech-to-text model in the catalog"
+      },
+      "quickstart": "Examples/Transcribe/Sources/QuickStart.swift",
+      "product": "CoreAIKit",
+      "snippetImport": "CoreAIKit",
+      "snippetFreeVars": {
+        "url": "URL"
+      },
+      "snippetResultComment": "// result.text, result.language (52 languages)",
+      "takeHomeNote": "Recording? `MicRecorder` (kit API) captures mic audio as 16 kHz mono `[Float]` — the record\nbutton and permission prompt are your app's own chrome.",
+      "checklistInfoPlist": "Info.plist: `NSMicrophoneUsageDescription` — only if you record",
+      "checklistEntitlements": "Entitlements: none needed (macOS)"
+    },
+    "parakeet-tdt-0.6b-v3": {
+      "zooCard": "zoo/parakeet.md",
+      "mediaCaption": "Parakeet-TDT 0.6B on iPhone 17 Pro — the zoo's coreai-audio app, real speed.",
+      "runner": {
+        "dir": "Examples/Transcribe",
+        "xcodeproj": "Transcribe.xcodeproj",
+        "scheme": "Transcribe",
+        "cliTarget": "transcribe-cli",
+        "cliArgs": "--audio sample.wav",
+        "blurb": "GUI + CLI, one app for every speech-to-text model in the catalog"
+      },
+      "quickstart": "Examples/Transcribe/Sources/QuickStart.swift",
+      "product": "CoreAIKit",
+      "snippetImport": "CoreAIKit",
+      "snippetFreeVars": {
+        "url": "URL"
+      },
+      "snippetResultComment": "// result.text (25 EU languages)",
+      "takeHomeNote": "Recording? `MicRecorder` (kit API) captures mic audio as 16 kHz mono `[Float]` — the record\nbutton and permission prompt are your app's own chrome.",
+      "checklistInfoPlist": "Info.plist: `NSMicrophoneUsageDescription` — only if you record",
+      "checklistEntitlements": "Entitlements: none needed (macOS)"
     }
   }
 }

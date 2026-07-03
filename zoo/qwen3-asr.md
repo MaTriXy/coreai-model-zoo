@@ -11,6 +11,48 @@ AED decoder is dropped — the encoder output is spliced into the Qwen3 embeddin
 LLM does the transcription. (Distinct from FluidAudio's legacy **Core ML + ANE** Qwen3-ASR — this
 is the first on the new **Core AI** runtime and a CoreAIKit drop-in.)
 
+<!-- gen-cards:use-it begin id=qwen3-asr-1.7b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+## Use it
+
+▶️ **Run it (source)** — the [Transcribe runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/Transcribe)
+(GUI + CLI, one app for every speech-to-text model in the catalog):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/Transcribe/Transcribe.xcodeproj
+# → Run, then pick "Qwen3-ASR 1.7B" in the model picker
+
+# agents / headless (macOS):
+cd coreai-kit/Examples/Transcribe
+swift run transcribe-cli --model qwen3-asr-1.7b --audio sample.wav
+```
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKit
+
+let transcriber = try await KitTranscriber(catalog: "qwen3-asr-1.7b")
+let samples = try AudioFile.pcm16kMono(url)  // any wav/m4a/mp3 → 16 kHz mono Float
+let result = try await transcriber.transcribe(samples: samples)
+// result.text, result.language (52 languages)
+```
+
+The take-home is [`Examples/Transcribe/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/Transcribe/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; both the runner's GUI and its CLI call it.
+Recording? `MicRecorder` (kit API) captures mic audio as 16 kHz mono `[Float]` — the record
+button and permission prompt are your app's own chrome.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKit**
+- Info.plist: `NSMicrophoneUsageDescription` — only if you record
+- Entitlements: none needed (macOS)
+- First run downloads the model — 3.1 GB (Mac) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
+
 ## Pipeline
 
 ```
