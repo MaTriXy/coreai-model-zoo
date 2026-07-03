@@ -1,0 +1,137 @@
+# Cross-turn KV PREFIX REUSE for the Core AI language engines.
+#
+# Adds a KV-rewind primitive so a chat loop can keep the cache for the shared
+# conversation prefix and prefill only the new tokens, instead of re-prefilling
+# the whole history every turn (CoreAIChatMac multi-turn TTFT 23.3s -> 0.23s at
+# 4k ctx, lossless). See knowledge/prefix-cache-kv-reuse.md.
+#
+#   InferenceEngine: trimKVCache(to:) -> Int  (retained prefix, <0 = unsupported)
+#                    prefixReuseFeedsFullSequence  (feed contract)
+#   Sequential + Pipelined: rewind processedTokenCount (pure-attention only;
+#                    recurrent/SSM returns <0 -> caller resets + full re-prefill).
+#
+# Apply on top of the coreai-pipelined-* patch stack against apple/coreai-models.
+#
+diff --git a/swift/Sources/CoreAILanguageModels/InferenceEngines/InferenceEngine.swift b/swift/Sources/CoreAILanguageModels/InferenceEngines/InferenceEngine.swift
+index f989bec..4809d69 100644
+--- a/swift/Sources/CoreAILanguageModels/InferenceEngines/InferenceEngine.swift
++++ b/swift/Sources/CoreAILanguageModels/InferenceEngines/InferenceEngine.swift
+@@ -108,6 +108,20 @@ public protocol InferenceEngine: Sendable {
+     /// Reset internal state including KV cache.
+     func reset() async throws
+ 
++    /// Rewind the KV cache toward `length` tokens for cross-call PREFIX REUSE, keeping the
++    /// leading cached tokens valid and dropping everything after — so the next
++    /// `generate(with:)` prefills only the un-cached suffix instead of the whole prompt.
++    /// (Attention is causal: positions ≥ the retained length are overwritten before being
++    /// read, so no clearing is needed.)
++    ///
++    /// Returns the ACTUAL retained prefix length (0…`length`), which may be less than
++    /// requested because the last generated token's KV can lag one step behind — the
++    /// caller must prefill from the returned offset, not from `length`. Returns a
++    /// negative value if the engine can't safely rewind (recurrent/SSM state can't be
++    /// reconstructed mid-sequence; non-KV engines have nothing to trim), in which case
++    /// the caller must `reset()` and re-feed the full prompt. Default: unsupported.
++    func trimKVCache(to length: Int) async -> Int
++
+     /// Run dummy inference to trigger kernel compilation.
+     func warmup(queryLength: Int, sampling: SamplingConfiguration?) async throws
+ 
+@@ -117,6 +131,12 @@ public protocol InferenceEngine: Sendable {
+     /// GPU-pipelined engines (which sample on-device) return false.
+     var supportsLogits: Bool { get }
+ 
++    /// Feed contract for prefix reuse after `trimKVCache`. `true`: `generate(with:)` takes
++    /// the FULL running sequence and prefills only `input[retained...]` (sequential engine
++    /// slices internally). `false`: the caller passes ONLY the un-cached suffix (pipelined
++    /// prefills the given tokens at the current offset). Default: `true`.
++    var prefixReuseFeedsFullSequence: Bool { get }
++
+     // MARK: - Configuration
+ 
+     associatedtype ConfigType: Codable, InferenceConfiguration
+@@ -159,6 +179,13 @@ extension InferenceEngine {
+     /// Default: supportsLogits is false. Engines that can return per-step
+     /// logits (sequential, static-shape) override this to true.
+     public var supportsLogits: Bool { false }
++
++    /// Default: prefix reuse unsupported (recurrent/non-KV engines). Attention-only
++    /// KV engines override this to rewind `processedTokenCount`.
++    public func trimKVCache(to length: Int) async -> Int { -1 }
++
++    /// Default: reuse callers pass the full running sequence (engine slices internally).
++    public var prefixReuseFeedsFullSequence: Bool { true }
+ }
+ 
+ extension InferenceEngine {
+diff --git a/swift/Sources/CoreAILanguageModels/InferenceEngines/CoreAISequentialEngine.swift b/swift/Sources/CoreAILanguageModels/InferenceEngines/CoreAISequentialEngine.swift
+index 4472f78..824c869 100644
+--- a/swift/Sources/CoreAILanguageModels/InferenceEngines/CoreAISequentialEngine.swift
++++ b/swift/Sources/CoreAILanguageModels/InferenceEngines/CoreAISequentialEngine.swift
+@@ -429,6 +429,19 @@ public final class CoreAISequentialEngine: InferenceEngine, @unchecked Sendable
+         resetSpan.end()
+     }
+ 
++    /// Rewind the cache offset for prefix reuse (see `InferenceEngine.trimKVCache`). This
++    /// engine's `generate(with:)` already prefills only `input[processedTokenCount...]`, so
++    /// after this the caller re-feeds the FULL running sequence and only the suffix is
++    /// processed. KV-only (no recurrent state) — always safe; no clearing needed since
++    /// causal attention never reads positions ≥ the retained offset before they're rewritten.
++    public func trimKVCache(to length: Int) async -> Int {
++        drain()
++        guard length >= 0 else { return -1 }
++        let retained = min(length, processedTokenCount)
++        processedTokenCount = retained
++        return retained
++    }
++
+     public func cleanup() {
+         let cleanupSpan = InstrumentsProfiler.beginCleanup(engine: "CoreAIClean")
+         CLILogger.log("CoreAI clean engine cleanup complete")
+diff --git a/swift/Sources/CoreAILanguageModels/InferenceEngines/CoreAIPipelinedEngine.swift b/swift/Sources/CoreAILanguageModels/InferenceEngines/CoreAIPipelinedEngine.swift
+index 0d044ae..c964cf9 100644
+--- aa/swift/Sources/CoreAILanguageModels/InferenceEngines/CoreAIPipelinedEngine.swift
++++ b/swift/Sources/CoreAILanguageModels/InferenceEngines/CoreAIPipelinedEngine.swift
+@@ -174,6 +174,19 @@ final class CoreAIPipelinedEngine: InferenceEngine, Sendable {
+         engine.reset()
+     }
+ 
++    /// Pipelined prefills exactly the tokens passed to `generate(with:)` at the current
++    /// offset, so a prefix-reuse caller must pass only the un-cached suffix.
++    var prefixReuseFeedsFullSequence: Bool { false }
++
++    /// Rewind the KV toward `length` for prefix reuse (see `InferenceEngine.trimKVCache`).
++    /// Only valid for pure-attention KV graphs — negative for hybrids with recurrent state.
++    func trimKVCache(to length: Int) async -> Int {
++        drain()
++        guard tryAcquireEngine() else { return -1 }
++        defer { releaseEngine() }
++        return engine.trimKVCache(to: length)
++    }
++
+     func cleanup() async throws {
+         let cleanupSpan = InstrumentsProfiler.beginCleanup(engine: "CoreAI-Pipelined")
+         if tryAcquireEngine() {
+@@ -1469,6 +1482,22 @@ private struct EngineImpl: ~Copyable {
+         span.end()
+     }
+ 
++    /// Rewind the cache offset to `length` so the next prefill starts there, reusing the
++    /// first `length` KV entries. Rejected when the graph carries recurrent `extraStates`
++    /// (GDN/SSM): those hold a running scan that can't be reconstructed at position
++    /// `length` from the retained KV, so a partial rewind would corrupt them. Pure
++    /// attention KV needs no clearing (causal reads never see positions ≥ `length`).
++    mutating func trimKVCache(to length: Int) -> Int {
++        guard extraStates.isEmpty else { return -1 }
++        // The last generated token's KV lags one decode step, so the committed cache may
++        // be shorter than `length`; retain the largest valid prefix and report it.
++        let retained = max(0, min(length, processedTokenCount))
++        processedTokenCount = retained
++        step = retained
++        lastSampledToken = nil
++        return retained
++    }
++
+     // MARK: - Warmup
+ 
+     mutating func performWarmup(queryLength: Int, samplingConfig: SamplingConfiguration?) async throws {

@@ -39,15 +39,14 @@ struct ChatView: View {
         .onChange(of: engine.status) {
             guard engine.status == .ready else { return }
             let env = ProcessInfo.processInfo.environment
-            if !autoPromptSent, let prompt = env["CHATMAC_PROMPT"] {
-                autoPromptSent = true
+            // Auto-send a sequence of turns for hands-free multi-turn A/B: CHATMAC_PROMPT,
+            // CHATMAC_PROMPT2, CHATMAC_PROMPT3, … each fires once the prior turn settles.
+            let keys = ["CHATMAC_PROMPT", "CHATMAC_PROMPT2", "CHATMAC_PROMPT3",
+                        "CHATMAC_PROMPT4", "CHATMAC_PROMPT5"]
+            if autoTurn < keys.count, let prompt = env[keys[autoTurn]] {
+                autoTurn += 1
                 engine.send(prompt)
-            } else if autoPromptSent, !secondPromptSent, let prompt2 = env["CHATMAC_PROMPT2"] {
-                // Multi-turn smoke test: a second turn exercises the reset()-after-generation path.
-                secondPromptSent = true
-                engine.send(prompt2)
-            } else if autoPromptSent, secondPromptSent || env["CHATMAC_PROMPT2"] == nil,
-                let snapshotPath = env["CHATMAC_SNAPSHOT"] {
+            } else if autoTurn > 0, let snapshotPath = env["CHATMAC_SNAPSHOT"] {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                     snapshotCard(to: snapshotPath)
                 }
@@ -55,8 +54,7 @@ struct ChatView: View {
         }
     }
 
-    @State private var autoPromptSent = false
-    @State private var secondPromptSent = false
+    @State private var autoTurn = 0
 
     // Renders a clean share-card PNG of the conversation + stats via
     // ImageRenderer (no screen-recording permission needed). Demo/docs hook,
@@ -243,6 +241,11 @@ struct ChatView: View {
             if engine.stats.promptTokens > 0 {
                 stat("text.alignleft",
                      "\(engine.stats.promptTokens) in / \(engine.stats.generatedTokens) out")
+            }
+            if engine.stats.reusedPromptTokens > 0 {
+                stat("bolt.horizontal.circle",
+                     "\(engine.stats.reusedPromptTokens) cached")   // prefix reuse: KV kept, not re-prefilled
+                    .foregroundStyle(.green)
             }
             if engine.stats.footprintBytes > 0 {
                 stat("memorychip",

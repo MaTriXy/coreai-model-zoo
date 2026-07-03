@@ -31,6 +31,7 @@ struct ChatMessage: Identifiable, Equatable {
 struct LiveStats: Equatable {
     var loadSeconds: Double?
     var promptTokens: Int = 0
+    var reusedPromptTokens: Int = 0   // prefix-cache hit: KV reused, NOT re-prefilled this turn
     var ttftSeconds: Double?
     var generatedTokens: Int = 0
     var tokensPerSecond: Double?
@@ -70,6 +71,34 @@ final class ChatEngine: ObservableObject {
     private var generationTask: Task<Void, Never>?
     private var genSeq = 0              // identifies the latest turn (stale tasks don't touch status)
     private var stopRequested = false   // user pressed Stop — stop displaying, keep draining
+    // Exact token sequence currently held in the engine's KV cache (prompt + committed
+    // generation). Drives cross-turn PREFIX REUSE: the next turn keeps the KV for the
+    // longest common prefix with the new prompt and prefills only the divergent tail.
+    private var kvTokens: [Int32] = []
+    // A/B switch: CHATMAC_NO_PREFIX_CACHE=1 forces the old reset()+full re-prefill path.
+    private let prefixCacheEnabled =
+        ProcessInfo.processInfo.environment["CHATMAC_NO_PREFIX_CACHE"] == nil
+
+    /// Prefix-cache A/B telemetry — silent in production; active only when
+    /// CHATMAC_STATS_LOG points at a file (appends there + mirrors to stderr).
+    private static func pfxLog(_ msg: String) {
+        guard let path = ProcessInfo.processInfo.environment["CHATMAC_STATS_LOG"] else { return }
+        let line = msg + "\n"
+        FileHandle.standardError.write(Data(line.utf8))
+        if let fh = FileHandle(forWritingAtPath: path) {
+            fh.seekToEndOfFile(); fh.write(Data(line.utf8)); try? fh.close()
+        } else {
+            try? line.write(toFile: path, atomically: true, encoding: .utf8)
+        }
+    }
+
+    /// Length of the longest common prefix of two token sequences.
+    private static func commonPrefixLength(_ a: [Int32], _ b: [Int32]) -> Int {
+        let n = min(a.count, b.count)
+        var i = 0
+        while i < n, a[i] == b[i] { i += 1 }
+        return i
+    }
 
     // MARK: - Model discovery
 
@@ -123,6 +152,7 @@ final class ChatEngine: ObservableObject {
             spec = nil
             selectedModel = nil
             messages = []
+            kvTokens = []
             stats = LiveStats()
             status = .idle
         }
@@ -137,6 +167,7 @@ final class ChatEngine: ObservableObject {
         selectedModel = entry
         status = .loading
         messages = []
+        kvTokens = []
         stats = LiveStats()
         engine = nil
         tokenizer = nil
@@ -250,32 +281,71 @@ final class ChatEngine: ObservableObject {
         generationTask = Task {
             await previous?.value
             do {
-                let promptTokens = try tokenizer.applyChatTemplate(messages: history)
-                if seq == self.genSeq { self.stats.promptTokens = promptTokens.count }
-                try await engine.reset()
+                let full = try tokenizer.applyChatTemplate(messages: history).map(Int32.init)
+                if seq == self.genSeq { self.stats.promptTokens = full.count }
+
+                // PREFIX REUSE: keep the KV for the longest common prefix with the tokens
+                // already cached, and prefill only the divergent tail — skipping the
+                // re-processing of the (potentially huge) system prompt + prior turns every
+                // turn. Falls back to reset()+full prefill on engines that can't rewind
+                // (recurrent/SSM) or when the conversation fully diverges.
+                // Cap at full.count-1 so at least one token is always prefilled (the engine
+                // needs a query step to produce the next-token logits).
+                let want = self.prefixCacheEnabled
+                    ? min(Self.commonPrefixLength(full, self.kvTokens), max(0, full.count - 1))
+                    : 0
+                let kvCountBefore = self.kvTokens.count
+                var trimResult = -99
+                var reused = 0
+                if want > 0 {
+                    let r = await engine.trimKVCache(to: want)   // actual retained prefix, or <0
+                    trimResult = r
+                    if r >= 0 {
+                        reused = r
+                    } else {
+                        try await engine.reset()
+                    }
+                } else {
+                    try await engine.reset()
+                }
+                Self.pfxLog("PFXDBG engine=\(type(of: engine)) full=\(full.count) kv=\(kvCountBefore) want=\(want) trim=\(trimResult) reused=\(reused)")
+                // Sequential slices input[reused...] internally → feed the full sequence.
+                // Pipelined prefills exactly what's passed → feed only the un-cached suffix.
+                let feed = engine.prefixReuseFeedsFullSequence ? full : Array(full[reused...])
+                if seq == self.genSeq { self.stats.reusedPromptTokens = reused }
+                // The KV now represents `full`; committed generation is appended below.
+                self.kvTokens = full
 
                 let stops = StopSequences(for: tokenizer)
                 let requestStart = SuspendingClock.now
                 var firstTokenAt: SuspendingClock.Instant?
                 var genTokens: [Int] = []       // for tokenizer.decode ([Int])
                 var recent: [Int32] = []         // for StopSequences.matches ([Int32])
-                var displaying = true        // false after a stop sequence / user Stop — keep draining
                 var emitted = 0
 
+                // CHATMAC_GREEDY=1 → temperature 0 (deterministic) so an ON-vs-OFF A/B can
+                // prove prefix reuse is LOSSLESS (identical output).
+                let temp: Double = ProcessInfo.processInfo.environment["CHATMAC_GREEDY"] != nil ? 0.0 : 0.7
                 for try await output in try engine.generate(
-                    with: promptTokens.map(Int32.init),
-                    samplingConfiguration: SamplingConfiguration(temperature: 0.7),
+                    with: feed,
+                    samplingConfiguration: SamplingConfiguration(temperature: temp),
                     inferenceOptions: InferenceOptions(maxTokens: 256, includeLogits: false)
                 ) {
-                    guard displaying else { continue }   // engine still producing — drain, don't show
-                    if self.stopRequested { displaying = false; self.finalize(&reply, replyID, seq); continue }
+                    if self.stopRequested { break }
                     if firstTokenAt == nil {
                         firstTokenAt = .now
-                        if seq == self.genSeq { self.stats.ttftSeconds = Self.seconds(from: requestStart, to: firstTokenAt!) }
+                        let ttft = Self.seconds(from: requestStart, to: firstTokenAt!)
+                        if seq == self.genSeq { self.stats.ttftSeconds = ttft }
+                        // A/B telemetry: prompt length, reused (cached) prefix, and TTFT.
+                        Self.pfxLog(String(format: "PFXCACHE prompt=%d reused=%d feed=%d ttft=%.3f",
+                                           full.count, reused, feed.count, ttft))
                     }
+                    // Track the committed token into the KV mirror BEFORE the stop check so
+                    // the stop delimiter itself is part of the reusable prefix next turn.
+                    self.kvTokens.append(output.tokenId)
                     recent.append(output.tokenId)
                     if recent.count > stops.maxLength { recent.removeFirst(recent.count - stops.maxLength) }
-                    if stops.matches(recentTokens: recent) { displaying = false; self.finalize(&reply, replyID, seq); continue }
+                    if stops.matches(recentTokens: recent) { break }   // end the stream: no drain, KV = prompt + answer
 
                     genTokens.append(Int(output.tokenId))
                     emitted += 1
@@ -291,7 +361,8 @@ final class ChatEngine: ObservableObject {
                         }
                     }
                 }
-                if displaying { self.finalize(&reply, replyID, seq) }   // hit maxTokens without a stop
+                Self.pfxLog("PFXANSWER \(reply.content.replacingOccurrences(of: "\n", with: " ").prefix(160))")
+                self.finalize(&reply, replyID, seq)
             } catch {
                 reply.isStreaming = false
                 if reply.content.isEmpty { reply.content = "(generation failed: \(error))" }

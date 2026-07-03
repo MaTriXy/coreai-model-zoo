@@ -42,8 +42,13 @@ Hugging Face into the app's models directory (resumable chunked transfer —
 ## Notes
 
 - The model list shows any subdirectory containing a `metadata.json`.
-- Multi-turn chat re-prefills the full history each turn via the bundle's own
-  chat template (`tokenizer.applyChatTemplate`).
+- **Prefix caching (cross-turn KV reuse):** each turn keeps the KV cache for the
+  longest common prefix with the previous turn and prefills only the new tokens,
+  instead of re-processing the whole conversation. Lossless; at a 4k-token context a
+  follow-up's time-to-first-token drops ~23 s → 0.2 s. Needs the engine `trimKVCache`
+  primitive — apply `apps/coreai-prefix-cache.patch` to the `coreai-models` checkout
+  (details in `knowledge/prefix-cache-kv-reuse.md`). Toggle off for A/B with
+  `CHATMAC_NO_PREFIX_CACHE=1`.
 - Generation: temperature 0.7, max 2048 tokens per reply, official
   `VanillaDecodingStrategy` streaming.
 - Measured on M4 Max 128GB: gpt-oss-20b decodes at ~78 tok/s
