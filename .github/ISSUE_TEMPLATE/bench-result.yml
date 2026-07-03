@@ -1,0 +1,22 @@
+name: Benchmark result
+description: Submit a result blob from the CoreAIChat Bench tab (community field data)
+title: "[bench] "
+labels: ["bench-result"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing a device row! Paste the JSON blob produced by the
+        **Bench tab** of [CoreAIChat](../tree/main/apps/CoreAIChat)
+        ([TestFlight](https://testflight.apple.com/join/bK4P7xby)) below — nothing else
+        is needed. The app measures and builds the blob; hand-edited numbers are
+        rejected by the aggregator. Results land in
+        [BENCHMARKS.md](../blob/main/BENCHMARKS.md) on the next aggregation run.
+  - type: textarea
+    id: blob
+    attributes:
+      label: Result blob (JSON)
+      description: Paste the blob exactly as the app produced it (Copy / Share / Submit button).
+      render: json
+    validations:
+      required: true

@@ -133,6 +133,12 @@ kernel — the stock MPSGraph SDPA crashes on the ≥16-head × 512 Q (a GPU scr
 | [`swift/`](swift/) | `CoreAIRunner` — a Swift package that drives `.aimodel` LLM bundles, including architectures beyond the standard runtime. |
 | [`apps/`](apps/) | **Engine showcases** — apps for models that need a hand-tuned backend (custom Metal kernels, patch stack: BitCPM, RWKV-7, LLaDA, …) and the device-verification bench behind the published numbers. Want to *just run a model*? Use the [kit examples ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples) instead. |
 
+## Contributing
+
+- **Conversion requests** — a model you'd like to see here? [Open an issue](https://github.com/john-rocky/coreai-model-zoo/issues/new) with the Hugging Face link and what you'd use it for.
+- **Port one yourself** — [`PORTING.md`](PORTING.md) walks the whole path; PRs welcome.
+- **No code needed** — run the Bench tab in [CoreAIChat (TestFlight)](https://testflight.apple.com/join/bK4P7xby) and submit the result: your device becomes a row in [`BENCHMARKS.md`](BENCHMARKS.md).
+
 ## License
 
 BSD-3-Clause ([`LICENSE`](LICENSE)). Re-authored model code derives from Apple's BSD-3-Clause
