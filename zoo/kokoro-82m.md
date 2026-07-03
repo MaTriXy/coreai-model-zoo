@@ -9,7 +9,51 @@ on-device, English-first, with the grapheme→phoneme step on the host.
 **Not an LLM.** There is no KV cache and no sampling. The acoustic graph is a fixed
 feed-forward network whose only data-dependent length is the duration→alignment
 expansion `L = Σ pred_dur`. The model is cut at that boundary into **three
-`.aimodel` bundles** with two cheap host steps between them.
+`.aimodel` bundles** with two cheap host steps between them. Catalog id: **`kokoro-82m`**.
+
+<!-- gen-cards:use-it begin id=kokoro-82m (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+## Use it
+
+▶️ **Run it (source)** — the [Speak runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/Speak)
+(GUI + CLI, one app for every text-to-speech model in the catalog):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/Speak/Speak.xcodeproj
+# → Run, then pick "Kokoro 82M" in the model picker
+
+# agents / headless (macOS):
+cd coreai-kit/Examples/Speak
+swift run speak-cli --model kokoro-82m --text "Hello from Core AI." --output hello.wav
+```
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKit
+
+let speaker = try await KitSpeaker(catalog: "kokoro-82m")
+let audio = try await speaker.synthesize(text)
+// audio.samples: 24 kHz mono PCM in [-1, 1] — play it or write a WAV
+```
+
+The take-home is [`Examples/Speak/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/Speak/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; the CLI is an argument shell over it, and
+the GUI drives the same `KitSpeaker(catalog:)` and plays the samples.
+English-first: G2P is a dictionary over the bundled misaki lexicons (~180k words);
+out-of-dictionary words are letter-spelled (no neural fallback). 28 voices ride the
+download — `af_heart` is the default; the underlying `KokoroTTS` takes a `voice:`
+label. Streaming? `synthesizeStreaming(_:onChunk:)` hands you a chunk per sentence.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKit**
+- Info.plist: none needed
+- Entitlements: none needed
+- First run downloads the model — 0.3 GB (Mac) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
 
 ## Pipeline
 
@@ -87,7 +131,13 @@ against stock Kokoro with the source noise removed (the deterministic export).
 **[mlboydaisuke/Kokoro-82M-CoreAI](https://huggingface.co/mlboydaisuke/Kokoro-82M-CoreAI)**
 — `kokoro_predictor.aimodel` + `kokoro_prosody.aimodel` + `kokoro_vocoder.aimodel`
 (~335 MB, token bucket 128 / frame bucket 512) + the English `voices/*.pt` packs.
-Apache-2.0.
+Apache-2.0. `kokoro_host_glue/` is the Swift-ready sidecar the kit path downloads:
+`vocab.json`, `l_linear.bin`, all 28 voice packs as raw f32 `.bin`, and the misaki US
+gold/silver lexicons — `KitSpeaker(catalog: "kokoro-82m")` phonemizes with a
+**dictionary-first G2P** (~180k words; out-of-dictionary words are letter-spelled, no
+neural fallback). Want misaki's full OOV model on-device instead? Use
+[MisakiSwift](https://github.com/mlalma/MisakiSwift) in your app (it carries an MLX
+dependency, which is why the kit doesn't bundle it).
 
 Convert / re-bucket yourself:
 [`conversion/export_kokoro.py`](../conversion/export_kokoro.py)

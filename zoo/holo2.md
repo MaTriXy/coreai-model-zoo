@@ -8,6 +8,75 @@ H Company's **computer-use / GUI-grounding** VLM: given a screenshot + an instru
 The zoo's **first GUI-grounding / computer-use model**, and a worked example of riding an existing
 zoo pipeline: Holo2-4B is byte-identical to Qwen3-VL-4B, so the conversion is the stock
 `export_qwen3_vl_pipelined.py` with `--hf-id Hcompany/Holo2-4B` — no model-code changes.
+Catalog id: **`holo2-4b`**.
+
+<!-- gen-cards:use-it begin id=holo2-4b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+## Use it
+
+▶️ **Run it (source)** — the [VLChat runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/VLChat)
+(GUI + CLI, one app for every vision-language model in the catalog):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/VLChat/VLChat.xcodeproj
+# → Run, then pick "Holo2 4B" in the model picker
+
+# agents / headless (macOS):
+cd coreai-kit/Examples/VLChat
+swift run vlchat-cli --model holo2-4b --image screenshot.png --prompt "Localize an element on the GUI image according to my instructions and output a click position as Click(x, y) with x num pixels from the left edge and y num pixels from the top edge. Instruction: click the Submit button."
+```
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKit
+import FoundationModels
+
+let vlm = try await KitVisionModel(catalog: "holo2-4b")
+let session = LanguageModelSession(model: vlm)
+let image = try ImageFile.load(imageURL)  // any image file → CGImage + EXIF orientation
+let reply = try await session.respond(to: Prompt {
+    prompt
+    Attachment(image.cgImage, orientation: image.orientation)
+})
+// reply.content: "Click(x, y)" in 0-1000-normalized coordinates for a grounding prompt,
+// or a plain answer for a normal question - all generated on-device
+```
+
+The take-home is [`Examples/VLChat/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/VLChat/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; the CLI is an argument shell over it, and
+the GUI drives the same `KitVisionModel(catalog:)` behind a `LanguageModelSession`.
+Holo2 is a GUI-grounding model: feed a screenshot and H Company's localization prompt
+(see the card's grounding section) and it returns `Click(x, y)` in 0-1000-normalized
+coordinates — multiply by `imageSize / 1000` for pixels. It also answers free-form
+questions like its Qwen3-VL base.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKit**
+- Info.plist: `NSPhotoLibraryUsageDescription` — only if you use PhotosPicker
+- Entitlements (iOS): `com.apple.developer.kernel.increased-memory-limit`
+- First run downloads the model — 5.5 GB (Mac) / 5.5 GB (iPhone) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
+
+## Grounding prompt (the model's real job)
+
+Holo2 answers free-form questions about an image like any VLM, but its specialty is
+localization: give it a screenshot and H Company's localization prompt, and it returns a
+click point.
+
+```
+Localize an element on the GUI image according to my instructions and output a click
+position as Click(x, y) with x num pixels from the left edge and y num pixels from the
+top edge. Instruction: click the Submit button.
+```
+
+The reply is `Click(x, y)` in **0–1000-normalized coordinates** (Qwen-VL convention):
+multiply by `imageWidth / 1000` and `imageHeight / 1000` for pixels. Verified through the
+kit path on a synthetic 800×600 settings screen: `Click(511, 841)` → (409, 505) px, dead
+center of the Submit button at (400, 505).
 
 ## Parity (vs fp32 HF oracle, Core AI GPU engine)
 

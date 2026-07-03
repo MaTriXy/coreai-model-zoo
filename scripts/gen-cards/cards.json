@@ -717,6 +717,76 @@
       "takeHomeNote": "Live mic? `MicRecorder` (kit API) captures 16 kHz mono `[Float]` — attach that instead.\nOne clip per session; attach a new clip to ask about different audio.",
       "checklistInfoPlist": "Info.plist: `NSMicrophoneUsageDescription` — only if you record",
       "checklistEntitlements": "Entitlements: none needed (macOS)"
+    },
+    "holo2-4b": {
+      "zooCard": "zoo/holo2.md",
+      "runner": {
+        "dir": "Examples/VLChat",
+        "xcodeproj": "VLChat.xcodeproj",
+        "scheme": "VLChat",
+        "cliTarget": "vlchat-cli",
+        "cliArgs": "--image screenshot.png --prompt \"Localize an element on the GUI image according to my instructions and output a click position as Click(x, y) with x num pixels from the left edge and y num pixels from the top edge. Instruction: click the Submit button.\"",
+        "blurb": "GUI + CLI, one app for every vision-language model in the catalog"
+      },
+      "quickstart": "Examples/VLChat/Sources/QuickStart.swift",
+      "product": "CoreAIKit",
+      "snippetImport": [
+        "CoreAIKit",
+        "FoundationModels"
+      ],
+      "snippetFreeVars": {
+        "prompt": "String",
+        "imageURL": "URL"
+      },
+      "snippetResultComment": "// reply.content: \"Click(x, y)\" in 0-1000-normalized coordinates for a grounding prompt,\n// or a plain answer for a normal question - all generated on-device",
+      "takeHomeTagline": "— this exact code as one typed function, no UI; the CLI is an argument shell over it, and\nthe GUI drives the same `KitVisionModel(catalog:)` behind a `LanguageModelSession`.",
+      "takeHomeNote": "Holo2 is a GUI-grounding model: feed a screenshot and H Company's localization prompt\n(see the card's grounding section) and it returns `Click(x, y)` in 0-1000-normalized\ncoordinates — multiply by `imageSize / 1000` for pixels. It also answers free-form\nquestions like its Qwen3-VL base.",
+      "checklistInfoPlist": "Info.plist: `NSPhotoLibraryUsageDescription` — only if you use PhotosPicker",
+      "checklistEntitlements": "Entitlements (iOS): `com.apple.developer.kernel.increased-memory-limit`"
+    },
+    "kokoro-82m": {
+      "zooCard": "zoo/kokoro-82m.md",
+      "runner": {
+        "dir": "Examples/Speak",
+        "xcodeproj": "Speak.xcodeproj",
+        "scheme": "Speak",
+        "cliTarget": "speak-cli",
+        "cliArgs": "--text \"Hello from Core AI.\" --output hello.wav",
+        "blurb": "GUI + CLI, one app for every text-to-speech model in the catalog"
+      },
+      "quickstart": "Examples/Speak/Sources/QuickStart.swift",
+      "product": "CoreAIKit",
+      "snippetImport": "CoreAIKit",
+      "snippetFreeVars": {
+        "text": "String"
+      },
+      "snippetResultComment": "// audio.samples: 24 kHz mono PCM in [-1, 1] — play it or write a WAV",
+      "takeHomeTagline": "— this exact code as one typed function, no UI; the CLI is an argument shell over it, and\nthe GUI drives the same `KitSpeaker(catalog:)` and plays the samples.",
+      "takeHomeNote": "English-first: G2P is a dictionary over the bundled misaki lexicons (~180k words);\nout-of-dictionary words are letter-spelled (no neural fallback). 28 voices ride the\ndownload — `af_heart` is the default; the underlying `KokoroTTS` takes a `voice:`\nlabel. Streaming? `synthesizeStreaming(_:onChunk:)` hands you a chunk per sentence.",
+      "checklistInfoPlist": "Info.plist: none needed",
+      "checklistEntitlements": "Entitlements: none needed"
+    },
+    "vjepa2-vitl-ssv2": {
+      "zooCard": "zoo/vjepa2.md",
+      "runner": {
+        "dir": "Examples/ActionCamera",
+        "xcodeproj": "ActionCamera.xcodeproj",
+        "scheme": "ActionCamera",
+        "cliTarget": "action-cli",
+        "cliArgs": "--video sample.mp4",
+        "blurb": "live camera action recognition, one app for every video model in the catalog"
+      },
+      "quickstart": "Examples/ActionCamera/Sources/QuickStart.swift",
+      "product": "CoreAIKitVision",
+      "snippetImport": "CoreAIKitVision",
+      "snippetFreeVars": {
+        "videoURL": "URL"
+      },
+      "snippetResultComment": "// actions: ranked [Prediction] — .label (\"Pushing [something] from left to right\"),\n// .probability; 174 SSv2 classes, fully on-device",
+      "takeHomeTagline": "— this exact code as one typed function, no UI; the CLI is an argument shell over it, and\nthe GUI classifies a rolling 16-frame clip from `CameraFeed`.",
+      "takeHomeNote": "Live camera? Keep the last 16 `CameraFeed` frames and call `classify(frames:)` — other\nframe counts are uniformly resampled to 16. The bundled `sample.mp4` is a synthetic\nclip (a hand pushing a block); point `--video` at real footage for real results.",
+      "checklistInfoPlist": "Info.plist: `NSCameraUsageDescription` — only for the live camera; the snippet needs none",
+      "checklistEntitlements": "Entitlements: none needed"
     }
   }
 }
