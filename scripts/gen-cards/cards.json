@@ -787,6 +787,69 @@
       "takeHomeNote": "Live camera? Keep the last 16 `CameraFeed` frames and call `classify(frames:)` — other\nframe counts are uniformly resampled to 16. The bundled `sample.mp4` is a synthetic\nclip (a hand pushing a block); point `--video` at real footage for real results.",
       "checklistInfoPlist": "Info.plist: `NSCameraUsageDescription` — only for the live camera; the snippet needs none",
       "checklistEntitlements": "Entitlements: none needed"
+    },
+    "unlimited-ocr": {
+      "zooCard": "zoo/unlimited-ocr.md",
+      "runner": {
+        "dir": "Examples/ReadDoc",
+        "xcodeproj": "ReadDoc.xcodeproj",
+        "scheme": "ReadDoc",
+        "cliTarget": "readdoc-cli",
+        "cliArgs": "--image sample.png",
+        "blurb": "GUI + CLI, one app for every document-OCR model in the catalog"
+      },
+      "quickstart": "Examples/ReadDoc/Sources/QuickStart.swift",
+      "product": "CoreAIKit",
+      "snippetImport": "CoreAIKit",
+      "snippetFreeVars": {
+        "imageURL": "URL"
+      },
+      "snippetResultComment": "// markdown: the document as structured text — tables as <table>/<tr>/<td>,\n// <|det|> layout boxes, reading order — fully on-device",
+      "takeHomeTagline": "— this exact code as one typed function, no UI; the CLI is an argument shell over it, and\nthe GUI drives the same `KitDocReader(catalog:)` on the image you pick.",
+      "takeHomeNote": "One `read(imageAt:)` call per page; chunk a PDF into page images first. The output keeps\nthe model's structural markup (tables as HTML, formulas as LaTeX, `<|det|>` boxes) —\nstrip or render it as your app prefers.",
+      "checklistInfoPlist": "Info.plist: none needed",
+      "checklistEntitlements": "Entitlements: none needed"
+    },
+    "llada-8b": {
+      "zooCard": "zoo/llada-8b.md",
+      "runner": {
+        "dir": "Examples/DiffuseChat",
+        "xcodeproj": "DiffuseChat.xcodeproj",
+        "scheme": "DiffuseChat",
+        "cliTarget": "diffuse-cli",
+        "cliArgs": "--prompt \"What is the capital of France?\"",
+        "blurb": "GUI + CLI, one app for every diffusion LM in the catalog"
+      },
+      "quickstart": "Examples/DiffuseChat/Sources/QuickStart.swift",
+      "product": "CoreAIKit",
+      "snippetImport": "CoreAIKit",
+      "snippetFreeVars": {
+        "prompt": "String",
+        "onStep": "(@Sendable (KitDiffusionLM.Step) -> Void)?"
+      },
+      "snippetResultComment": "// reply: the denoised answer — pass onStep: to watch the canvas fill in per forward\n// (still-masked positions as ░), in parallel, not left-to-right",
+      "takeHomeTagline": "— this exact code as one typed function, no UI; the CLI is an argument shell over it, and\nthe GUI renders the same live canvas.",
+      "takeHomeNote": "The canvas is fixed (S=256 ≈ 210 generated tokens) and the whole history must fit — no\nKV cache. `reply(messages:)` takes role/content turns and drops the oldest first.\nPass `onStep: nil` if you only want the final text.",
+      "checklistInfoPlist": "Info.plist: none needed",
+      "checklistEntitlements": "Entitlements: none needed"
+    },
+    "ltx-video-2b": {
+      "zooCard": "zoo/ltxvideo.md",
+      "name": "LTX-Video 2B (distilled)",
+      "repo": "mlboydaisuke/LTX-Video-2B-CoreAI",
+      "appDoor": {
+        "path": "apps/CoreAIVideo",
+        "blurb": "text → video on Mac: T5 + 8-step flow-matching DiT + causal video VAE, host FlowMatch sampler"
+      }
+    },
+    "triposplat": {
+      "zooCard": "zoo/triposplat.md",
+      "name": "TripoSplat",
+      "repo": "mlboydaisuke/TripoSplat-CoreAI",
+      "appDoor": {
+        "path": "apps/TripoSplatMac",
+        "blurb": "single image → 3D Gaussian splats on Mac: 5 converted nets + host flow sampler and octree resampling"
+      }
     }
   }
 }

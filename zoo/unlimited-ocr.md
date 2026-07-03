@@ -14,7 +14,51 @@ port that the runtime can run as-is.
 [mlboydaisuke/Unlimited-OCR-CoreAI](https://huggingface.co/mlboydaisuke/Unlimited-OCR-CoreAI)** —
 `vision/` (DeepEncoder, fp16, 762 MB) + `decoder/` (R-SWA MoE decoder, sym8, 3.2 GB, two functions
 `prefill`+`decode` sharing one weight set) + `assets/` (embedding table + arrangement constants) +
-`tokenizer/`. MIT.
+`tokenizer/`. MIT. Catalog id: **`unlimited-ocr`**.
+
+<!-- gen-cards:use-it begin id=unlimited-ocr (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+## Use it
+
+▶️ **Run it (source)** — the [ReadDoc runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ReadDoc)
+(GUI + CLI, one app for every document-OCR model in the catalog):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/ReadDoc/ReadDoc.xcodeproj
+# → Run, then pick "Unlimited-OCR" in the model picker
+
+# agents / headless (macOS):
+cd coreai-kit/Examples/ReadDoc
+swift run readdoc-cli --model unlimited-ocr --image sample.png
+```
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKit
+
+let reader = try await KitDocReader(catalog: "unlimited-ocr")
+let markdown = try await reader.read(imageAt: imageURL)
+// markdown: the document as structured text — tables as <table>/<tr>/<td>,
+// <|det|> layout boxes, reading order — fully on-device
+```
+
+The take-home is [`Examples/ReadDoc/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/ReadDoc/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; the CLI is an argument shell over it, and
+the GUI drives the same `KitDocReader(catalog:)` on the image you pick.
+One `read(imageAt:)` call per page; chunk a PDF into page images first. The output keeps
+the model's structural markup (tables as HTML, formulas as LaTeX, `<|det|>` boxes) —
+strip or render it as your app prefers.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKit**
+- Info.plist: none needed
+- Entitlements: none needed
+- First run downloads the model — 4.5 GB (Mac) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
 
 <p align="center"><em>macOS app <code>apps/CoreAIOCR</code>: drop a document → structured markdown,
 fully on-device. Reads a Japanese invoice (table + totals) and an English paper (abstract + LaTeX

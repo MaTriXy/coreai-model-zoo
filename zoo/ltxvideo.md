@@ -15,6 +15,14 @@ compression, 32× spatial / 8× temporal; also performs the final denoise via ti
 conditioning at `decode_timestep=0.05`). At `guidance_scale=1` (distilled) CFG is off
 and `stg_scale=0`, so the DiT runs batch-1, single-conditioning.
 
+<!-- gen-cards:use-it begin id=ltx-video-2b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+## Use it
+
+▶️ **Run it (source)** — [`apps/CoreAIVideo`](https://github.com/john-rocky/coreai-model-zoo/tree/main/apps/CoreAIVideo),
+the zoo app that ships this model (text → video on Mac: T5 + 8-step flow-matching DiT + causal video VAE, host FlowMatch sampler; build & run steps in its README).
+
+<!-- gen-cards:use-it end -->
+
 ## Sample
 
 512×768 · 49 frames · 8 steps · **~14 s on a Mac GPU**. Prompt: *"A clear glass of water on a
