@@ -41,7 +41,7 @@ swift run detect-cli --model rf-detr --image Resources/gate_image.jpg
 ```swift
 import CoreAIKitVision
 
-let detector = try await ObjectDetector(catalog: "rf-detr")
+let detector = try await KitDetector(catalog: "rf-detr")
 let image = try ImageFile.load(imageURL)  // any image file → CGImage + EXIF orientation
 let detections = try await detector.detect(in: image.cgImage)
 // detections: [Detection] — label, score, normalized box (top-left origin)

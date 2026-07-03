@@ -1,5 +1,6 @@
 {
   "kitURL": "https://github.com/john-rocky/coreai-kit",
+  "zooURL": "https://github.com/john-rocky/coreai-model-zoo",
   "cloneDirName": "coreai-kit",
   "variantLabels": {
     "macos": "Mac",
@@ -625,6 +626,51 @@
       "takeHomeNote": "Recording? `MicRecorder` (kit API) captures mic audio as 16 kHz mono `[Float]` — the record\nbutton and permission prompt are your app's own chrome.",
       "checklistInfoPlist": "Info.plist: `NSMicrophoneUsageDescription` — only if you record",
       "checklistEntitlements": "Entitlements: none needed (macOS)"
+    },
+    "stable-audio-open-small": {
+      "mediaCaption": "Stable Audio Open Small on iPhone 17 Pro — the zoo's coreai-audio app, 12 s of audio in ~1 s.",
+      "runner": {
+        "dir": "Examples/Music",
+        "xcodeproj": "Music.xcodeproj",
+        "scheme": "Music",
+        "cliTarget": "music-cli",
+        "cliArgs": "--prompt \"128 BPM tech house drum loop\" --output loop.wav",
+        "blurb": "GUI + CLI, one app for every text-to-music model in the catalog"
+      },
+      "quickstart": "Examples/Music/Sources/QuickStart.swift",
+      "product": "CoreAIKit",
+      "snippetImport": "CoreAIKit",
+      "snippetFreeVars": {
+        "prompt": "String"
+      },
+      "snippetResultComment": "// audio.samples: 44.1 kHz stereo (planar L/R) — play it or write a WAV",
+      "takeHomeTagline": "— this exact code as one typed function, no UI; the CLI is an argument shell over it, and\nthe GUI drives the same `KitMusician(catalog:)` and plays the result.",
+      "takeHomeNote": "Length? `generate(_:seconds:)` up to the model's ~11 s window. The WAV container is your\napp's territory (the runner ships a 30-line writer with planar-stereo support).",
+      "checklistInfoPlist": "Info.plist: none needed",
+      "checklistEntitlements": "Entitlements: none needed (macOS)"
+    },
+    "yolox-s": {
+      "zooCard": "zoo/yolox.md",
+      "runner": {
+        "dir": "Examples/DetectCamera",
+        "xcodeproj": "DetectCamera.xcodeproj",
+        "scheme": "DetectCamera",
+        "cliTarget": "detect-cli",
+        "cliArgs": "--image Resources/gate_image.jpg",
+        "blurb": "real-time object detection on the zero-copy camera path",
+        "pickNote": "Run, then pick \"YOLOX\" in the model picker"
+      },
+      "quickstart": "Examples/DetectCamera/Sources/QuickStart.swift",
+      "product": "CoreAIKitVision",
+      "snippetImport": "CoreAIKitVision",
+      "snippetFreeVars": {
+        "imageURL": "URL"
+      },
+      "snippetResultComment": "// detections: [Detection] — label, score, normalized box (top-left origin)",
+      "takeHomeTagline": "— this exact code as one typed function, no UI; the CLI is an argument shell over it, and\nthe GUI runs the same detector per camera frame on a zero-copy pixel-buffer fast path.",
+      "takeHomeNote": "YOLOX is a dense detector — `KitDetector` runs the obj·cls threshold + per-class NMS\nhost-side; the DETR family needs none. Same `detect(in:)` either way.",
+      "checklistInfoPlist": "Info.plist: `NSCameraUsageDescription` — only for the live camera; the snippet needs none",
+      "checklistEntitlements": "Entitlements: none needed"
     }
   }
 }

@@ -15,6 +15,49 @@ obj branches per FPN level). 8.97M params, 640² input, three strides 8/16/32 �
 **8400 anchors** (80² + 40² + 20²). Upstream COCO accuracy is **40.5 AP** (Megvii's
 reported number).
 
+<!-- gen-cards:use-it begin id=yolox-s (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+## Use it
+
+▶️ **Run it (source)** — the [DetectCamera runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/DetectCamera)
+(real-time object detection on the zero-copy camera path):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/DetectCamera/DetectCamera.xcodeproj
+# → Run, then pick "YOLOX" in the model picker
+
+# agents / headless (macOS):
+cd coreai-kit/Examples/DetectCamera
+swift run detect-cli --model yolox-s --image Resources/gate_image.jpg
+```
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKitVision
+
+let detector = try await KitDetector(catalog: "yolox-s")
+let image = try ImageFile.load(imageURL)  // any image file → CGImage + EXIF orientation
+let detections = try await detector.detect(in: image.cgImage)
+// detections: [Detection] — label, score, normalized box (top-left origin)
+```
+
+The take-home is [`Examples/DetectCamera/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/DetectCamera/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; the CLI is an argument shell over it, and
+the GUI runs the same detector per camera frame on a zero-copy pixel-buffer fast path.
+YOLOX is a dense detector — `KitDetector` runs the obj·cls threshold + per-class NMS
+host-side; the DETR family needs none. Same `detect(in:)` either way.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKitVision**
+- Info.plist: `NSCameraUsageDescription` — only for the live camera; the snippet needs none
+- Entitlements: none needed
+- First run downloads the model — 0.0 GB (Mac) / 0.0 GB (iPhone) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
+
 ## Graph contract
 
 ```
