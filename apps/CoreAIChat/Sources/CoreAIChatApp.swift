@@ -11,8 +11,28 @@ import SwiftUI
 @main
 struct CoreAIChatApp: App {
     @StateObject private var engine = Gemma4ChatEngine()
+    @State private var tab = 0
     var body: some Scene {
         WindowGroup {
+            TabView(selection: $tab) {
+                chatTab
+                    .tabItem { Label("Chat", systemImage: "bubble.left.and.bubble.right") }
+                    .tag(0)
+                BenchView(chatEngine: engine)
+                    .tabItem { Label("Bench", systemImage: "speedometer") }
+                    .tag(1)
+            }
+            .onChange(of: tab) { _, t in
+                // A bench run frees the chat engine for memory headroom; coming back to
+                // the Chat tab reloads it lazily (files are still on disk).
+                if t == 0, !engine.ready, !engine.loading, engine.installedForCurrentMode {
+                    Task { await engine.load() }
+                }
+            }
+        }
+    }
+
+    private var chatTab: some View {
             ChatView(engine: engine)
                 .task {
                     // GEMMA_CLEAR_SPEC_CACHE=1: wipe the in-container GPU
@@ -33,6 +53,12 @@ struct CoreAIChatApp: App {
                                 print("[chat] cleared spec cache: \(name)")
                             }
                         }
+                    }
+                    // BENCH_AUTO=<model id | all>: headless community-bench run (downloads the
+                    // bundle when missing, prints the blob between BENCH-BLOB-BEGIN/END).
+                    if let benchID = ProcessInfo.processInfo.environment["BENCH_AUTO"] {
+                        await BenchRunner.headless(modelID: benchID)
+                        return
                     }
                     // De-risk path: GEMMA_SLICE_TEST=1 runs the ISOLATED dual-KV ANE slice self-test
                     // (does the gemma4 iOS port lower+run on the ANE?) and skips the Phase-1 engine.
@@ -69,6 +95,5 @@ struct CoreAIChatApp: App {
                     // --environment-variables '{"GEMMA_PROMPT":"..."}'` — prints result + tok/s.
                     await engine.autoTestIfRequested()
                 }
-        }
     }
 }

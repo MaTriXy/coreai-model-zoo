@@ -290,6 +290,23 @@ final class Gemma4ChatEngine: ObservableObject {
             }
     }
 
+    // Free the loaded backend WITHOUT deleting any files — the Bench tab calls this before a
+    // run so the bench engine gets the memory headroom and an idle GPU. Coming back to the
+    // Chat tab reloads lazily (CoreAIChatApp.onChange(of: tab)).
+    func unload() {
+        backend = nil
+        pipelined?.unload(); pipelined = nil
+        vl?.unload(); vl = nil
+        gvl?.unload(); gvl = nil
+        rwkv7?.unload(); rwkv7 = nil
+        specDecode?.unload(); specDecode = nil
+        vlImageAttached = false
+        loadedMode = nil
+        ready = false
+        output = ""; stats = ""
+        status = "idle (bench running)"
+    }
+
     // Remove the current mode's downloaded files from this device (always re-downloadable). Frees
     // the loaded backend first so nothing is memory-mapped, and keeps files another installed mode
     // still shares. The mode then drops back to its download panel.

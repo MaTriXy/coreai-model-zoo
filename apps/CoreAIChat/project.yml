@@ -50,4 +50,4 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: CoreAIChat
         TARGETED_DEVICE_FAMILY: "1"
         MARKETING_VERSION: "1.0"
-        CURRENT_PROJECT_VERSION: "4"
+        CURRENT_PROJECT_VERSION: "5"
