@@ -27,6 +27,7 @@
 import CoreAI
 import CoreAIShared
 import Foundation
+import Metal
 import Tokenizers
 
 @MainActor
@@ -271,16 +272,39 @@ final class WindowedModel {
             throw SpecDecodeEngine.err("\(bundleURL.lastPathComponent) is not a verify bundle")
         }
         s = windowLen
-        let assetName = ((meta["assets"] as? [String: Any])?["main"] as? String)
-            ?? "\(bundleURL.lastPathComponent).aimodel"
         // KV states are allocated at the export trace capacity (TRACE_KV_CACHE_SEQ_LEN),
         // not the tokenizer's max_context_length.
         kvCapacity = 2048
 
+        // Prefer an AOT slice for THIS GPU (Metal "applegpu_g16s" → "<name>.h16s.aimodelc")
+        // when one is present AND loadable — it ships every shape precompiled. Fall back to
+        // the JIT .aimodel otherwise: anchors only ever advance in steps of S, so the shape
+        // set is CLOSED (position lengths = multiples of S) and the runtime's on-disk
+        // specialization cache makes repeat runs fast after a one-time warm-up. (On this
+        // OS build the beta coreai-build's .aimodelc is rejected with invalidCompiledModel
+        // — toolchain/runtime format skew — hence the fallback rather than a hard error.)
+        let jitName = ((meta["assets"] as? [String: Any])?["main"] as? String)
+            ?? "\(bundleURL.lastPathComponent).aimodel"
         var options = SpecializationOptions(preferredComputeUnitKind: .gpu)
         options.expectFrequentReshapes = true   // multi-position-length runtime — see header
-        let model = try await AIModel(contentsOf: bundleURL.appendingPathComponent(assetName),
+
+        var loaded: AIModel?
+        if let gpuArch = MTLCreateSystemDefaultDevice()?.architecture.name,
+           let code = gpuArch.split(separator: "_").last.map(String.init), code.hasPrefix("g") {
+            let aotName = jitName.replacingOccurrences(
+                of: ".aimodel", with: ".h\(code.dropFirst()).aimodelc")
+            let aotURL = bundleURL.appendingPathComponent(aotName)
+            if FileManager.default.fileExists(atPath: aotURL.path) {
+                loaded = try? await AIModel(contentsOf: aotURL, options: options)
+            }
+        }
+        let model: AIModel
+        if let loaded {
+            model = loaded
+        } else {
+            model = try await AIModel(contentsOf: bundleURL.appendingPathComponent(jitName),
                                       options: options)
+        }
         guard let loaded = try model.loadFunction(named: "main") else {
             throw SpecDecodeEngine.err("\(bundleURL.lastPathComponent): no 'main' function")
         }
@@ -365,21 +389,30 @@ final class WindowedModel {
         fillNDArray(&posArray, as: Int32.self, with: (0..<positions).map(Int32.init))
         var logits = NDArray(descriptor: logDesc.resolvingDynamicDimensions([1, s, vocab]))
 
-        // States threaded like the iOS backend: locals in, run, write back — nothing is
-        // held `inout` across the await.
-        var threaded: [(name: String, array: NDArray)] = try desc.stateNames.map { name in
-            guard let array = states[name] else { throw SpecDecodeEngine.err("state \(name)") }
-            return (name, array)
+        // States threaded like the iOS backend: distinct locals in, run, write back.
+        // MutableViews is ~Escapable — its lifetime depends on each inserted borrow, and
+        // an array-element borrow (&arr[i]) ends at the statement, so only plain local
+        // vars satisfy the checker. The qwen3_5 hybrid family always has exactly 4 states
+        // (keyCache, valueCache, convState, recState).
+        let names = desc.stateNames
+        guard names.count == 4,
+              var s0 = states[names[0]], var s1 = states[names[1]],
+              var s2 = states[names[2]], var s3 = states[names[3]] else {
+            throw SpecDecodeEngine.err("expected 4 hybrid states, got \(desc.stateNames.count)")
         }
         var stateViews = InferenceFunction.MutableViews()
-        for i in threaded.indices {
-            stateViews.insert(&threaded[i].array, for: threaded[i].name)
-        }
+        stateViews.insert(&s0, for: names[0])
+        stateViews.insert(&s1, for: names[1])
+        stateViews.insert(&s2, for: names[2])
+        stateViews.insert(&s3, for: names[3])
         var outputViews = InferenceFunction.MutableViews()
         outputViews.insert(&logits, for: logitsName)
         _ = try await fn.run(inputs: [inName: idArray, posName: posArray],
                              states: consume stateViews, outputViews: consume outputViews)
-        for (name, array) in threaded { states[name] = array }
+        states[names[0]] = s0
+        states[names[1]] = s1
+        states[names[2]] = s2
+        states[names[3]] = s3
         forwards += 1
         return flattenAsFloat(logits)
     }
