@@ -71,6 +71,11 @@ final class ChatEngine: ObservableObject {
     private var generationTask: Task<Void, Never>?
     private var genSeq = 0              // identifies the latest turn (stale tasks don't touch status)
     private var stopRequested = false   // user pressed Stop — stop displaying, keep draining
+    // True when load() fell back to the pipelined engine: its generate() honors a consumer
+    // break (onTermination → cancel flag → stops within pipeline depth), so a large per-turn
+    // cap costs nothing once a stop sequence lands. The sequential engine runs to the full
+    // cap in the background after short answers — its default stays modest.
+    private var engineStopsOnBreak = false
     // Exact token sequence currently held in the engine's KV cache (prompt + committed
     // generation). Drives cross-turn PREFIX REUSE: the next turn keeps the KV for the
     // longest common prefix with the new prompt and prefills only the divergent tail.
@@ -235,6 +240,7 @@ final class ChatEngine: ObservableObject {
                 // also compatible with any other dynamic bundle (chunked-static ones throw cleanly).
                 async let tokenizerResult = bundle.loadTokenizer()
                 let loadedEngine: any InferenceEngine
+                var loadedViaPipelinedFallback = false
                 do {
                     Self.restoreLaunchChunkThreshold()
                     loadedEngine = try await EngineFactory.createEngine(
@@ -252,11 +258,13 @@ final class ChatEngine: ObservableObject {
                     loadedEngine = try await EngineFactory.createEngine(
                         config: configData, modelURL: modelURL,
                         options: EngineOptions(variant: "coreai-pipelined"))
+                    loadedViaPipelinedFallback = true
                 }
                 let loadedTokenizer = try await tokenizerResult
                 let elapsed = Self.seconds(from: start, to: .now)
 
                 self.engine = loadedEngine
+                self.engineStopsOnBreak = loadedViaPipelinedFallback
                 self.tokenizer = loadedTokenizer
                 self.stats.loadSeconds = elapsed
                 self.stats.footprintBytes = Self.physFootprint()
@@ -352,10 +360,14 @@ final class ChatEngine: ObservableObject {
                 // CHATMAC_GREEDY=1 → temperature 0 (deterministic) so an ON-vs-OFF A/B can
                 // prove prefix reuse is LOSSLESS (identical output).
                 let temp: Double = ProcessInfo.processInfo.environment["CHATMAC_GREEDY"] != nil ? 0.0 : 0.7
+                // CHATMAC_MAX_TOKENS overrides the per-turn cap; else 1024 on the
+                // break-cancelable pipelined path, 256 on the sequential path.
+                let maxTokens = ProcessInfo.processInfo.environment["CHATMAC_MAX_TOKENS"]
+                    .flatMap(Int.init) ?? (self.engineStopsOnBreak ? 1024 : 256)
                 for try await output in try engine.generate(
                     with: feed,
                     samplingConfiguration: SamplingConfiguration(temperature: temp),
-                    inferenceOptions: InferenceOptions(maxTokens: 256, includeLogits: false)
+                    inferenceOptions: InferenceOptions(maxTokens: maxTokens, includeLogits: false)
                 ) {
                     if self.stopRequested { break }
                     if firstTokenAt == nil {
