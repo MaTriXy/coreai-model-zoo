@@ -353,9 +353,23 @@ final class ChatEngine: ObservableObject {
                 let stops = StopSequences(for: tokenizer)
                 let requestStart = SuspendingClock.now
                 var firstTokenAt: SuspendingClock.Instant?
-                var genTokens: [Int] = []       // for tokenizer.decode ([Int])
+                var genTokens: [Int] = []       // full sequence (fallback decode + audit)
                 var recent: [Int32] = []         // for StopSequences.matches ([Int32])
                 var emitted = 0
+                // Incremental detokenization: full-sequence re-decode per token is O(n²)
+                // and visibly throttles long answers (601-token demo: 37 tok/s displayed
+                // vs the engine's 48). Decode only a small tail cache and fold it into
+                // `stableText` at newline boundaries; a trailing U+FFFD means a UTF-8
+                // char is still split across tokens, so hold the cache open. Suffix
+                // decode is only valid for byte-level-BPE tokenizers (SentencePiece
+                // strips a leading space per chunk), so the FIRST fold audits against a
+                // full decode and falls back for the whole turn on mismatch.
+                var stableText = ""
+                var tailTokens: [Int] = []
+                var tailText = ""
+                var useIncremental = true
+                var incrementalAudited = false
+                var lastUIFlush: SuspendingClock.Instant?
 
                 // CHATMAC_GREEDY=1 → temperature 0 (deterministic) so an ON-vs-OFF A/B can
                 // prove prefix reuse is LOSSLESS (identical output).
@@ -387,16 +401,55 @@ final class ChatEngine: ObservableObject {
 
                     genTokens.append(Int(output.tokenId))
                     emitted += 1
-                    let parsed = HarmonyParser.parse(tokenizer.decode(tokens: genTokens))
-                    reply.thinking = parsed.thinking
-                    reply.content = parsed.answer
-                    self.update(replyID, with: reply)
-                    if seq == self.genSeq {
-                        self.stats.generatedTokens = emitted
-                        if let first = firstTokenAt, emitted > 1 {
-                            let genElapsed = Self.seconds(from: first, to: .now)
-                            if genElapsed > 0 { self.stats.tokensPerSecond = Double(emitted - 1) / genElapsed }
+                    if useIncremental {
+                        tailTokens.append(Int(output.tokenId))
+                        tailText = tokenizer.decode(tokens: tailTokens)
+                        if !tailText.hasSuffix("\u{FFFD}"),
+                           tailText.hasSuffix("\n") || tailTokens.count > 64 {
+                            if !incrementalAudited {
+                                incrementalAudited = true
+                                if stableText + tailText != tokenizer.decode(tokens: genTokens) {
+                                    useIncremental = false   // SP-style tokenizer: full decode
+                                }
+                            }
+                            if useIncremental {
+                                stableText += tailText
+                                tailTokens.removeAll()
+                                tailText = ""
+                            }
                         }
+                    }
+                    // Coalesce UI mutations to ~20 Hz — every @Published write re-renders
+                    // the view tree, the other half of the long-answer display tax.
+                    if lastUIFlush.map({ Self.seconds(from: $0, to: .now) > 0.05 }) ?? true {
+                        lastUIFlush = .now
+                        let raw = useIncremental ? stableText + tailText
+                                                 : tokenizer.decode(tokens: genTokens)
+                        let parsed = HarmonyParser.parse(raw)
+                        reply.thinking = parsed.thinking
+                        reply.content = parsed.answer
+                        self.update(replyID, with: reply)
+                        if seq == self.genSeq {
+                            self.stats.generatedTokens = emitted
+                            if let first = firstTokenAt, emitted > 1 {
+                                let genElapsed = Self.seconds(from: first, to: .now)
+                                if genElapsed > 0 { self.stats.tokensPerSecond = Double(emitted - 1) / genElapsed }
+                            }
+                        }
+                    }
+                }
+                // Final flush — the loop usually ends between UI ticks.
+                let rawFinal = useIncremental ? stableText + tailText
+                                              : tokenizer.decode(tokens: genTokens)
+                let parsedFinal = HarmonyParser.parse(rawFinal)
+                reply.thinking = parsedFinal.thinking
+                reply.content = parsedFinal.answer
+                self.update(replyID, with: reply)
+                if seq == self.genSeq {
+                    self.stats.generatedTokens = emitted
+                    if let first = firstTokenAt, emitted > 1 {
+                        let genElapsed = Self.seconds(from: first, to: .now)
+                        if genElapsed > 0 { self.stats.tokensPerSecond = Double(emitted - 1) / genElapsed }
                     }
                 }
                 Self.pfxLog("PFXANSWER \(reply.content.replacingOccurrences(of: "\n", with: " ").prefix(160))")
