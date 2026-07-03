@@ -92,6 +92,17 @@ final class ChatEngine: ObservableObject {
         }
     }
 
+    // COREAI_CHUNK_THRESHOLD is read live at prefill time. The hybrid-bundle pipelined
+    // fallback in load() sets it to 1 (per-token prefill for static S=1 graphs); restore
+    // the launch-time value before every sequential load so chunked prefill stays intact
+    // for 2-state bundles loaded later in the same session.
+    private static let launchChunkThreshold =
+        ProcessInfo.processInfo.environment["COREAI_CHUNK_THRESHOLD"]
+    private static func restoreLaunchChunkThreshold() {
+        if let v = launchChunkThreshold { setenv("COREAI_CHUNK_THRESHOLD", v, 1) }
+        else { unsetenv("COREAI_CHUNK_THRESHOLD") }
+    }
+
     /// Length of the longest common prefix of two token sequences.
     private static func commonPrefixLength(_ a: [Int32], _ b: [Int32]) -> Int {
         let n = min(a.count, b.count)
@@ -222,11 +233,26 @@ final class ChatEngine: ObservableObject {
                 // logits path asserts in GrowingLogitsBuffer for them (SIGTRAP on load). The
                 // "coreai-sequential" variant is the one that drives these bundles correctly; it is
                 // also compatible with any other dynamic bundle (chunked-static ones throw cleanly).
-                async let engineResult = EngineFactory.createEngine(
-                    config: configData, modelURL: modelURL,
-                    options: EngineOptions(variant: "coreai-sequential"))
                 async let tokenizerResult = bundle.loadTokenizer()
-                let loadedEngine = try await engineResult
+                let loadedEngine: any InferenceEngine
+                do {
+                    Self.restoreLaunchChunkThreshold()
+                    loadedEngine = try await EngineFactory.createEngine(
+                        config: configData, modelURL: modelURL,
+                        options: EngineOptions(variant: "coreai-sequential"))
+                } catch InferenceRuntimeError.invalidOutputType(let detail)
+                    where detail.contains("Expected 2 states") && !bundle.name.contains("gather") {
+                    // Hybrid decode-pipelined bundles (qwen3.5 family, Granite, Ornith, …) carry
+                    // extra fixed-shape SSM states (conv/rec) the sequential engine rejects; the
+                    // extra-states pipelined engine drives them. Their static S=1 graphs need
+                    // per-token prefill — chunkThreshold is read live from the env at prefill.
+                    // (gather_qmm bundles stay on the sequential error path: their logits shape
+                    // asserts in the pipelined GrowingLogitsBuffer.)
+                    setenv("COREAI_CHUNK_THRESHOLD", "1", 1)
+                    loadedEngine = try await EngineFactory.createEngine(
+                        config: configData, modelURL: modelURL,
+                        options: EngineOptions(variant: "coreai-pipelined"))
+                }
                 let loadedTokenizer = try await tokenizerResult
                 let elapsed = Self.seconds(from: start, to: .now)
 
