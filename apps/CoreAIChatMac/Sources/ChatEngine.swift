@@ -400,6 +400,11 @@ final class ChatEngine: ObservableObject {
                     }
                 }
                 Self.pfxLog("PFXANSWER \(reply.content.replacingOccurrences(of: "\n", with: " ").prefix(160))")
+                // Demo/testing hook: dump the full raw answer (newlines intact) so a harness
+                // can compile-verify exactly what the UI displayed.
+                if let p = ProcessInfo.processInfo.environment["CHATMAC_ANSWER_LOG"] {
+                    try? reply.content.write(toFile: p, atomically: true, encoding: .utf8)
+                }
                 self.finalize(&reply, replyID, seq)
             } catch {
                 reply.isStreaming = false
@@ -578,9 +583,22 @@ final class ChatEngine: ObservableObject {
 }
 
 // Splits gpt-oss "harmony" output into the analysis channel (thinking) and the
-// final channel (answer). Models without harmony markers pass through as-is.
+// final channel (answer), and qwen-family `<think>…</think>` blocks likewise.
+// Models without either marker pass through as-is.
 enum HarmonyParser {
     static func parse(_ raw: String) -> (thinking: String, answer: String) {
+        // Qwen-family thinking: the chat template auto-opens the block, so the stream
+        // is "<reasoning text></think><answer>" — the opening tag is usually absent
+        // from the OUTPUT. Re-parsing the full text each step means the reasoning
+        // moves to the thinking pane retroactively the moment `</think>` arrives.
+        if let close = raw.range(of: "</think>") {
+            var think = String(raw[..<close.lowerBound])
+            if let open = think.range(of: "<think>") { think.removeSubrange(..<open.upperBound) }
+            return (strip(think), strip(String(raw[close.upperBound...])))
+        }
+        if raw.hasPrefix("<think>") {   // explicit open, still streaming inside the block
+            return (strip(String(raw.dropFirst("<think>".count))), "")
+        }
         guard raw.contains("<|channel|>") else {
             return ("", strip(raw))
         }
