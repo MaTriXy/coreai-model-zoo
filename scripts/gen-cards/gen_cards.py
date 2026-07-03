@@ -172,14 +172,18 @@ let package = Package(
     return True
 
 
-def hero_exists(repo: str) -> bool:
-    req = urllib.request.Request(
-        f"https://huggingface.co/{repo}/resolve/main/demo.gif", method="HEAD")
-    try:
-        with urllib.request.urlopen(req, timeout=15):
-            return True
-    except Exception:
-        return False
+def hero_media(repo: str) -> str | None:
+    """The hero file hosted next to the weights: demo.gif preferred, demo.png accepted
+    (a still capture is honest too — principle 9 names both)."""
+    for name in ("demo.gif", "demo.png"):
+        req = urllib.request.Request(
+            f"https://huggingface.co/{repo}/resolve/main/{name}", method="HEAD")
+        try:
+            with urllib.request.urlopen(req, timeout=15):
+                return name
+        except Exception:
+            continue
+    return None
 
 
 # ---------------------------------------------------------------- rendering
@@ -188,18 +192,16 @@ def render_block(model_id: str, entry: dict, cfg: dict, top: dict,
                  snippet: str, doors: dict) -> str:
     kit_url = top["kitURL"]
     clone = top["cloneDirName"]
-    r = cfg["runner"]
-    runner_name = Path(r["dir"]).name
     parts: list[str] = []
 
     if doors["hero"]:
         cap = cfg.get("mediaCaption")
         if not cap:
-            fail(f"{model_id}: demo.gif exists on HF but cards.json has no mediaCaption "
+            fail(f"{model_id}: {doors['hero']} exists on HF but cards.json has no mediaCaption "
                  f"(device/OS/config line) — refusing to emit an uncaptioned capture")
         else:
             parts.append(f"![{entry['name']} demo]"
-                         f"(https://huggingface.co/{entry['repo']}/resolve/main/demo.gif)\n"
+                         f"(https://huggingface.co/{entry['repo']}/resolve/main/{doors['hero']})\n"
                          f"*{cap}*\n")
 
     parts.append("## Use it\n")
@@ -207,7 +209,18 @@ def render_block(model_id: str, entry: dict, cfg: dict, top: dict,
     if doors["green"]:
         parts.append(doors["green"] + "\n")
 
+    # Engine-showcase models (custom backends the generic kit path can't drive yet):
+    # the ▶️ door points at their zoo app; 💻 is omitted until the backend is ported
+    # into kit (design §4).
+    if doors.get("appDoor"):
+        a = cfg["appDoor"]
+        parts.append(
+            f"▶️ **Run it (source)** — [`{a['path']}`]({top['zooURL']}/tree/main/{a['path']}),\n"
+            f"the zoo app that ships this model ({a['blurb']}; build & run steps in its README).\n")
+
     if doors["runner"]:
+        r = cfg["runner"]
+        runner_name = Path(r["dir"]).name
         # The GUI hint after "Run": defaults to the catalog picker convention; a runner
         # whose picker labels differ (or that auto-loads its single model) overrides it
         # with `runner.pickNote` — the line must match what the app actually shows.
@@ -310,18 +323,32 @@ def main() -> int:
 
     for model_id in ids:
         cfg = top["models"][model_id]
-        entry = catalog[model_id]
+        if model_id in catalog:
+            entry = catalog[model_id]
+        else:
+            # Engine-showcase models live outside the kit catalog (no generic runner
+            # drives them); the sidecar names the repo directly.
+            entry = {"id": model_id, "name": cfg["name"], "repo": cfg["repo"], "variants": {}}
         log("model", f"{model_id} ({entry['name']})")
-        runner_dir = kit / cfg["runner"]["dir"]
 
-        doors: dict = {"green": None, "runner": False, "snippet": False, "hero": False}
+        doors: dict = {"green": None, "runner": False, "snippet": False, "hero": None,
+                       "appDoor": False}
+        snippet = None
 
-        if args.skip_builds:
+        if "appDoor" in cfg:
+            app_path = ZOO / cfg["appDoor"]["path"]
+            if app_path.is_dir():
+                doors["appDoor"] = True
+                log("gate", f"zoo app exists: {cfg['appDoor']['path']}")
+            else:
+                fail(f"{model_id}: appDoor path {cfg['appDoor']['path']} not found in the zoo")
+        elif args.skip_builds:
             log("warn", "--skip-builds: emitting doors WITHOUT verification (dry-run only)")
             doors["runner"] = True
             snippet = extract_snippet(kit, cfg, model_id)
             doors["snippet"] = snippet is not None
         else:
+            runner_dir = kit / cfg["runner"]["dir"]
             ok = gate_regen_diff(kit, runner_dir, cfg["runner"]["xcodeproj"])
             ok = gate_cli_build(runner_dir) and ok
             ok = gate_app_build(runner_dir, cfg["runner"]["xcodeproj"],
@@ -337,9 +364,9 @@ def main() -> int:
         else:
             log("info", "🟢 door: no TestFlight/dmg link configured — omitted")
 
-        doors["hero"] = hero_exists(entry["repo"])
+        doors["hero"] = hero_media(entry["repo"])
         if not doors["hero"]:
-            log("info", "hero: no demo.gif in the HF repo — omitted (capture is demand-driven)")
+            log("info", "hero: no demo.gif/png in the HF repo — omitted (capture is demand-driven)")
 
         block = render_block(model_id, entry, cfg, top, snippet or "", doors)
 
