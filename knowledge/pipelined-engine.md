@@ -148,6 +148,23 @@ possible:
   53.8 s) and the tbl ingest re-runs cleanly. Rule of thumb: after adding a multi-GB
   bundle next to other specialized models, expect one wipe + re-spec cycle.
 
+- **Driving hybrid bundles from an APP (found wiring Ornith-1.0-9B into CoreAIChatMac,
+  2026-07-03): the factory's `coreai-sequential` variant hard-requires exactly 2 states**,
+  so every 4-state hybrid (the whole qwen3.5 family, Granite) fails engine-create with
+  `invalidOutputType("Expected 2 states … got 4")`. Route those to the (extra-states-patched)
+  `coreai-pipelined` variant instead, and remember `COREAI_CHUNK_THRESHOLD=1` is read LIVE at
+  prefill time — set it for the pipelined load, restore the launch value before sequential
+  loads in the same process. CoreAIChatMac's pattern: try sequential, catch that specific
+  error, retry pipelined (gather_qmm bundles excluded — their logits shape asserts in the
+  pipelined `GrowingLogitsBuffer`).
+- **Streaming display is O(n²) if you re-decode the full sequence per token** — a 601-token
+  answer displayed 37 tok/s while the engine ran 48 (the stream buffers; only the consumer
+  lags). Fix: incremental detokenization (decode a small tail cache, fold into stable text at
+  newline boundaries; a trailing U+FFFD means a UTF-8 char is still split across tokens — hold
+  the fold) + coalescing UI writes to ~20 Hz. Suffix decode is only valid for byte-level-BPE
+  tokenizers — SentencePiece strips a leading space per chunk — so audit the first fold against
+  one full decode and fall back. Displayed rate recovered to 48.9 at 601 tokens.
+
 ## State & precision traps on the GPU delegate (found by the LFM2.5 port)
 
 Two macOS-27-beta GPU-delegate behaviors that produce *silently wrong* decode (the bundle
