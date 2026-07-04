@@ -12,6 +12,48 @@ similar quality to bfloat16").
 `gpu-pipelined/` provider (both platforms) + precompiled `_aotc_h18p` + tbl (Mac-fastest),
 plus the QAT gather tables under `ios-frontend/gemma4_e4b_qat_gather_raw/`.
 
+<!-- gen-cards:use-it begin id=gemma-4-e4b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+## Use it
+
+▶️ **Run it (source)** — the [ChatDemo runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo)
+(GUI + CLI, one app for every chat model in the catalog):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/ChatDemo/ChatDemo.xcodeproj
+# → Run, then pick "Gemma 4 E4B" in the model picker
+
+# agents / headless (macOS):
+cd coreai-kit/Examples/ChatDemo
+swift run chat-cli --model gemma-4-e4b --prompt "What can you do, offline?"
+```
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKit
+
+let chat = try await ChatSession(catalog: "gemma-4-e4b")
+let reply = try await chat.respond(to: prompt)
+// reply: the answer, generated fully on-device
+```
+
+The take-home is [`Examples/ChatDemo/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/ChatDemo/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; the CLI is an argument shell over it, and
+the GUI drives the same `ChatSession` across turns for its transcript.
+Multi-turn? Hold the `ChatSession` and call `respond(to:)` per turn — it keeps the
+conversation history; `streamResponse(to:)` yields tokens as they decode.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKit**
+- Info.plist: none needed
+- Entitlements: none needed (macOS)
+- First run downloads the model — 7.6 GB (Mac) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
+
 ## Architecture (config + checkpoint verified — corrects the old "E4B adds MoE" note)
 
 **Clean dense model, no MoE** (`moe_intermediate_size: null`). vs E2B: 42 layers

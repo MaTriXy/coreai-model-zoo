@@ -133,7 +133,7 @@ def extract_snippet(kit: Path, cfg: dict, model_id: str) -> str | None:
 
 
 def gate_snippet_compiles(snippet: str, kit_url: str, local_kit: Path | None,
-                          free_vars: dict) -> bool:
+                          free_vars: dict, product: str = "CoreAIKit") -> bool:
     """Compile the extracted snippet in a scratch package against kit (url-dep by default) —
     catches the "compiles in the runner, not in the reader's app" class. `free_vars` names the
     reader-supplied inputs the snippet references (e.g. {"url": "URL"} / {"prompt": "String"});
@@ -150,7 +150,7 @@ let package = Package(
     platforms: [.macOS("27.0")],
     dependencies: [{dep}],
     targets: [.executableTarget(name: "SnippetCheck",
-        dependencies: [.product(name: "CoreAIKit", package: "coreai-kit")])]
+        dependencies: [.product(name: "{product}", package: "coreai-kit")])]
 )
 """)
     imports = [l for l in snippet.split("\n") if l.startswith("import ")]
@@ -357,7 +357,8 @@ def main() -> int:
             snippet = extract_snippet(kit, cfg, model_id)
             doors["snippet"] = snippet is not None and gate_snippet_compiles(
                 snippet, top["kitURL"], kit if args.local_kit_dep else None,
-                cfg.get("snippetFreeVars", {"url": "URL"}))
+                cfg.get("snippetFreeVars", {"url": "URL"}),
+                product=cfg.get("product", "CoreAIKit"))
 
         if cfg.get("testflightURL") or cfg.get("dmgURL"):
             fail("green door configured but its template is not implemented yet")

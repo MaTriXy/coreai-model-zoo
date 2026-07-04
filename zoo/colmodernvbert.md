@@ -18,6 +18,53 @@ It is an **encoder, not a generator** — one bidirectional forward per graph, n
 head, no sampling — exported / run like the other encoders (plain `.aimodel` via `AIModel.run`).
 Two graphs (two encoders, shared backbone), one per modality.
 
+<!-- gen-cards:use-it begin id=colmodernvbert (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+## Use it
+
+▶️ **Run it (source)** — the [DocSearch runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/DocSearch)
+(visual page search over bundled sample pages; the GUI (iPhone) adds tiled where-it-matched highlights):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/DocSearch/DocSearch.xcodeproj
+# → Run, then pick "ColModernVBERT" in the model picker
+
+# agents / headless (macOS):
+cd coreai-kit/Examples/DocSearch
+swift run docsearch-cli --model colmodernvbert --query "monthly revenue trend"
+```
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKitEmbeddings
+
+let retriever = try await VisualDocumentRetriever(
+    catalog: "colmodernvbert")
+var corpus: [VisualDocumentRetriever.PageEmbedding] = []
+for url in pages {
+    corpus.append(try await retriever.encode(page: ImageFile.load(url).cgImage))
+}
+let hits = try await retriever.retrieve(query: query, over: corpus, topK: pages.count)
+// hits: pages ranked by MaxSim, best match first — no OCR, pages are matched as pictures
+```
+
+The take-home is [`Examples/DocSearch/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/DocSearch/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; the CLI is an argument shell over it, and
+the GUI drives the same `VisualDocumentRetriever(catalog:)` with tiled per-page encoding.
+Encode your corpus once and keep the `PageEmbedding`s — scoring a query is then host-side
+MaxSim, no model call per page. `encodeTiled(page:)` localizes *where* a query matched.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKitEmbeddings**
+- Info.plist: `NSPhotoLibraryUsageDescription` — only if you use PhotosPicker to import pages
+- Entitlements: none needed
+- First run downloads the model — 0.7 GB (Mac) / 0.7 GB (iPhone) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
+
 ## Graph contracts
 
 ```

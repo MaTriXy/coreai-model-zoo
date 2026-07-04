@@ -24,6 +24,55 @@ original `…_int8lin` decoder + fp16 `minicpmv46_vision` kept for compatibility
 </p>
 <p align="center"><em>Fridge photo → recipe ideas, fully on-device on an iPhone 17 Pro (CoreAIChat).</em></p>
 
+<!-- gen-cards:use-it begin id=minicpm-v-4.6 (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+## Use it
+
+▶️ **Run it (source)** — the [VLChat runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/VLChat)
+(GUI + CLI, one app for every vision-language model in the catalog):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/VLChat/VLChat.xcodeproj
+# → Run, then pick "MiniCPM-V 4.6" in the model picker
+
+# agents / headless (macOS):
+cd coreai-kit/Examples/VLChat
+swift run vlchat-cli --model minicpm-v-4.6 --image sample.jpg --prompt "What is in this image?"
+```
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKit
+import FoundationModels
+
+let vlm = try await KitVisionModel(catalog: "minicpm-v-4.6")
+let session = LanguageModelSession(model: vlm)
+let image = try ImageFile.load(imageURL)  // any image file → CGImage + EXIF orientation
+let reply = try await session.respond(to: Prompt {
+    prompt
+    Attachment(image.cgImage, orientation: image.orientation)
+})
+// reply.content: the answer about the image, generated fully on-device
+```
+
+The take-home is [`Examples/VLChat/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/VLChat/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; the CLI is an argument shell over it, and
+the GUI drives the same `KitVisionModel(catalog:)` behind a `LanguageModelSession`.
+Multi-turn about the same image? Hold the `LanguageModelSession` and call `respond(to:)`
+per turn. The photo picker / file chooser is your app's own chrome — `ImageFile.load`
+(kit API) turns any image file into model input.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKit**
+- Info.plist: `NSPhotoLibraryUsageDescription` — only if you use PhotosPicker
+- Entitlements (iOS): `com.apple.developer.kernel.increased-memory-limit`
+- First run downloads the model — 2.1 GB (Mac) / 2.1 GB (iPhone) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
+
 ## How a VLM rides a text-only engine
 
 The pipelined engine knows nothing about images. The whole multimodal state rides the
