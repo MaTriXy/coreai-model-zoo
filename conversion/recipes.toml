@@ -1,0 +1,59 @@
+# Zoo conversion recipes — verified ship configs, one command each via zoo_convert.py.
+#
+#   python3 zoo_convert.py list
+#   python3 zoo_convert.py show qwen3.5-0.8b
+#   python3 zoo_convert.py run qwen3.5-0.8b --dry-run
+#
+# Every entry mirrors a config already documented in README.md / the model's zoo card —
+# this file is an index, not a new source of truth. Add entries only for gated,
+# shipped configs (regen conversion/overlay/ first if the port added model code).
+
+["qwen3.5-0.8b"]
+script = "export_qwen3_5_decode_pipelined.py"
+args = ["int8hu", "--head-sym"]
+card = "../zoo/qwen3.5.md"
+notes = [
+  "Ship config: per-block-32 absmax int8 head (int8lin fp16-head is the slower fallback).",
+  "Runtime needs apps/coreai-pipelined-extra-states.patch + COREAI_CHUNK_THRESHOLD=1.",
+  "M4 Max 210 tok/s / iPhone 17 Pro 69.7-74.0 tok/s.",
+]
+
+["qwen3.5-2b"]
+script = "export_qwen3_5_decode_pipelined.py"
+args = ["int8hu", "--head-sym", "--hf-id", "Qwen/Qwen3.5-2B"]
+card = "../zoo/qwen3.5.md"
+notes = [
+  "Same ship config as 0.8B, HF-id swap only.",
+  "M4 Max 161 tok/s / iPhone 17 Pro 28-30 tok/s.",
+]
+
+["lfm2.5-1.2b"]
+script = "export_lfm2_decode_pipelined.py"
+args = ["int8hu", "--head-sym"]
+card = "../zoo/lfm2.5.md"
+notes = [
+  "conv+attention hybrid, loop-free by construction. Oracle gate 16/16.",
+  "M4 Max 276.5 tok/s with int8 head (253 int8lin / 162 fp16).",
+  "Model overlay bakes in two macOS-27-beta GPU-delegate workarounds (see script header).",
+]
+
+["holo2-4b"]
+script = "export_qwen3_vl_pipelined.py"
+args = ["int8lin", "--hf-id", "Hcompany/Holo2-4B"]
+card = "../zoo/holo2.md"
+notes = [
+  "Stock Qwen3-VL-4B drop-in: HF-id swap only, no model code.",
+  "Emits decoder + _s1 gate twin + fp16 vision tower; _s1 is static so no AOT needed.",
+  "Parity vs fp32 HF: vision cos 0.9999, decoder 4/4 + 16/16 decode steps token-exact.",
+]
+
+["fastcontext-4b"]
+command = ["coreai.llm.export", "fastcontext-4b"]
+card = "../zoo/fastcontext.md"
+notes = [
+  "STOCK architecture (byte-identical to Qwen/Qwen3-4B) — no re-authoring, rides the stock qwen3 graph.",
+  "Needs the overlay only for the model_registry short-name preset + metadata entry.",
+  "iOS: dense 4B dynamic graph can't specialize on device -> ship the AOT bundle:",
+  "  coreai-build compile exports/fastcontext_4b_dynamic/*.aimodel --platform iOS --preferred-compute gpu --architecture h18p",
+  "Parity 23/24 argmax (ppl 1.41) vs HF fp16.",
+]

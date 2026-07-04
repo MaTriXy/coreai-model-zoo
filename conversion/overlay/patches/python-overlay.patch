@@ -1,0 +1,1029 @@
+diff --git a/python/src/coreai_models/export/bundle.py b/python/src/coreai_models/export/bundle.py
+index 94241ca..67c79a2 100644
+--- a/python/src/coreai_models/export/bundle.py
++++ b/python/src/coreai_models/export/bundle.py
+@@ -35,8 +35,18 @@ def bundle_llm_asset(
+ 
+ def _write_tokenizer(dest: Path, hf_model_id: str) -> None:
+     logger.info(f"Saving tokenizer from {hf_model_id}...")
+-    tokenizer = AutoTokenizer.from_pretrained(hf_model_id)
+-    tokenizer.save_pretrained(str(dest))
++    # A tokenizer that can't be auto-loaded (e.g. a transformers version that
++    # predates the model's tokenizer, or a parsing bug) must NOT discard an
++    # otherwise-successful multi-GB model export. Warn and continue — the
++    # tokenizer can be added to the bundle separately.
++    try:
++        tokenizer = AutoTokenizer.from_pretrained(hf_model_id)
++        tokenizer.save_pretrained(str(dest))
++    except Exception as e:  # noqa: BLE001
++        logger.warning(
++            f"Could not bundle tokenizer for {hf_model_id} ({type(e).__name__}: {e}). "
++            f"The model exported fine; add the tokenizer to {dest} manually."
++        )
+ 
+ 
+ def _write_metadata(
+diff --git a/python/src/coreai_models/export/macos.py b/python/src/coreai_models/export/macos.py
+index c879830..0a3d316 100644
+--- a/python/src/coreai_models/export/macos.py
++++ b/python/src/coreai_models/export/macos.py
+@@ -131,6 +131,7 @@ def export_to_coreai(
+     input_names: tuple[str, ...] | None = None,
+     output_names: tuple[str, ...] | None = None,
+     state_names: tuple[str, ...] | None = None,
++    externalize_modules: list | tuple | None = None,
+ ) -> AIProgram:
+     """Export a stateful macOS model to a AIProgram.
+ 
+@@ -157,10 +158,19 @@ def export_to_coreai(
+         state_names: Names of inputs that are state (i.e. mutated in place by
+             the forward pass and surfaced via the runtime ``state=`` kwarg
+             rather than as regular inputs/outputs).
++        externalize_modules: Composite-op externalization specs. ``None`` uses
++            the default set (RMSNorm/RoPE/SDPA/GatherMM/GatedDeltaUpdate). Pass an
++            empty list/tuple to DISABLE externalization — required for models
++            whose export unit holds submodules of an externalized class that are
++            NOT in the traced graph (e.g. Gemma 4's decode core keeps the PLE
++            front-end RMSNorms as attributes; externalizing by class would mark
++            them and then fail to find them in the program).
+ 
+     Returns:
+         A AIProgram ready for optimization and compilation.
+     """
++    if externalize_modules is None:
++        externalize_modules = _EXTERNALIZE_SPECS
+     # If the caller didn't pass input_names explicitly, derive them from
+     # ``reference_inputs.keys()`` while excluding any name the caller declared
+     # as state. This keeps the call to ``add_pytorch_module`` predictable
+@@ -187,7 +197,7 @@ def export_to_coreai(
+     converter.add_pytorch_module(
+         model,
+         export_fn=export_fn,
+-        externalize_modules=_EXTERNALIZE_SPECS,
++        externalize_modules=list(externalize_modules) or None,
+         input_names=input_names,
+         output_names=output_names,
+         state_names=state_names,
+@@ -196,10 +206,61 @@ def export_to_coreai(
+     return converter.to_coreai()
+ 
+ 
++def export_to_coreai_multifunction(
++    model: torch.nn.Module,
++    entries: "list[tuple[str, dict]]",
++    externalize_modules: list | tuple | None = None,
++) -> AIProgram:
++    """Export several entrypoints of the SAME weights into one AIProgram.
++
++    Each entry is ``(entrypoint_name, spec)`` where ``spec`` carries the same
++    keys the model's ``build_export_spec`` returns (``reference_inputs``,
++    ``dynamic_shapes``, ``input_names``, ``output_names``, ``state_names``).
++    Constants are deduplicated across entrypoints, so a static-chunk prefill
++    function rides next to the S=1 decode function at no weight cost.
++    """
++    if externalize_modules is None:
++        externalize_modules = _EXTERNALIZE_SPECS
++    model.eval()
++    converter = coreai_torch.TorchConverter()
++    for entrypoint_name, spec in entries:
++        reference_inputs = spec["reference_inputs"]
++        state_names = spec.get("state_names")
++        input_names = spec.get("input_names")
++        if input_names is None:
++            state_names_set = set(state_names or ())
++            input_names = tuple(k for k in reference_inputs if k not in state_names_set)
++
++        def export_fn(
++            module: torch.nn.Module,
++            _inputs=reference_inputs,
++            _dyn=spec.get("dynamic_shapes"),
++        ) -> torch.export.ExportedProgram:
++            with torch.no_grad():
++                aten_ep = torch.export.export(
++                    module, args=(), kwargs=_inputs, dynamic_shapes=_dyn)
++            coreaten_ep = aten_ep.run_decompositions(coreai_torch.get_decomp_table())
++            remove_functionalization(coreaten_ep)
++            return coreaten_ep
++
++        converter.add_pytorch_module(
++            model,
++            export_fn=export_fn,
++            externalize_modules=list(externalize_modules) or None,
++            input_names=input_names,
++            output_names=spec.get("output_names"),
++            state_names=state_names,
++            entrypoint_name=entrypoint_name,
++        )
++    register_custom_torch_lowering(converter)
++    return converter.to_coreai()
++
++
+ def export_macos_model(
+     model: torch.nn.Module,
+     config,
+     export_config,
++    palettization_config: "dict | None" = None,
+ ) -> AIProgram:
+     """Export a macOS model to a AIProgram.
+ 
+@@ -212,6 +273,11 @@ def export_macos_model(
+         model: A loaded PyTorch model (already in the correct dtype).
+         config: HuggingFace model config (used for cache dimensions, vocab size, etc.).
+         export_config: An ExportConfig instance (used for max_context_length, etc.).
++        palettization_config: Optional k-means palettization config (the inner
++            ``kmeans_palettization_config`` dict). Applied to the EXTRACTED decode
++            core with its own example inputs — the macOS palettization path for
++            ``export_core()`` models (e.g. Gemma 4). The pipeline defers it here
++            because the export unit is the core, not the input_ids->logits forward.
+ 
+     Returns:
+         An optimized AIProgram ready for MLIR quantization and compilation.
+@@ -220,22 +286,67 @@ def export_macos_model(
+     if max_context_length is None:
+         max_context_length = getattr(config, "max_position_embeddings", 2048)
+ 
+-    # Determine target dtype from the model parameters
++    # Models that keep an embedding-gather FRONT-END on the CPU and a separate
++    # head export their inner stateful *core*, not their full input_ids->logits
++    # forward. The core carries its own ``build_macos_export_spec`` (e.g. Gemma 4's
++    # dual KV cache), so exporting it makes the hook below fire; the giant
++    # embedding / per-layer-embedding tables and the tied lm_head stay off-graph
++    # (gathered on the CPU front-end; the head is its own bundle/function).
++    if hasattr(model, "export_core"):
++        logger.info("Routing to model.export_core() (decode core; front-end + head stay separate)")
++        model = model.export_core()
++
++    # Determine target dtype + capture the export unit's externalize opt-out NOW,
++    # before any palettization replaces ``model`` with a finalized module that may
++    # not carry the ``coreai_externalize_specs`` attribute.
+     target_dtype = next(model.parameters()).dtype
++    externalize_modules = getattr(model, "coreai_externalize_specs", None)
+ 
+     logger.info(
+         f"Exporting macOS model (dtype={target_dtype}, max_context_length={max_context_length})"
+     )
+ 
+-    reference_inputs, dynamic_shapes = _build_reference_inputs(
+-        model, config, target_dtype, max_context_length
+-    )
+-
+-    input_names = ("input_ids", "position_ids")
+-    output_names = ("logits",)
+-    state_names = (KEY_CACHE_NAME, VALUE_CACHE_NAME)
++    # Hybrid-cache models (e.g. Qwen3.5: KV for full-attention layers + conv/recurrent
++    # SSM state for linear-attention layers) override the uniform-KV reference inputs by
++    # providing `build_macos_export_spec`. Plain attention models use the default path.
++    if hasattr(model, "build_macos_export_spec"):
++        spec = model.build_macos_export_spec(
++            target_dtype=target_dtype,
++            max_context_length=max_context_length,
++            query_len=QUANT_TRACE_QUERY_LEN,
++            offset=QUANT_TRACE_OFFSET,
++            trace_kv_len=TRACE_KV_CACHE_SEQ_LEN,
++        )
++        reference_inputs = spec["reference_inputs"]
++        dynamic_shapes = spec["dynamic_shapes"]
++        input_names = spec["input_names"]
++        output_names = spec["output_names"]
++        state_names = spec["state_names"]
++    else:
++        reference_inputs, dynamic_shapes = _build_reference_inputs(
++            model, config, target_dtype, max_context_length
++        )
++        input_names = ("input_ids", "position_ids")
++        output_names = ("logits",)
++        state_names = (KEY_CACHE_NAME, VALUE_CACHE_NAME)
++
++    # Optional weight palettization of the (already-extracted) decode core, using
++    # the core's own example inputs — the macOS palettization path. Deferred here
++    # from the pipeline because the export unit is the core, not the
++    # input_ids->logits forward (see pipeline.py). K-means palettizes only
++    # F.linear/F.conv weights, so RMSNorm/RoPE params stay full precision. For
++    # Gemma 4 E2B this reproduces convert_palettize.py's "all8": ~1.90 GB, exact argmax.
++    if palettization_config is not None:
++        from coreai_models.export.compression import palettize_pytorch_model
++
++        logger.info("Palettizing decode core (macOS, core-signature trace)...")
++        example_inputs = tuple(reference_inputs.values())
++        model = palettize_pytorch_model(model, example_inputs, palettization_config)
+ 
+     logger.info("Exporting model to Core AI dialect...")
++    # ``externalize_modules`` was captured above (before palettization) so the core's
++    # opt-out (e.g. Gemma 4's, which keeps PLE front-end RMSNorms as attributes)
++    # survives. ``None`` -> the default spec set.
+     coreai_program = export_to_coreai(
+         model,
+         reference_inputs,
+@@ -243,6 +354,7 @@ def export_macos_model(
+         input_names=input_names,
+         output_names=output_names,
+         state_names=state_names,
++        externalize_modules=externalize_modules,
+     )
+ 
+     logger.info("Optimizing AIProgram...")
+diff --git a/python/src/coreai_models/export/metadata.py b/python/src/coreai_models/export/metadata.py
+index 77e17c2..3555563 100644
+--- a/python/src/coreai_models/export/metadata.py
++++ b/python/src/coreai_models/export/metadata.py
+@@ -35,6 +35,16 @@ class AIModelMetadataFields:
+ # `coreai_models.model_registry`, add a matching entry here.
+ _METADATA: dict[str, AIModelMetadataFields] = {
+     # ---- LLMs ----
++    "openbmb/MiniCPM5-1B": AIModelMetadataFields(
++        author="OpenBMB",
++        license="Apache-2.0",
++        model_description=(
++            "MiniCPM5-1B is a 1.08B-parameter on-device causal language model "
++            "from OpenBMB, with hybrid (Think / No-Think) reasoning and 128K "
++            "context, reaching 1B-class open-source SOTA. "
++            "Source: https://huggingface.co/openbmb/MiniCPM5-1B"
++        ),
++    ),
+     "Qwen/Qwen2.5-1.5B-Instruct": AIModelMetadataFields(
+         author="Qwen Team",
+         license="Apache-2.0",
+@@ -60,6 +70,17 @@ _METADATA: dict[str, AIModelMetadataFields] = {
+             "family. Source: https://huggingface.co/Qwen/Qwen3-4B"
+         ),
+     ),
++    "microsoft/FastContext-1.0-4B-SFT": AIModelMetadataFields(
++        author="Microsoft",
++        license="MIT",
++        model_description=(
++            "FastContext-1.0-4B-SFT is a 4B-parameter long-context repository-"
++            "exploration agent from Microsoft, built on the Qwen3-4B backbone and "
++            "supervised-fine-tuned on exploration traces (broad first-turn search, "
++            "multi-turn evidence gathering, precise citation generation). "
++            "Source: https://huggingface.co/microsoft/FastContext-1.0-4B-SFT"
++        ),
++    ),
+     "Qwen/Qwen3-8B": AIModelMetadataFields(
+         author="Qwen Team",
+         license="Apache-2.0",
+@@ -95,6 +116,16 @@ _METADATA: dict[str, AIModelMetadataFields] = {
+             "Source: https://huggingface.co/google/gemma-3-12b-it"
+         ),
+     ),
++    "google/gemma-4-E2B-it": AIModelMetadataFields(
++        author="Gemma Team",
++        license="Gemma Terms of Use",
++        model_description=(
++            "Gemma 4 E2B IT is a compact instruction-tuned multimodal model from "
++            "Google's Gemma 4 family; this export targets the text decode core "
++            "(the embedding-gather front-end and tied LM head are exported "
++            "separately). Source: https://huggingface.co/google/gemma-4-E2B-it"
++        ),
++    ),
+     "mistralai/Mistral-7B-Instruct-v0.3": AIModelMetadataFields(
+         author="Mistral AI",
+         license="Apache-2.0",
+diff --git a/python/src/coreai_models/export/pipeline.py b/python/src/coreai_models/export/pipeline.py
+index 292c1d1..b2b88da 100644
+--- a/python/src/coreai_models/export/pipeline.py
++++ b/python/src/coreai_models/export/pipeline.py
+@@ -139,8 +139,11 @@ async def _async_export_model(config: ExportConfig) -> str:
+     entry = get_model_entry(model_type)
+ 
+     # Unwrap the per-modality sub-config (e.g. Gemma-3 wraps the text
+-    # model under `text_config`)
+-    if entry.hf_config_attr:
++    # model under `text_config`). Applied defensively: a registry entry may be
++    # shared by both a multimodal checkpoint (has `text_config`) and a text-only
++    # checkpoint of the same family (e.g. gemma-3-1b-it, whose config is already
++    # a Gemma3TextConfig). For the latter there is nothing to unwrap.
++    if entry.hf_config_attr and hasattr(hf_config, entry.hf_config_attr):
+         hf_config = getattr(hf_config, entry.hf_config_attr)
+ 
+     if config.variant == "iOS" and entry.ios_class is None:
+@@ -269,6 +272,18 @@ async def _async_export_model(config: ExportConfig) -> str:
+                 calibration_data_fn=get_calibration_data,
+                 mmap_dir=quantizer_mmap_dir,
+             )
++        # Decode-core models (e.g. gemma4) expose `export_core()`: their export
++        # unit is the inner stateful decode core (inputs_embeds / per_layer_inputs /
++        # position_ids + KV state), NOT the input_ids->logits forward. Palettizing
++        # here with the iOS input_ids-shaped trace would build the wrong graph and
++        # pull the giant embedding tables, so defer palettization to
++        # export_macos_model, which palettizes the EXTRACTED core with its own
++        # example inputs. This is the only macOS palettization path.
++        deferred_palettization_config = None
++        if torch_palettization_config is not None and hasattr(model, "export_core"):
++            deferred_palettization_config = torch_palettization_config
++            torch_palettization_config = None
++
+         if torch_palettization_config is not None:
+             assert config.variant == "iOS", "palettization is only supported for iOS variant."
+ 
+@@ -304,7 +319,9 @@ async def _async_export_model(config: ExportConfig) -> str:
+ 
+         # ---- 4. Variant-specific export ----
+         if config.variant == "macOS":
+-            coreai_program = export_macos_model(model, hf_config, config)
++            coreai_program = export_macos_model(
++                model, hf_config, config, palettization_config=deferred_palettization_config
++            )
+         else:
+             coreai_program = await export_ios_model(model, hf_config, config)
+ 
+diff --git a/python/src/coreai_models/export/presets.py b/python/src/coreai_models/export/presets.py
+index 0d13af7..e139199 100644
+--- a/python/src/coreai_models/export/presets.py
++++ b/python/src/coreai_models/export/presets.py
+@@ -108,6 +108,34 @@ MACOS_PRESETS: dict[str, dict[str, Any]] = {
+         "suffix": "4bit",
+         "description": "INT4 symmetric per-block weight quantization (torch pre-export)",
+     },
++    # ---------------------------------------------------------------
++    # INT8 k-means weight palettization (decode-core models only).
++    # Applied to the extracted decode CORE inside export_macos_model (not the
++    # input_ids->logits forward), so it only takes effect for models exposing
++    # `export_core()` (currently Gemma 4). For Gemma 4 E2B this is the verified
++    # "all8" recipe: exact 8/8 HF argmax at ~1.90 GB (vs 3.5 GB fp16) — see
++    # gemma4/convert_palettize.py. Only F.linear/F.conv weights are palettized,
++    # so RMSNorm/RoPE/SDPA params stay full precision automatically.
++    # ---------------------------------------------------------------
++    "int8": {
++        "torch_palettization_config": {
++            "global_config": {
++                "op_state_spec": {
++                    "weight": {
++                        "n_bits": 8,
++                        "granularity": {
++                            "type": "per_grouped_channel",
++                            "axis": 0,
++                            "group_size": 32,
++                        },
++                    }
++                }
++            },
++        },
++        "suffix": "int8",
++        "description": "INT8 k-means group-32 weight palettization of the decode core "
++        "(decode-core models, e.g. gemma4; ~half fp16 size, exact argmax)",
++    },
+ }
+ 
+ IOS_PRESETS: dict[str, dict[str, Any]] = {
+diff --git a/python/src/coreai_models/model_registry.py b/python/src/coreai_models/model_registry.py
+index 1a813a6..df4579e 100644
+--- a/python/src/coreai_models/model_registry.py
++++ b/python/src/coreai_models/model_registry.py
+@@ -82,6 +82,8 @@ LLM_PRESETS: list[ModelPreset] = [
+     ),
+     ModelPreset("qwen3-0.6b", "Qwen/Qwen3-0.6B", "qwen3", "llm", "macOS", "4bit", "float16", 8192),
+     ModelPreset("qwen3-4b", "Qwen/Qwen3-4B", "qwen3", "llm", "macOS", "4bit", "float16", 40960),
++    ModelPreset("fastcontext-4b", "microsoft/FastContext-1.0-4B-SFT", "qwen3", "llm", "macOS", "4bit", "float16", 40960,
++                notes="Qwen3-4B-arch long-context repo-exploration agent (Microsoft, MIT)."),
+     ModelPreset("qwen3-8b", "Qwen/Qwen3-8B", "qwen3", "llm", "macOS", "4bit", "float16", 40960),
+     ModelPreset(
+         "qwen3-coder-30b-a3b-instruct",
+@@ -106,6 +108,24 @@ LLM_PRESETS: list[ModelPreset] = [
+         "bfloat16",
+         131072,
+     ),
++    # Gemma 4 E2B (community port). Exports the stateful text DECODE CORE; the giant
++    # embedding-gather front-end and the tied LM head are separate units (see
++    # gemma4/ONDEVICE_DESIGN.md). compression="none" (fp16, ~3.5 GB shippable): the
++    # 4bit macOS quantization path traces input_ids->logits, which doesn't match the
++    # core's (inputs_embeds, per_layer_inputs, position_ids, +KV state) signature, and
++    # int4 can't reach exact HF argmax anyway — the verified compressed point is int8
++    # k-means palettization (gemma4/convert_palettize.py all8 = 1.90 GB).
++    ModelPreset(
++        "gemma-4-e2b",
++        "google/gemma-4-E2B-it",
++        "gemma4",
++        "llm",
++        "macOS",
++        "none",
++        "float16",
++        32768,
++        notes="Text decode core; front-end gather + tied head exported separately.",
++    ),
+     ModelPreset(
+         "mistral-7b-instruct-v0.3",
+         "mistralai/Mistral-7B-Instruct-v0.3",
+@@ -162,6 +182,19 @@ LLM_PRESETS: list[ModelPreset] = [
+         4096,
+         compression_config="models/qwen3/qwen3_4b_mixed_4bit_8bit.yaml",
+     ),
++    ModelPreset(
++        "fastcontext-4b",
++        "microsoft/FastContext-1.0-4B-SFT",
++        "qwen3",
++        "llm",
++        "iOS",
++        "none",
++        "float16",
++        4096,
++        # Same Qwen3-4B architecture, so the curated qwen3-4b mixed 4/8 palettized
++        # (ANE-safe) recipe applies unchanged.
++        compression_config="models/qwen3/qwen3_4b_mixed_4bit_8bit.yaml",
++    ),
+ ]
+ 
+ # ---------------------------------------------------------------------------
+diff --git a/python/src/coreai_models/models/base.py b/python/src/coreai_models/models/base.py
+index ad04c99..8ba31a8 100644
+--- a/python/src/coreai_models/models/base.py
++++ b/python/src/coreai_models/models/base.py
+@@ -159,6 +159,22 @@ def _resolve_safetensors_files(model_dir: str) -> list[str]:
+         )
+ 
+ 
++def _any_key_has_prefix(safetensors_files: list[str], prefix: str) -> bool:
++    """Return True if any tensor key in the files starts with ``prefix``.
++
++    Used to decide whether a multimodal state-dict prefix (e.g.
++    ``language_model.``) actually applies to this checkpoint, so a registry
++    entry shared with a text-only checkpoint of the same family degrades
++    gracefully (the text-only checkpoint has no such prefix).
++    """
++    for path in safetensors_files:
++        with safe_open(path, framework="pt", device="cpu") as f:
++            for key in f.keys():  # noqa: SIM118
++                if key.startswith(prefix):
++                    return True
++    return False
++
++
+ def _build_safetensors_key_index(
+     safetensors_files: list[str],
+     num_layers: int | None = None,
+@@ -446,7 +462,15 @@ class BaseForCausalLM(torch.nn.Module):
+         )
+ 
+         raw_config = AutoConfig.from_pretrained(model_dir)
+-        hf_config = getattr(raw_config, hf_config_attr) if hf_config_attr else raw_config
++        # Defensive: a registry entry may be shared by a multimodal checkpoint
++        # (config nests the text model under `hf_config_attr`, weights are keyed
++        # under `hf_state_dict_prefix`) and a text-only checkpoint of the same
++        # family (e.g. gemma-3-1b-it). For the text-only case neither the nested
++        # config nor the prefix is present, so both are skipped.
++        if hf_config_attr and hasattr(raw_config, hf_config_attr):
++            hf_config = getattr(raw_config, hf_config_attr)
++        else:
++            hf_config = raw_config
+ 
+         config = cls._get_reauthored_config(hf_config, max_context_length, num_layers=num_layers)
+ 
+@@ -454,6 +478,8 @@ class BaseForCausalLM(torch.nn.Module):
+         model.to(dtype=target_dtype)
+ 
+         safetensors_files = _resolve_safetensors_files(model_dir)
++        if hf_state_dict_prefix and not _any_key_has_prefix(safetensors_files, hf_state_dict_prefix):
++            hf_state_dict_prefix = ""
+         per_layer_index, shared_index = _build_safetensors_key_index(
+             safetensors_files,
+             num_layers=num_layers,
+diff --git a/python/src/coreai_models/models/ios/mistral.py b/python/src/coreai_models/models/ios/mistral.py
+index 454d78f..053161a 100644
+--- a/python/src/coreai_models/models/ios/mistral.py
++++ b/python/src/coreai_models/models/ios/mistral.py
+@@ -10,7 +10,7 @@ from transformers.models.mistral.modeling_mistral import (
+     MistralForCausalLM as HFMistralForCausalLM,
+ )
+ 
+-from coreai_models._hf import resolve_rope_theta
++from coreai_models._hf import is_default_rope_scaling, resolve_rope_theta
+ from coreai_models.models.base import BaseForCausalLMForiOS
+ from coreai_models.primitives.ios.cache import KVCacheHandler
+ from coreai_models.primitives.ios.mlp import MLP
+@@ -19,10 +19,33 @@ from coreai_models.primitives.ios.quantization import (
+     quantize_per_tensor,
+ )
+ from coreai_models.primitives.ios.rms_norm import RMSNorm
+-from coreai_models.primitives.ios.rope import RoPECache, apply_rope
++from coreai_models.primitives.ios.rope import RoPECache, apply_rope, compute_llama3_inv_freq
+ from coreai_models.primitives.ios.sdpa import SDPA
+ 
+ 
++def _make_rope_cache(config, head_dim: int, max_cache_size: int) -> RoPECache:
++    """Build a RoPECache honoring non-trivial `rope_scaling` (llama3). Default /
++    absent scaling reproduces the previous `RoPECache(head_dim, max, theta)`
++    exactly, so models on the shared path are unaffected."""
++    base = resolve_rope_theta(config)
++    if is_default_rope_scaling(config):
++        return RoPECache(head_dim, max_cache_size, base)
++    scaling = config.rope_scaling
++    rope_type = scaling.get("rope_type") or scaling.get("type")
++    if rope_type == "llama3":
++        inv_freq = compute_llama3_inv_freq(
++            head_dim,
++            base,
++            float(scaling["factor"]),
++            float(scaling["low_freq_factor"]),
++            float(scaling["high_freq_factor"]),
++            int(scaling["original_max_position_embeddings"]),
++        )
++        return RoPECache(head_dim, max_cache_size, base, inv_freq=inv_freq, attention_scaling=1.0)
++    # Other scaling types (yarn, longrope, …) are not yet wired on iOS.
++    return RoPECache(head_dim, max_cache_size, base)
++
++
+ class Attention(nn.Module):
+     def __init__(self, config: MistralConfig, layer_idx: int) -> None:
+         super().__init__()
+@@ -183,8 +206,7 @@ class MistralExtend(nn.Module):
+         head_dim = (
+             getattr(config, "head_dim", None) or config.hidden_size // config.num_attention_heads
+         )
+-        rope_theta = resolve_rope_theta(config)
+-        self.rope = RoPECache(head_dim, config.max_position_embeddings, rope_theta)
++        self.rope = _make_rope_cache(config, head_dim, config.max_position_embeddings)
+ 
+     def forward(
+         self,
+diff --git a/python/src/coreai_models/models/macos/mistral.py b/python/src/coreai_models/models/macos/mistral.py
+index 2e74b30..75362d9 100644
+--- a/python/src/coreai_models/models/macos/mistral.py
++++ b/python/src/coreai_models/models/macos/mistral.py
+@@ -11,7 +11,7 @@ from transformers.models.mistral.modeling_mistral import (
+ )
+ from typing_extensions import Self, override
+ 
+-from coreai_models._hf import resolve_rope_theta
++from coreai_models._hf import is_default_rope_scaling, resolve_rope_theta
+ from coreai_models.models.base import BaseForCausalLM
+ from coreai_models.primitives.macos.cache import KVCache
+ from coreai_models.primitives.macos.mlp import MLP
+@@ -22,6 +22,42 @@ from coreai_models.primitives.macos.sdpa import SDPA
+ USE_FUSED_KV = True
+ 
+ 
++def _resolve_scaling_config(config) -> dict | None:
++    """Return the active non-default RoPE scaling dict, or None.
++
++    Prefers `rope_scaling` (Llama-3 carries `llama3` here); falls back to
++    `rope_parameters` (Ministral-3 carries `yarn` there). Returns None for
++    default/absent scaling so the default RoPE path is byte-identical."""
++    scaling = getattr(config, "rope_scaling", None)
++    if isinstance(scaling, dict) and not is_default_rope_scaling(config):
++        return scaling
++    rp = getattr(config, "rope_parameters", None)
++    if isinstance(rp, dict) and (rp.get("rope_type") or rp.get("type", "default")) != "default":
++        return rp
++    return None
++
++
++def _make_rope(config) -> nn.Module:
++    """Build a RoPE module, honoring non-trivial RoPE scaling (`llama3`,
++    `linear`, `yarn`) from either `rope_scaling` or `rope_parameters`. For
++    default/absent scaling this is byte-identical to the previous
++    `initialize_rope(base=...)` call, so models on the shared Mistral path
++    (plain Mistral, the `llama` remap, …) are unaffected."""
++    scaling = _resolve_scaling_config(config)
++    if scaling is None:
++        return initialize_rope(base=resolve_rope_theta(config))
++    # yarn carries its own theta in the scaling dict (e.g. Ministral 1e6); the
++    # top-level rope_theta is the MistralConfig default (1e4) and must not win.
++    base = scaling.get("rope_theta") or resolve_rope_theta(config)
++    head_dim = getattr(config, "head_dim", None) or config.hidden_size // config.num_attention_heads
++    return initialize_rope(
++        dims=head_dim,
++        base=base,
++        scaling_config=scaling,
++        max_position_embeddings=getattr(config, "max_position_embeddings", None),
++    )
++
++
+ class Attention(nn.Module):
+     def __init__(self, config: MistralConfig, layer_idx: int) -> None:
+         super().__init__()
+@@ -40,7 +76,7 @@ class Attention(nn.Module):
+         self.o_proj = nn.Linear(n_heads * head_dim, dim, bias=False)
+ 
+         self.sdpa = SDPA(is_causal=True)
+-        self.rope = initialize_rope(base=resolve_rope_theta(config))
++        self.rope = _make_rope(config)
+ 
+     def forward(
+         self,
+diff --git a/python/src/coreai_models/models/registry.py b/python/src/coreai_models/models/registry.py
+index 3e0e738..5fe64c5 100644
+--- a/python/src/coreai_models/models/registry.py
++++ b/python/src/coreai_models/models/registry.py
+@@ -10,6 +10,18 @@ from functools import lru_cache
+ 
+ import torch.nn as nn
+ 
++# Importing the config shim registers the Qwen3.5 configs with transformers
++# AutoConfig (the 4.57 export env has no built-in qwen3_5), so the export
++# pipeline's `AutoConfig.from_pretrained` can parse the checkpoint.
++from coreai_models.models.macos import qwen3_5_config as _qwen3_5_config  # noqa: F401
++
++# Likewise register gemma4 / gemma4_text with AutoConfig on import (4.57 has no gemma4).
++from coreai_models.models.macos import gemma4_config_shim as _gemma4_config_shim  # noqa: F401
++
++# Register the inner `ministral3` text config type so AutoConfig can parse the
++# Ministral-3 (mistral3 multimodal) checkpoint.
++from coreai_models.models.macos import ministral3_config_shim as _ministral3_config_shim  # noqa: F401
++
+ 
+ @dataclass
+ class ModelEntry:
+@@ -31,15 +43,24 @@ class ModelEntry:
+ def _get_registry() -> dict[str, ModelEntry]:
+     """Build the model registry (cached singleton). Lazy imports to avoid circular deps."""
+     from coreai_models.models.ios.mistral import MistralForCausalLMForiOS
++    from coreai_models.models.ios.olmo2 import Olmo2ForCausalLMForiOS
++    from coreai_models.models.ios.phi3 import Phi3ForCausalLMForiOS
+     from coreai_models.models.ios.qwen2 import Qwen2ForCausalLMForiOS
+     from coreai_models.models.ios.qwen3 import Qwen3ForCausalLMForiOS
++    from coreai_models.models.ios.smollm3 import SmolLM3ForCausalLMForiOS
+     from coreai_models.models.macos.gemma3_text import Gemma3ForCausalLM
++    from coreai_models.models.macos.gemma4_text import Gemma4TextForCausalLM
+     from coreai_models.models.macos.gpt_oss import GptOssForCausalLM
++    from coreai_models.models.macos.ministral3 import Ministral3ForCausalLM
+     from coreai_models.models.macos.mistral import MistralForCausalLM
+     from coreai_models.models.macos.mixtral import MixtralForCausalLM
++    from coreai_models.models.macos.olmo2 import Olmo2ForCausalLM
++    from coreai_models.models.macos.phi3 import Phi3ForCausalLM
+     from coreai_models.models.macos.qwen2 import Qwen2ForCausalLM
+     from coreai_models.models.macos.qwen3 import Qwen3ForCausalLM
++    from coreai_models.models.macos.qwen3_5 import Qwen3_5StatefulForCausalLM
+     from coreai_models.models.macos.qwen3_moe import Qwen3MoeForCausalLM
++    from coreai_models.models.macos.smollm3 import SmolLM3ForCausalLM
+ 
+     return {
+         "gemma3_text": ModelEntry(
+@@ -47,6 +68,15 @@ def _get_registry() -> dict[str, ModelEntry]:
+             hf_config_attr="text_config",
+             hf_state_dict_prefix="language_model.",
+         ),
++        # Gemma 4 E2B/E4B text decoder (community port). Multimodal checkpoint:
++        # text weights nest under "model.language_model."; dual head_dim + KV
++        # sharing + PLE handled in the re-authored module. AutoConfig needs the
++        # gemma4 shim (transformers 4.57 predates gemma4) — registered on lookup.
++        "gemma4_text": ModelEntry(
++            macos_class=Gemma4TextForCausalLM,
++            hf_config_attr="text_config",
++            hf_state_dict_prefix="model.language_model.",
++        ),
+         "gpt_oss": ModelEntry(
+             macos_class=GptOssForCausalLM,
+         ),
+@@ -57,6 +87,25 @@ def _get_registry() -> dict[str, ModelEntry]:
+         "mixtral": ModelEntry(
+             macos_class=MixtralForCausalLM,
+         ),
++        # Ministral-3 multimodal (mistral3) checkpoint: export the FP8 text
++        # decoder nested under text_config / language_model.
++        "mistral3": ModelEntry(
++            macos_class=Ministral3ForCausalLM,
++            hf_config_attr="text_config",
++            hf_state_dict_prefix="language_model.",
++        ),
++        "olmo2": ModelEntry(
++            macos_class=Olmo2ForCausalLM,
++            ios_class=Olmo2ForCausalLMForiOS,
++        ),
++        "phi3": ModelEntry(
++            macos_class=Phi3ForCausalLM,
++            ios_class=Phi3ForCausalLMForiOS,
++        ),
++        "smollm3": ModelEntry(
++            macos_class=SmolLM3ForCausalLM,
++            ios_class=SmolLM3ForCausalLMForiOS,
++        ),
+         "qwen2": ModelEntry(
+             macos_class=Qwen2ForCausalLM,
+             ios_class=Qwen2ForCausalLMForiOS,
+@@ -68,6 +117,13 @@ def _get_registry() -> dict[str, ModelEntry]:
+         "qwen3_moe": ModelEntry(
+             macos_class=Qwen3MoeForCausalLM,
+         ),
++        # Qwen3.5 hybrid linear/full-attention text decoder (community port).
++        # Text weights nest under "model.language_model." in the multimodal ckpt.
++        "qwen3_5_text": ModelEntry(
++            macos_class=Qwen3_5StatefulForCausalLM,
++            hf_config_attr="text_config",
++            hf_state_dict_prefix="model.language_model.",
++        ),
+     }
+ 
+ 
+@@ -75,6 +131,15 @@ def _get_registry() -> dict[str, ModelEntry]:
+ MODEL_TYPE_REMAPPING: dict[str, str] = {
+     "gemma3": "gemma3_text",
+     "qwen2_5": "qwen2",
++    # Plain LlamaForCausalLM (e.g. MiniCPM5-1B) is architecturally identical to
++    # Mistral minus the sliding window: GQA + RoPE + RMSNorm + SiLU, no qkv bias,
++    # no qk-norm, explicit head_dim honored by the Mistral builder.
++    "llama": "mistral",
++    # The Qwen3.5 checkpoint's top-level model_type is the VLM "qwen3_5"; we
++    # export its text decoder.
++    "qwen3_5": "qwen3_5_text",
++    # Gemma 4's top-level multimodal model_type -> text decoder.
++    "gemma4": "gemma4_text",
+ }
+ 
+ 
+diff --git a/python/src/coreai_models/primitives/ios/rope.py b/python/src/coreai_models/primitives/ios/rope.py
+index 3d045dc..5d27b37 100644
+--- a/python/src/coreai_models/primitives/ios/rope.py
++++ b/python/src/coreai_models/primitives/ios/rope.py
+@@ -3,11 +3,70 @@
+ # Use of this source code is governed by a BSD-3-clause license that can
+ # be found in the LICENSE file or at https://opensource.org/licenses/BSD-3-Clause
+ 
++import math
+ import os
+ 
+ import torch
+ 
+ 
++def compute_llama3_inv_freq(
++    head_dim: int,
++    base: float,
++    factor: float,
++    low_freq_factor: float,
++    high_freq_factor: float,
++    original_max_position_embeddings: int,
++) -> torch.Tensor:
++    """Llama-3 RoPE inverse-frequency rescaling (`rope_type: "llama3"`).
++
++    Mirrors HuggingFace `_compute_llama3_parameters` and the macOS
++    `Llama3RoPE`. Returns the per-dim inv_freq (length head_dim/2, fp32).
++    """
++    # Force CPU: this may run inside a `torch.device("meta")` init context
++    # (BaseForCausalLM builds the module tree on meta), and the inv_freq must be
++    # a real CPU tensor so RoPECache can build its cos/sin cache.
++    with torch.device("cpu"):
++        inv_freq = 1.0 / (base ** (torch.arange(0, head_dim, 2, dtype=torch.float32) / head_dim))
++        low_freq_wavelen = original_max_position_embeddings / low_freq_factor
++        high_freq_wavelen = original_max_position_embeddings / high_freq_factor
++        wavelen = 2 * math.pi / inv_freq
++        inv_freq_llama = torch.where(wavelen > low_freq_wavelen, inv_freq / factor, inv_freq)
++        smooth_factor = (original_max_position_embeddings / wavelen - low_freq_factor) / (
++            high_freq_factor - low_freq_factor
++        )
++        smoothed_inv_freq = (
++            1 - smooth_factor
++        ) * inv_freq_llama / factor + smooth_factor * inv_freq_llama
++        is_medium_freq = ~(wavelen < high_freq_wavelen) * ~(wavelen > low_freq_wavelen)
++        return torch.where(is_medium_freq, smoothed_inv_freq, inv_freq_llama)
++
++
++def compute_longrope_inv_freq(
++    rotary_dim: int,
++    base: float,
++    short_factor: list[float],
++) -> torch.Tensor:
++    """LongRoPE inverse frequencies (short-factor regime), length rotary_dim/2.
++
++    Mirrors HuggingFace `_compute_longrope_parameters`: inv_freq is the default
++    schedule divided per-dim by `short_factor`. CPU-forced for meta-device init.
++    """
++    with torch.device("cpu"):
++        ext = torch.tensor(short_factor, dtype=torch.float32)
++        return 1.0 / (
++            ext * base ** (torch.arange(0, rotary_dim, 2, dtype=torch.float32) / rotary_dim)
++        )
++
++
++def compute_longrope_attention_scaling(
++    max_position_embeddings: int, original_max_position_embeddings: int
++) -> float:
++    factor = max_position_embeddings / original_max_position_embeddings
++    if factor <= 1.0:
++        return 1.0
++    return math.sqrt(1 + math.log(factor) / math.log(original_max_position_embeddings))
++
++
+ def rotate_half(x: torch.Tensor) -> torch.Tensor:
+     """
+     GPT NeoX style: rotates [repeat] half the hidden dims of the input.
+@@ -50,6 +109,19 @@ def apply_rope(x: torch.Tensor, rope_cos: torch.Tensor, rope_sin: torch.Tensor)
+     return (x * rope_cos) + (rotate_half(x) * rope_sin)
+ 
+ 
++def apply_rope_partial(
++    x: torch.Tensor, rope_cos: torch.Tensor, rope_sin: torch.Tensor, rotary_dim: int
++) -> torch.Tensor:
++    """Partial rotary (Phi-4-mini): rotate only the first ``rotary_dim`` of each
++    head, pass the remaining dims through unchanged. ``rope_cos``/``rope_sin``
++    must be sized to ``rotary_dim`` (built from a length-``rotary_dim/2``
++    inv_freq)."""
++    x_rot = x[..., :rotary_dim]
++    x_pass = x[..., rotary_dim:]
++    x_rot = apply_rope(x_rot, rope_cos, rope_sin)
++    return torch.cat((x_rot, x_pass), dim=-1)
++
++
+ # On iOS, it is more efficient to compute RoPE using precomputed and cached cos/sin values
+ class RoPECache(torch.nn.Module):
+     """
+@@ -63,11 +135,20 @@ class RoPECache(torch.nn.Module):
+         head_dim: int,
+         max_cache_size: int,
+         base: float = 500_000,
++        inv_freq: torch.Tensor | None = None,
++        attention_scaling: float = 1.0,
+     ) -> None:
+         super().__init__()
+         self._head_dim = head_dim
+         self._max_cache_size = max_cache_size
+         self._base = base
++        # Optional precomputed per-dim inverse frequencies (length head_dim/2),
++        # used for non-default RoPE scaling (e.g. llama3). When None the default
++        # `1 / base**(2i/d)` schedule is used.
++        self._inv_freq_override = (
++            inv_freq.to(torch.float32) if inv_freq is not None else None
++        )
++        self._attention_scaling = float(attention_scaling)
+         self._use_hf_impl = os.environ.get("USE_HF_IMPL", "False").lower() == "true"
+         self._compute_sin_and_cos()
+ 
+@@ -91,10 +172,13 @@ class RoPECache(torch.nn.Module):
+         base = self._base
+ 
+         with torch.device("cpu"):
+-            theta = 1.0 / (
+-                base
+-                ** (torch.arange(start=0, end=head_dim, step=2, dtype=torch.float32) / head_dim)
+-            )
++            if self._inv_freq_override is not None:
++                theta = self._inv_freq_override.to(torch.float32)
++            else:
++                theta = 1.0 / (
++                    base
++                    ** (torch.arange(start=0, end=head_dim, step=2, dtype=torch.float32) / head_dim)
++                )
+ 
+             if self._use_hf_impl:
+                 theta = theta.to(dtype)
+@@ -106,10 +190,12 @@ class RoPECache(torch.nn.Module):
+             # Calculate product of position index and theta
+             freqs = seq_idx[:, None] * theta
+ 
+-            # Cache cos sin values
++            # Cache cos sin values (attention_scaling is 1.0 for default/llama3).
+             emb = torch.concatenate((freqs, freqs), dim=-1)
+-            self.cos_cached = torch.nn.Buffer(torch.cos(emb).to(dtype=dtype), persistent=False)
+-            self.sin_cached = torch.nn.Buffer(torch.sin(emb).to(dtype=dtype), persistent=False)
++            cos = torch.cos(emb) * self._attention_scaling
++            sin = torch.sin(emb) * self._attention_scaling
++            self.cos_cached = torch.nn.Buffer(cos.to(dtype=dtype), persistent=False)
++            self.sin_cached = torch.nn.Buffer(sin.to(dtype=dtype), persistent=False)
+ 
+     def gather_cos_sin(self, position_ids: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+         """Gather the cached cos/sin values using the position_ids"""
+diff --git a/python/src/coreai_models/primitives/macos/cache.py b/python/src/coreai_models/primitives/macos/cache.py
+index c716ca5..7af0ff3 100644
+--- a/python/src/coreai_models/primitives/macos/cache.py
++++ b/python/src/coreai_models/primitives/macos/cache.py
+@@ -260,7 +260,7 @@ class SSMState:
+                     layer_index_end,
+                     *[
+                         torch.tensor((cache.size(i),), dtype=torch.int32)
+-                        for i in range(1, 1 + cache.dim() - 2)
++                        for i in range(1, cache.dim())
+                     ],
+                 ]
+             ),
+diff --git a/python/src/coreai_models/primitives/macos/rope.py b/python/src/coreai_models/primitives/macos/rope.py
+index 89407c1..3125f86 100644
+--- a/python/src/coreai_models/primitives/macos/rope.py
++++ b/python/src/coreai_models/primitives/macos/rope.py
+@@ -114,6 +114,117 @@ class YarnRoPE(torch.nn.Module):
+         )
+ 
+ 
++class Llama3RoPE(torch.nn.Module):
++    """Llama-3 RoPE frequency rescaling (`rope_type: "llama3"`).
++
++    Mirrors HuggingFace `_compute_llama3_parameters`: the default inverse
++    frequencies are rescaled per-dimension — low-frequency components are
++    divided by `factor`, high-frequency components are untouched, and a smooth
++    ramp interpolates in between. `attention_scaling` is 1.0, so no logit
++    rescaling is needed. The resulting inv_freq is fed to the base RoPE op as
++    `freqs` (angle = position * freqs).
++    """
++
++    def __init__(
++        self: Self,
++        dims: int,
++        base: float,
++        factor: float,
++        low_freq_factor: float,
++        high_freq_factor: float,
++        original_max_position_embeddings: int,
++        interleaved: bool = False,
++    ) -> None:
++        super().__init__()
++        with torch.device("cpu"):
++            inv_freq = 1.0 / (
++                base ** (torch.arange(0, dims, 2, dtype=torch.float32) / dims)
++            )
++            low_freq_wavelen = original_max_position_embeddings / low_freq_factor
++            high_freq_wavelen = original_max_position_embeddings / high_freq_factor
++            wavelen = 2 * math.pi / inv_freq
++
++            inv_freq_llama = torch.where(wavelen > low_freq_wavelen, inv_freq / factor, inv_freq)
++            smooth_factor = (original_max_position_embeddings / wavelen - low_freq_factor) / (
++                high_freq_factor - low_freq_factor
++            )
++            smoothed_inv_freq = (
++                1 - smooth_factor
++            ) * inv_freq_llama / factor + smooth_factor * inv_freq_llama
++            is_medium_freq = ~(wavelen < high_freq_wavelen) * ~(wavelen > low_freq_wavelen)
++            inv_freq_llama = torch.where(is_medium_freq, smoothed_inv_freq, inv_freq_llama)
++
++            self._freqs = inv_freq_llama
++            self._rope = RoPE(scale=1.0, interleaved=interleaved)
++
++    def forward(
++        self: Self,
++        x: torch.Tensor,
++        position_ids: torch.Tensor | None = None,
++        offset: torch.Tensor | None = None,
++    ) -> torch.Tensor:
++        return self._rope(x, position_ids=position_ids, freqs=self._freqs, offset=offset)
++
++
++class LongRoPE(torch.nn.Module):
++    """LongRoPE (`rope_type: "longrope"`, e.g. Phi-4-mini), short-factor regime.
++
++    Two Phi-specific features are handled:
++      * **Partial rotary** — only the first ``rotary_dim`` (= head_dim *
++        partial_rotary_factor) dims are rotated; the rest pass through. The base
++        RoPE op does this natively via ``dims=rotary_dim``.
++      * **LongRoPE rescale + attention scaling** — inv_freq is divided by the
++        per-dim ``short_factor``; cos/sin are scaled by ``attention_scaling``.
++        Since attention_scaling distributes over the rotation, it is applied as
++        a per-dim multiply on the rotary output (1.0 on the pass-through dims),
++        which is torch.export-friendly (no partial sliced assignment).
++
++    Only the short-factor branch is materialized — correct for context lengths
++    up to ``original_max_position_embeddings`` (the benchmark regime). The
++    long-factor branch (positions beyond that) is not wired.
++    """
++
++    def __init__(
++        self: Self,
++        head_dim: int,
++        rotary_dim: int,
++        base: float,
++        short_factor: list[float],
++        attention_scaling: float = 1.0,
++        interleaved: bool = False,
++    ) -> None:
++        super().__init__()
++        with torch.device("cpu"):
++            ext = torch.tensor(short_factor, dtype=torch.float32)
++            inv_freq = 1.0 / (
++                ext * base ** (torch.arange(0, rotary_dim, 2, dtype=torch.float32) / rotary_dim)
++            )
++            self._freqs = inv_freq
++            self._rope = RoPE(scale=1.0, dims=rotary_dim, interleaved=interleaved)
++            scale_vec = torch.ones(head_dim, dtype=torch.float32)
++            scale_vec[:rotary_dim] = attention_scaling
++            self._scale_vec = scale_vec
++
++    def forward(
++        self: Self,
++        x: torch.Tensor,
++        position_ids: torch.Tensor | None = None,
++        offset: torch.Tensor | None = None,
++    ) -> torch.Tensor:
++        out = self._rope(x, position_ids=position_ids, freqs=self._freqs, offset=offset)
++        return out * self._scale_vec.to(out.dtype)
++
++
++def compute_longrope_attention_scaling(
++    max_position_embeddings: int, original_max_position_embeddings: int
++) -> float:
++    """HuggingFace `_compute_longrope_parameters` attention factor."""
++    factor = max_position_embeddings / original_max_position_embeddings
++    if factor <= 1.0:
++        return 1.0
++    return math.sqrt(1 + math.log(factor) / math.log(original_max_position_embeddings))
++
++
+ def initialize_rope(
+     dims: int | None = None,
+     base: float = 1e4,
+@@ -132,6 +243,22 @@ def initialize_rope(
+             scale = 1 / scaling_config["factor"] if rope_type == "linear" else 1.0
+             rope = RoPE(scale=float(scale), base=float(base), dims=dims, interleaved=interleaved)
+ 
++        case "llama3":
++            if dims is None:
++                msg = "dims is required for llama3 rope"
++                raise ValueError(msg)
++            rope = Llama3RoPE(
++                dims,
++                base=float(base),
++                factor=float(scaling_config["factor"]),
++                low_freq_factor=float(scaling_config["low_freq_factor"]),
++                high_freq_factor=float(scaling_config["high_freq_factor"]),
++                original_max_position_embeddings=int(
++                    scaling_config["original_max_position_embeddings"]
++                ),
++                interleaved=interleaved,
++            )
++
+         case "yarn":
+             if dims is None:
+                 msg = "dims is required for yarn rope"

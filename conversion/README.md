@@ -2,6 +2,12 @@
 
 PyTorch → Core AI `.aimodel`: re-authored models + convert / verify / compress scripts.
 
+**One-command entry point**: verified ship configs are indexed in [`recipes.toml`](recipes.toml)
+and run through [`zoo_convert.py`](zoo_convert.py) —
+`python3 zoo_convert.py doctor` checks your venv + overlay wiring, then
+`python3 zoo_convert.py run qwen3.5-0.8b`. The model authoring code the scripts import is
+packaged in [`overlay/`](overlay/) (pinned apple/coreai-models base + patch + files).
+
 ## How it relates to Apple's `coreai_models`
 
 The re-authored decoders use `coreai_models` primitives (KVCache, RMSNorm, RoPE, SDPA, SSMState,
@@ -14,9 +20,10 @@ overlay** of that package. Concretely, the additions are:
   presets + `export/{presets,metadata,macos,pipeline}.py` hooks (e.g. `export_core()` routing,
   macOS int8 palettization, multi-function front-end gather).
 
-> ⚠️ These currently live as working-tree edits on a local `coreai-models` checkout. Packaging them
-> as a clean installable overlay (a thin fork or a patch set applied on top of a pinned
-> `coreai-models`) is a TODO so this repo is self-contained.
+These are packaged as a pinned-base patch set + file overlay in [`overlay/`](overlay/) —
+`python3 overlay/apply.py /path/to/coreai-models` on a fresh upstream clone reproduces the
+conversion environment byte-for-byte (verified 2026-07-03). After new porting work on the live
+checkout, refresh it with `overlay/regen.sh`.
 
 ## Scripts (current locations, to be consolidated here)
 
