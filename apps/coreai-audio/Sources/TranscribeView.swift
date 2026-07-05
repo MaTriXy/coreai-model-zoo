@@ -32,22 +32,34 @@ struct TranscribeView: View {
             }
 
             HStack(spacing: 12) {
+                if model.engine == .nemotron {
+                    // The streaming differentiator: transcribe WHILE speaking, no stop-then-wait.
+                    Button {
+                        model.toggleLive()
+                    } label: {
+                        Label(model.live ? "Stop" : "Live",
+                              systemImage: model.live ? "stop.circle.fill" : "waveform.badge.mic")
+                    }
+                    .disabled(!model.loaded || model.busy || model.recording)
+                    .tint(model.live ? .red : .accentColor)
+                }
+
                 Button {
                     model.toggleRecord()
                 } label: {
                     Label(model.recording ? "Stop" : "Record",
                           systemImage: model.recording ? "stop.circle.fill" : "mic.circle")
                 }
-                .disabled(!model.loaded || model.busy)
+                .disabled(!model.loaded || model.busy || model.live)
                 .tint(model.recording ? .red : .accentColor)
 
                 Button { showImporter = true } label: {
                     Label("Choose…", systemImage: "waveform")
-                }.disabled(!model.loaded || model.busy || model.recording)
+                }.disabled(!model.loaded || model.busy || model.recording || model.live)
 
                 Button { Task { await model.transcribeClip() } } label: {
                     Label("Transcribe", systemImage: "text.bubble")
-                }.disabled(!model.loaded || model.busy || model.recording)
+                }.disabled(!model.loaded || model.busy || model.recording || model.live)
             }
 
             Text(model.clipName).font(.footnote).foregroundStyle(.secondary)
