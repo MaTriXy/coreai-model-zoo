@@ -365,7 +365,7 @@ struct ChatView: View {
                     case .ane: "~2.1–4.7"
                     case .gemmaTbl: "~2.0–4.8"
                     case .qwen: "~1.3"
-                    case .qwen2b: "~2.4"
+                    case .qwen2b: "~2.2"
                     case .lfm2: "~1.5"
                     case .granite: "~1.2"
                     case .minicpm5: "~2.0"

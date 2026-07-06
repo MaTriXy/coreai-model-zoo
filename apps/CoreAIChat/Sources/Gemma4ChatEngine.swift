@@ -40,7 +40,7 @@ protocol Gemma4Backend: AnyObject {
 /// The MODEL level of the picker. GPU/ANE is a compute-unit toggle one level
 /// below this (gemma only — the pipelined models are GPU-only by design).
 enum ChatModel: String, CaseIterable, Identifiable {
-    case gemma = "Gemma 4 E2B", qwen = "Qwen3.5 0.8B", qwen2b = "Qwen3.5 2B",
+    case gemma = "Gemma 4 E2B", qwen = "Qwen3.5 0.8B", qwen2b = "Youtu-LLM 2B",
          lfm2 = "LFM2.5 1.2B", granite = "Granite 1B", minicpm5 = "MiniCPM5 1B",
          fastcontext = "BitCPM-8B 1.58bit",
          qwen3vl = "Qwen3-VL 2B", qwen3vl4b = "Qwen3-VL 4B", gemma4vl = "Gemma 4 VL",
@@ -84,7 +84,7 @@ enum GemmaMode: String, CaseIterable, Identifiable {
         case .ane: "Gemma 4 E2B · ANE"
         case .gemmaTbl: "Gemma 4 E2B · ⚡"
         case .qwen: "Qwen3.5 0.8B"
-        case .qwen2b: "Qwen3.5 2B"
+        case .qwen2b: "Youtu-LLM 2B ⚡MLA"
         case .lfm2: "LFM2.5 1.2B"
         case .granite: "Granite 4.0-H 1B"
         case .minicpm5: "MiniCPM5 1B"
@@ -176,7 +176,7 @@ final class Gemma4ChatEngine: ObservableObject {
     static func defaultRepo(for mode: GemmaMode) -> String {
         switch mode {
         case .qwen: "https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreAI"
-        case .qwen2b: "https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreAI"
+        case .qwen2b: "https://huggingface.co/mlboydaisuke/Youtu-LLM-2B-CoreAI"
         case .lfm2: "https://huggingface.co/mlboydaisuke/LFM2.5-1.2B-CoreAI"
         case .granite: "https://huggingface.co/mlboydaisuke/granite-4.0-h-CoreAI"
         case .minicpm5: "https://huggingface.co/mlboydaisuke/MiniCPM5-1B-CoreAI"
@@ -640,6 +640,8 @@ final class Gemma4ChatEngine: ObservableObject {
             await generate(p, maxNew: Int(env["GEMMA_N"] ?? "24") ?? 24)
             print("[chat] OUT >>> \(output)")
             print("[chat] \(stats)")
+            fflush(stdout)  // headless via devicectl --console: flush the block-buffered stdout
+                            // (the ~4 short autotest lines never fill the 4 KB pipe buffer on their own)
         }
     }
 }

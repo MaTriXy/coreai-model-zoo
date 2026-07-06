@@ -72,11 +72,18 @@ final class PipelinedBackend {
         hfRemotePath: "gpu-pipelined/qwen3_5_0_8b_decode_int8hu_perchan_sym",
         label: "Qwen ⚡pipelined",
         warmupToken: 9707)
+    // DEMO: the qwen2b slot is repurposed for Youtu-LLM-2B (Tencent, dense DeepSeek-MLA
+    // with the absorbed flash-decode Metal kernel — zoo's first iPhone/dense MLA). int8
+    // per-block-32 body + int8 head. Chat = <|User|>…<|Assistant|> (thinking mode on by
+    // default -> the model emits <think>…</think> then the answer). eos <|end_of_text|>
+    // 128001 (tokenizer eos), turn-end <|eot_id|> 128009.
     nonisolated static let qwen2b = Spec(
-        bundleName: "qwen3_5_2b_decode_int8lin",
-        hfRemotePath: "gpu-pipelined/qwen3_5_2b_decode_int8lin",
-        label: "Qwen 2B ⚡pipelined",
-        warmupToken: 9707)
+        bundleName: "youtu_llm_2b_decode_absorbed_msdpa",
+        hfRemotePath: "gpu-pipelined/youtu_llm_2b_decode_absorbed_msdpa",
+        label: "Youtu-2B ⚡MLA",
+        warmupToken: 837,
+        fallbackTemplate: "<|begin_of_text|><|User|>%@<|Assistant|>",
+        stopTokens: [128009])
     nonisolated static let lfm2 = Spec(
         bundleName: "lfm2_5_1_2b_instruct_decode_int8lin",
         hfRemotePath: "gpu-pipelined/lfm2_5_1_2b_instruct_decode_int8lin",
