@@ -1,0 +1,14 @@
+# Large model artifacts & oracle blobs — reproduce via the scripts here (never commit).
+ship_macos/
+ship_ios/
+artifacts/
+_nemo/
+_dl/
+_mel_tables/
+__pycache__/
+*.npz
+*.npy
+*.wav
+*.f32
+*.aimodel/
+*.aimodelc/
