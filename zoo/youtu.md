@@ -32,9 +32,20 @@ Architecturally this is **dense DeepSeek-V2/V3 MLA on every layer + a plain SwiG
 
 ## Use it
 
-▶️ **Run it** — the [CoreAIChat](../apps/CoreAIChat) on-device chat app: pick **Youtu-LLM 2B**
-in the model picker (2B needs the increased-memory entitlement, which the app ships). The
-model shows its `<think>` reasoning, then the answer.
+💻 **Build with it** — [CoreAIKit](https://github.com/john-rocky/coreai-kit) (SPM), one line:
+
+```swift
+import CoreAIKit
+
+let chat = try await ChatSession(catalog: "youtu-llm-2b")
+let reply = try await chat.respond(to: "What can you do, offline?")
+// downloads once, runs fully on-device; the <think> reasoning arrives as .thinking events,
+// reply.content is the final answer
+```
+
+▶️ **Run it (source)** — the [ChatDemo runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo)
+(pick "Youtu-LLM 2B"), or the zoo's own [CoreAIChat](../apps/CoreAIChat) on-device app. Verified
+on Mac via `swift run chat-cli --model youtu-llm-2b` → *"The capital of France is Paris."*
 
 The bundle is a standard decode-only `LanguageBundle` on Apple's `coreai-pipelined` GPU engine
 (`COREAI_CHUNK_THRESHOLD=1`, never `engine.warmup()`), chat-templated
