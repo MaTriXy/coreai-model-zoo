@@ -52,7 +52,9 @@ coreai-models/.venv/bin/python conversion/sortformer_diar/gate_long.py         #
 ```
 
 Conversion + the authoritative Swift-port reference:
-[`conversion/sortformer_diar`](../conversion/sortformer_diar) (`HANDOFF.md`).
+[`conversion/sortformer_diar`](../conversion/sortformer_diar) (`HANDOFF.md`). Porting lessons (export
+boundary, the log-mel cosine trap, the AOSC compression bug, the long-clip gate):
+[`knowledge/sortformer-speaker-diarization.md`](../knowledge/sortformer-speaker-diarization.md).
 
 - 🤗 [Streaming-Sortformer-Diar-CoreAI](https://huggingface.co/mlboydaisuke/Streaming-Sortformer-Diar-CoreAI)
   — macOS `.aimodel` + iOS `.h18p.aimodelc` + mel filterbank.
