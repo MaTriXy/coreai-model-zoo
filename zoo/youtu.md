@@ -101,3 +101,5 @@ COREAI_CHUNK_THRESHOLD=1 .build/release/llm-runner \
 
 Model overlay: `models/macos/youtu.py` (naive dense-MLA + loader) + `youtu_absorbed.py` (absorbed
 decode, reusing `glm4_moe_lite_absorbed`). **Decode-only loop-free** for the pipelined engine.
+Full port notes (reuse, gates, int4 cliff, split_g non-lever, chat template):
+[`knowledge/youtu-mla-port.md`](../knowledge/youtu-mla-port.md).
