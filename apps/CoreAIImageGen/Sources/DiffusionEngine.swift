@@ -43,6 +43,9 @@ final class DiffusionEngine: ObservableObject {
         let title: String
         let defaultSteps: Int
         let defaultGuidance: Float
+        // The Hub repo also hosts in-context edit transformers, fetched on demand (not in the
+        // base download) so text-to-image users don't pay for the ~4 GB edit weights up front.
+        var hasEditAssets: Bool = false
     }
 
     // Hosted catalog — macOS only. FLUX.2 klein 4B overruns the iOS memory limit, so the
@@ -54,7 +57,8 @@ final class DiffusionEngine: ObservableObject {
                 repoId: "mlboydaisuke/FLUX.2-klein-4B-CoreAI",
                 bundleDirName: "FLUX.2-klein-4B",
                 title: "FLUX.2 klein 4B",
-                defaultSteps: 4, defaultGuidance: 1.0)
+                defaultSteps: 4, defaultGuidance: 1.0,
+                hasEditAssets: true)
         ]
         #else
         return []
@@ -96,6 +100,22 @@ final class DiffusionEngine: ObservableObject {
     @Published var loadSeconds: Double?
     @Published var generateSeconds: Double?
     @Published var imageSize: String = ""
+    /// True once a pipeline with a VAE encoder is loaded — FLUX.2 bundles ship one, so
+    /// the loaded model can run image-to-image (the UI reveals its mode switch on this).
+    @Published var supportsImg2Img: Bool = false
+    /// Native square side the loaded model generates at (e.g. 1024). Used to letterbox an
+    /// image-to-image source into the square the runtime expects, then crop the result back.
+    private var modelSide: Int = 1024
+    /// Directory the loaded bundle was read from — used to locate the edit-sequence transformer.
+    private var modelDir: URL?
+    /// True when the loaded FLUX.2 bundle also ships an edit-sequence transformer (in-context edit).
+    @Published var supportsEdit: Bool = false
+    /// True when the bundle also ships the two-reference edit transformer (combine two images).
+    @Published var supports2refEdit: Bool = false
+    /// True when the loaded hosted model can fetch its edit transformers on demand (not yet local).
+    @Published var canDownloadEditAssets: Bool = false
+    private var loadedRepoId: String?
+    private var loadedHasEditAssets = false
 
     /// Shared range-chunked downloader (atomic placement + cross-launch resume).
     let downloader = ModelDownloader()
@@ -121,6 +141,11 @@ final class DiffusionEngine: ObservableObject {
         .init(remote: "VAEEncoder_half.aimodel", local: "VAEEncoder_half.aimodel"),
         .init(remote: "tokenizer", local: "tokenizer"),
     ]
+    // Edit transformers — fetched on demand (not part of the base download).
+    private static let editDirectoryItems: [ModelDownloader.Item] = [
+        .init(remote: "Transformer_edit_512.aimodel", local: "Transformer_edit_512.aimodel"),
+        .init(remote: "Transformer_edit_2ref_512.aimodel", local: "Transformer_edit_2ref_512.aimodel"),
+    ]
     #else
     private static let fluxMode: DecodeResolution = .auto
     private static let decodeResolution: DecodeResolution = .full
@@ -130,6 +155,11 @@ final class DiffusionEngine: ObservableObject {
         .init(remote: "VAEDecoder.aimodel", local: "VAEDecoder.aimodel"),
         .init(remote: "VAEEncoder.aimodel", local: "VAEEncoder.aimodel"),
         .init(remote: "tokenizer", local: "tokenizer"),
+    ]
+    // Edit transformers — fetched on demand (not part of the base download).
+    private static let editDirectoryItems: [ModelDownloader.Item] = [
+        .init(remote: "Transformer_edit.aimodel", local: "Transformer_edit.aimodel"),
+        .init(remote: "Transformer_edit_2ref.aimodel", local: "Transformer_edit_2ref.aimodel"),
     ]
     #endif
 
@@ -145,6 +175,8 @@ final class DiffusionEngine: ObservableObject {
         work?.cancel()
         image = nil; exportURL = nil; loadSeconds = nil; generateSeconds = nil
         modelTitle = option.title
+        loadedRepoId = option.repoId
+        loadedHasEditAssets = option.hasEditAssets
         status = .downloading
         // Keep the screen awake for the multi-GB download: if the device auto-locks the app
         // gets suspended and the (foreground) URLSession transfer stalls. Re-enabled when the
@@ -184,6 +216,8 @@ final class DiffusionEngine: ObservableObject {
         work?.cancel()
         image = nil; exportURL = nil; loadSeconds = nil; generateSeconds = nil
         modelTitle = url.lastPathComponent
+        loadedRepoId = nil
+        loadedHasEditAssets = false
         status = .loading
         work = Task {
             do { try await self.loadPipeline(at: url) }
@@ -191,8 +225,25 @@ final class DiffusionEngine: ObservableObject {
         }
     }
 
+    /// Edit-transformer bundle names for this platform (full 1024 vs half 512), by reference count.
+    #if os(iOS)
+    private static let edit1RefName = "Transformer_edit_512.aimodel"
+    private static let edit2RefName = "Transformer_edit_2ref_512.aimodel"
+    #else
+    private static let edit1RefName = "Transformer_edit.aimodel"
+    private static let edit2RefName = "Transformer_edit_2ref.aimodel"
+    #endif
+    private static func editTransformerName(refCount: Int) -> String {
+        refCount >= 2 ? edit2RefName : edit1RefName
+    }
+
     private func loadPipeline(at url: URL) async throws {
         status = .loading
+        supportsImg2Img = false
+        supportsEdit = false
+        supports2refEdit = false
+        canDownloadEditAssets = false
+        modelDir = url
         let start = ContinuousClock.now
         let desc = try PipelineDescriptor.resolve(at: url, config: .auto)
 
@@ -211,6 +262,15 @@ final class DiffusionEngine: ObservableObject {
         self.loadSeconds = Self.seconds(since: start)
         let size = built.defaultImageSize
         self.imageSize = "\(size.width)×\(size.height)"
+        self.modelSide = size.width
+        self.supportsImg2Img = built.supportsImageToImage
+        let fm = FileManager.default
+        self.supportsEdit = (desc.type == .flux2)
+            && fm.fileExists(atPath: url.appendingPathComponent(Self.edit1RefName).path)
+        self.supports2refEdit = self.supportsEdit
+            && fm.fileExists(atPath: url.appendingPathComponent(Self.edit2RefName).path)
+        // Hosted FLUX bundles can fetch the edit transformers on demand if not already present.
+        self.canDownloadEditAssets = self.loadedHasEditAssets && !self.supportsEdit
         self.status = .ready
     }
 
@@ -244,7 +304,11 @@ final class DiffusionEngine: ObservableObject {
 
     // MARK: - Generation
 
-    func generate(prompt: String, negativePrompt: String, steps: Int, guidance: Float, seed: UInt32) {
+    /// Generate an image. Pass `startingImage` (with `strength` in 0…1) to run image-to-image:
+    /// the runtime encodes it through the VAE encoder, blends in noise up to `strength`, and
+    /// denoises from there — higher strength deviates further from the source. `nil` is txt2img.
+    func generate(prompt: String, negativePrompt: String, steps: Int, guidance: Float, seed: UInt32,
+                  startingImage: CGImage? = nil, strength: Float = 1.0) {
         guard let pipeline, let desc = descriptor, canGenerate else { return }
         work?.cancel()
         savedURL = nil
@@ -256,6 +320,11 @@ final class DiffusionEngine: ObservableObject {
             (desc.type == .flux2 || desc.type == .stableDiffusion3)
             ? .discreteFlow : .dpmSolverMultistep
 
+        // Image-to-image: the model only generates a fixed square. Letterbox the source into
+        // that square (no stretching) and remember its aspect ratio to crop the result back.
+        let sourceSize: (w: Int, h: Int)? = startingImage.map { ($0.width, $0.height) }
+        let squaredSource = startingImage.map { Self.fitToSquare($0, side: modelSide) }
+
         let config = PipelineConfiguration(
             prompt: prompt,
             negativePrompt: negativePrompt,
@@ -263,6 +332,8 @@ final class DiffusionEngine: ObservableObject {
             stepCount: steps,
             guidanceScale: guidance,
             schedulerType: scheduler,
+            startingImage: squaredSource,
+            strength: strength,
             encoderScaleFactor: desc.encoderScaleFactor ?? 0.18215,
             decoderScaleFactor: desc.decoderScaleFactor ?? 0.18215,
             decoderShiftFactor: desc.decoderShiftFactor ?? 0.0,
@@ -280,11 +351,96 @@ final class DiffusionEngine: ObservableObject {
                 }
                 if token.isCancelled { self.status = .ready; return }
                 self.generateSeconds = Self.seconds(since: start)
-                let cg = result.images.first
+                var cg = result.images.first
+                // Crop the square result back to the source's aspect ratio (image-to-image only).
+                if let out = cg, let s = sourceSize, s.w != s.h {
+                    cg = Self.cropToAspect(out, aspectW: s.w, aspectH: s.h)
+                }
                 self.image = cg
+                if let cg { self.imageSize = "\(cg.width)×\(cg.height)" }
                 self.exportURL = Self.writeTempPNG(cg)
                 self.status = .ready
             } catch {
+                self.status = .error("\(error)")
+            }
+        }
+    }
+
+    /// Single-reference convenience.
+    func edit(referenceImage: CGImage, instruction: String, steps: Int, seed: UInt32) {
+        edit(referenceImages: [referenceImage], instruction: instruction, steps: steps, seed: seed)
+    }
+
+    /// FLUX.2 in-context edit: denoise a fresh output while the transformer attends to one or more
+    /// clean reference images, so the instruction edits/combines content while keeping the subjects.
+    /// Requires the matching edit-sequence transformer (Transformer_edit / _2ref) in the bundle.
+    func edit(referenceImages: [CGImage], instruction: String, steps: Int, seed: UInt32) {
+        guard let flux = pipeline as? Flux2Pipeline, let dir = modelDir, canGenerate,
+              !referenceImages.isEmpty else { return }
+        work?.cancel()
+        savedURL = nil
+        let token = CancellationToken()
+        cancelToken = token
+        status = .generating(step: 0, total: steps)
+
+        let editName = Self.editTransformerName(refCount: referenceImages.count)
+        let editURL = dir.appendingPathComponent(editName)
+        work = Task {
+            do {
+                guard FileManager.default.fileExists(atPath: editURL.path) else {
+                    self.status = .error("Edit transformer missing (\(editName)).")
+                    return
+                }
+                let editTransformer = CoreAIDiffusionModelFunction(modelURL: editURL)
+                let start = ContinuousClock.now
+                let result = try await flux.editImages(
+                    referenceImages: referenceImages, instruction: instruction,
+                    editTransformer: editTransformer, stepCount: steps, seed: seed
+                ) { @Sendable progress in
+                    let s = progress.step, t = progress.totalSteps
+                    Task { @MainActor in self.status = .generating(step: s, total: t) }
+                    return !token.isCancelled
+                }
+                if token.isCancelled { self.status = .ready; return }
+                self.generateSeconds = Self.seconds(since: start)
+                let cg = result.images.first
+                self.image = cg
+                if let cg { self.imageSize = "\(cg.width)×\(cg.height)" }
+                self.exportURL = Self.writeTempPNG(cg)
+                self.status = .ready
+            } catch {
+                self.status = .error("\(error)")
+            }
+        }
+    }
+
+    /// Fetch the in-context edit transformers on demand (they're not in the base download, so
+    /// text-to-image users don't pay for the ~4 GB edit weights). Recomputes edit support after.
+    func downloadEditAssets() {
+        guard let repoId = loadedRepoId, let dir = modelDir, !isDownloadingOrLoading else { return }
+        work?.cancel()
+        canDownloadEditAssets = false
+        status = .downloading
+        Self.setIdleTimerDisabled(true)
+        work = Task {
+            defer { Self.setIdleTimerDisabled(false) }
+            do {
+                await downloader.fetch(
+                    repo: "https://huggingface.co/\(repoId)",
+                    items: Self.editDirectoryItems, into: dir)
+                try Task.checkCancellation()
+                if case .failed(let msg) = downloader.phase { throw Self.err(msg) }
+                let fm = FileManager.default
+                self.supportsEdit = fm.fileExists(atPath: dir.appendingPathComponent(Self.edit1RefName).path)
+                self.supports2refEdit = self.supportsEdit
+                    && fm.fileExists(atPath: dir.appendingPathComponent(Self.edit2RefName).path)
+                self.canDownloadEditAssets = self.loadedHasEditAssets && !self.supportsEdit
+                self.status = .ready
+            } catch is CancellationError {
+                self.canDownloadEditAssets = self.loadedHasEditAssets
+                self.status = .ready
+            } catch {
+                self.canDownloadEditAssets = self.loadedHasEditAssets
                 self.status = .error("\(error)")
             }
         }
@@ -333,6 +489,40 @@ final class DiffusionEngine: ObservableObject {
     }
 
     // MARK: - Helpers
+
+    /// Letterbox an image into `side`×`side` without stretching: an aspect-fill (cover) copy
+    /// fills the square as background, the whole aspect-fit image is drawn centered on top. The
+    /// model then edits a coherent full-bleed square; the padded margins are cropped off after.
+    private static func fitToSquare(_ image: CGImage, side: Int) -> CGImage {
+        guard let cs = CGColorSpace(name: CGColorSpace.sRGB),
+              let ctx = CGContext(
+                data: nil, width: side, height: side, bitsPerComponent: 8,
+                bytesPerRow: 4 * side, space: cs,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return image }
+        ctx.interpolationQuality = .high
+        let w = CGFloat(image.width), h = CGFloat(image.height), s = CGFloat(side)
+        // Cover background (fills the square, cropping the overflow).
+        let cover = max(s / w, s / h)
+        let cw = w * cover, ch = h * cover
+        ctx.draw(image, in: CGRect(x: (s - cw) / 2, y: (s - ch) / 2, width: cw, height: ch))
+        // Fit foreground (whole image, centered).
+        let fit = min(s / w, s / h)
+        let fw = w * fit, fh = h * fit
+        ctx.draw(image, in: CGRect(x: (s - fw) / 2, y: (s - fh) / 2, width: fw, height: fh))
+        return ctx.makeImage() ?? image
+    }
+
+    /// Crop a square result back to the source aspect ratio (the centered aspect-fit region).
+    private static func cropToAspect(_ square: CGImage, aspectW: Int, aspectH: Int) -> CGImage {
+        let s = CGFloat(min(square.width, square.height))
+        let fit = min(s / CGFloat(aspectW), s / CGFloat(aspectH))
+        let fw = (CGFloat(aspectW) * fit).rounded()
+        let fh = (CGFloat(aspectH) * fit).rounded()
+        let x = ((CGFloat(square.width) - fw) / 2).rounded()
+        let y = ((CGFloat(square.height) - fh) / 2).rounded()
+        return square.cropping(to: CGRect(x: x, y: y, width: fw, height: fh)) ?? square
+    }
 
     /// Write a CGImage to a temp PNG for sharing/saving via SwiftUI ShareLink.
     private static func writeTempPNG(_ cg: CGImage?) -> URL? {

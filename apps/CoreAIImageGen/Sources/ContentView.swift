@@ -1,8 +1,35 @@
+import CoreGraphics
+import ImageIO
 import SwiftUI
 import UniformTypeIdentifiers
 #if canImport(AppKit)
 import AppKit
 #endif
+
+/// Generation mode. Text→Image (pure prompt), Image→Image (SDEdit restyle with strength), and
+/// Edit (FLUX.2 in-context edit: attend to a reference image, prompt is the edit instruction).
+private enum GenMode: String, CaseIterable, Identifiable {
+    case textToImage = "Text → Image"
+    case imageToImage = "Image → Image"
+    case edit = "Edit"
+    var id: String { rawValue }
+    /// True when this mode needs a source/reference image.
+    var usesImage: Bool { self != .textToImage }
+    var actionLabel: String {
+        switch self {
+        case .textToImage: return "Generate"
+        case .imageToImage: return "Transform"
+        case .edit: return "Apply Edit"
+        }
+    }
+    var actionIcon: String {
+        switch self {
+        case .textToImage: return "sparkles"
+        case .imageToImage: return "wand.and.stars"
+        case .edit: return "wand.and.rays"
+        }
+    }
+}
 
 struct ContentView: View {
     @StateObject private var engine = DiffusionEngine()
@@ -16,13 +43,34 @@ struct ContentView: View {
     @State private var seedText = "42"
     @State private var showingFolderImporter = false
 
+    // Image-to-image. Default 0.85 matches the runtime's own default: a guidance-distilled
+    // 4-step model needs a high strength to actually change the image — below ~0.6 the
+    // denoiser mostly reconstructs the source, which reads as "nothing happened".
+    @State private var mode: GenMode = .textToImage
+    @State private var inputImage: CGImage?
+    @State private var strength: Float = 0.85
+    @State private var showingImageImporter = false
+    // Edit mode: an optional second reference image (combine / place subject across images).
+    @State private var inputImage2: CGImage?
+    @State private var showingImageImporter2 = false
+
+    /// Modes the loaded model supports: Image→Image needs a VAE encoder, Edit needs the
+    /// edit-sequence transformer. Text→Image is always available.
+    private var availableModes: [GenMode] {
+        var m: [GenMode] = [.textToImage]
+        if engine.supportsImg2Img { m.append(.imageToImage) }
+        if engine.supportsEdit || engine.canDownloadEditAssets { m.append(.edit) }
+        return m
+    }
+
     var body: some View {
         #if os(macOS)
         HSplitView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     group("Model") { modelControls }
-                    group("Prompt") { promptControls(maxWidth: nil) }
+                    if availableModes.count > 1 { group("Mode") { modeControls } }
+                    group(mode == .edit ? "Instruction" : "Prompt") { promptControls(maxWidth: nil) }
                     group("Settings") { settingsControls }
                     generateButton
                 }
@@ -31,6 +79,18 @@ struct ContentView: View {
             .frame(minWidth: 320, idealWidth: 350, maxWidth: 440)
             .fileImporter(isPresented: $showingFolderImporter, allowedContentTypes: [.folder]) { result in
                 if case .success(let url) = result { engine.loadLocal(url) }
+            }
+            .fileImporter(isPresented: $showingImageImporter, allowedContentTypes: [.image]) { result in
+                if case .success(let url) = result { loadInputImage(from: url, into: 1) }
+            }
+            .fileImporter(isPresented: $showingImageImporter2, allowedContentTypes: [.image]) { result in
+                if case .success(let url) = result { loadInputImage(from: url, into: 2) }
+            }
+            .onChange(of: engine.supportsImg2Img) { _, _ in
+                if !availableModes.contains(mode) { mode = .textToImage }
+            }
+            .onChange(of: engine.supportsEdit) { _, _ in
+                if !availableModes.contains(mode) { mode = .textToImage }
             }
             canvas.frame(minWidth: 460)
         }
@@ -50,7 +110,8 @@ struct ContentView: View {
                             .frame(height: 230)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         card("Model") { modelControls }
-                        card("Prompt") { promptControls(maxWidth: contentWidth) }
+                        if availableModes.count > 1 { card("Mode") { modeControls } }
+                        card(mode == .edit ? "Instruction" : "Prompt") { promptControls(maxWidth: contentWidth) }
                         card("Settings") { settingsControls }
                     }
                     .padding(16)
@@ -68,6 +129,18 @@ struct ContentView: View {
             .navigationBarTitleDisplayMode(.inline)
             .fileImporter(isPresented: $showingFolderImporter, allowedContentTypes: [.folder]) { result in
                 if case .success(let url) = result { engine.loadLocal(url) }
+            }
+            .fileImporter(isPresented: $showingImageImporter, allowedContentTypes: [.image]) { result in
+                if case .success(let url) = result { loadInputImage(from: url, into: 1) }
+            }
+            .fileImporter(isPresented: $showingImageImporter2, allowedContentTypes: [.image]) { result in
+                if case .success(let url) = result { loadInputImage(from: url, into: 2) }
+            }
+            .onChange(of: engine.supportsImg2Img) { _, _ in
+                if !availableModes.contains(mode) { mode = .textToImage }
+            }
+            .onChange(of: engine.supportsEdit) { _, _ in
+                if !availableModes.contains(mode) { mode = .textToImage }
             }
         }
         #endif
@@ -115,6 +188,109 @@ struct ContentView: View {
         }
 
         statusLine
+    }
+
+    // Mode switch + (in image-to-image) the source picker and strength. Shown only when the
+    // loaded model has a VAE encoder — FLUX.2 bundles do; a bare txt2img model would not.
+    @ViewBuilder private var modeControls: some View {
+        Picker("Mode", selection: $mode) {
+            ForEach(availableModes) { Text($0.rawValue).tag($0) }
+        }
+        .pickerStyle(.segmented)
+        .disabled(engine.status.isBusy)
+
+        if mode.usesImage {
+            if mode == .edit && !engine.supportsEdit {
+                editDownloadPrompt
+            } else {
+                sourceImageControls
+            }
+        }
+    }
+
+    /// Shown in Edit mode when the edit transformers aren't downloaded yet (hosted model).
+    @ViewBuilder private var editDownloadPrompt: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button { engine.downloadEditAssets() } label: {
+                Label("Download edit models (~4 GB)", systemImage: "arrow.down.circle")
+            }
+            .disabled(engine.status.isBusy)
+            Text("In-context editing uses separate transformers, fetched on demand.")
+                .font(.caption2).foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder private var sourceImageControls: some View {
+        // Source preview — full width at its true aspect ratio, tap to (re)choose.
+        Group {
+            if let cg = inputImage {
+                Image(decorative: cg, scale: 1)
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: .infinity)
+                    .frame(maxHeight: 240)
+            } else {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color(white: 0.12))
+                    .frame(height: 120)
+                    .overlay {
+                        VStack(spacing: 6) {
+                            Image(systemName: "photo.badge.plus").font(.title2)
+                            Text("Choose a source image").font(.caption)
+                        }
+                        .foregroundStyle(.secondary)
+                    }
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .contentShape(Rectangle())
+        .onTapGesture { if !engine.status.isBusy { showingImageImporter = true } }
+
+        Button { showingImageImporter = true } label: {
+            Label(inputImage == nil ? "Choose Image…" : "Change Image…", systemImage: "photo")
+                .frame(maxWidth: .infinity)
+        }
+        .disabled(engine.status.isBusy)
+
+        if mode == .imageToImage {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Strength")
+                    Spacer()
+                    Text(String(format: "%.2f", strength)).monospacedDigit().foregroundStyle(.secondary)
+                }
+                Slider(value: $strength, in: 0.3...1.0)
+                Text("0.8–0.9 for content edits · 0.5–0.75 for style/texture · lower keeps the source.")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+        } else if mode == .edit {
+            if engine.supports2refEdit {
+                HStack(spacing: 10) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8).fill(Color(white: 0.12))
+                        if let cg = inputImage2 {
+                            Image(decorative: cg, scale: 1).resizable().aspectRatio(contentMode: .fit)
+                        } else {
+                            Image(systemName: "photo.badge.plus").foregroundStyle(.secondary)
+                        }
+                    }
+                    .frame(width: 52, height: 52)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    Button { showingImageImporter2 = true } label: {
+                        Label(inputImage2 == nil ? "Add 2nd reference…" : "Change 2nd", systemImage: "photo.on.rectangle")
+                    }
+                    .disabled(engine.status.isBusy)
+                    if inputImage2 != nil {
+                        Button { inputImage2 = nil } label: { Image(systemName: "xmark.circle.fill") }
+                            .buttonStyle(.borderless).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+            }
+            Text("References are kept; the instruction edits/combines them (e.g. \"add a red hat\", or with a 2nd reference \"put the subject into this scene\").")
+                .font(.caption2).foregroundStyle(.secondary)
+        }
     }
 
     @ViewBuilder private func promptControls(maxWidth: CGFloat?) -> some View {
@@ -176,16 +352,25 @@ struct ContentView: View {
                 }
             } else {
                 Button {
-                    engine.generate(
-                        prompt: prompt,
-                        negativePrompt: negativePrompt,
-                        steps: steps,
-                        guidance: guidance,
-                        seed: UInt32(seedText) ?? 42)
+                    let seedValue = UInt32(seedText) ?? 42
+                    if mode == .edit, let ref = inputImage {
+                        var refs = [ref]
+                        if engine.supports2refEdit, let ref2 = inputImage2 { refs.append(ref2) }
+                        engine.edit(referenceImages: refs, instruction: prompt, steps: steps, seed: seedValue)
+                    } else {
+                        engine.generate(
+                            prompt: prompt, negativePrompt: negativePrompt,
+                            steps: steps, guidance: guidance, seed: seedValue,
+                            startingImage: mode == .imageToImage ? inputImage : nil,
+                            strength: strength)
+                    }
                 } label: {
-                    Label("Generate", systemImage: "sparkles").frame(maxWidth: .infinity)
+                    Label(mode.actionLabel, systemImage: mode.actionIcon).frame(maxWidth: .infinity)
                 }
-                .disabled(!engine.canGenerate || prompt.trimmingCharacters(in: .whitespaces).isEmpty)
+                .disabled(!engine.canGenerate
+                    || (mode != .imageToImage && prompt.trimmingCharacters(in: .whitespaces).isEmpty)
+                    || (mode.usesImage && inputImage == nil)
+                    || (mode == .edit && !engine.supportsEdit))
             }
         }
         .controlSize(.large)
@@ -239,6 +424,16 @@ struct ContentView: View {
             .buttonStyle(.borderless)
             .padding(10)
         }
+    }
+
+    /// Decode a user-picked image file into a CGImage for the image-to-image source.
+    /// The runtime resizes it to the model's native size, so any resolution is fine.
+    private func loadInputImage(from url: URL, into slot: Int = 1) {
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        guard let src = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let cg = CGImageSourceCreateImageAtIndex(src, 0, nil) else { return }
+        if slot == 2 { inputImage2 = cg } else { inputImage = cg }
     }
 
     /// Reveal a saved file in Finder (macOS); no-op elsewhere.
