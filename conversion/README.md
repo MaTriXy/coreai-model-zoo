@@ -125,6 +125,19 @@ checkout, refresh it with `overlay/regen.sh`.
   arrangement assets shipped raw for host-side assembly. App: `apps/CoreAIOCR` (drives the stock
   runtime via `InferenceFunction.MutableViews`). See [`../zoo/unlimited-ocr.md`](../zoo/unlimited-ocr.md)
   + [`../knowledge/unlimited-ocr-rswa-static-decode.md`](../knowledge/unlimited-ocr-rswa-static-decode.md).
+- **GLM-OCR — doc-OCR (GLM-4.V small): `export_glm_ocr_pipelined.py [fp16|int8lin|int8hu] [--grid-h H --grid-w W]`** —
+  zai-org/GLM-OCR (0.9B, MIT) → CogViT vision `.aimodel` (fp16) + a GLM text decoder (int8hu) on the
+  pipelined rope-shift rider (`image_embeds` + `rope_shift_start`/`rope_shift_amount`). GLM ChatML
+  (`[gMASK]<sop>…<|assistant|>`), single-pass `Text Recognition:`, tables → Markdown. App: `KitGlmOcrReader`
+  in `Examples/ReadDoc`. See [`../zoo/glm-ocr.md`](../zoo/glm-ocr.md)
+  + [`../knowledge/glm-ocr-port.md`](../knowledge/glm-ocr-port.md).
+- **MinerU2.5-Pro — whole-page auto-structuring doc-OCR (stock Qwen2-VL): `export_mineru_pipelined.py [fp16|int8lin] [--grid-h H --grid-w W] [--prefill-chunk 64]`** —
+  opendatalab/MinerU2.5-Pro (1.2B, Apache-2.0) → Qwen2-VL ViT vision `.aimodel` (fp16) + Qwen2-0.5B
+  int8lin decoder on the same rider. **Two grids**: 768 (32×24 portrait) recognition + 1036² (37×37
+  square) layout for the 2-stage pipeline (`Layout Detection:` → per-region recognition → `json2md`,
+  tables → `<table>` HTML via OTSL). `--prefill-chunk 64` = `pf64` multifunction chunked prefill. App:
+  `KitMineruReader.readStructured` in `Examples/ReadDoc`. See [`../zoo/mineru.md`](../zoo/mineru.md)
+  + [`../knowledge/mineru-port.md`](../knowledge/mineru-port.md).
 - **Qwen3.6-35B-A3B pipelined — the first MoE (in this dir): `export_qwen3_6_decode_pipelined.py [int8lin|int8hu]`** —
   Qwen3.5's hybrid decoder + a 256-expert top-8 sparse-MoE FFN (+ shared expert), 40 layers,
   GVA GatedDeltaNet (32 value / 16 key heads). Experts ride Apple's `SwitchGLU`/`GatherMM`;
