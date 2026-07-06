@@ -47,12 +47,23 @@ final class TranscribeModel: ObservableObject {
     @Published var clipName = "No audio loaded."
     @Published var transcript = ""
     @Published var language = ""
+    /// Diarize mode: label each speaker turn ("who said what") by running the chosen ASR on every
+    /// Sortformer speaker turn. Available only when the Diarize bundle is staged.
+    @Published var diarize = false
 
     private var whisper: KitWhisperModel?
     private var asr: KitASRModel?
     private var parakeet: KitParakeetModel?
     private var nemotron: KitNemotronModel?
+    private var diarizer: SortformerDiarizer?
     private var samples: [Float]?
+    /// Plays the chosen clip aloud when transcription starts, so you can hear what you picked
+    /// (the file importer gives no preview). 16 kHz mono — the same PCM fed to the model. Recreated
+    /// per clip so a fresh Transcribe restarts audio instead of queueing behind the previous clip.
+    private var player = AudioPlayer()
+
+    /// Whether the Sortformer diarize bundle is present (dev symlink on macOS / sideload on device).
+    var diarizeAvailable: Bool { DiarizeAssets.root != nil }
     private let recorder = MicRecorder()
     private let micStreamer = MicStreamer()
     private var liveTask: Task<Void, Never>?
@@ -248,6 +259,8 @@ final class TranscribeModel: ObservableObject {
 
     func transcribeClip() async {
         guard loaded, let samples, !busy, !live else { return }
+        playClip(samples)   // hear the clip you picked, in sync with transcription
+        if diarize { await transcribeDiarized(samples); return }
         busy = true
         transcript = ""; language = ""
         // Nemotron streams — no bucket, feed the whole clip; the batch engines cap at 30 s.
@@ -288,5 +301,84 @@ final class TranscribeModel: ObservableObject {
             status = "Transcription failed: \(error.localizedDescription)"
         }
         busy = false
+    }
+
+    // MARK: - Diarized transcription ("who said what")
+
+    /// Diarize the clip into speaker turns (Streaming Sortformer on Core AI), then transcribe each
+    /// turn's audio slice with the selected ASR engine and stitch a "Speaker N [t0–t1]: text"
+    /// transcript. No ASR word timestamps are needed — the diarizer supplies the turn boundaries.
+    private func transcribeDiarized(_ samples: [Float]) async {
+        busy = true; transcript = ""; language = ""
+        defer { busy = false }
+        status = "Diarizing — who spoke when…"
+        do {
+            let diar = try await ensureDiarizer()
+            let (segs, _) = try await diar.diarize(samples)
+            guard !segs.isEmpty else { transcript = "(no speech detected)"; status = "Done."; return }
+
+            let sr = 16000.0
+            let pad = 0.1                      // widen each turn slightly so onsets aren't clipped
+            let minTurn = Int(0.3 * sr)        // skip sub-0.3 s turns (too short to transcribe)
+            var speakerLabel: [Int: Int] = [:] // raw speaker -> display order (1-based, first-seen)
+            var lines: [String] = []
+
+            for (i, seg) in segs.enumerated() {
+                status = "Transcribing turn \(i + 1)/\(segs.count)…"
+                let a = max(0, Int((seg.startSec - pad) * sr))
+                let b = min(samples.count, Int((seg.endSec + pad) * sr))
+                guard b - a >= minTurn else { continue }
+                let text = try await transcribeSlice(Array(samples[a..<b]))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !text.isEmpty else { continue }
+                let label = speakerLabel[seg.speaker] ?? (speakerLabel.count + 1)
+                speakerLabel[seg.speaker] = label
+                lines.append(String(format: "Speaker %d [%.1f–%.1fs]: %@",
+                                    label, seg.startSec, seg.endSec, text))
+                transcript = lines.joined(separator: "\n\n")   // stream turns into the UI as they land
+            }
+            transcript = lines.isEmpty ? "(no speech transcribed)" : lines.joined(separator: "\n\n")
+            status = "Done — \(speakerLabel.count) speaker(s), \(segs.count) turn(s)."
+        } catch {
+            status = "Diarized transcription failed: \(error.localizedDescription)"
+        }
+    }
+
+    /// Lazily build the diarizer from the staged bundle (GPU on Mac / device).
+    private func ensureDiarizer() async throws -> SortformerDiarizer {
+        if let d = diarizer { return d }
+        guard let murl = DiarizeAssets.modelURL, let filters = DiarizeAssets.melFilters() else {
+            throw NSError(domain: "diarize", code: 1, userInfo: [NSLocalizedDescriptionKey:
+                "Diarize model not staged at \(DiarizeAssets.location.path)"])
+        }
+        let d = try await SortformerDiarizer(model: murl, melFilters: filters, computeUnits: .gpu)
+        diarizer = d
+        return d
+    }
+
+    /// Start playing the clip (16 kHz mono) from the top. A fresh AudioPlayer per call means the old
+    /// one deallocates and stops, so re-transcribing restarts audio cleanly instead of queueing.
+    private func playClip(_ samples: [Float]) {
+        guard !samples.isEmpty else { return }
+        player = AudioPlayer()
+        player.play(samples, sampleRate: 16000)
+    }
+
+    /// Transcribe one speaker turn's audio with the currently-selected engine (text only).
+    private func transcribeSlice(_ clip: [Float]) async throws -> String {
+        switch engine {
+        case .whisper:
+            guard let whisper else { return "" }
+            return try await whisper.transcribe(samples: clip).text
+        case .qwen3ASR:
+            guard let asr else { return "" }
+            return try await asr.transcribe(samples: clip).text
+        case .parakeet:
+            guard let parakeet else { return "" }
+            return try await parakeet.transcribe(samples: clip).text
+        case .nemotron:
+            guard let nemotron else { return "" }
+            return try await nemotron.transcribe(samples: clip).text
+        }
     }
 }

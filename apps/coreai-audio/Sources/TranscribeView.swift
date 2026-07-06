@@ -25,6 +25,15 @@ struct TranscribeView: View {
             Text(model.engine.blurb)
                 .font(.callout).foregroundStyle(.secondary)
 
+            if model.diarizeAvailable {
+                Toggle(isOn: $model.diarize) {
+                    Label("Diarize — who said what", systemImage: "person.2.wave.2")
+                }
+                .disabled(model.busy || model.recording || model.live)
+                Text("Streaming Sortformer labels each speaker turn, then \(model.engine.title) transcribes it.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+
             if !model.loaded {
                 Button { Task { await model.load() } } label: {
                     Label("Load model", systemImage: "arrow.down.circle")

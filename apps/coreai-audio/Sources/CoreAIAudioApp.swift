@@ -20,8 +20,17 @@ struct CoreAIAudioApp: App {
         if ProcessInfo.processInfo.environment["PARAKEET_SELFTEST"] != nil {
             Task.detached { await runParakeetSelfTest() }
         }
+        if ProcessInfo.processInfo.environment["NEMOTRON_SELFTEST"] != nil {
+            Task.detached { await runNemotronSelfTest() }
+        }
         if ProcessInfo.processInfo.environment["MUSIC_SELFTEST"] != nil {
             Task.detached { await runMusicSelfTest() }
+        }
+        if ProcessInfo.processInfo.environment["SEPARATE_SELFTEST"] != nil {
+            Task.detached { await runSeparateSelfTest() }
+        }
+        if ProcessInfo.processInfo.environment["DIARIZE_SELFTEST"] != nil {
+            Task.detached { await runDiarizeSelfTest() }
         }
     }
 
@@ -38,8 +47,12 @@ struct CoreAIAudioApp: App {
                     .tabItem { Label("Voice", systemImage: "waveform") }
                 VoxCPM2View()
                     .tabItem { Label("Voice 2B", systemImage: "waveform.badge.plus") }
+                DotsView()
+                    .tabItem { Label("Voice ML", systemImage: "globe") }
                 MusicGenView()
                     .tabItem { Label("Music", systemImage: "music.note") }
+                SeparateView()
+                    .tabItem { Label("Separate", systemImage: "music.mic") }
             }
             // Non-blocking self-test (KOKORO_SELFTEST=1): the iOS launch watchdog
             // kills any main-thread block, so run it as a normal async task.
@@ -47,6 +60,14 @@ struct CoreAIAudioApp: App {
                 if ProcessInfo.processInfo.environment["KOKORO_SELFTEST"] != nil {
                     await runKokoroSelfTest()
                 }
+                // env var (device: devicectl --environment-variables) or, on macOS where `open`
+                // can't inherit env, a ~/.dots_selftest trigger file.
+                var dotsTrigger = ProcessInfo.processInfo.environment["DOTS_SELFTEST"] != nil
+                #if os(macOS)
+                dotsTrigger = dotsTrigger || FileManager.default.fileExists(
+                    atPath: FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".dots_selftest").path)
+                #endif
+                if dotsTrigger { await runDotsSelfTest() }
             }
         }
         #if os(macOS)

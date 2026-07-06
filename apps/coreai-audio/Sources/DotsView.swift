@@ -1,70 +1,72 @@
-// VoxCPM2View — the "Voice 2B" tab: VoxCPM2 (2B, 48 kHz) text-to-speech on Core AI, the scaled
-// successor to the VoxCPM-0.5B "Voice" tab. Drives CoreAIKit's `VoxCPM2TTS` (five bundles + host glue,
-// all on device). Kept separate from VoxCPMView so the shipped 0.5B path is untouched.
+// DotsView — the "Voice ML" (multilingual) tab: dots.tts (rednote-hilab, 2B, 24-language) TTS on
+// Core AI. Community port. Drives CoreAIKit's `DotsTTS` (four bundles + host glue, all on device),
+// the validated Python blueprint conversion/dots_tts/e2e_full.py (engine wav cos 0.9959).
 //
-// Assets load from the same `VoxCPMAssets` root (symlink -> conversion artifacts) — the v2 bundles are
-// `voxcpm2_*`, glue is `voxcpm2_host_glue/`, tokenizer is `tokenizer2/` (LlamaTokenizer fast path).
+// Assets load from a `DotsAssets` root (macOS dev: symlink -> conversion/dots_tts/artifacts, which
+// holds dots_*_.aimodel bundle dirs + dots_host_glue/ + tokenizer/). iOS: applicationSupport/DotsAssets.
 import CoreAIKit
 import SwiftUI
 
-enum VoxCPM2Assets {
-    static let repo = "mlboydaisuke/VoxCPM2-CoreAI"   // not yet published
+enum DotsAssets {
+    static let repo = "mlboydaisuke/dots.tts-CoreAI"   // not yet published
 
     static var location: URL {
         #if os(macOS)
         return URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-            .appendingPathComponent("VoxCPMAssets")
+            .appendingPathComponent("DotsAssets")
         #else
         return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("VoxCPMAssets")
+            .appendingPathComponent("DotsAssets")
         #endif
     }
 
-    /// Present only if the v2 tokenizer is staged (distinguishes from the v1-only asset root).
+    /// Present only if the tokenizer + glue are staged.
     static var root: URL? {
         let p = location
-        return FileManager.default.fileExists(atPath: p.appendingPathComponent("tokenizer2").path) ? p : nil
+        let fm = FileManager.default
+        return fm.fileExists(atPath: p.appendingPathComponent("tokenizer").path)
+            && fm.fileExists(atPath: p.appendingPathComponent("dots_host_glue").path) ? p : nil
     }
 
-    static func paths(root: URL, lm: VoxCPM2Paths.LMPrecision = .int8) -> VoxCPM2Paths {
-        let tok = root.appendingPathComponent("tokenizer2")
+    static func paths(root: URL, lm: DotsTTSPaths.LMPrecision = .fp16,
+                      decoder: DotsTTSPaths.Decoder = .mf) -> DotsTTSPaths {
+        let tok = root.appendingPathComponent("tokenizer")
         #if os(macOS)
-        return .standard(artifactsRoot: root, lm: lm, tokenizerDir: tok)
+        return .standard(artifactsRoot: root, lm: lm, decoder: decoder, tokenizerDir: tok)
         #else
-        return .aot(root: root, arch: "h18p", lm: lm, tokenizerDir: tok)
+        return .aot(root: root, arch: "h18p", lm: .int4, decoder: decoder, tokenizerDir: tok)  // device: int4 bb, mf decoder (~5.5 GB)
         #endif
     }
 }
 
 @MainActor
-final class VoxCPM2VM: ObservableObject {
+final class DotsVM: ObservableObject {
     @Published var status = "Tap Load to start."
     @Published var loaded = false
     @Published var busy = false
     @Published var streaming = true
-    @Published var lm: VoxCPM2Paths.LMPrecision = .int8
+    @Published var lm: DotsTTSPaths.LMPrecision = .fp16
+    let decoder: DotsTTSPaths.Decoder = .mf   // MeanFlow: ~5× faster than soar
 
-    private var tts: VoxCPM2TTS?
+    private var tts: DotsTTS?
     private let player = AudioPlayer()
     private var preroll: [[Float]] = []
     private var prerolling = false
-    private let prerollChunks = 3                       // one chunk ≈ 0.16 s -> ~0.48 s lead. RTF~1.1 means
-                                                        // 1-2 chunks underrun (crackles); 3 absorbs the jitter.
+    private let prerollChunks = 3
 
-    private var sr: Double { Double(VoxCPM2TTS.sampleRate) }   // 48 kHz
+    private var sr: Double { Double(DotsTTS.sampleRate) }   // 48 kHz
 
     func load() async {
-        busy = true; status = "Loading VoxCPM2 2B (\(lm == .fp16 ? "fp16" : "int8"))…"
+        busy = true; status = "Loading dots.tts 2B (\(lm.rawValue))…"
         do {
-            guard let root = VoxCPM2Assets.root else {
-                status = "v2 model not found (need tokenizer2/ + voxcpm2_* at \(VoxCPM2Assets.location.path))."
+            guard let root = DotsAssets.root else {
+                status = "model not found (need tokenizer/ + dots_host_glue/ + dots_* at \(DotsAssets.location.path))."
                 busy = false; return
             }
             let t0 = Date()
-            tts = try await VoxCPM2TTS(paths: VoxCPM2Assets.paths(root: root, lm: lm))
+            tts = try await DotsTTS(paths: DotsAssets.paths(root: root, lm: lm, decoder: decoder), decoder: decoder)
             loaded = true
-            status = String(format: "Ready (%@, loaded in %.1f s).", lm == .fp16 ? "fp16" : "int8",
-                            Date().timeIntervalSince(t0))
+            status = String(format: "Ready (%@, loaded in %.1f s).", lm.rawValue, Date().timeIntervalSince(t0))
         } catch {
             status = "Load failed: \(error)"
         }
@@ -105,16 +107,10 @@ final class VoxCPM2VM: ObservableObject {
     }
 
     private func beginPlayback() { player.reset(sampleRate: sr); preroll.removeAll(); prerolling = true }
-
     private func scheduleChunk(_ chunk: [Float]) {
-        if prerolling {
-            preroll.append(chunk)
-            if preroll.count >= prerollChunks { flushPreroll() }
-        } else {
-            player.play(chunk, sampleRate: sr)
-        }
+        if prerolling { preroll.append(chunk); if preroll.count >= prerollChunks { flushPreroll() } }
+        else { player.play(chunk, sampleRate: sr) }
     }
-
     private func flushPreroll() {
         guard prerolling else { return }
         for c in preroll { player.play(c, sampleRate: sr) }
@@ -122,21 +118,22 @@ final class VoxCPM2VM: ObservableObject {
     }
 }
 
-struct VoxCPM2View: View {
-    @StateObject private var vm = VoxCPM2VM()
-    @State private var text = "On device speech synthesis, running entirely on your iPhone."
+struct DotsView: View {
+    @StateObject private var vm = DotsVM()
+    @State private var text = "Hello from Core A I."
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("VoxCPM2 — 2B, 48 kHz on-device TTS")
+            Text("dots.tts — 2B, 24-language on-device TTS")
                 .font(.title2).bold()
-            Text("Scaled MiniCPM4 backbone (28L) + LocDiT-12L diffusion + 48 kHz AudioVAE on Core AI. Five bundles + host glue, no network.")
+            Text("Qwen2.5-1.5B backbone + 18L AdaLN flow-matching DiT + 48 kHz BigVGAN on Core AI. Four bundles + host glue, no network. Multilingual.")
                 .font(.callout).foregroundStyle(.secondary)
 
             if !vm.loaded {
                 Picker("Precision", selection: $vm.lm) {
-                    Text("int8 (smaller, ~1.6 GB LM)").tag(VoxCPM2Paths.LMPrecision.int8)
-                    Text("fp16 (best quality)").tag(VoxCPM2Paths.LMPrecision.fp16)
+                    Text("fp16 (reference quality)").tag(DotsTTSPaths.LMPrecision.fp16)
+                    Text("int8 (smaller LM)").tag(DotsTTSPaths.LMPrecision.int8)
+                    Text("int4 (smallest)").tag(DotsTTSPaths.LMPrecision.int4)
                 }
                 .pickerStyle(.segmented)
                 .disabled(vm.busy)
@@ -148,14 +145,11 @@ struct VoxCPM2View: View {
                     .lineLimit(1...5)
                     .textFieldStyle(.roundedBorder)
                 Toggle(isOn: $vm.streaming) {
-                    Text(vm.streaming ? "Streaming (play as it generates)"
-                                      : "No streaming (wait for whole clip)")
+                    Text(vm.streaming ? "Streaming (play as it generates)" : "No streaming (wait for whole clip)")
                         .font(.callout)
                 }
                 .disabled(vm.busy)
-                Button {
-                    Task { await vm.speak(text) }
-                } label: {
+                Button { Task { await vm.speak(text) } } label: {
                     Label("Speak", systemImage: "play.fill").frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)

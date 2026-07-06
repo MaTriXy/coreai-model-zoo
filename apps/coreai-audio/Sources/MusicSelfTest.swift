@@ -19,16 +19,19 @@ func runMusicSelfTest() async {
         log("loaded (3 bundles + T5 tokenizer) in \(ms(since: t0))")
 
         let prompt = ProcessInfo.processInfo.environment["MUSIC_PROMPT"] ?? "128 BPM tech house drum loop"
-        let g0 = ContinuousClock().now
-        let audio = try await engine.generate(prompt: prompt, seconds: 11)
-        let gms = msVal(since: g0)
         let N = StableAudioMusic.audioSamples
+        let audioSec = Double(N) / Double(StableAudioMusic.sampleRate)
+        var audio: [Float] = []
+        // 3 runs to separate cold (first, GPU shader specialize) from warm steady-state.
+        for run in 1...3 {
+            let g0 = ContinuousClock().now
+            audio = try await engine.generate(prompt: prompt, seconds: 11)
+            let gms = msVal(since: g0)
+            log(String(format: "run %d %@: %.1fs audio in %.2fs (%.1f× real-time)",
+                       run, run == 1 ? "(cold)" : "(warm)", audioSec, gms / 1000, audioSec / (gms / 1000)))
+        }
         var peak: Float = 0; for v in audio { peak = max(peak, abs(v)) }
-        log(String(format: "generated \"%@\": %.1fs audio in %.2fs (%.0f× real-time), peak=%.3f",
-                   prompt, Double(N) / Double(StableAudioMusic.sampleRate), gms / 1000,
-                   (Double(N) / Double(StableAudioMusic.sampleRate)) / (gms / 1000), peak))
-
-        // write wav
+        log(String(format: "peak=%.3f", peak))
         let out = URL(fileURLWithPath: ProcessInfo.processInfo.environment["MUSIC_OUT"] ?? "/tmp/music_selftest.wav")
         writeWav(audio, n: N, sr: StableAudioMusic.sampleRate, to: out)
         log("wrote \(out.path)")

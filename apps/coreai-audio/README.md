@@ -16,6 +16,11 @@ Four tabs, all fully on-device:
     encoder + LSTM predictor + joint, 3 graphs driven by a host greedy TDT loop), via
     `KitParakeetModel`. 25 EU languages, ≤30 s; **iPhone 17 Pro 47.9× real-time**. See
     [`zoo/parakeet.md`](../../zoo/parakeet.md).
+  - **Diarize — who said what** (toggle): **Streaming Sortformer 4-spk v2** (NVIDIA, CC-BY-4.0) labels
+    each speaker turn on Core AI, then the chosen ASR transcribes it → *"Speaker 1 [0.3–4.1s]: …"*.
+    A pure host port (NeMo 128-mel + streaming loop + AOSC speaker-cache compression) driving the
+    fixed-buffer graph; byte-gated **100% speaker-activity agreement** vs NeMo. See
+    [`conversion/sortformer_diar/HANDOFF.md`](../../conversion/sortformer_diar/HANDOFF.md).
 - **Voice** — **VoxCPM-0.5B** diffusion text-to-speech (MiniCPM4 LM + LocDiT flow-matching +
   AudioVAE), streaming int8. See [🤗 VoxCPM-0.5B-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM-0.5B-CoreAI).
 - **Speak** — **Kokoro-82M** (StyleTTS2 + iSTFTNet) text-to-speech on Core AI: pick a voice and a

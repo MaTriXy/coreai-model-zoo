@@ -7,10 +7,14 @@ options:
 # swift-transformers / swift-crypto resource bundles so they code-sign cleanly on device — the
 # self-contained raw-deps build hit "code object is not signed at all" on those bundles.
 packages:
-  # VoxCPMTTS + VoxCPM2TTS (0.5B "Voice" + 2B "Voice 2B" tabs) + KitWhisperModel/KitASRModel.
+  # KitWhisperModel + KitASRModel (Whisper + Qwen3-ASR for the Transcribe tab).
+  # DEV: local path so the uncommitted VoxCPM2TTS (Voice 2B tab) + ASR are live. Revert to the
+  # url/revision below before committing.
   coreai-kit:
-    url: https://github.com/john-rocky/coreai-kit
-    revision: dbb2ab0d47fb32f6731758a5aaa5c9a50b2d9555
+    path: ../../../../coreai-kit
+  # coreai-kit (release pin):
+  #   url: https://github.com/john-rocky/coreai-kit
+  #   revision: 9f97c9fc0372ea9bfe60368122f9a1dd0406dc6e
   # On-device English G2P for free-text TTS (made for Kokoro; pulls in MLX for the
   # neural fallback on out-of-dictionary words).
   MisakiSwift:
@@ -39,6 +43,10 @@ targets:
           - KokoroAssets       # 3 .aimodel (321 MB) — downloaded from HF at runtime (dev: from disk)
           - KokoroResources    # added below as a folder-reference resource
           - VoxCPMAssets       # 5 bundles + glue + tokenizer (~1.3 GB) — dev symlink, loaded via #filePath
+          - DotsAssets         # 4 bundles + glue + tokenizer (~4 GB) — dev symlink, loaded via #filePath
+          - StableAudioAssets  # 3 bundles + t5_tokenizer + metadata (~1 GB) — dev symlink, loaded via #filePath
+          - SeparateAssets     # mbr_full_fp16 bundle + metadata + golden_*.f32 (~0.5 GB) — dev symlink, loaded via #filePath
+          - DiarizeAssets      # sortformer_float16 bundle + mel filters + golden_*.f32 + demo wav (~0.24 GB) — dev symlink, loaded via #filePath
       - path: Sources/KokoroResources   # vocab/voices/l_linear/demo_phrases — bundled into the app
         type: folder
     dependencies:
