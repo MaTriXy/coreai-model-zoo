@@ -145,6 +145,10 @@ def main() -> None:
     ap.add_argument("--skip-decoder", action="store_true")
     ap.add_argument("--skip-dynamic", action="store_true")
     ap.add_argument("--skip-s1", action="store_true")
+    ap.add_argument("--prefill-chunk", type=int, default=0,
+                    help="also export a multifunction bundle <name>_pf<N>: 'main' = static S=1 "
+                         "decode + 'prefill' = static S=N chunk, weights shared. The engine feeds "
+                         "the prompt in S=N chunks (chunked prefill) then decodes 1 token/step.")
     args = ap.parse_args()
 
     name = f"glm_ocr_decode_{args.mode}"
@@ -205,6 +209,89 @@ def main() -> None:
         print(f"saving {aimodel} ...")
         prog.save_asset(aimodel, rt.AIModelAssetMetadata())
         write_bundle_metadata(out_dir, vname, args.hf_id, cfg.vocab_size, args.max_ctx)
+        try:
+            AutoTokenizer.from_pretrained(args.hf_id).save_pretrained(out_dir / "tokenizer")
+        except Exception as e:  # noqa: BLE001
+            print(f"  (tokenizer save skipped: {e})")
+        print(f"bundle ready: {out_dir}")
+
+    # -- chunked-prefill multifunction bundle (main S=1 + prefill S=N) ------------------
+    if args.prefill_chunk:
+        from coreai_models.export.macos import export_to_coreai_multifunction
+
+        # coreai-torch bug workaround (from export_qwen3_vl_pipelined.py): a static S=N causal
+        # SDPA emits a `key_seq >= N` guard inside the externalized submodule whose fallback
+        # Dim(min=1) then violates it, and the body must stay dynamic. Retry the export with the
+        # min/max bounds torch itself suggests in the ConstraintViolation message.
+        import re as _re
+
+        import coreai_torch.converter as _ct_conv
+        from torch.export import Dim as _Dim
+
+        _orig_export_module = _ct_conv._torch_export_module
+
+        def _export_module_with_retry(prep):
+            for _attempt in range(3):
+                try:
+                    return _orig_export_module(prep)
+                except Exception as e:  # noqa: BLE001 — retry only on suggested fixes
+                    fixes = {
+                        name: (int(mn), int(mx) if mx else None)
+                        for name, mn, mx in _re.findall(
+                            r"(\w+) = Dim\('\w+', min=(\d+)(?:, max=(\d+))?\)", str(e))
+                    }
+                    if not fixes:
+                        raise
+                    print(f"[externalize-retry] {prep.name}: {fixes}")
+                    rebuilt: dict[str, object] = {}
+
+                    def _remap(dims):
+                        if dims is None:
+                            return None
+                        out = {}
+                        for j, d in dims.items():
+                            name = getattr(d, "__name__", None)
+                            if name not in fixes:
+                                out[j] = d
+                                continue
+                            if name not in rebuilt:
+                                mn, mx = fixes[name]
+                                kwargs = {"min": mn}
+                                if mx is not None:
+                                    kwargs["max"] = mx
+                                rebuilt[name] = _Dim(name, **kwargs)
+                            out[j] = rebuilt[name]
+                        return out
+
+                    prep.dynamic_shapes = tuple(
+                        _remap(dims) for dims in prep.dynamic_shapes)
+            return _orig_export_module(prep)
+
+        _ct_conv._torch_export_module = _export_module_with_retry
+
+        pf = args.prefill_chunk
+        vname = f"{name}_pf{pf}"
+        print(f"exporting multifunction decoder (main S=1 + prefill S={pf}) ...")
+        entries = [
+            ("main", model.build_export_spec(
+                DTYPE, args.max_ctx, trace_kv_len=TRACE_KV_CACHE_SEQ_LEN, trace_query=1)),
+            ("prefill", model.build_export_spec(
+                DTYPE, args.max_ctx, trace_kv_len=TRACE_KV_CACHE_SEQ_LEN,
+                trace_query=pf, static_ids=True)),
+        ]
+        prog = export_to_coreai_multifunction(model, entries, externalize_modules=_specs())
+        print("optimizing ...")
+        prog.optimize()
+
+        out_dir = Path(args.out_dir) / vname
+        if out_dir.exists():
+            shutil.rmtree(out_dir)
+        out_dir.mkdir(parents=True)
+        aimodel = out_dir / f"{vname}.aimodel"
+        print(f"saving {aimodel} ...")
+        prog.save_asset(aimodel, rt.AIModelAssetMetadata())
+        write_bundle_metadata(out_dir, vname, args.hf_id, cfg.vocab_size, args.max_ctx,
+                              functions=("main", "prefill"))
         try:
             AutoTokenizer.from_pretrained(args.hf_id).save_pretrained(out_dir / "tokenizer")
         except Exception as e:  # noqa: BLE001

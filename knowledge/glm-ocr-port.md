@@ -74,3 +74,17 @@ Decoder AOT-compiles clean for iOS h18p (`coreai-build compile … --platform iO
 --preferred-compute gpu --expect-frequent-reshapes`) — the multifunction-AOT breakage seen elsewhere
 doesn't apply to this single-function bundle. `PipelinedBench` enrolls GLM-OCR as a `vlGlm` ModelSpec
 (image_embeds + rope-shift, no deepstack) for on-device tok/s.
+
+## In-app (KitGlmOcrReader) + chunked prefill
+
+`KitGlmOcrReader` (in `Examples/ReadDoc`) rides `VLRuntime` + `VLArchitecture.glmOcr` (portrait 32×24
+= 768 tokens, CLIP norm, letterbox) and builds the GLM ChatML itself
+(`[gMASK]<sop><|user|>\n<|begin_of_image|><|image|>×768<|end_of_image|>Text Recognition:<|assistant|>\n`,
+image token 59 280 rewritten to `vocab + slot`, stop on eos / `<|user|>`).
+
+**Chunked prefill is essential on iPhone.** An S=1 decoder prefills the 768 image tokens one step at a
+time; on the iPhone GPU that's **20 s+/page** (the M-series GPU hides it — Mac reads in ~3.7 s). Export
+with `--prefill-chunk 64` (the same `pf64` multifunction as MinerU: `main` S=1 + `prefill` S=64, shared
+weights) and the engine auto-discovers the `prefill` function — **no Swift change** — dropping the
+iPhone read to **~5 s/page**. The shipped HF bundle is a 22×31 landscape grid; the app uses a separately
+exported 32×24 portrait grid (documents are portrait).
