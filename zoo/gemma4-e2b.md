@@ -50,8 +50,8 @@ conversation history; `streamResponse(to:)` yields tokens as they decode.
 
 - SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKit**
 - Info.plist: none needed
-- Entitlements: none needed (macOS)
-- First run downloads the model — 4.9 GB (Mac) — then it loads from the
+- Entitlements: none on Mac; iPhone needs `com.apple.developer.kernel.increased-memory-limit`
+- First run downloads the model — 4.9 GB (Mac) / 4.9 GB (iPhone) — then it loads from the
   local cache (Application Support; progress via the `downloadProgress` callback)
 - Measure in Release — Debug is ~3× slower on per-token host work
 <!-- gen-cards:use-it end -->
