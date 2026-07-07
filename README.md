@@ -18,6 +18,22 @@ complete copy-paste snippet and its integration checklist. Every row below also 
 ready-to-build app — in this repo's [`apps/`](apps) or a
 [CoreAIKit example](https://github.com/john-rocky/coreai-kit/tree/main/Examples) (marked ↗).
 
+## Quickstart — running a model on your device
+
+New here? You'll have a model answering on-device in a few minutes (needs Xcode 27 + a Mac or an
+iPhone/iPad on iOS/macOS 27):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/ChatDemo/ChatDemo.xcodeproj   # Run, then pick a model in the picker
+```
+
+The app downloads the model on first pick (cached after), then runs it fully offline. **Start
+small for the fastest first run:** `Qwen3-0.6B` (454 MB) or `Qwen3.5-2B` on iPhone;
+any of the Mac-only rows on a Mac. Prefer the terminal? `swift run chat-cli --model qwen3-0.6b
+--prompt "Hello"` from `Examples/ChatDemo`. To drop a model into **your own** app, copy the
+snippet from that model's card — it's the same `catalog:` one-liner shown above.
+
 ## Models
 
 | Model | Download (`.aimodel`) | Run in app | License |
