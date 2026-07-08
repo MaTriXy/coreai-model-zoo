@@ -71,8 +71,8 @@ deterministic host arithmetic (identical Mac ↔ device).
 | params / dtype | 200M / fp16 (bundle 463 MB) |
 | context / horizon | 2048 (64 patches of 32) / 128 steps, 10 quantiles |
 | **Mac GPU (M4 Max)** | **~7 ms/graph → ~14 ms per 128-step forecast** (flip = 2 calls) |
-| iOS | h18p AOT compiles clean; device numeric gate pending |
-| parity vs HF fp32 oracle | graph **cos 1.0000000**; end-to-end fp16 **cos 0.9999999**, values match to 2–3 dp (incl. front-padded short context) |
+| **iPhone 17 Pro (AOT h18p GPU)** | **~25 ms/forecast warm** (54 ms cold, ~0.8 s very-first-run = one-time shader compile), **device-verified in-app** |
+| parity vs HF fp32 oracle | graph **cos 1.0000000**; end-to-end fp16 **cos 0.9999999**, values match to 2–3 dp (incl. front-padded short context); **iPhone in-app == Mac to 3 dp** |
 
 ## Gate ladder (vs `TimesFm2_5ModelForPrediction` fp32)
 
@@ -81,6 +81,8 @@ deterministic host arithmetic (identical Mac ↔ device).
 3. Core AI export fp32 (CPU) — **cos 1.0000000**; fp16 (CPU/GPU) — **cos ≥ 0.99998**.
 4. End-to-end host DSP + fp16 GPU engine vs HF — **cos 0.9999999** across sine / trend / random-walk
    / padded-short.
+5. **iPhone 17 Pro, in-app (`KitForecaster`, AOT h18p)** — forecast **matches the Mac reference to 3
+   decimals** (Δ ≤ 0.001, fp16 GPU rounding); **~25 ms warm** per 128-step forecast.
 
 Conversion: [`conversion/timesfm/`](../conversion/timesfm/) (`export_timesfm.py`, `timesfm_core.py`,
 `host_forecast.py`, `oracle.py`, `gate_core.py`, `e2e_engine_gate.py`). Knowledge:

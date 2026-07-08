@@ -59,7 +59,10 @@ runtime, just CoreAIKit's `GraphModel`.
 - Independent host DSP + graph vs HF final forecast: **cos 1.0000000** (rel ~1e-8).
 - Core AI **fp16** graph, Mac GPU: **cos ≥ 0.99998**; end-to-end forecast **cos 0.9999999**,
   values match HF to 2–3 decimals — including a front-padded short-context case.
-- Mac GPU **~7 ms/graph → ~14 ms per 128-step forecast** (flip = 2 calls). iOS h18p AOT: clean.
+- **iPhone 17 Pro, in-app (`KitForecaster`, AOT h18p): device forecast == Mac to 3 decimals**
+  (Δ ≤ 0.001, fp16 GPU rounding).
+- Mac GPU **~7 ms/graph → ~14 ms per 128-step forecast** (flip = 2 calls);
+  **iPhone 17 Pro ~25 ms warm** (54 ms cold). iOS h18p AOT: clean, device-verified.
 
 ## Use (Python, Core AI runtime)
 
