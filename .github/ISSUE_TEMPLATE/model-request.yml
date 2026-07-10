@@ -1,0 +1,42 @@
+name: Model request
+description: Request a model port to Core AI — or port it yourself with maintainer support
+title: "[request] "
+labels: ["model-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Upvote existing requests with 👍 — reactions are how requests get ranked.
+        Want to port it yourself? Start from [PORTING.md](../blob/main/PORTING.md) and the
+        [knowledge base](../tree/main/knowledge); open the issue anyway and maintainer
+        support is available in the thread.
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      description: Name + Hugging Face link
+      placeholder: "Qwen3.5-4B — https://huggingface.co/Qwen/Qwen3.5-4B"
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: License
+      placeholder: "Apache-2.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: target
+    attributes:
+      label: Target device class
+      options:
+        - iPhone (≤4B class)
+        - Mac
+        - Both
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why this model?
+      description: What would you build with it on-device? Anything notable about the architecture (MoE, hybrid/SSM, new attention, ...)?

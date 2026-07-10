@@ -1,0 +1,27 @@
+name: Model / runtime issue
+description: A zoo model fails to download, load, or generate correctly
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: input
+    id: model
+    attributes:
+      label: Catalog id or HF repo
+      placeholder: "qwen3.5-2b"
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Device, OS build, CoreAIKit version (or app)
+      placeholder: "iPhone 17 Pro, iOS 27 beta 3, CoreAIKit 0.2.0"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Steps, expected vs actual, and the full error text / console output if any
+    validations:
+      required: true

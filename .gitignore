@@ -36,3 +36,6 @@ conversion/voxcpm/scratch_*.py
 
 # VoxCPM dev asset symlink (points at conversion artifacts; machine-specific)
 apps/coreai-audio/Sources/VoxCPMAssets
+
+# Working logs from device builds / smoke gates (local R&D artifacts)
+*.log
