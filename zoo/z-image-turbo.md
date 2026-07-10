@@ -28,7 +28,7 @@ open apps/CoreAIImageGen/CoreAIImageGen.xcodeproj
 ```
 
 The host loop is ~250 lines (`Sources/ZImagePipeline.swift`) and is gated against the Python
-reference by `ondevice/ZImageRunner`, which compiles the *same file* into a CLI: same bundle,
+reference by `conversion/zimage/ZImageRunner`, which compiles the *same file* into a CLI: same bundle,
 same noise, images agree to 42.9 dB.
 
 Or drive it from Python (Core AI runtime, no app needed):

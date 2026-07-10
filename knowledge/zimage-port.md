@@ -172,7 +172,7 @@ every step count and resolution.
 ⚠️ The VAE graph **bakes the un-scale** (`z/0.3611 + 0.1159`) — feed it the raw latent. Doing
 it again on the host costs 18 dB (42.9 → 24.4) and is the one bug the Swift port actually hit.
 
-`ondevice/ZImageRunner` compiles the app's `ZImagePipeline.swift` into a CLI so the Swift host
+`conversion/zimage/ZImageRunner` compiles the app's `ZImagePipeline.swift` into a CLI so the Swift host
 can be gated against the Python engine on identical noise: images agree to **42.9 dB**.
 
 ## Follow-ups
