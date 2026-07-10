@@ -53,23 +53,20 @@ Check whether the head is tied before you trust it.
 
 ## D — the honest one
 
-I wrote a fused Metal kernel for the Mamba2 decode step. It measured 1.3x slower
-per layer than the graph the compiler already emits, so I wrote that up: "the
-optimizer beats the hand kernel."
+I benchmarked a fused Metal kernel for a Mamba2 decode step against the compiler's
+graph. It came out 1.3x slower. I wrote that up: the optimizer beats the hand kernel.
 
-It doesn't. I had two hypotheses for the loss and both were wrong. Occupancy? The
-kernel ran 1536 threads, each serializing a 128-wide reduction; spreading that
-across a simdgroup gave 32x the threads and bought nothing. Dispatch overhead? Two
-kernels per layer are *cheaper* than one — which no launch-cost model can produce.
+Then I found the cause — a fp32 cast at the kernel boundary — fixed it, remeasured,
+got 1.07x faster, and wrote *that* up. Two causal stories, one day.
 
-It was the boundary. A custom-kernel op is a fusion barrier, and my call site did
-`state.float()` on the way in and `.half()` on the way out: a fp32 blow-up of the
-recurrent state, ~3 MB per layer that the stock graph never pays. Hand it across in
-fp16 and the kernel wins by 5%.
+Both were noise. The machine drifts 10-15% between runs and I was timing the two
+arms in separate passes. Paired properly — same process, alternating, eight reps,
+report the median — every variant of the kernel is 3-8% faster, including the one I
+had "diagnosed" as broken. The variant I "fixed" is not reliably better than the one
+I fixed it from.
 
-Two adjacent kernels are cheap because they share one boundary. That's the whole
-lesson, and I had to measure three things to find it.
-
+A 5% effect cannot be measured by running each side once. I know this. I did it
+anyway, twice, and each time the number was decisive enough to explain.
 ---
 
 Recommendation: **B**, then **A** a day or two later.
@@ -86,6 +83,7 @@ Notes:
 - All numbers measured: iPhone 17 Pro (A19 Pro) cooled, PipelinedBench, AOT h18p;
   M4 Max via raw AIModel calls. Quality = teacher-forced top-1 vs the fp32 oracle at
   the 33 margin-clean prompt positions.
-- D's figures are granite-4.0-h-350m: 0.161 ms/mamba-layer stock, 0.209 with the fp32
-  boundary, 0.180 with the fp16 one; full model 1.01–1.07x over three runs.
+- D's figures: granite-4.0-h-350m, 32 layers. Paired median stock/fused = 1.060 (v1),
+  1.031 (v2), 1.078 (v3), 8 interleaved reps each. Unpaired singles of the same configs
+  ranged 0.89x–1.19x.
 - Card: zoo/nemotron-3-nano.md

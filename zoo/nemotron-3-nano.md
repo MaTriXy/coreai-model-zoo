@@ -18,17 +18,18 @@ dt*B*x; y = (state·C) + D*x` — the HF `use_precomputed_states` branch), so th
 graph is loop-free and lowers on the MPSGraph GPU delegate. State = growing KV for the 4
 attention layers + two fixed-shape stacks (conv columns `[21,1,9728,3]`, SSM state
 `[21,1,96,80,128]` = 41 MB) — the same `(convState, recState)` shape-class as granite4h and
-qwen3.5, inside the extra-states patch budget (≤2). **No custom Metal kernel**: at S=1 there is
-no loop for one to fuse away. A hand-written fused scan is worth about **5%** on granite-4.0-h-350m
-(1.01–1.07x over three runs) — real, but far too little to pay for the shape constraints and the
-fusion barrier a `metal4_kernel` op puts in the graph.
+qwen3.5, inside the extra-states patch budget (≤2). **No custom Metal kernel** — but not because
+one loses. A hand-written fused scan measures **3–8% faster** than the stock graph on
+granite-4.0-h-350m (paired A/B, both arms in one process, 8 interleaved reps, median 1.03–1.08x).
+That margin does not pay for the fusion barrier a `metal4_kernel` op puts in the graph, its grid
+and shape constraints, and a second artifact to maintain. At S=1 the scan is a single recurrence
+step, so the plain torch graph is already the right answer.
 
-(An earlier version of this card said the kernel measured *slower* than the optimizer's graph.
-That was a 0.89x reading of my own `rec_in.float()` / `st_f.to(fp16)` casts at the kernel boundary —
-a fp32 blow-up of the `[1,H,P,N]` recurrent state, ~3.1 MB of traffic per layer the stock graph never
-pays. Hand the state across in fp16 and the gap disappears. Occupancy and dispatch count were both
-ruled out by measurement: a 32x-more-threads simd-parallel scan bought nothing, and *two* kernels per
-layer are cheaper than one, because adjacent kernels share a boundary.)
+(Two earlier versions of this card said the kernel measured *slower* — first 1.24x, then, after a
+"correction", that a fp32 cast at the kernel boundary explained it. Both were artifacts of unpaired
+single-shot timings on a machine that drifts 10–15% run to run: the same configuration read anywhere
+from 0.89x to 1.19x. The lesson worth keeping is the protocol, not the kernel: pair the arms in one
+process, interleave, repeat, report the median and the spread.)
 
 A 4B graph cannot specialize on-device, so the iPhone bundle is **AOT-compiled** for `h18p`
 (the FastContext lesson). `CoreAIShared.ModelBundle` reads `metadata.json` **at the model dir**,
