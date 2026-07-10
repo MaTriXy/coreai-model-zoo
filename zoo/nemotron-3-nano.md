@@ -26,6 +26,48 @@ A 4B graph cannot specialize on-device, so the iPhone bundle is **AOT-compiled**
 (the FastContext lesson). `CoreAIShared.ModelBundle` reads `metadata.json` **at the model dir**,
 so after `coreai-build compile` you must rewrite `assets.main` to `<name>.h18p.aimodelc`.
 
+<!-- gen-cards:use-it begin id=nemotron-3-nano-4b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+## Use it
+
+▶️ **Run it (source)** — the [ChatDemo runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo)
+(GUI + CLI, one app for every chat model in the catalog):
+
+```bash
+git clone https://github.com/john-rocky/coreai-kit
+open coreai-kit/Examples/ChatDemo/ChatDemo.xcodeproj
+# → Run, then pick "Nemotron-3-Nano 4B" in the model picker
+
+# agents / headless (macOS):
+cd coreai-kit/Examples/ChatDemo
+swift run chat-cli --model nemotron-3-nano-4b --prompt "What can you do, offline?"
+```
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKit
+
+let chat = try await ChatSession(catalog: "nemotron-3-nano-4b")
+let reply = try await chat.respond(to: prompt)
+// reply: the answer, generated fully on-device
+```
+
+The take-home is [`Examples/ChatDemo/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/ChatDemo/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; the CLI is an argument shell over it, and
+the GUI drives the same `ChatSession` across turns for its transcript.
+Multi-turn? Hold the `ChatSession` and call `respond(to:)` per turn — it keeps the
+conversation history; `streamResponse(to:)` yields tokens as they decode.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKit**
+- Info.plist: none needed
+- Entitlements: iOS needs `com.apple.developer.kernel.increased-memory-limit` — a 4.3 GB bundle is past the default jetsam limit
+- First run downloads the model — 4.6 GB (Mac) / 4.6 GB (iPhone) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
+
 ## Measured
 
 Numerics, port vs `transformers` fp32 (`nemotron_parity.py`): per-step logits `rel 2e-7 … 4e-7`

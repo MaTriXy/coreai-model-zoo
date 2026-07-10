@@ -52,6 +52,9 @@ single recurrence step, so the graph is loop-free.
 | `gpu-pipelined/` | `{NAME}.aimodel` | Mac (JIT specialization) |
 | `ios-h18p/` | `{NAME}.h18p.aimodelc` | iPhone (AOT — a 4B graph cannot specialize on-device) |
 
+<!-- gen-cards:use-it begin id=nemotron-3-nano-4b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+<!-- gen-cards:use-it end -->
+
 Measured: **16.0 tok/s decode on an iPhone 17 Pro** (cooled, AOT h18p, bandwidth-saturated)
 and 85.2 tok/s on an M4 Max GPU. Greedy output is token-identical to the fp32
 `transformers` rollout on the probe prompts.
