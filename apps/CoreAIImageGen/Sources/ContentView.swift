@@ -35,7 +35,7 @@ struct ContentView: View {
     @StateObject private var engine = DiffusionEngine()
 
     // Optional: the iOS build ships an empty hosted catalog (load via "Local…").
-    @State private var selectedModel = DiffusionEngine.catalog.first
+    @State private var selectedModel = DiffusionEngine.defaultSelection
     @State private var prompt = "a watercolor painting of a red fox reading a book by candlelight, cozy, detailed"
     @State private var negativePrompt = ""
     @State private var steps = DiffusionEngine.catalog.first?.defaultSteps ?? 4

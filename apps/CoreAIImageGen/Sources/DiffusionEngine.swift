@@ -39,7 +39,9 @@ final class DiffusionEngine: ObservableObject {
 
     /// A Core AI-converted diffusion bundle published on the Hugging Face Hub.
     struct ModelOption: Identifiable, Hashable {
-        var id: String { repoId }
+        // Several options share a repo (GLM 512/1024, Z-Image 512/1024 differ only in what the
+        // host feeds one graph), so the repo cannot identify a row — ForEach needs unique ids.
+        var id: String { title }
         let repoId: String           // "org/name" on the Hub
         let bundleDirName: String    // local folder name under Documents/
         let title: String
@@ -257,7 +259,10 @@ final class DiffusionEngine: ObservableObject {
         modelTitle = option.title
         loadedRepoId = option.repoId
         loadedHasEditAssets = option.hasEditAssets
-        status = .downloading
+        // Not `.downloading` yet — a bundle already staged under Documents/ never hits the Hub,
+        // and flashing a download bar at it is a lie. `.loading` is busy, so the button is
+        // disabled either way; the fetch below promotes the status if it actually runs.
+        status = .loading
         // Keep the screen awake for the multi-GB download: if the device auto-locks the app
         // gets suspended and the (foreground) URLSession transfer stalls. Re-enabled when the
         // whole flow finishes (see the defer below).
@@ -283,6 +288,7 @@ final class DiffusionEngine: ObservableObject {
                 let alreadyLocal = (option.isGLM && Self.glmBundleComplete(at: dest))
                     || (option.isZImage && Self.zimageBundleComplete(at: dest))
                 if !alreadyLocal {
+                    self.status = .downloading
                     await downloader.fetch(
                         repo: "https://huggingface.co/\(option.repoId)",
                         items: items, into: dest)
@@ -297,6 +303,21 @@ final class DiffusionEngine: ObservableObject {
                 self.status = .error("\(error)")
             }
         }
+    }
+
+    /// Preselect a model whose bundle is already on disk, so opening the app and hitting
+    /// "Download & Load" cannot kick off a multi-GB transfer for a model the user never chose.
+    /// Falls back to the first entry. (Only GLM and Z-Image can be checked — FLUX has no
+    /// completeness predicate and always round-trips through the downloader's cache.)
+    static var defaultSelection: ModelOption? {
+        let docs = try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask,
+                                                appropriateFor: nil, create: false)
+        return catalog.first(where: { opt in
+            guard let dir = docs?.appendingPathComponent(opt.bundleDirName, isDirectory: true)
+            else { return false }
+            return (opt.isGLM && glmBundleComplete(at: dir))
+                || (opt.isZImage && zimageBundleComplete(at: dir))
+        }) ?? catalog.first
     }
 
     /// True when a GLM bundle folder already holds everything the pipeline needs locally.
