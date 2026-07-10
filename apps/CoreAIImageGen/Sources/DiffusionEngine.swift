@@ -129,7 +129,8 @@ final class DiffusionEngine: ObservableObject {
                   local: "zimage_dit.aimodel"),
             .init(remote: "zimage_encoder_seq64_full_bf16_ids_iofp32.aimodel", local: "zimage_encoder.aimodel"),
             .init(remote: "zimage_vae_\(side)_fp32.aimodel", local: "zimage_vae_\(side).aimodel"),
-            .init(remote: "glue/zimage_t_embedder_fp32.aimodel", local: "zimage_t_embedder.aimodel"),
+            .init(remote: "glue/zimage_t_embedder_fp32/zimage_t_embedder_fp32.aimodel",
+                  local: "zimage_t_embedder.aimodel"),
             .init(remote: "tokenizer", local: "tokenizer"),
         ]
     }
