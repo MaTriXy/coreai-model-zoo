@@ -143,7 +143,7 @@ Sanity anchor: the zoo's shipped iOS bundle `glm_ocr_decode_int8hu_s1` is 764 MB
 Placement makes no difference: `--preferred-compute gpu|none|neural-engine` all land on the
 MPSGraph delegate (no ANE regions) with identical size — this DiT cannot go on ANE.
 
-### 📱 DEVICE VERDICT (iPhone 17 Pro, A19 — `ondevice/ZImageFP16Probe`, 2026-07-10)
+### 📱 DEVICE VERDICT (iPhone 17 Pro, A19 — throwaway fp16 probe app, 2026-07-10)
 
 Every fp16 conclusion above was drawn on the Mac. The device says the same thing, and adds a
 second wall. Both are now measured, not inferred.

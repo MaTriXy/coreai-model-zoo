@@ -29,6 +29,7 @@ __pycache__/
 apps/**/*.xcodeproj/
 apps/**/build/
 apps/**/build-*/
+apps/**/.build_*/
 apps/**/tokenizer.json
 
 # VoxCPM scratch experiments (not shipped)
