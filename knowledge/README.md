@@ -48,6 +48,24 @@ Hard-won, verified notes on Apple's Core AI (iOS/macOS 27) — what the docs don
   cooperative tensors, the FlashAttention recipe, and the M5/A19 GPU **neural accelerator** — the
   compute-bound/prefill lever hand-rolled MSL can't reach.
 
+- [`prefix-cache-kv-reuse.md`](prefix-cache-kv-reuse.md) — **cross-turn KV reuse**: turn-2 TTFT
+  0.23 s vs 23.3 s = **101× at a 4k context**, proven lossless (greedy token-identical). The
+  orthogonal speed lever nobody's shipping on-device yet.
+- [`spec-decode-design.md`](spec-decode-design.md) — **speculative decoding** on the pipelined decode
+  bundles: the only lever past the decode bandwidth wall (verify K tokens per forward); design +
+  feasibility. GDN-hybrid (Qwen3.5/3.6) static-S verify companion:
+  [`spec-decode-hybrid-verify-design.md`](spec-decode-hybrid-verify-design.md).
+- [`tensorops-zoo-impact-and-kernel-wins.md`](tensorops-zoo-impact-and-kernel-wins.md) — applied
+  survey: where TensorOps quantized kernels and pure custom-Metal wins actually pay across the zoo.
+
+## Benchmarks & comparisons
+- [`apple-models-bench.md`](apple-models-bench.md) — measured numbers for Apple's own
+  `coreai-models` export recipes — **the README Apple didn't write** (21 recipes, zero official
+  numbers).
+- [`coreai-vs-mlx-speed.md`](coreai-vs-mlx-speed.md) — every measured Core AI–vs–MLX decode
+  comparison (same M4 Max, same protocol) + the **causal decomposition** of the gap: where Core AI
+  wins, where it structurally can't, and why.
+
 ## ANE-later track (when the beta KV-write bug lifts + int4 head + AOT)
 - [`aot-and-specialization.md`](aot-and-specialization.md) — specialization, `AIModelCache` /
   `AIModel.specialize()`, and AOT compile (`xcrun coreai-build compile` → `.aimodelc`,
@@ -90,6 +108,42 @@ Hard-won, verified notes on Apple's Core AI (iOS/macOS 27) — what the docs don
 - [`swift-runtime.md`](swift-runtime.md) — the Core AI Swift API, driving `.aimodel` from Swift,
   non-standard architectures, macOS/Xcode 27 setup (incl. running Xcode 27 beta without sudo).
 
+## Model port notes (per-architecture lessons)
+- [`bitcpm-ternary-1.58bit.md`](bitcpm-ternary-1.58bit.md) — **1.58-bit ternary** MiniCPM4-8B: the
+  zoo's first sub-int8 packed-GEMM Metal kernel; an 8B running in ~2.1 GB on the iPhone GPU.
+- [`bitvla-1.58bit-vla.md`](bitvla-1.58bit-vla.md) — 1.58-bit **Vision-Language-Action** (robotics):
+  image + instruction → 7-DoF actions, fully on-device.
+- [`minicpm5-1b.md`](minicpm5-1b.md) — the clean-LlamaForCausalLM recipe done end-to-end (hybrid
+  Think/No-Think, untied head, 128K) — the most reusable conversion template in the zoo.
+- [`youtu-mla-port.md`](youtu-mla-port.md) — dense **DeepSeek-style MLA at 2B on iPhone**: latent-KV
+  attention with an absorbed flash-decode kernel.
+- [`diffusion-llms-dllm.md`](diffusion-llms-dllm.md) — masked-**diffusion** LLMs (LLaDA): parallel
+  canvas denoising, bidirectional attention, no KV cache — and how that maps to Core AI graphs.
+- [`gliner2-pii.md`](gliner2-pii.md) — DeBERTa-v3 (disentangled attention) NER / schema-driven
+  zero-shot extraction; the on-device PII-redaction model.
+- [`glm-ocr-port.md`](glm-ocr-port.md) / [`mineru-port.md`](mineru-port.md) /
+  [`unlimited-ocr-rswa-static-decode.md`](unlimited-ocr-rswa-static-decode.md) — the document-OCR
+  trio: a Glm4v variant, whole-page parsing on stock Qwen2-VL, and an R-SWA MoE on the **stock
+  runtime** with static-shape stateful decode.
+- [`video-world-models-vjepa2.md`](video-world-models-vjepa2.md) — V-JEPA 2: a self-supervised
+  **video world model** as on-device action classification (16-frame clips).
+- [`gemma4-mixedbit-qat-transplant.md`](gemma4-mixedbit-qat-transplant.md) — extracting Google's
+  mobile **mixed-bit QAT** weights and transplanting them into Core AI bundles.
+- [`gemma4-ple-static-input-fm-stack.md`](gemma4-ple-static-input-fm-stack.md) — Gemma 4's
+  **per-layer-embedding table** as a static graph input, loaded behind FoundationModels.
+- [`timesfm-port.md`](timesfm-port.md) — TimesFM 2.5: the zoo's first **time-series forecasting**
+  foundation model (stateless graph + host RevIN DSP).
+- [`esam3-port.md`](esam3-port.md) — EfficientSAM3: a **dropped** port (device-verified but redundant
+  vs the official SAM 3) — kept for what transferred.
+
+## Image generation & editing (diffusion)
+- [`zimage-port.md`](zimage-port.md) — Z-Image-Turbo, a 6B Single-Stream DiT text-to-image — and why
+  it ships Mac-only.
+- [`glm-image-port.md`](glm-image-port.md) — GLM-Image: the zoo's first **AR + diffusion hybrid**
+  (9B GLM-4 AR writes visual prior tokens → 7B flow-matching DiT renders).
+- [`flux2-in-context-editing.md`](flux2-in-context-editing.md) — FLUX.2 [klein] **instruction
+  editing + multi-reference composition** with no separate editing model and no ControlNet.
+
 ## Audio (the new modality — model-specific port notes)
 - [`qwen2.5-omni-audio-understanding.md`](qwen2.5-omni-audio-understanding.md) — Qwen2.5-Omni's
   **Thinker** as on-device **audio understanding** (describes sounds, *not* ASR): de-dynamizing the
@@ -125,6 +179,16 @@ Hard-won, verified notes on Apple's Core AI (iOS/macOS 27) — what the docs don
   the squish + resize-back contract and why r≈0.98 vs official **is** faithful (= the model's own
   504-vs-518 variance); the RoPE-const / cache-free / pos-embed-dtype export patches; fp16 via
   `.half()` not autocast. Sample: [`scripts/depth_anything_3_sample.py`](scripts/depth_anything_3_sample.py).
+
+- [`voxcpm-tts.md`](voxcpm-tts.md) — VoxCPM-0.5B, the zoo's first **diffusion TTS**: a family of
+  graphs (LM + diffusion + VAE + vocoder) resolved as one catalog model.
+- [`chatterbox-port.md`](chatterbox-port.md) — Chatterbox: the zoo's first **zero-shot voice-cloning
+  TTS** and first multi-network port.
+- [`music-generation-stable-audio.md`](music-generation-stable-audio.md) — Stable Audio Open:
+  text→music latent diffusion (T5 cond + DiT + VAE) on-device.
+- [`sortformer-speaker-diarization.md`](sortformer-speaker-diarization.md) — streaming **speaker
+  diarization**: export only the neural core, port the streaming loop + AOSC speaker cache to the
+  host.
 
 Primary official sources behind these notes: the open repos (`coreai-torch`, `coreai-optimization`,
 `coreai-models` incl. its agent skills), the WWDC26 talks **324 / 325 / 326 / 330** (verbatim transcripts in
