@@ -43,6 +43,8 @@ let reply = try await chat.respond(to: "What can you do, offline?")
 // reply.content is the final answer
 ```
 
+Also runs behind **Apple's FoundationModels API** — CoreAIKit's [`KitLanguageModel`](https://github.com/john-rocky/coreai-kit#works-with-apples-foundationmodels-api) plugs this bundle into the system `LanguageModelSession`; capabilities (tool calling, guided generation) auto-detect per model.
+
 ▶️ **Run it (source)** — the [ChatDemo runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo)
 (pick "Youtu-LLM 2B"), or the zoo's own [CoreAIChat](../apps/CoreAIChat) on-device app. Verified
 on Mac via `swift run chat-cli --model youtu-llm-2b` → *"The capital of France is Paris."*

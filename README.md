@@ -22,6 +22,15 @@ complete copy-paste snippet and its integration checklist. Every row below also 
 ready-to-build app — in this repo's [`apps/`](apps) or a
 [CoreAIKit example](https://github.com/john-rocky/coreai-kit/tree/main/Examples) (marked ↗).
 
+Chat models also plug straight into **Apple's FoundationModels API**:
+`LanguageModelSession(model: try await KitLanguageModel(model: .qwen3_0_6B))` gives you the
+system session — `Tool` calling, `@Generable` guided generation, transcripts — backed by a zoo
+model ([how](https://github.com/john-rocky/coreai-kit#works-with-apples-foundationmodels-api)).
+Zero-dependency alternative: every bundle loads with Apple's own
+`CoreAILanguageModel(resourcesAt:)` as-is; this repo's
+[`ZooFMProvider`](swift/Sources/ZooFMProvider) adds streaming tool calling on top (incl. LFM's
+native dialect) — engineering notes in [`knowledge/fm-provider.md`](knowledge/fm-provider.md).
+
 ## Quickstart — running a model on your device
 
 New here? You'll have a model answering on-device in a few minutes (needs Xcode 27 + a Mac or an
