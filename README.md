@@ -110,6 +110,12 @@ snippet from that model's card — it's the same `catalog:` one-liner shown abov
 [CoreAIKit example app](https://github.com/john-rocky/coreai-kit/tree/main/Examples); **‡** = app
 wiring in progress. Full app list: [`apps/README.md`](apps/README.md).
 
+### Built with the zoo
+
+Third-party apps running zoo models. Built something? Open a
+[showcase issue](https://github.com/john-rocky/coreai-model-zoo/issues/new?template=showcase.yml)
+— a name, a link, and one line is all it takes. *Your app here.*
+
 ### Decode throughput (tok/s, greedy; output top-1 exact vs the Hugging Face reference)
 
 | | iPhone 17 Pro · GPU | iPhone 17 Pro · ANE | M4 Max · GPU |

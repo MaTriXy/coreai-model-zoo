@@ -1,0 +1,39 @@
+name: "Showcase — I built something with zoo models"
+description: Get your app listed in the README's "Built with the zoo" section
+title: "[Showcase] "
+labels: ["showcase"]
+body:
+  - type: input
+    id: app
+    attributes:
+      label: App name
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: Link
+      description: App Store / GitHub / web — whatever is public
+    validations:
+      required: true
+  - type: input
+    id: models
+    attributes:
+      label: Zoo models used
+      placeholder: e.g. qwen3.5-2b, whisper-large-v3-turbo
+    validations:
+      required: true
+  - type: textarea
+    id: blurb
+    attributes:
+      label: One-line description
+      description: What does it do? One sentence is perfect.
+    validations:
+      required: true
+  - type: checkboxes
+    id: permission
+    attributes:
+      label: Listing permission
+      options:
+        - label: You may list this app (name, link, one-liner) in the README
+          required: true
