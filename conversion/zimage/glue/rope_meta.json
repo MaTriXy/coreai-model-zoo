@@ -1,0 +1,20 @@
+{
+  "axes": [
+    {
+      "rows": 1536,
+      "freqs": 16
+    },
+    {
+      "rows": 512,
+      "freqs": 24
+    },
+    {
+      "rows": 512,
+      "freqs": 24
+    }
+  ],
+  "seq_multi_of": 32,
+  "latent_scaling": 0.3611,
+  "latent_shift": 0.1159,
+  "note": "caption token i -> coord (i+1,0,0); image token (h,w) -> coord (n_cap+1,h,w). Concat the three axis lookups for cos and sin."
+}

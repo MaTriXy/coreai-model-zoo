@@ -160,7 +160,7 @@ class RealRopeAttnProcessor(ZSingleStreamAttnProcessor):
 
 
 class NativeZDiT(nn.Module):
-    def __init__(self, rm, n_layers=None, residual_scale=1.0, update_scale=1.0):
+    def __init__(self, rm, n_layers=None, residual_scale=1.0, update_scale=1.0, io_fp32=False):
         super().__init__()
         self.x_embed = rm.all_x_embedder["2-1"]
         self.cap_embed = rm.cap_embedder
@@ -168,6 +168,7 @@ class NativeZDiT(nn.Module):
         self.context_refiner = rm.context_refiner
         self.layers = rm.layers if n_layers is None else rm.layers[:n_layers]
         self.final = rm.all_final_layer["2-1"]
+        self.io_fp32 = io_fp32
         self.register_buffer("x_pad_token", rm.x_pad_token.detach().clone())
         self.register_buffer("cap_pad_token", rm.cap_pad_token.detach().clone())
         # swap every block's attention processor to the export-clean real-rope one
@@ -187,6 +188,15 @@ class NativeZDiT(nn.Module):
 
     def forward(self, img_tokens, cap_feats, adaln, x_cos, x_sin, cap_cos, cap_sin,
                 x_pad_mask, cap_pad_mask):
+        # io_fp32: keep bf16 weights and bf16 compute, but expose fp32 at the graph
+        # boundary. Swift cannot fill a bfloat16 NDArray (CoreAIRuntime.BFloat16 is not
+        # public), and bf16 is the only dtype this DiT is numerically safe in.
+        if self.io_fp32:
+            dt = self.x_embed.weight.dtype
+            img_tokens, cap_feats, adaln = img_tokens.to(dt), cap_feats.to(dt), adaln.to(dt)
+            x_cos, x_sin = x_cos.to(dt), x_sin.to(dt)
+            cap_cos, cap_sin = cap_cos.to(dt), cap_sin.to(dt)
+            x_pad_mask, cap_pad_mask = x_pad_mask.to(dt), cap_pad_mask.to(dt)
         x = self.x_embed(img_tokens)
         x = x * (1.0 - x_pad_mask) + self.x_pad_token * x_pad_mask
         x_freqs = torch.cat([x_cos, x_sin], dim=-1)          # [1,n_img,hd]
@@ -201,4 +211,5 @@ class NativeZDiT(nn.Module):
         uni_freqs = torch.cat([x_freqs, cap_freqs], dim=1)
         for blk in self.layers:
             unified = blk(unified, None, uni_freqs, adaln, None)
-        return self.final(unified, adaln)
+        out = self.final(unified, adaln)
+        return out.float() if self.io_fp32 else out

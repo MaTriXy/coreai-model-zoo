@@ -25,7 +25,6 @@ import torch
 
 import coreai.runtime as rt
 from zimage_host import build_native_inputs, unpatchify_velocity
-from engine_parity_encoder import build_encoder_inputs
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "oracle")
@@ -51,11 +50,12 @@ ORDER = ("img_tokens", "cap_feats", "adaln", "x_cos", "x_sin", "cap_cos", "cap_s
 async def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("dit")
-    ap.add_argument("--dtype", default="bf16", choices=["fp16", "bf16", "fp32"])
+    ap.add_argument("--dtype", default="bf16", choices=["fp16", "bf16", "fp32"],
+                    help="the graph's IO dtype — fp32 for the shipped --io-fp32 bundles")
     ap.add_argument("--vae", default="torch", help="'torch' or a Core AI VAE bundle path")
     ap.add_argument("--encoder", default="oracle", help="'oracle' or a Core AI encoder bundle path")
     ap.add_argument("--enc-L", type=int, default=64)
-    ap.add_argument("--enc-dtype", default=None, choices=["fp16", "bf16"],
+    ap.add_argument("--enc-dtype", default=None, choices=["fp16", "bf16", "fp32"],
                     help="encoder graph dtype if it differs from the DiT's")
     ap.add_argument("--prompt", default=None, help="override prompt (default: oracle prompt)")
     ap.add_argument("--tag", default=None,
@@ -103,19 +103,28 @@ async def main():
         _e0 = _t.time()
         enc = (await rt.AIModel.load(args.encoder, rt.SpecializationOptions.default())).load_function("main")
 
-        enc_dt = (torch.bfloat16 if args.enc_dtype == "bf16" else
-                  torch.float16 if args.enc_dtype == "fp16" else DTYPE)
+        enc_dt = ({"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}
+                  .get(args.enc_dtype or "", DTYPE))
 
+        # The shipped encoder graph takes input_ids (embed_tokens is inside it), so the host
+        # needs a tokenizer and nothing else — no 7.5 GB text_encoder just for a lookup table.
         from transformers import AutoTokenizer
-        from transformers.models.qwen3.modeling_qwen3 import Qwen3Model
         tok = AutoTokenizer.from_pretrained(MODEL, subfolder="tokenizer")
-        te = Qwen3Model.from_pretrained(MODEL, subfolder="text_encoder",
-                                        torch_dtype=torch.bfloat16).eval()   # embed_tokens only
+        L = args.enc_L
 
         async def encode(text):
-            emb, mask, Lv = build_encoder_inputs(tok, te, text, args.enc_L, enc_dt)
-            r = await enc(inputs={"inputs_embeds": rt.NDArray(emb.contiguous()),
-                                  "mask": rt.NDArray(mask.contiguous())})
+            templated = tok.apply_chat_template([{"role": "user", "content": text}], tokenize=False,
+                                                add_generation_prompt=True, enable_thinking=True)
+            valid_ids = tok(templated, return_tensors="pt").input_ids
+            Lv = valid_ids.shape[1]
+            assert Lv <= L, f"prompt is {Lv} tokens; the encoder graph is fixed at {L}"
+            ids = torch.full((1, L), tok.pad_token_id or 0, dtype=torch.int32)
+            ids[0, :Lv] = valid_ids[0, :Lv].to(torch.int32)
+            neg = torch.finfo(enc_dt).min
+            m = torch.triu(torch.full((L, L), neg), 1)
+            m[:, Lv:] = neg                                    # padding keys are unattendable
+            r = await enc(inputs={"input_ids": rt.NDArray(ids.contiguous()),
+                                  "mask": rt.NDArray(m[None, None].to(enc_dt).contiguous())})
             return torch.as_tensor(r["penultimate"].numpy().astype(np.float32))[0, :Lv]  # [Lv,2560]
 
         _load_s = _t.time() - _e0

@@ -6,7 +6,9 @@ conditions a 34-block DiT that denoises in 8 FlowMatchEuler steps with classifie
 guidance, and a 16-channel VAE decodes. Photoreal by default.
 
 Bundle: [🤗 mlboydaisuke/Z-Image-Turbo-CoreAI](https://huggingface.co/mlboydaisuke/Z-Image-Turbo-CoreAI)
-— macOS, bf16 DiT (11 GB) + bf16 text encoder (6.6 GB) + fp32 VAE (256 / 512 / 1024).
+— macOS, bf16 DiT (11 GB) + bf16 text encoder (7.3 GB) + fp32 VAE (256 / 512 / 1024) + 2.4 MB
+of glue. Weights are bf16, graph boundaries are fp32 — Swift cannot fill a bfloat16 `NDArray`,
+and the cast costs ~15 % while *raising* fidelity to 42.6 dB.
 
 **One DiT graph covers 256², 512² and 1024² and any prompt length** — both the image-token
 and caption axes are dynamic, at a ~5–9 % cost. No per-resolution bundles.
@@ -17,7 +19,19 @@ bf16 module. See [port notes](../knowledge/zimage-port.md).
 
 ## Use it
 
-▶️ **Run it** — the Python reference engine (Core AI runtime, no app needed):
+▶️ **Run it** — [CoreAIImageGen (macOS)](../apps/CoreAIImageGen):
+
+```
+open apps/CoreAIImageGen/CoreAIImageGen.xcodeproj
+# → run the CoreAIImageGenMac scheme
+# → MODEL: "Z-Image-Turbo 512" → Download & Load → prompt → Generate
+```
+
+The host loop is ~250 lines (`Sources/ZImagePipeline.swift`) and is gated against the Python
+reference by `ondevice/ZImageRunner`, which compiles the *same file* into a CLI: same bundle,
+same noise, images agree to 42.9 dB.
+
+Or drive it from Python (Core AI runtime, no app needed):
 
 ```
 cd conversion/zimage
@@ -27,15 +41,12 @@ PY=../../coreai-models/.venv/bin/python
 $PY capture_oracle.py --size 512 --steps 8 --guidance 1.0
 
 # generate
-$PY pipeline_engine.py exports/zimage_dit_512_cap32_full_native_bf16_dyncap_dynimg/*.aimodel \
-    --arch native --dtype bf16 \
-    --encoder exports/zimage_encoder_seq64_full_bf16/*.aimodel \
+$PY pipeline_engine.py exports/zimage_dit_512_cap32_full_native_bf16_dyncap_dynimg_iofp32/*.aimodel \
+    --dtype fp32 \
+    --encoder exports/zimage_encoder_seq64_full_bf16_ids_iofp32/*.aimodel \
     --vae exports/zimage_vae_512_fp32/*.aimodel \
     --prompt "a lighthouse on a rocky cliff at sunset, dramatic clouds"
 ```
-
-An app tab (`CoreAIImageGen`) is a follow-up — the host loop is ~80 lines
-(`pipeline_engine.py`) and maps directly onto the Swift `GlmImagePipeline` shape.
 
 ## Which image model should I use?
 
@@ -45,12 +56,12 @@ The zoo has three Mac text-to-image models and they are **not** ranked — pick 
 | | params | sampler | time @1024 | precision |
 | --- | --- | --- | --- | --- |
 | **FLUX.2 klein** | 4B | 4 steps, guidance-distilled (no CFG) | **~17 s** | int4 |
-| **Z-Image-Turbo** | 6B | 8 steps + CFG (16 forwards) | ~64 s | **bf16, near-lossless** |
+| **Z-Image-Turbo** | 6B | 8 steps + CFG (16 forwards) | ~70 s | **bf16, near-lossless** |
 | **GLM-Image** | 16B (9B AR + 7B DiT) | AR prior + 20-step DiT | ~208 s | int8 |
 
 FLUX.2 klein is the fast one, and it also does in-context editing. Z-Image trades that speed
 for a non-distilled sampler you can steer with CFG and a port that is **numerically near the
-fp32 reference** (PSNR 39–42 dB, per-step velocity correlation ≥ 0.9997). GLM-Image buys
+fp32 reference** (PSNR 42.3–42.6 dB at 512²/1024², per-step velocity correlation ≥ 0.9997). GLM-Image buys
 composition from its autoregressive prior. No head-to-head *aesthetic* comparison has been
 run — the table above is speed and fidelity-to-reference, not taste.
 

@@ -28,9 +28,20 @@ and caption axes are dynamic, at a ~5–9 % cost over static shapes.
 
 | file | role | size |
 | --- | --- | --- |
-| `zimage_dit_..._bf16_dyncap_dynimg.aimodel` | the DiT — any resolution, any prompt length | 11 GB |
-| `zimage_encoder_seq64_full_bf16.aimodel` | Qwen3 text encoder → **penultimate** hidden | 6.6 GB |
+| `zimage_dit_..._dyncap_dynimg_iofp32.aimodel` | the DiT — any resolution, any prompt length | 11 GB |
+| `zimage_encoder_seq64_full_bf16_ids_iofp32.aimodel` | Qwen3 encoder → **penultimate** hidden; `embed_tokens` is *inside* the graph | 7.3 GB |
 | `zimage_vae_{256,512,1024}_fp32.aimodel` | 16ch VAE decoder (per-size) | 189 MB each |
+| `glue/` | RoPE tables + a `t_embedder` graph | 2.4 MB |
+| `tokenizer/` | Qwen2 BPE | 15 MB |
+
+**Weights are bf16; the graph boundaries are fp32** (`--io-fp32`). That is not a preference:
+a Swift host cannot fill or read a bfloat16 `NDArray`, and bf16 is the only dtype this DiT is
+numerically safe in. Casting at the boundary costs ~15 % per forward and *improves* fidelity
+(PSNR 39.5 → 42.6 dB) because nothing rounds on the way in.
+
+The `glue/` is what keeps a host from re-implementing the reference: `RopeEmbedder` is a
+per-axis table lookup, so three tables reproduce it exactly at any resolution and prompt
+length, and the timestep MLP ships as a 2 MB graph.
 
 **bf16, not int8.** On this compute-bound graph weight-only int8 is *slower* than bf16
 (2.35 vs 0.89 s/forward at 512²) because it dequantizes back to 16-bit and runs the same
@@ -41,9 +52,9 @@ the port numerically near the fp32 reference.
 
 | | s/forward | denoise (8 steps, CFG = 16 forwards) | PSNR |
 | --- | --- | --- | --- |
-| 256² | 0.29 | 5.4 s | 41.9 dB |
-| 512² | 0.96 | 15.4 s | 39.5 dB |
-| 1024² | 4.02 | 64.2 s | 42.4 dB |
+| 256² | 0.36 | 5.8 s | 35.6 dB |
+| 512² | 1.12 | 17.9 s | **42.6 dB** |
+| 1024² | 4.36 | 69.7 s | 42.3 dB |
 
 Per-step velocity correlation vs the reference is ≥ 0.9997 at every step and both CFG
 branches. PSNR is not comparable across prompts: a texture-heavy oil-painting prompt scores
@@ -51,10 +62,15 @@ branches. PSNR is not comparable across prompts: a texture-heavy oil-painting pr
 
 ## Usage
 
-The DiT graph takes host-prepped inputs (patchify, RoPE, pad masks) and returns the
-velocity; the sampler loop lives on the host. A complete, runnable reference is
-[`conversion/zimage/pipeline_engine.py`](https://github.com/john-rocky/coreai-model-zoo/blob/main/conversion/zimage/pipeline_engine.py)
-(~80 lines):
+Run it in [CoreAIImageGen](https://github.com/john-rocky/coreai-model-zoo/tree/main/apps/CoreAIImageGen)
+(macOS): pick "Z-Image-Turbo 512" or "… 1024" → Download & Load → Generate. The host loop is
+[`ZImagePipeline.swift`](https://github.com/john-rocky/coreai-model-zoo/blob/main/apps/CoreAIImageGen/Sources/ZImagePipeline.swift);
+the Python twin is
+[`conversion/zimage/pipeline_engine.py`](https://github.com/john-rocky/coreai-model-zoo/blob/main/conversion/zimage/pipeline_engine.py).
+Both agree with the fp32 reference to ~42.6 dB.
+
+The DiT graph takes host-prepped inputs (patchify, RoPE, pad masks) and returns the velocity;
+the sampler loop lives on the host:
 
 ```python
 # per step, for cond and uncond:

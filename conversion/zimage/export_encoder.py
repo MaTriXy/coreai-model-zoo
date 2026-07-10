@@ -43,15 +43,35 @@ def linear_quant_config(dtype: str = "int8") -> dict:
 
 
 class EncWrap(nn.Module):
-    def __init__(self, te, L):
+    """ids=True folds embed_tokens into the graph so a host app never needs the
+    151936x2560 embedding matrix (778 MB bf16). ids=False keeps the inputs_embeds
+    contract used by the Python reference engine."""
+
+    def __init__(self, te, L, ids: bool = False, io_fp32: bool = False):
         super().__init__()
         self.te = te
+        self.ids = ids
+        self.io_fp32 = io_fp32
         self.register_buffer("pos", torch.arange(L)[None])
 
-    def forward(self, inputs_embeds, mask):
-        out = self.te(inputs_embeds=inputs_embeds, attention_mask=mask,
+    def _run(self, emb, mask):
+        if self.io_fp32:
+            mask = mask.to(emb.dtype)
+        out = self.te(inputs_embeds=emb, attention_mask=mask,
                       position_ids=self.pos, use_cache=False, output_hidden_states=True)
-        return out.hidden_states[-2]
+        h = out.hidden_states[-2]
+        return h.float() if self.io_fp32 else h
+
+    def forward(self, inputs_embeds, mask):
+        return self._run(inputs_embeds, mask)
+
+
+class EncWrapIds(EncWrap):
+    """export_to_coreai binds reference_inputs by forward-parameter NAME, so the
+    ids graph needs its own signature."""
+
+    def forward(self, input_ids, mask):
+        return self._run(self.te.embed_tokens(input_ids), mask)
 
 
 def main():
@@ -59,12 +79,17 @@ def main():
     ap.add_argument("mode", nargs="?", default="int8lin", choices=["fp16", "bf16", "int8lin"])
     ap.add_argument("--L", type=int, default=64)
     ap.add_argument("--layers", type=int, default=None)
+    ap.add_argument("--io-fp32", action="store_true",
+                    help="fp32 mask + fp32 output (Swift cannot fill bfloat16 NDArrays)")
+    ap.add_argument("--ids", action="store_true",
+                    help="graph takes input_ids (embed_tokens in-graph) — required for app hosts")
     ap.add_argument("--out-dir", default="exports")
     args = ap.parse_args()
     dtype = torch.bfloat16 if args.mode in ("bf16", "int8lin") else DTYPE
 
     tag = f"L{args.layers}" if args.layers is not None else "full"
-    name = f"zimage_encoder_seq{args.L}_{tag}_{args.mode}"
+    name = (f"zimage_encoder_seq{args.L}_{tag}_{args.mode}"
+            + ("_ids" if args.ids else "") + ("_iofp32" if args.io_fp32 else ""))
 
     from coreai_models.export.macos import export_to_coreai
     import coreai.runtime as rt
@@ -76,12 +101,17 @@ def main():
         torch_dtype=torch.float32, attn_implementation="sdpa").eval()
     if args.layers is not None:
         te.layers = te.layers[:args.layers]
-    wrap = EncWrap(te, args.L).eval().to(dtype)
+    Wrap = EncWrapIds if args.ids else EncWrap
+    wrap = Wrap(te, args.L, ids=args.ids, io_fp32=args.io_fp32).eval().to(dtype)
 
     neg = torch.finfo(dtype).min
+    first = (torch.randint(0, 151936, (1, args.L), dtype=torch.int32) if args.ids
+             else torch.randn(1, args.L, 2560, dtype=dtype))
     ref = {
-        "inputs_embeds": torch.randn(1, args.L, 2560, dtype=dtype),
-        "mask": torch.triu(torch.full((1, 1, args.L, args.L), neg, dtype=dtype), 1),
+        ("input_ids" if args.ids else "inputs_embeds"): first,
+        "mask": torch.triu(torch.full((1, 1, args.L, args.L),
+                                      torch.finfo(torch.float32).min if args.io_fp32 else neg,
+                                      dtype=torch.float32 if args.io_fp32 else dtype), 1),
     }
     dyn = {k: None for k in ref}
     print(f"[enc] graph: L={args.L} layers={tag} mode={args.mode}", flush=True)

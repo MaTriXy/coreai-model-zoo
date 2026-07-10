@@ -144,6 +144,9 @@ def main():
     ap.add_argument("--act-quant", action="store_true",
                     help="quantize ACTIVATIONS to int8 too (true int8xint8 matmul; the LiteRT/"
                          "Android recipe). Calibrated on the captured oracle inputs.")
+    ap.add_argument("--io-fp32", action="store_true",
+                    help="fp32 graph inputs/outputs with bf16 weights+compute — required for a "
+                         "Swift host (bfloat16 NDArrays cannot be filled from Swift)")
     ap.add_argument("--update-scale", type=float, default=1.0, metavar="C",
                     help="fp16-safe: divide feed_forward.w2 / attention.to_out by C (output-exact)")
     ap.add_argument("--dyn-img", action="store_true",
@@ -163,6 +166,8 @@ def main():
         suffix += f"_rs{int(args.residual_scale)}u{int(args.update_scale)}"
     if args.act_quant:
         suffix += "_actq"
+    if args.io_fp32:
+        suffix += "_iofp32"
     name = f"zimage_dit_{args.size}_cap{args.cap}_{tag}_native_{args.mode}{suffix}"
 
     from coreai_models.export.macos import export_to_coreai
@@ -181,9 +186,11 @@ def main():
         dtype = torch.bfloat16 if args.mode in ("bf16", "int8lin") else DTYPE
     deploy = NativeZDiT(rm, n_layers=args.layers,
                         residual_scale=args.residual_scale,
-                        update_scale=args.update_scale).eval().to(dtype)
+                        update_scale=args.update_scale,
+                        io_fp32=args.io_fp32).eval().to(dtype)
 
-    ref, n_img = build_ref_inputs(args.size, args.cap, dtype)
+    ref, n_img = build_ref_inputs(args.size, args.cap,
+                                 torch.float32 if args.io_fp32 else dtype)
     dyn = {k: None for k in ref}  # fully static
     axis = 1
     if args.dyn_cap:

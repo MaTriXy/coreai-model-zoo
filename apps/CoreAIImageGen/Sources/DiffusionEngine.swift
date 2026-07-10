@@ -53,6 +53,10 @@ final class DiffusionEngine: ObservableObject {
         // One Hub repo hosts both resolutions (the AR is shared); glmSize picks the DiT/VAE pair.
         var isGLM: Bool = false
         var glmSize: Int = 1024
+        // Z-Image-Turbo: bespoke host loop (negated CFG, host-prepped tokens + RoPE).
+        // One DiT graph serves every side, so the option carries the side to render at.
+        var isZImage: Bool = false
+        var zSide: Int = 512
     }
 
     // Hosted catalog — macOS only. FLUX.2 klein 4B overruns the iOS memory limit, so the
@@ -82,6 +86,21 @@ final class DiffusionEngine: ObservableObject {
                 title: "GLM-Image 512 (AR+diffusion)",
                 defaultSteps: 20, defaultGuidance: 1.5,
                 isGLM: true, glmSize: 512),
+            // Z-Image-Turbo (Tongyi-MAI, Apache-2.0). ONE bf16 DiT graph covers every side —
+            // the image-token and caption axes are dynamic — so 512 and 1024 share weights and
+            // differ only in what the host feeds them.
+            ModelOption(
+                repoId: "mlboydaisuke/Z-Image-Turbo-CoreAI",
+                bundleDirName: "Z-Image-Turbo",
+                title: "Z-Image-Turbo 512",
+                defaultSteps: 8, defaultGuidance: 1.0,
+                isZImage: true, zSide: 512),
+            ModelOption(
+                repoId: "mlboydaisuke/Z-Image-Turbo-CoreAI",
+                bundleDirName: "Z-Image-Turbo",
+                title: "Z-Image-Turbo 1024",
+                defaultSteps: 8, defaultGuidance: 1.0,
+                isZImage: true, zSide: 1024),
         ]
         #else
         return []
@@ -99,6 +118,23 @@ final class DiffusionEngine: ObservableObject {
         ]
     }
     private static let glmRootFiles = ["ehs.f32"]
+
+    /// Z-Image bundle contents on the Hub. One repo, one DiT (dynamic axes) and per-side VAEs;
+    /// the ~2.4 MB glue (RoPE tables + t_embedder graph) keeps the host from re-implementing
+    /// the RoPE and the timestep MLP, and the ids-input encoder keeps the 778 MB embedding
+    /// matrix inside its graph.
+    private static func zimageItems(side: Int) -> [ModelDownloader.Item] {
+        [
+            .init(remote: "zimage_dit_512_cap32_full_native_bf16_dyncap_dynimg_iofp32.aimodel",
+                  local: "zimage_dit.aimodel"),
+            .init(remote: "zimage_encoder_seq64_full_bf16_ids_iofp32.aimodel", local: "zimage_encoder.aimodel"),
+            .init(remote: "zimage_vae_\(side)_fp32.aimodel", local: "zimage_vae_\(side).aimodel"),
+            .init(remote: "glue/zimage_t_embedder_fp32.aimodel", local: "zimage_t_embedder.aimodel"),
+            .init(remote: "tokenizer", local: "tokenizer"),
+        ]
+    }
+    private static let zimageRootFiles = ["glue/rope_axis0.f32", "glue/rope_axis1.f32",
+                                          "glue/rope_axis2.f32", "glue/rope_meta.json"]
 
     enum Status: Equatable {
         case idle
@@ -156,6 +192,9 @@ final class DiffusionEngine: ObservableObject {
     /// of the high-level CoreAIDiffusionPipeline auto-detect path. Set when such a bundle is loaded.
     @Published var isGLM = false
     private var glm: GlmImagePipeline?
+    private var zimage: ZImagePipeline?
+    private var isZImage = false
+    private var zSide = 512
 
     /// Shared range-chunked downloader (atomic placement + cross-launch resume).
     let downloader = ModelDownloader()
@@ -229,13 +268,20 @@ final class DiffusionEngine: ObservableObject {
         work = Task {
             defer { Self.setIdleTimerDisabled(false) }
             do {
+                self.zSide = option.zSide
                 let dest = try Self.bundleDestination(for: option)
-                let items = option.isGLM ? Self.glmItems(size: option.glmSize) : Self.directoryItems
-                let roots = option.isGLM ? Self.glmRootFiles : Self.rootFiles
+                let items: [ModelDownloader.Item]
+                if option.isGLM { items = Self.glmItems(size: option.glmSize) }
+                else if option.isZImage { items = Self.zimageItems(side: option.zSide) }
+                else { items = Self.directoryItems }
+                let roots = option.isGLM ? Self.glmRootFiles
+                          : (option.isZImage ? Self.zimageRootFiles : Self.rootFiles)
                 // Load a bundle already present under Documents/ without re-downloading; otherwise
                 // fetch it from the Hub. (GLM: the folder is "complete" once the AR bundle + ehs.f32
                 // are present; FLUX always goes through the downloader, which no-ops cached files.)
-                if !(option.isGLM && Self.glmBundleComplete(at: dest)) {
+                let alreadyLocal = (option.isGLM && Self.glmBundleComplete(at: dest))
+                    || (option.isZImage && Self.zimageBundleComplete(at: dest))
+                if !alreadyLocal {
                     await downloader.fetch(
                         repo: "https://huggingface.co/\(option.repoId)",
                         items: items, into: dest)
@@ -253,6 +299,12 @@ final class DiffusionEngine: ObservableObject {
     }
 
     /// True when a GLM bundle folder already holds everything the pipeline needs locally.
+    /// A staged Z-Image bundle is complete once the DiT and the RoPE glue are present.
+    private static func zimageBundleComplete(at dir: URL) -> Bool {
+        ZImagePipeline.looksLikeZImage(dir)
+            && FileManager.default.fileExists(atPath: dir.appendingPathComponent("rope_meta.json").path)
+    }
+
     private static func glmBundleComplete(at dir: URL) -> Bool {
         GlmImagePipeline.looksLikeGLM(dir)
             && FileManager.default.fileExists(atPath: dir.appendingPathComponent("ehs.f32").path)
@@ -313,8 +365,24 @@ final class DiffusionEngine: ObservableObject {
             self.status = .ready
             return
         }
+        // Z-Image bundle — bespoke host loop as well.
+        if ZImagePipeline.looksLikeZImage(url) {
+            let zStart = ContinuousClock.now
+            let pipe = ZImagePipeline(dir: url)
+            try await pipe.load()
+            self.zimage = pipe
+            self.glm = nil; self.pipeline = nil; self.descriptor = nil
+            self.isGLM = false; self.isZImage = true
+            self.loadSeconds = Self.seconds(since: zStart)
+            self.imageSize = "\(zSide)×\(zSide)"
+            self.modelSide = zSide
+            self.status = .ready
+            return
+        }
         self.glm = nil
+        self.zimage = nil
         self.isGLM = false
+        self.isZImage = false
 
         let start = ContinuousClock.now
         let desc = try PipelineDescriptor.resolve(at: url, config: .auto)
@@ -382,6 +450,11 @@ final class DiffusionEngine: ObservableObject {
     func generate(prompt: String, negativePrompt: String, steps: Int, guidance: Float, seed: UInt32,
                   startingImage: CGImage? = nil, strength: Float = 1.0) {
         if isGLM { generateGLM(prompt: prompt, steps: steps, guidance: guidance, seed: seed); return }
+        if isZImage {
+            generateZImage(prompt: prompt, negativePrompt: negativePrompt,
+                           steps: steps, guidance: guidance, seed: seed)
+            return
+        }
         guard let pipeline, let desc = descriptor, canGenerate else { return }
         work?.cancel()
         savedURL = nil
@@ -442,6 +515,39 @@ final class DiffusionEngine: ObservableObject {
     /// GLM-Image generation (text→image only). Drives the bespoke AR→DiT→VAE pipeline. The UI's
     /// Steps (default 20 — quality reference; ~12 is a faster preview) and Guidance (1.5) are
     /// honored via a dynamically computed flow-match schedule.
+    /// Z-Image-Turbo: negated CFG + FlowMatchEuler over one dynamic-shape DiT graph.
+    private func generateZImage(prompt: String, negativePrompt: String,
+                                steps: Int, guidance: Float, seed: UInt32) {
+        guard let zimage, canGenerate else { return }
+        work?.cancel()
+        savedURL = nil
+        let token = CancellationToken()
+        cancelToken = token
+        status = .generating(step: 0, total: steps)
+        let side = zSide
+        work = Task {
+            do {
+                let start = ContinuousClock.now
+                let cg = try await zimage.generate(
+                    prompt: prompt, negativePrompt: negativePrompt, side: side,
+                    steps: steps, guidance: guidance, seed: UInt64(seed)) { @Sendable step, total in
+                        Task { @MainActor in self.status = .generating(step: step, total: total) }
+                        return !token.isCancelled
+                    }
+                if token.isCancelled { self.status = .ready; return }
+                self.generateSeconds = Self.seconds(since: start)
+                self.image = cg
+                self.imageSize = "\(cg.width)×\(cg.height)"
+                self.exportURL = Self.writeTempPNG(cg)
+                self.status = .ready
+            } catch is CancellationError {
+                self.status = .ready
+            } catch {
+                self.status = .error(error.localizedDescription)
+            }
+        }
+    }
+
     private func generateGLM(prompt: String, steps: Int, guidance: Float, seed: UInt32) {
         guard let glm, canGenerate else { return }
         work?.cancel()

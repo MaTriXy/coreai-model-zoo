@@ -1,7 +1,9 @@
 # Z-Image-Turbo port — a 6B diffusion DiT on Core AI, and why it is Mac-only
 
 [`Tongyi-MAI/Z-Image-Turbo`](https://huggingface.co/Tongyi-MAI/Z-Image-Turbo) (6B,
-Apache-2.0) → the zoo's **fastest** text-to-image model. Single-Stream DiT (S3-DiT):
+Apache-2.0) → a Single-Stream DiT (S3-DiT) text-to-image model. Not the zoo's fastest —
+FLUX.2 klein does 1024² in ~17 s to Z-Image's ~70 s — but the port is near-lossless (PSNR 42.6 dB)
+and one graph serves every resolution and prompt length:
 Qwen3-4B text encoder → 34-block DiT (8-step FlowMatchEuler + CFG) → 16ch AutoencoderKL.
 Shipped as [mlboydaisuke/Z-Image-Turbo-CoreAI](https://huggingface.co/mlboydaisuke/Z-Image-Turbo-CoreAI).
 
@@ -14,7 +16,7 @@ CFG, the penultimate-hidden conditioning and the fp16 NaN long before we hit the
 
 | Piece | What it is | How it exported |
 | --- | --- | --- |
-| Text encoder | Qwen3-4B, causal, **penultimate hidden** `hidden_states[-2]` | fixed-L graph over `inputs_embeds` + an additive 4D mask (causal ∧ non-padding). Host: chat-template tokenize → right-pad → `embed_tokens` gather. Padding keys are masked, so valid-token outputs are pad-length independent. bf16. |
+| Text encoder | Qwen3-4B, causal, **penultimate hidden** `hidden_states[-2]` | fixed-L (64) graph over `input_ids` + an additive 4D mask (causal ∧ non-padding); `embed_tokens` is *inside* the graph. Host: chat-template tokenize → right-pad → build mask. Padding keys are masked, so valid-token outputs are pad-length independent. bf16 weights, fp32 boundary. |
 | DiT | 3840 dim / 30 heads / hd 128; x-embed + cap-embed, 2 noise-refiner (adaLN) + 2 context-refiner (no adaLN) + 30 main + final; 3-axis RoPE | thin wrapper over the **stock diffusers blocks** (`NativeZDiT`). The only change: the attention processor's `view_as_complex` RoPE swapped for a bit-exact real interleaved form fed precomputed cos/sin. Host does patchify / RoPE / pad-mask / unpatchify. **bf16.** |
 | VAE | 16ch AutoencoderKL decoder | fp32, scalar unscale `z/0.3611 + 0.1159`, `_patch_nearest_upsample`. Per-size (dynamic latent H/W trips `Constraints violated` — the decoder derives W from H). |
 | Sampler | FlowMatchEuler, 8 steps, `guidance=1.0` | host loop |
@@ -119,9 +121,11 @@ strictly more work than bf16. Weight-only int8 wins only on **bandwidth-bound** 
 
 | | s/fwd | denoise (8 steps, CFG = 16 forwards) | PSNR |
 | --- | --- | --- | --- |
-| 256px | 0.29 | 5.4 s | 41.93 dB |
-| 512px | 0.96 | 15.4 s | 39.47 dB |
-| 1024px | 4.02 | 64.2 s | 42.39 dB |
+| 256px | 0.36 | 5.8 s | 35.60 dB |
+| 512px | 1.12 | 17.9 s | 42.64 dB |
+| 1024px | 4.36 | 69.7 s | 42.33 dB |
+
+(Shipped `--io-fp32` graphs. The bf16-boundary variants were ~15 % faster and ~3 dB worse.)
 
 Encoder 0.2 s (2 calls), VAE 0.2–0.8 s. PSNR is **not comparable across prompts**: a
 texture-heavy oil-painting prompt scores 27.7 dB while being visually indistinguishable from
@@ -141,6 +145,35 @@ teacher-forced against it:
 - `engine_parity_encoder.py` — penultimate vs the pipeline's caption embeds: **0.999984**
 - `pipeline_engine.py` — end-to-end image vs the reference, plus novel prompts and
   resolutions via `ref_image.py`
+
+## Hosting it from Swift (the app tab)
+
+A Swift host cannot fill or read a **bfloat16 `NDArray`** — `CoreAIRuntime.BFloat16` is not
+public and a `UInt16` view trips the runtime's element-type check. Since bf16 is the only dtype
+this DiT survives, the shipped graphs expose **fp32 boundaries with bf16 weights and bf16
+compute** (`export_dit.py --io-fp32`, `export_encoder.py --io-fp32`). The cast costs ~15 %
+per forward (0.97 → 1.12 s at 512²) and *raises* fidelity (39.5 → 42.6 dB) — nothing rounds
+on the way in.
+
+Three more things keep the host from re-implementing the reference:
+
+- `export_encoder.py --ids` folds `embed_tokens` into the graph, so the app never carries the
+  151936×2560 embedding matrix (778 MB bf16).
+- `RopeEmbedder` is literally `cat([freqs[i][ids[:,i]] for i in 0..2])` — a **per-axis table
+  lookup**. Three tables (392 KB) reproduce it exactly at any resolution and prompt length.
+  Coordinates: caption token *i* → `(i+1, 0, 0)`; image token *(h,w)* → `(n_cap+1, h, w)`.
+- The timestep MLP ships as a 2 MB `t_embedder` graph.
+
+Host arithmetic that *is* re-implemented (all verified against the model):
+patchify feature order is `f = (dy*2 + dx)*16 + c`; the sampler schedule has a closed form,
+`σ_i = 3(1−t)/(3(1−t)+t)` with `t = i/(n−1)`, matching the diffusers scheduler to 3e-8 for
+every step count and resolution.
+
+⚠️ The VAE graph **bakes the un-scale** (`z/0.3611 + 0.1159`) — feed it the raw latent. Doing
+it again on the host costs 18 dB (42.9 → 24.4) and is the one bug the Swift port actually hit.
+
+`ondevice/ZImageRunner` compiles the app's `ZImagePipeline.swift` into a CLI so the Swift host
+can be gated against the Python engine on identical noise: images agree to **42.9 dB**.
 
 ## Follow-ups
 
