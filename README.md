@@ -1,6 +1,7 @@
 # CoreAI-Model-Zoo
 
 [![CoreAIKit](https://img.shields.io/github/v/tag/john-rocky/coreai-kit?label=CoreAIKit)](https://github.com/john-rocky/coreai-kit/releases)
+[![HF downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fjohn-rocky%2Fcoreai-assets%2Fmain%2Fbadge%2Fhf-downloads.json)](https://huggingface.co/mlboydaisuke)
 [![CI](https://github.com/john-rocky/coreai-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/john-rocky/coreai-kit/actions/workflows/ci.yml)
 [![Nightly device gate](https://github.com/john-rocky/coreai-kit/actions/workflows/nightly-gate.yml/badge.svg)](https://github.com/john-rocky/coreai-kit/actions/workflows/nightly-gate.yml)
 
@@ -115,6 +116,12 @@ wiring in progress. Full app list: [`apps/README.md`](apps/README.md).
 Third-party apps running zoo models. Built something? Open a
 [showcase issue](https://github.com/john-rocky/coreai-model-zoo/issues/new?template=showcase.yml)
 — a name, a link, and one line is all it takes. *Your app here.*
+
+### Most downloaded
+
+<img src="https://raw.githubusercontent.com/john-rocky/coreai-assets/main/charts/hf-top.svg" alt="Most downloaded zoo models this month" width="700">
+
+*(auto-updated weekly from Hugging Face download counts)*
 
 ### Decode throughput (tok/s, greedy; output top-1 exact vs the Hugging Face reference)
 
