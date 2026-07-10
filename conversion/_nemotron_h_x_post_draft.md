@@ -53,16 +53,22 @@ Check whether the head is tied before you trust it.
 
 ## D — the honest one
 
-I wrote a fused Metal kernel for the Mamba2 selective scan. Verified it to 2e-7.
-Then measured it: 1.24x **slower** per layer than the graph the compiler already
-emits.
+I wrote a fused Metal kernel for the Mamba2 decode step. It measured 1.3x slower
+per layer than the graph the compiler already emits, so I wrote that up: "the
+optimizer beats the hand kernel."
 
-At S=1 there is no scan. `state = state*dA + dt*B*x` is elementwise and
-`y = (state·C)` is a 128-wide sum. No loop, nothing to fuse. Worse, I'd serialized
-that 128-wide reduction inside one thread while the compiler spreads it across many.
+It doesn't. I had two hypotheses for the loss and both were wrong. Occupancy? The
+kernel ran 1536 threads, each serializing a 128-wide reduction; spreading that
+across a simdgroup gave 32x the threads and bought nothing. Dispatch overhead? Two
+kernels per layer are *cheaper* than one — which no launch-cost model can produce.
 
-The sequential dependency only exists in prefill. I spent the effort on the one
-place in the model where it isn't.
+It was the boundary. A custom-kernel op is a fusion barrier, and my call site did
+`state.float()` on the way in and `.half()` on the way out: a fp32 blow-up of the
+recurrent state, ~3 MB per layer that the stock graph never pays. Hand it across in
+fp16 and the kernel wins by 5%.
+
+Two adjacent kernels are cheap because they share one boundary. That's the whole
+lesson, and I had to measure three things to find it.
 
 ---
 
@@ -80,6 +86,6 @@ Notes:
 - All numbers measured: iPhone 17 Pro (A19 Pro) cooled, PipelinedBench, AOT h18p;
   M4 Max via raw AIModel calls. Quality = teacher-forced top-1 vs the fp32 oracle at
   the 33 margin-clean prompt positions.
-- The 1.24x kernel figure in D is from granite-4.0-h-350m (0.195 vs 0.242 ms per
-  mamba layer), the model the kernel was written against.
+- D's figures are granite-4.0-h-350m: 0.161 ms/mamba-layer stock, 0.209 with the fp32
+  boundary, 0.180 with the fp16 one; full model 1.01–1.07x over three runs.
 - Card: zoo/nemotron-3-nano.md
