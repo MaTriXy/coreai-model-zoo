@@ -426,10 +426,12 @@ final class DiffusionEngine: ObservableObject {
     }
 
     /// Fetch the tiny root files with a plain resolve GET (skipping any already present).
+    /// `names` are repo paths and may be nested (Z-Image keeps its RoPE tables under `glue/`);
+    /// they always land flat at the bundle root, where the pipelines look for them.
     private static func fetchRootFiles(repoId: String, names: [String] = rootFiles, into dest: URL) async throws {
         let fm = FileManager.default
         for name in names {
-            let target = dest.appendingPathComponent(name)
+            let target = dest.appendingPathComponent((name as NSString).lastPathComponent)
             if fm.fileExists(atPath: target.path) { continue }
             guard let url = URL(string: "https://huggingface.co/\(repoId)/resolve/main/\(name)") else {
                 throw err("bad file url for \(name)")
