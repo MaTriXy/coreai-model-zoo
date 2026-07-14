@@ -80,3 +80,22 @@ betting a port on it).
 
 See [`stateful-kv-cache.md`](stateful-kv-cache.md) for the state-based path this replaces, and
 [`conversion-guide.md`](conversion-guide.md) for the `slice_update` / `remove_functionalization` details.
+
+
+## Strategy note — de-confusing "the ANE wall" (2026-06-10 re-verification, added 2026-07-14)
+
+Three separate facts were historically conflated into "ANE is walled by a SIGSEGV, so we pivoted to GPU":
+
+1. **ANE is correct, not broken**: gemma4 E2B ran **8/8 exact on the device ANE** once fp16 numerics
+   were fixed (`[x,-x]` LayerNorm trick + fp32 accumulation for Conv2d-1×1). The earlier "ANE 0/8" read
+   was retracted.
+2. **ANE is speed-capped, not correctness-capped** (~6 tok/s at the time): a 262k-vocab head plus
+   host-cache KV re-feed every step. Lifting it needs stateful KV (this very bug) + a reduced head + AOT.
+3. **The sound reason the zoo standardized on GPU** is that custom Metal kernels
+   (`coreai_torch.TorchMetalKernel` → `coreai.metal4_kernel`) are **GPU-only by construction** — the ANE
+   runs fixed hardware ops, never hand-written MSL. If the speed lever is fused kernels, that is a GPU
+   play regardless of this bug.
+
+Caveat kept honest: on-device the GPU lead was small at measurement time (iPhone GPU 7.4 vs ANE 5.9 tok/s);
+the big GPU numbers are Mac. Keep the ANE path alive — it is the energy-efficient lane MLX/llama.cpp
+cannot touch, and it revives whenever the FB above lifts.

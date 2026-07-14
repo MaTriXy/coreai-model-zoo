@@ -168,3 +168,19 @@ download and upload of multi-GB `.aimodel` bundles:
 - **Upload:** `hf upload-large-folder <repo> . --repo-type=model` is **resumable** — kill it and re-run,
   it continues (only un-committed files re-upload). Uploads are fast when the chunks are already in the
   local Xet cache from a prior download.
+
+
+## Device-integration traps (detection/CV apps; from the RF-DETR device work, added 2026-07-14)
+
+- **`.aimodel` directories cannot be embedded in an app bundle** — the installer misreads the
+  extension-suffixed root dir as a nested bundle → "invalid bundle". Ship via download (Hub) or
+  sideload to Documents instead.
+- **Never name a folder `Resources/` at the iOS bundle root** — CodeSign fails with
+  "code object is not signed at all (embedded.mobileprovision)".
+- **Benchmark only at `thermalState == .nominal`**: a day of device use silently degrades a 25 ms
+  model to 58–103 ms (thermal saturation, not your app). Record thermal/lowPower alongside STATS;
+  cool-down between runs.
+- **ANE status for CV (iOS 27 beta)**: CV graphs silently fall back to GPU even with an ANE preference
+  and a pure-ViT split backbone (fingerprint-identical outputs, zero ANE-compile wait). GPU monolith is
+  the fastest deployment; the split-deploy infra (`export_rf_detr.py --split`, backbone/head chain
+  bit-exact) stands ready for when the runtime honors ANE.
