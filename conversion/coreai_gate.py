@@ -52,8 +52,14 @@ ARCH = {
     "granite": {},
     "youtu": {},
     "nanbeige": {},
+    "lfm2_moe": {},
+    "qwen3_6_moe": {},
 }
-ALIASES = {"ornith": "qwen3.5", "qwen3_6": "qwen3.5", "qwen3.6": "qwen3.5"}
+# Dense Qwen3.6-27B reuses the qwen3.5 overlay; the 35B-A3B is MoE (own overlay). Match the
+# MoE substrings before the generic qwen3.6->qwen3.5 fallback.
+ALIASES = {"ornith": "qwen3.5", "lfm2_moe": "lfm2_moe", "a1b": "lfm2_moe",
+           "35b_a3b": "qwen3_6_moe", "35b-a3b": "qwen3_6_moe", "a3b": "qwen3_6_moe",
+           "qwen3_6": "qwen3.5", "qwen3.6": "qwen3.5"}
 
 
 def resolve_python(flag: str | None) -> str:
@@ -79,10 +85,12 @@ def resolve_runner() -> str:
 def detect_arch(bundle: str, hf_id: str) -> str | None:
     name = Path(bundle).name.lower()
     hay = name + " " + hf_id.lower()
-    for k in ARCH:
-        if k in name or k.replace("_", "") in name or k in hf_id.lower():
-            return k
-    return next((v for sub, v in ALIASES.items() if sub in hay), None)
+    # Aliases first: they carry the specific discriminators (a1b/a3b) that must beat the
+    # generic family substring — e.g. "lfm2_5_8b_a1b" must route to lfm2_moe, not lfm2_5.
+    a = next((v for sub, v in ALIASES.items() if sub in hay), None)
+    if a:
+        return a
+    return next((k for k in ARCH if k in name or k.replace("_", "") in name or k in hf_id.lower()), None)
 
 
 # The oracle runs in a child interpreter (the overlay venv). Kept as source text so the
@@ -122,6 +130,17 @@ def build(arch, hf_id):
         saved = m.config.max_position_embeddings; m.config.max_position_embeddings = TRACE_KV_CACHE_SEQ_LEN
         k, v = KVCache.create_cache_tensors(m.config, dtype=FP32); m.config.max_position_embeddings = saved
         st = {"k_cache": k, "v_cache": v}; order = ["k_cache","v_cache"]
+    elif arch == "lfm2_moe":
+        from coreai_models.models.macos.lfm2_moe import lfm2_moe_from_hf, build_decode_state
+        m = lfm2_moe_from_hf(hf_id, target_dtype=FP32)
+        st = build_decode_state(m.config, max_seq_len=CTX, dtype=FP32); order = ["k_cache","v_cache","conv_state"]
+    elif arch == "qwen3_6_moe":
+        from coreai_models.models.macos.qwen3_5_moe import Qwen3_5MoeStatefulForCausalLM, build_decode_state
+        try:
+            m = Qwen3_5MoeStatefulForCausalLM.from_hf_memory_efficient(hf_id, max_context_length=CTX, target_dtype=FP32, hf_config_attr="text_config")
+        except Exception:
+            m = Qwen3_5MoeStatefulForCausalLM.from_hf_memory_efficient(hf_id, max_context_length=CTX, target_dtype=FP32)
+        st = build_decode_state(m.config, max_seq_len=CTX, dtype=FP32); order = ["k_cache","v_cache","conv_state","rec_state"]
     else:
         raise SystemExit("unknown arch: " + arch)
     m.eval()
