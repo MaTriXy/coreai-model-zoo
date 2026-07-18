@@ -99,8 +99,11 @@ ORACLE_SRC = r'''
 import json, sys, warnings
 warnings.filterwarnings("ignore")
 import torch
-FP32, CTX = torch.float32, 4096
+CTX = 4096
 arch, hf_id, prompt, n = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
+# Oracle weight dtype: fp32 is the strict ceiling, but a 35B in fp32 is ~140 GB — past
+# most machines. fp16 (the export's own trace dtype) fits and is a valid conversion check.
+FP32 = {"fp32": torch.float32, "fp16": torch.float16}[sys.argv[5] if len(sys.argv) > 5 else "fp32"]
 
 def build(arch, hf_id):
     from coreai_models.export._constants import TRACE_KV_CACHE_SEQ_LEN
@@ -177,11 +180,11 @@ print(json.dumps({"input_ids": ids[0].tolist(), "gen_ids": gen, "margins": margi
 '''
 
 
-def run_oracle(python: str, arch: str, hf_id: str, prompt: str, n: int) -> dict:
+def run_oracle(python: str, arch: str, hf_id: str, prompt: str, n: int, dtype: str) -> dict:
     with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
         f.write(ORACLE_SRC)
         script = f.name
-    r = subprocess.run([python, script, arch, hf_id, prompt, str(n)],
+    r = subprocess.run([python, script, arch, hf_id, prompt, str(n), dtype],
                        capture_output=True, text=True, cwd=tempfile.gettempdir())
     line = next((l for l in r.stdout.splitlines() if l.startswith("{")), None)
     if not line:
@@ -217,6 +220,8 @@ def main() -> None:
     ap.add_argument("--prompt", default="The capital of France is",
                     help="deterministic prompt; open-ended ones hit ties and aren't good gates")
     ap.add_argument("-n", type=int, default=16)
+    ap.add_argument("--oracle-dtype", choices=["fp32", "fp16"], default="fp32",
+                    help="fp32 = strict ceiling; fp16 for models too big for fp32 (e.g. 35B needs ~140 GB)")
     ap.add_argument("--python", help="overlay interpreter (default: sibling coreai-models/.venv)")
     args = ap.parse_args()
 
@@ -226,7 +231,7 @@ def main() -> None:
     python = resolve_python(args.python)
     runner = resolve_runner()
 
-    oracle = run_oracle(python, arch, args.hf_id, args.prompt, args.n)
+    oracle = run_oracle(python, arch, args.hf_id, args.prompt, args.n, args.oracle_dtype)
     engine = run_engine(runner, args.bundle, oracle["input_ids"], args.n)
 
     print("=== GATE:", Path(args.bundle).name, f"(arch={arch})")
@@ -236,7 +241,7 @@ def main() -> None:
     if engine is None:
         sys.exit("  RESULT: ERROR (engine produced no output)")
     if engine == oracle["gen_text"]:
-        print("  RESULT: PASS — token-for-token == fp32 oracle")
+        print(f"  RESULT: PASS — token-for-token == {args.oracle_dtype} oracle")
         return
     from transformers import AutoTokenizer
     eng_ids = AutoTokenizer.from_pretrained(args.hf_id)(engine, add_special_tokens=False).input_ids

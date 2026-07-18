@@ -59,9 +59,17 @@ check the quant recipe and pass regardless of converter version.
 python3 conversion/coreai_gate.py <bundle-dir> <hf-id> [--arch KEY] [-n 16]
 ```
 
-PASS = token-for-token match, or a first divergence only at a fp32 top-2 margin < 0.1 (a
+PASS = token-for-token match, or a first divergence only at a top-2 margin < 0.1 (a
 knife-edge tie, fp16 class). Use a **deterministic** prompt ("The capital of France is");
 open-ended prompts hit ties everywhere and aren't gate material.
+
+- **Large models: `--oracle-dtype fp16`.** The fp32 oracle materialises all weights in
+  fp32 — a 35B is ~140 GB and won't fit (27B at ~108 GB was the largest that fit 137 GB RAM).
+  fp16 is the export's own trace dtype, so an fp16 oracle is still a valid conversion check.
+- **MoE + custom-metal-kernel bundles gate fine.** The `sym8_gather` MoE bundles
+  (`export_*_moe_metal_decode_pipelined.py`, custom `gather_qmm` Metal kernel) load and run
+  through the engine on OS 27 beta 3 — the "custom Metal kernels fail to load" known issue
+  (178056451) did NOT fire for them. Gate arch: `qwen3_6_moe` / `lfm2_moe`.
 
 Non-obvious things the gate encodes (documented nowhere else):
 
