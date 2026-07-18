@@ -153,7 +153,15 @@ def build(arch, hf_id):
     return m, [st[k] for k in order]
 
 from transformers import AutoTokenizer
-tok = AutoTokenizer.from_pretrained(hf_id)
+try:
+    tok = AutoTokenizer.from_pretrained(hf_id)
+except Exception:
+    # Some repos (LFM2.5) name a tokenizer_class this transformers build lacks
+    # ("TokenizersBackend"); load the fast tokenizer straight from tokenizer.json,
+    # bypassing class resolution. config.eos_token_id still drives EOS below.
+    from huggingface_hub import hf_hub_download
+    from transformers import PreTrainedTokenizerFast
+    tok = PreTrainedTokenizerFast(tokenizer_file=hf_hub_download(hf_id, "tokenizer.json"))
 ids = tok(prompt, return_tensors="pt").input_ids.to(torch.int32)
 model, states = build(arch, hf_id)
 eos = set()
@@ -244,7 +252,13 @@ def main() -> None:
         print(f"  RESULT: PASS — token-for-token == {args.oracle_dtype} oracle")
         return
     from transformers import AutoTokenizer
-    eng_ids = AutoTokenizer.from_pretrained(args.hf_id)(engine, add_special_tokens=False).input_ids
+    try:
+        tk = AutoTokenizer.from_pretrained(args.hf_id)
+    except Exception:
+        from huggingface_hub import hf_hub_download
+        from transformers import PreTrainedTokenizerFast
+        tk = PreTrainedTokenizerFast(tokenizer_file=hf_hub_download(args.hf_id, "tokenizer.json"))
+    eng_ids = tk(engine, add_special_tokens=False).input_ids
     ref, margins = oracle["gen_ids"], oracle.get("margins", [])
     d = next((i for i in range(min(len(eng_ids), len(ref))) if eng_ids[i] != ref[i]),
              min(len(eng_ids), len(ref)))
