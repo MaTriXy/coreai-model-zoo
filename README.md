@@ -11,8 +11,8 @@
 > Every model broken by the `coreai-torch` 0.4.0 debug-location issue has been re-published:
 > re-converted with 0.4.1 (verification gates re-run), or repaired in place with
 > `strip_debug_info` (debug locations removed, weights byte-identical). Catalog-served apps
-> just re-download. One artifact remains pending: FastContext-1.0-4B, whose upstream weights
-> were removed from Hugging Face.
+> just re-download. (One port, FastContext-1.0-4B, was retired instead of recovered — Microsoft
+> removed its upstream weights from Hugging Face on 2026-06-30, so it cannot be rebuilt.)
 >
 > One correction to the earlier version of this banner: "there is no workaround" was wrong.
 > Apple later shared [`strip_debug_info`](https://github.com/apple/coreai-torch/issues/44) —
@@ -87,7 +87,6 @@ snippet from that model's card — it's the same `catalog:` one-liner shown abov
 | ✅ [**Nanbeige4.1-3B**](zoo/nanbeige4.1-3b.md) (dense reasoning/agentic, iPhone — 32B-class @ 3.93B) | [🤗 Nanbeige4.1-3B-CoreAI](https://huggingface.co/mlboydaisuke/Nanbeige4.1-3B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Apache-2.0 |
 | ✅ [**MiniCPM5-1B**](zoo/minicpm5-1b.md) (1B-class on-device LLM, hybrid Think/No-Think, 128K, OpenBMB) | [🤗 MiniCPM5-1B-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM5-1B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Apache-2.0 |
 | ✅ [**Youtu-LLM-2B**](zoo/youtu.md) (dense **MLA** — zoo's first **iPhone** MLA & first **dense** MLA; DeepSeek-V2-style latent-KV attention at 1.96B with an absorbed flash-decode kernel, reasoning + agentic; Tencent) | [🤗 Youtu-LLM-2B-CoreAI](https://huggingface.co/mlboydaisuke/Youtu-LLM-2B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Other (youtu-llm) |
-| 🔧 **FastContext-1.0-4B** (repo-exploration agent — first-turn search / multi-turn evidence / file:line citation; Qwen3-4B arch, iPhone GPU, AOT h18p; Microsoft) | [🤗 FastContext-1.0-4B-CoreAI](https://huggingface.co/mlboydaisuke/FastContext-1.0-4B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | MIT |
 | ✅ **BitCPM-8B** (zoo's first **1.58-bit ternary** LLM — every weight is {-1,0,+1}; MiniCPM4-8B arch, custom 2-bit packed-GEMM Metal kernel; 8B running in ~2.1 GB on iPhone GPU; OpenBMB) | [🤗 BitCPM-8B-CoreAI](https://huggingface.co/mlboydaisuke/BitCPM-8B-CoreAI) | [CoreAIChat](apps/CoreAIChat) ‡ | Apache-2.0 |
 | ✅ **LLaDA-8B dLLM** (zoo's first **diffusion LLM** — masked-diffusion decode: fills a canvas of `[MASK]` tokens **in parallel**, not left-to-right AR; bidirectional LLaMA-dense 8B, [d3LLM](https://huggingface.co/d3LLM/d3LLM_LLaDA)-distilled; int4 ~4.9 GB, Mac) | [🤗 LLaDA-8B-dLLM-CoreAI](https://huggingface.co/mlboydaisuke/LLaDA-8B-dLLM-CoreAI) | [DiffuseChat ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/DiffuseChat) | Other |
 | ✅ **BitVLA** (zoo's first **Vision-Language-Action / robotics** model + first ternary multimodal — image+instruction → 7-DoF robot action; **1.58-bit** BitNet-2B LLM + BitSigLIP vision, shared ternary kernel; runs on iPhone GPU; arXiv 2506.07530) | [🤗 BitVLA-CoreAI](https://huggingface.co/mlboydaisuke/BitVLA-CoreAI) | [CoreAIChat](apps/CoreAIChat) ‡ | MIT |

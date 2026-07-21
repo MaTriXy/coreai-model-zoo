@@ -1,5 +1,9 @@
 # FastContext-1.0-4B-SFT — Core AI
 
+> **Deprecated 2026-07-21** — Microsoft removed the upstream weights from Hugging Face
+> (2026-06-30, no explanation); the shipped 0.4.0-era artifact cannot be rebuilt without them.
+> The HF repo is kept for reference.
+
 [🤗 mlboydaisuke/FastContext-1.0-4B-CoreAI](https://huggingface.co/mlboydaisuke/FastContext-1.0-4B-CoreAI) · MIT · base [microsoft/FastContext-1.0-4B-SFT](https://huggingface.co/microsoft/FastContext-1.0-4B-SFT)
 
 Microsoft's long-context **repository-exploration agent** — a Qwen3-4B-Instruct backbone SFT'd on
