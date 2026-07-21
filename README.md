@@ -5,37 +5,20 @@
 [![CI](https://github.com/john-rocky/coreai-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/john-rocky/coreai-kit/actions/workflows/ci.yml)
 [![Nightly device gate](https://github.com/john-rocky/coreai-kit/actions/workflows/nightly-gate.yml/badge.svg)](https://github.com/john-rocky/coreai-kit/actions/workflows/nightly-gate.yml)
 
-> [!WARNING]
-> ## Every converted model in the zoo is currently unusable
+> [!NOTE]
+> ## Recovered — the zoo is back on OS 27 beta 2+
 >
-> They run on iOS/macOS 27 **beta 1**. From **beta 2 onward, all of them fail to load.**
+> Every model broken by the `coreai-torch` 0.4.0 debug-location issue has been re-published:
+> re-converted with 0.4.1 (verification gates re-run), or repaired in place with
+> `strip_debug_info` (debug locations removed, weights byte-identical). Catalog-served apps
+> just re-download. The last three precompiled `.aimodelc` artifacts (qwen3-1.7b-official,
+> FastContext, GLM-Image AR/DiT) are being replaced today.
 >
-> Recovery is underway. Every recipe is in [`conversion/`](conversion). Models will return in
-> waves, and this banner will go away with the last one.
->
-> If this cost you time, I'm sorry.
->
-> ### What happened
->
-> `coreai-torch` 0.4.0 baked PyTorch stack traces into the IR as fused locations. From OS 27
-> beta 2 the compiler stopped accepting them, so every asset converted before 2026-07-13 —
-> all 83 catalog entries — fails to load:
->
-> ```
-> error: expected AICode versioned location
-> LLVM ERROR: cannot unwrap empty `odiec_module_t`
-> ```
->
-> Apple has documented this and the call is sound
-> ([coreai-torch#37](https://github.com/apple/coreai-torch/issues/37),
-> [v0.4.1 release notes](https://github.com/apple/coreai-torch/releases/tag/v0.4.1)):
-> *"Reconvert your model using coreai-torch v0.4.1 or later."*
->
-> Unfortunately there is no workaround. `coreai-build package` re-emits the asset but leaves
-> the IR locations untouched; pinning `coreai-core` back to `1.0.0b1` does not help either, as
-> the gate is OS-side. `coreai-build inspect` still reads the asset without complaint, which
-> makes it look recoverable — it isn't. The weights are intact. The graph is intact. Only the
-> debug metadata is the problem.
+> One correction to the earlier version of this banner: "there is no workaround" was wrong.
+> Apple later shared [`strip_debug_info`](https://github.com/apple/coreai-torch/issues/44) —
+> it strips the offending debug locations from an existing 0.4.0 asset in minutes, no
+> re-conversion needed. If you have your own 0.4.0-converted assets, that is the shortest fix.
+> Details: [`knowledge/coreai-torch-041-ir-incident.md`](knowledge/coreai-torch-041-ir-incident.md).
 
 LLMs converted to Apple **Core AI** (`.aimodel`, iOS 27 / macOS 27) — downloadable, verified
 on-device, with the conversion code and a knowledge base. Successor to

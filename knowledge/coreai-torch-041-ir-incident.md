@@ -13,8 +13,7 @@ LLVM ERROR: cannot unwrap empty `odiec_module_t`
 Root cause (Apple, [apple/coreai-torch#37](https://github.com/apple/coreai-torch/issues/37),
 [v0.4.1 release notes](https://github.com/apple/coreai-torch/releases/tag/v0.4.1)): 0.4.0
 baked PyTorch stack traces into the IR as MLIR `fused` locations; the beta-2 compiler no
-longer parses that nested form. It fires on deep module hierarchies. Apple's fix is the only
-fix: **re-convert with coreai-torch 0.4.1+**. Things that do NOT work (all verified):
+longer parses that nested form. It fires on deep module hierarchies. Apple's original guidance was **re-convert with coreai-torch 0.4.1+** — **UPDATE 2026-07-21: a cheaper in-place fix exists, see the strip_debug_info section at the end of this doc.** Things that do NOT work (all verified):
 
 - `coreai-build package` — re-emits the asset (producer bumps) but leaves IR locations
   untouched; compile fails identically.
@@ -107,3 +106,35 @@ with a pure-text fallback (Ornith); `lfm2_5` = `lfm2_from_hf(stateful=True)`;
    not reach users; the re-pin commit does. HF-direct models (e.g. Ornith) need no catalog
    change.
 6. Free disk: delete the local export and the source weights once the upload is verified.
+
+## UPDATE 2026-07-21 — the in-place fix: `strip_debug_info` (no re-conversion needed)
+
+Apple later shared a workaround ([coreai-torch#44](https://github.com/apple/coreai-torch/issues/44)):
+the broken assets are healthy except the debug locations, and those can simply be stripped:
+
+```python
+from coreai_torch.debugging.debug_info import strip_debug_info
+from coreai.authoring import AIModelAsset
+asset = AIModelAsset.load(path)          # <-- fails on beta 2+ with b2 wheels, see below
+strip_debug_info(asset.program)
+asset.program.save_asset(out_path)
+```
+
+Verified here on 40 zoo bundles: weights byte-identical, minutes per model, stripped assets
+load clean on beta 3.
+
+**Caveat — on a beta 2+ machine the snippet above cannot even load the asset** (the authoring
+bytecode reader in coreai-core 1.0.0b2 wheels runs the same versioned-IR conversion and aborts).
+The working recipe on this machine:
+
+1. Isolated venv with **coreai-torch 0.4.0 + coreai-core 1.0.0b1** (`_recovery_venvs/strip`) —
+   the b1 wheel's bundled MLIR parses the old fused locations fine. (The earlier "pinning
+   coreai-core back to 1.0.0b1 does not help, the gate is OS-side" finding in this doc was
+   about the RUNTIME load path; for the AUTHORING parse the gate is in the wheel, not the OS.)
+2. `AIProgram._load_bytecode(bundle/main.mlirb)` -> vendored 0.4.1 `strip_debug_info`
+   (0.4.0 lacks it; two helper signatures need adapting) -> `save_asset`.
+3. Re-load + re-save with the b2 wheel (now parses fine) to get a proper
+   `producer: coreai-core 1.0.0b2` fingerprint, then probe + publish.
+
+Driver scripts: recovery session scratchpad `strip_b1.py` / `strip_sweep.py`.
+`.aimodelc` (compiled) artifacts cannot be stripped — those need re-export + AOT recompile.
