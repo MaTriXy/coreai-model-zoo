@@ -83,11 +83,23 @@ repeat run.
 |---|---:|---|---:|---:|
 | int8hu block-32 symmetric | 4.59 GiB | **Pass; shipping baseline** | 47.37 prefill / 46.35 decode tok/s | 29.83 / 32.80 tok/s |
 | int4hu block-32 symmetric | 3.14 GiB | **No-go** | 58.91 prefill / 56.07 decode tok/s after warmup | 45.47 / 44.46 tok/s |
+| mixed int4/int8 (layers 3/4/5 int4) | 4.41 GiB | **No-go** | not benchmarked; quality gate first | not run |
 
 The int8 4K run used a 3,840-token prompt plus 256 generated tokens, peaked at 9.17 GiB RSS, and recorded zero
 swaps. Int4 peaked at 6.24 GiB. Int4 is faster and smaller but is not shippable: Paris diverges after 2/24
 tokens, the freezing prompt after 3/16, and the reasoning prompt diverges at the decisive first prediction with
 margin `0.8237`. Determinism does not compensate for failed oracle parity.
+
+Mixed precision was screened by changing physical layers, so each selected weight was still stored once and
+used by both loop passes. All four layer quartiles failed decisive eager checks. Twelve layers were harmless in
+isolation, but accumulated error made the combined set fail. The largest greedy eager survivor used int4 for
+physical layers 3, 4, 5, and 10; its 4.3 GiB Core AI bundle matched the 24-token Paris probe and took only an
+allowed fp32 knife-edge branch on the freezing probe, but failed the 64-token decimal-reasoning probe at token
+zero with a decisive fp32 margin of `0.8542`. Removing layer 10 produced the 4.41 GiB candidate shown above and
+failed at the same position and margin. Other two-layer combinations failed eager checks; the surviving
+two-layer mix would put only 2/22 physical blocks in int4—too little bandwidth reduction to justify
+another shipping mode after the larger Core AI failures. The exporter and recipe therefore remain unchanged:
+int8 is the only accepted body quantization.
 
 All accepted Mac results were measured on an M4 Max with 36 GB RAM, macOS 27.0 (`26A5378n`), Xcode 27 beta 4,
 runtime `aff0bb2`, AC power, and High Power Mode. A battery-saving run reached only 21.83 decode tok/s, so power
@@ -173,9 +185,8 @@ The remaining credible optimization order is:
 
 1. Keep the compiler-recognized SDPA, fused QKV authoring, single two-pass graph, shared physical weights, and
    44 disjoint cache slots already implemented.
-2. Pursue a quality-guided mixed int4/int8 body, not another attention kernel. Pure int4 proved the bandwidth
-   opportunity (+21% warm decode) but failed the reasoning gate; selectively retaining sensitive physical
-   modules at int8 is the smallest experiment that could recover quality while benefiting both executions.
+2. Keep int8 as the shipping body. The quality-guided mixed int4/int8 sweep above was the smallest remaining
+   weight-bandwidth experiment; every meaningful multi-layer candidate failed a decisive eager or Core AI gate.
 3. If contexts beyond 4K become a requirement, evaluate quantized KV state. Int8 KV would halve the dominant
    cache capacity and long-context traffic, but it requires a quantization-aware attention path and must beat
    the stock composite plus all recurrent quality gates. It is not justified for the current verified 4K target.

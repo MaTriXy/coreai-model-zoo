@@ -56,6 +56,7 @@ notes = [
   "Local 4.59 GiB bundle passes fp32 and Core AI gates; M4 Max averages 47.4 prefill / 46.4 decode tok/s.",
   "The exported 4,096-token boundary passes at 29.8 prefill / 32.8 decode tok/s with 9.17 GiB peak RSS.",
   "int4hu is a measured no-go: 3.14 GiB and 56.1 warm decode tok/s, but it fails the decisive fp32 continuation gate.",
+  "Mixed int4/int8 is also a no-go: the 4.41 GiB three-layer candidate fails the decisive Core AI reasoning gate.",
 ]
 
 ["holo2-4b"]
