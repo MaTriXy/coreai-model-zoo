@@ -37,6 +37,27 @@ notes = [
   "Model overlay bakes in two macOS-27-beta GPU-delegate workarounds (see script header).",
 ]
 
+# Staged exception: conversion and Mac gates are verified; iPhone and publication
+# remain explicitly pending in the card.
+["nanbeige4.2-3b"]
+script = "export_nanbeige41_decode_pipelined.py"
+args = [
+  "int8hu",
+  "--head-sym",
+  "--static-ids",
+  "--hf-id",
+  "Nanbeige/Nanbeige4.2-3B",
+  "--revision",
+  "5ff54fb7ed86ce8e216d78bff5417ab9981de3d4",
+]
+card = "../zoo/nanbeige4.2-3b.md"
+notes = [
+  "Pinned int8 baseline: 22 shared physical layers, two passes, 44 logical KV cache layers.",
+  "Local 4.59 GiB bundle passes fp32 and Core AI gates; M4 Max averages 47.4 prefill / 46.4 decode tok/s.",
+  "The exported 4,096-token boundary passes at 29.8 prefill / 32.8 decode tok/s with 9.17 GiB peak RSS.",
+  "int4hu is a measured no-go: 3.14 GiB and 56.1 warm decode tok/s, but it fails the decisive fp32 continuation gate.",
+]
+
 ["holo2-4b"]
 script = "export_qwen3_vl_pipelined.py"
 args = ["int8lin", "--hf-id", "Hcompany/Holo2-4B"]
