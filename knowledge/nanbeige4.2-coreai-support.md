@@ -101,6 +101,14 @@ two-layer mix would put only 2/22 physical blocks in int4—too little bandwidth
 another shipping mode after the larger Core AI failures. The exporter and recipe therefore remain unchanged:
 int8 is the only accepted body quantization.
 
+A second sweep selected int4 by projection role across all 22 physical layers while leaving every other body
+linear and the head at the accepted int8 settings. `qkv_proj`, `o_proj`, `gate_proj`, and `down_proj` all
+produced decisive teacher-forced errors; their worst accepted-int8 margins were `0.4620`, `0.1370`, `0.4620`,
+and `0.3115`, respectively. `up_proj` was the only eager survivor: Paris and freezing were exact, and its sole
+reasoning mismatch was a `0.0302` tie. The resulting 4.27 GiB Core AI bundle then passed both factual fp32
+engine gates exactly but diverged on reasoning token zero at margin `0.8542`. The temporary mode and bundle were
+removed. Selecting by projection role therefore does not recover a shippable mixed int4/int8 configuration.
+
 All accepted Mac results were measured on an M4 Max with 36 GB RAM, macOS 27.0 (`26A5378n`), Xcode 27 beta 4,
 runtime `aff0bb2`, AC power, and High Power Mode. A battery-saving run reached only 21.83 decode tok/s, so power
 state is part of the benchmark record.
@@ -145,8 +153,26 @@ state, but the partial-result staging and merge could not beat Apple’s composi
 kernel gate by 22% at short context and 57% at 4K, no full-model candidate was exported and no experimental
 kernel remains in the overlay.
 
-**Decision:** retain the built-in externalized SDPA. It is both faster and simpler. No custom Nanbeige kernel is
-included in the conversion recipe.
+The short-context weight path was tested separately with a dense S=1 symmetric-int8 Metal GEMV specialized
+from the existing MoE gather kernel. The probe consumed the exact signed-int8 bytes and fp16 block-32 scales
+emitted by the shipping quantizer, so it changed only execution, not weights. Each asset was warmed and timed
+for 200 calls on the same M4 Max:
+
+| Nanbeige projection shape | Stock int8 | Custom GEMV | Stock/custom |
+|---|---:|---:|---:|
+| output `[3072, 6144]` | **0.2797 ms** | 0.2900 ms | 0.965x |
+| fused QKV `[8192, 3072]` | **0.3149 ms** | 0.3223 ms | 0.977x |
+| MLP gate/up `[10752, 3072]` | **0.3459 ms** | 0.3590 ms | 0.964x |
+| MLP down `[3072, 10752]` | **0.3519 ms** | 0.3599 ms | 0.978x |
+| LM head `[166144, 3072]` | **1.7532 ms** | 1.7603 ms | 0.996x |
+
+Outputs retained cosine approximately `1.0` with maximum absolute error at most `9.77e-4`, but every real
+shape was slower. A fused gate+up/SwiGLU variant also failed to improve: row/threadgroup tunings `4×8`, `2×16`,
+`2×8`, and `8×4` measured `0.962x`, `0.999x`, `0.891x`, and `0.993x` versus the stock pair. The best result is
+statistical parity, not a deployable gain, so both probes were deleted.
+
+**Decision:** retain the built-in externalized SDPA and stock quantized linears. They are faster and simpler.
+No custom Nanbeige kernel is included in the conversion recipe.
 
 ## Loop-aware complexity and pipeline analysis
 
@@ -185,8 +211,9 @@ The remaining credible optimization order is:
 
 1. Keep the compiler-recognized SDPA, fused QKV authoring, single two-pass graph, shared physical weights, and
    44 disjoint cache slots already implemented.
-2. Keep int8 as the shipping body. The quality-guided mixed int4/int8 sweep above was the smallest remaining
-   weight-bandwidth experiment; every meaningful multi-layer candidate failed a decisive eager or Core AI gate.
+2. Keep int8 as the shipping body. The quality-guided layer and projection-role mixed int4/int8 sweeps above
+   were the smallest remaining weight-bandwidth experiments; every meaningful candidate failed a decisive
+   eager or Core AI gate.
 3. If contexts beyond 4K become a requirement, evaluate quantized KV state. Int8 KV would halve the dominant
    cache capacity and long-context traffic, but it requires a quantization-aware attention path and must beat
    the stock composite plus all recurrent quality gates. It is not justified for the current verified 4K target.

@@ -22,7 +22,7 @@ catalog entry has been written. The shipping candidate is `int8hu --head-sym --s
 | Int8 authoring/oracle gate | **Pass:** prompt top-1 8/8, greedy 32/32, cosine 0.9997768, deterministic |
 | Int8 Core AI engine gate | **Pass:** token-exact vs fp32 for Paris (24 tokens), 0°C (16), and the 64-token-max reasoning smoke concluding 9.8 > 9.11; deterministic rerun |
 | Int4 candidate | **No-go:** 3.14 GiB and deterministic, but Paris diverged after 2/24 tokens, freezing after 3/16, and reasoning failed decisively at token 0 (`margin=0.8237`) |
-| Mixed int4/int8 candidate | **No-go:** layers 3/4/5 in int4 reduced the bundle to 4.41 GiB, but the Core AI reasoning gate failed decisively at token 0 (`margin=0.8542`); no mixed mode is exposed |
+| Mixed int4/int8 candidates | **No-go:** layers 3/4/5 and the projection-role `up_proj` candidate both failed the Core AI reasoning gate decisively at token 0 (`margin=0.8542`); no mixed mode is exposed |
 | Core AI bundle load/cache smoke | **Pass:** load 2.34 s; one token produced logits and mutated all 44 cache layers |
 | Mac M4 Max, prompt 128 / generation 256 / 3 runs | **Pass:** 47.37 prefill / 46.35 decode tok/s average |
 | iPhone Release/AOT `h18p`, same workload | **Blocked:** connected iPhone 16 Pro is `h17p` on iOS 26.6; Xcode 27 cannot mount its developer image |
@@ -63,6 +63,13 @@ eager margin gate, but combining them accumulated decisive errors. The largest m
 exported: the four-layer (`3/4/5/10`) and three-layer (`3/4/5`) candidates both selected a different
 high-margin reasoning branch in Core AI. The smaller bundle was 4.41 GiB. It was not benchmarked because quality
 gates precede performance acceptance, and no experimental mixed mode remains in the conversion interface.
+
+Selecting int4 by projection role did not recover the candidate. `qkv_proj`, `o_proj`, `gate_proj`, and
+`down_proj` had decisive eager errors. `up_proj` alone reached all three eager continuations with only one
+`0.0302`-margin tie and produced a 4.27 GiB bundle, but the Core AI reasoning gate still diverged at token zero
+with margin `0.8542`. Dense int8 GEMV, fused gate/up, SDPA, TensorOps attention, and loop-draft kernel/pipeline
+experiments also failed their isolated speed or quality gate; measurements are in the support report. The
+shipping recipe therefore continues to use Core AI's stock int8 linear and SDPA paths.
 
 ## Convert
 
