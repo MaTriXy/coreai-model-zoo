@@ -283,9 +283,7 @@ index 2c28784..093dfbd 100644
          span.end()
      }
  
-@@ -1117,10 +1260,12 @@ private struct EngineImpl: ~Copyable {
-         let defaultWarmupLength = 256
- 
+@@ -1119,6 +1262,8 @@ private struct EngineImpl: ~Copyable {
          let shapesToWarm: [Int]
 -        if queryLength > 0 {
 +        if inputIdsBaseDesc.shape.count >= 2 && inputIdsBaseDesc.shape[1] == 1 {
@@ -295,8 +293,6 @@ index 2c28784..093dfbd 100644
          } else {
              shapesToWarm = [1, defaultWarmupLength]
          }
- 
-         CLILogger.log("Running warmup for \(shapesToWarm.count) shape(s)")
 @@ -1188,12 +1333,35 @@ private struct EngineImpl: ~Copyable {
              var asyncOutputs = InferenceFunction.AsyncMutableViews()
              asyncOutputs.insert(&logitsOutput, for: logitsOutputName)
