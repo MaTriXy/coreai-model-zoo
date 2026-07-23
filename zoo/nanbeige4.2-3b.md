@@ -40,7 +40,8 @@ The bundled vendor chat template supports both `enable_thinking=true` and `enabl
 | M4 Max Release, prompt 128 / generation 256 / 3 runs | **47.37 prefill / 46.35 decode tok/s** |
 | Maximum context tested | **4,096 tokens**: 29.83 prefill / 32.80 decode tok/s, 9.17 GiB peak RSS, zero swaps |
 | iOS 27 GPU AOT `h18p` | Compile pass with Xcode 27; generated package source hash matches the published model |
-| iPhone `h18p` hardware | Pending; no iPhone throughput or memory claim |
+| iPhone 17 Pro `h18p` hardware | **PASS (2026-07-24)**: nat 24/24 + oracle 24/24 greedy tokens identical to the M4 Max engine reference (itself token-exact vs the fp32 oracle), reproduced on a second full run; cold-specialization load 31.7 s (warm 10.8 s), no jetsam |
+| iPhone 17 Pro speed (p=128 g=256, S=1 chunking, ×2 trials) | first run 6.9 prefill / 5.7 decode → settled **8.5 prefill / 6.4 decode tok/s** — the two-pass loop reads the 22 shared blocks twice per token (~2× weight traffic), so a bandwidth-bound phone lands near half a same-size single-pass model; Mac-class GPUs are this model's sweet spot |
 
 The Mac benchmark used macOS 27.0, Xcode 27 beta 4, Core AI runtime `aff0bb2`, AC power, and High Power Mode.
 The checkpoint config SHA-256 is
@@ -75,8 +76,36 @@ python3 ../coreai-model-zoo/_smoke/verify_nanbeige42_checkpoint.py \
   --official-python /path/to/nanbeige-oracle/bin/python
 ```
 
-The advertised 262K context is not claimed; the published bundle is verified to 4K. CoreAIKit enrollment and
-the generated “Use it” block remain pending until the iOS 27 `h18p` device gate passes.
+The advertised 262K context is not claimed; the published bundle is verified to 4K.
+
+<!-- gen-cards:use-it begin id=nanbeige4.2-3b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
+## Use it
+
+💻 **Build with it** — complete; the glue is kit API, copy-paste runs:
+
+```swift
+import CoreAIKit
+
+let chat = try await ChatSession(catalog: "nanbeige4.2-3b")
+let reply = try await chat.respond(to: prompt)
+// reply: the answer, generated fully on-device
+```
+
+The take-home is [`Examples/ChatDemo/Sources/QuickStart.swift`](https://github.com/john-rocky/coreai-kit/blob/main/Examples/ChatDemo/Sources/QuickStart.swift)
+— this exact code as one typed function, no UI; the CLI is an argument shell over it, and
+the GUI drives the same `ChatSession` across turns for its transcript.
+Multi-turn? Hold the `ChatSession` and call `respond(to:)` per turn — it keeps the
+conversation history; `streamResponse(to:)` yields tokens as they decode.
+
+**Integration checklist**
+
+- SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKit**
+- Info.plist: none needed
+- Entitlements (iOS): `com.apple.developer.kernel.increased-memory-limit`
+- First run downloads the model — 4.7 GB (Mac) / 4.7 GB (iPhone) — then it loads from the
+  local cache (Application Support; progress via the `downloadProgress` callback)
+- Measure in Release — Debug is ~3× slower on per-token host work
+<!-- gen-cards:use-it end -->
 
 ## License
 

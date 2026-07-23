@@ -118,8 +118,12 @@ Mac execution and Mac-side iOS compile acceptance pass. Xcode 27 (`27A5228h`) wi
 compiled the int8 bundle for iOS 27 GPU `h18p` in 11.53 seconds. The resulting 4,809,424 KiB `.aimodelc`
 records the published `.aimodel` source hash.
 
-The iOS 27 `h18p` hardware gate is pending, so no iPhone throughput or memory claim is made. CoreAIKit
-enrollment and the generated “Use it” block remain pending that gate.
+The iOS 27 `h18p` hardware gate passed on 2026-07-24 (iPhone 17 Pro, maintainer-run): nat 24/24 and
+oracle 24/24 greedy tokens identical to the M4 Max engine reference across two full runs, cold-specialization
+load 31.7 s (warm 10.8 s), and p=128/g=256 throughput of 6.9/5.7 tok/s first-run → 8.5 prefill / 6.4 decode
+tok/s settled. The two-pass loop reads the 22 shared blocks twice per token, so the bandwidth-bound phone
+lands near half a same-size single-pass model — consistent with theory, no conversion issue. CoreAIKit
+enrollment (`nanbeige4.2-3b`) and the generated "Use it" block shipped with the gate.
 
 ## Reproduction
 
