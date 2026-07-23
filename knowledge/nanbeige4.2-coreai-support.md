@@ -3,7 +3,10 @@
 This report records the implementation and acceptance work for
 [`Nanbeige/Nanbeige4.2-3B`](https://huggingface.co/Nanbeige/Nanbeige4.2-3B) at immutable revision
 `5ff54fb7ed86ce8e216d78bff5417ab9981de3d4`. Conversion and Mac execution are implemented. Publication,
-the chat-template integration, and iPhone acceptance remain pending.
+published-LanguageBundle chat-template review, and iPhone acceptance remain pending.
+
+Port by [Vadim Smirnov (@ukint-vs)](https://github.com/ukint-vs); tracked in
+[`john-rocky/coreai-model-zoo#5`](https://github.com/john-rocky/coreai-model-zoo/issues/5).
 
 ## Model architecture
 
@@ -224,8 +227,9 @@ The remaining credible optimization order is:
 
 Mac acceptance passes. iPhone acceptance does not: the connected iPhone 16 Pro is `h17p` on iOS 26.6, so Xcode
 27 cannot mount a compatible developer image, and the release criterion requires an iOS 27 `h18p` device. No
-iPhone throughput or memory claim is extrapolated from Mac measurements. Int4 cannot be used as a fallback
-because it failed the same quality gate required of int8.
+iPhone throughput or memory claim is extrapolated from Mac measurements. Local `h18p` AOT compile acceptance
+also stops before compilation because Xcode 27's optional Metal Toolchain component is not installed. Int4
+cannot be used as a fallback because it failed the same quality gate required of int8.
 
 ## Reproduction
 
@@ -247,4 +251,5 @@ python3 ../coreai-model-zoo/conversion/coreai_gate.py \
 
 The advertised 262K context is not claimed. The verified recipe remains 4K until larger contexts are measured on
 both target classes. No bundle has been uploaded and no external CoreAIKit catalog has been changed. Publication
-requires separate approval, a verified chat template, and successful iOS 27 `h18p` acceptance.
+requires separate approval and successful iOS 27 `h18p` acceptance. The pinned vendor template is bundled and
+renders correctly with thinking enabled and disabled; both modes still need published-LanguageBundle review.

@@ -6,6 +6,9 @@ revision `5ff54fb7ed86ce8e216d78bff5417ab9981de3d4` (Apache-2.0). The checkpoint
 transformer layers** whose weights run twice; the exported decoder therefore executes 44 layer passes and keeps
 **44 independent KV cache layers** without duplicating the 22 trainable blocks.
 
+**Ported by [Vadim Smirnov (@ukint-vs)](https://github.com/ukint-vs).** Tracking issue:
+[`john-rocky/coreai-model-zoo#5`](https://github.com/john-rocky/coreai-model-zoo/issues/5).
+
 The complete architecture, conversion, parity, quantization, runtime, hardware, and kernel investigation is in
 the [Nanbeige4.2 Core AI support report](../knowledge/nanbeige4.2-coreai-support.md).
 
@@ -25,7 +28,7 @@ catalog entry has been written. The shipping candidate is `int8hu --head-sym --s
 | Mixed int4/int8 candidates | **No-go:** layers 3/4/5 and the projection-role `up_proj` candidate both failed the Core AI reasoning gate decisively at token 0 (`margin=0.8542`); no mixed mode is exposed |
 | Core AI bundle load/cache smoke | **Pass:** load 2.34 s; one token produced logits and mutated all 44 cache layers |
 | Mac M4 Max, prompt 128 / generation 256 / 3 runs | **Pass:** 47.37 prefill / 46.35 decode tok/s average |
-| iPhone Release/AOT `h18p`, same workload | **Blocked:** connected iPhone 16 Pro is `h17p` on iOS 26.6; Xcode 27 cannot mount its developer image |
+| iPhone Release/AOT `h18p`, same workload | **Blocked:** connected iPhone 16 Pro is `h17p` on iOS 26.6; local AOT also needs Xcode's optional Metal Toolchain component |
 | Peak memory and maximum context actually tested | **9.17 GiB peak RSS**, zero swaps; full 4,096-token boundary passed at 29.83 prefill / 32.80 decode tok/s |
 
 The upstream config bytes are pinned by SHA-256
@@ -37,8 +40,8 @@ The committed isolated official-checkpoint versus Core AI overlay gate reports `
 continuation. The measured int8 quality results use the exact shipping quantization traversal (111 physical
 linear modules). The Release Core AI bundle on runtime
 `aff0bb2` then matched its pinned fp32 authoring oracle token-for-token for all three public prompts. The pinned
-tokenizer does not contain the configurable vendor chat template described by its model README, so a separately
-verified chat-template integration remains a publication gate.
+tokenizer includes the vendor `chat_template.jinja`; rendering is verified with `enable_thinking=true` and
+`enable_thinking=false`. Review should exercise both modes through the published LanguageBundle.
 
 The accepted M4 Max benchmark used macOS 27.0 (`26A5378n`), Xcode 27 beta 4, Core AI runtime `aff0bb2`,
 static-S=1, AC power, High Power Mode, prompt 128, generation 256, and three trials. Prefill was 48.84, 48.45,
@@ -51,7 +54,8 @@ required.
 The connected iPhone 16 Pro (`iPhone17,1`) runs iOS 26.6, so Xcode 27 cannot mount a compatible developer image
 and Core AI device execution is unavailable. It also targets `h17p`, while this release criterion requires
 `h18p`. iPhone acceptance therefore remains failed—not extrapolated from Mac results—until an iOS 27 `h18p`
-device is available.
+device is available. The local `h18p` AOT command currently exits before compilation with “Core AI requires the
+Metal Toolchain”; install Xcode 27’s optional Metal Toolchain component before repeating compile acceptance.
 
 For comparison only, the int4 candidate occupies 3.14 GiB and peaks at 6.24 GiB RSS with zero swaps. Its first
 128/256 run was still rising (38.01 prefill / 37.74 decode tok/s average); after the full-context warmup, the
@@ -107,7 +111,8 @@ have shape `[44, 1, 8, max_context, 128]`. The existing static-S=1 pipelined run
 
 - Run the same Release benchmark and 24-token oracle gate on an iOS 27 `h18p` iPhone with the increased-memory
   entitlement. The evaluated int4 candidate has failed and cannot be used as a fallback.
-- Supply and verify the intended chat template; the pinned tokenizer has none.
+- Exercise both bundled chat-template modes through the published LanguageBundle; local rendering passes for
+  `enable_thinking=true` and `enable_thinking=false`.
 
 After those results are recorded and publication is separately approved, upload the selected immutable bundle,
 add `nanbeige4.2-3b` to CoreAIKit with `kind: chat`, `engine: pipelined`, `thinking: true`, enroll the card in
