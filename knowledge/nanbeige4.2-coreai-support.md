@@ -118,9 +118,8 @@ Mac execution and Mac-side iOS compile acceptance pass. Xcode 27 (`27A5228h`) wi
 compiled the int8 bundle for iOS 27 GPU `h18p` in 11.53 seconds. The resulting 4,809,424 KiB `.aimodelc`
 records the published `.aimodel` source hash.
 
-The available iPhone 16 Pro is `h17p` on iOS 26.6, while acceptance requires an iOS 27 `h18p` device. No iPhone
-throughput or memory claim is made. CoreAIKit enrollment and the generated “Use it” block remain pending that
-hardware gate.
+The iOS 27 `h18p` hardware gate is pending, so no iPhone throughput or memory claim is made. CoreAIKit
+enrollment and the generated “Use it” block remain pending that gate.
 
 ## Reproduction
 
