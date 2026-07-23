@@ -158,7 +158,7 @@ def build_kv_reference(cfg, max_ctx: int, static_ids: bool = False):
 
 
 def write_bundle_metadata(
-    out_dir: Path, name: str, hf_id: str, revision: str | None, cfg, max_ctx: int
+    out_dir: Path, name: str, hf_id: str, revision: str | None, cfg, max_ctx: int, mode: str
 ) -> None:
     source = {"model_definition": "torch", "hf_model_id": hf_id}
     if revision:
@@ -170,7 +170,7 @@ def write_bundle_metadata(
                      "max_context_length": max_ctx, "embedded_tokenizer": True,
                      "function_map": {"main": ["main"]}},
         "source": source,
-        "compression": None,
+        "compression": None if mode == "fp16" else {"scheme": mode},
         "compilation": {"date": datetime.now(timezone.utc).isoformat(), "targets": []},
     }
     (out_dir / "metadata.json").write_text(json.dumps(meta, indent=2))
@@ -266,7 +266,7 @@ def main() -> None:
     print(f"saving {aimodel} ...", flush=True)
     prog.save_asset(aimodel, rt.AIModelAssetMetadata())
 
-    write_bundle_metadata(out_dir, name, args.hf_id, args.revision, cfg, args.max_ctx)
+    write_bundle_metadata(out_dir, name, args.hf_id, args.revision, cfg, args.max_ctx, args.mode)
     from transformers import AutoTokenizer
 
     AutoTokenizer.from_pretrained(args.hf_id, revision=args.revision).save_pretrained(
