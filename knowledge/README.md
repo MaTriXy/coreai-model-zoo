@@ -189,6 +189,12 @@ Hard-won, verified notes on Apple's Core AI (iOS/macOS 27) — what the docs don
 - [`sortformer-speaker-diarization.md`](sortformer-speaker-diarization.md) — streaming **speaker
   diarization**: export only the neural core, port the streaming loop + AOSC speaker cache to the
   host.
+- [`vibevoice-multispeaker-tts.md`](vibevoice-multispeaker-tts.md) — VibeVoice, the zoo's first
+  **multi-speaker / dialogue TTS**: dual-LM **next-token diffusion**, why the speech feedback loop
+  forces fp16, and why the `expectFrequentReshapes` hint must be off on iOS.
+- [`melband-source-separation.md`](melband-source-separation.md) — Mel-Band RoFormer, the zoo's first
+  **source separation**: complex → real arithmetic, and folding STFT/iSTFT into the graph as constant
+  DFT matmuls so the on-device host needs no FFT.
 
 Primary official sources behind these notes: the open repos (`coreai-torch`, `coreai-optimization`,
 `coreai-models` incl. its agent skills), the WWDC26 talks **324 / 325 / 326 / 330** (verbatim transcripts in

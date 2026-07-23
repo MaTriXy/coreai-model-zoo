@@ -1,0 +1,14 @@
+# derived fixtures + exported bundles + weights — never commit (large, regenerable)
+artifacts/
+ship_ios/
+ship_macos/
+_ckpt/
+_ref/
+_precheck/
+__pycache__/
+*.aimodel
+*.aimodelc
+*.f32
+*.npz
+*.wav
+*.ckpt

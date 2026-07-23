@@ -1,0 +1,15 @@
+# derived fixtures + exported bundles + upstream code/weights — never commit (large, regenerable)
+artifacts/
+artifacts_ios/
+device_bundle/
+_code/
+_oracle/
+_oracle_out/
+__pycache__/
+*.aimodel
+*.aimodelc
+*.f16
+*.f32
+*.npz
+*.wav
+*.log

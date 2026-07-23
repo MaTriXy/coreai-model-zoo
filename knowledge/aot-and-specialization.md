@@ -85,6 +85,26 @@ coreai-build compile <input.aimodel> [--output <dir>] [--platform iOS|macOS|watc
   and requests the matching one (326). See "Compiling Core AI models ahead of time" + "Discover Apple-Hosted
   Background Assets".
 
+### ⚠️ `expectFrequentReshapes` on a FIXED-shape graph kills the AOT bundle on iOS (device-validated 2026-07-23)
+The hint is not free insurance — it is a request for a *reshape-tolerant* specialization. Ask for it at
+load time on a graph whose shapes are all static and the runtime **stops using the AOT specialization and
+compiles on device**, which on iPhone 17 Pro segfaults inside the MPSGraph AICode compiler:
+
+```
+EXC_BAD_ACCESS (SIGSEGV) … MPSGraphAICodeCompilerDelegate getInitializedAICodeBytecodeWithPayloadPrefix:
+  → Compiler_coreAI.compile(moduleBytecode:to:with:) → libODIECompiler … CompileForDelegates
+```
+No error string, no partial output — the app just dies at `AIModel(contentsOf:options:)`.
+
+- Found on VibeVoice (5 fixed-shape graphs: q=1 stateful decode + fixed-T decoder). `expectFrequentReshapes
+  = true` → SIGSEGV on the first graph; `= false` → all 6 loads in 2.6 s, gate PASS.
+- **Compiling the bundle with `--expect-frequent-reshapes` does NOT make the runtime hint safe** — both the
+  plain and the reshape-hinted `.aimodelc` crash when the *runtime* asks for the hint. It is the load-time
+  option that matters.
+- Rule of thumb: `expectFrequentReshapes = true` only where the shapes really do change — dynamic query
+  length / bucketed prefill (MinerU decode, spec-decode verify, gemma4's 3-stage pipeline). Static decode
+  (`S=1`) and fixed-T vocoders must load **without** it.
+
 ### ⚠️ Architecture names track the DEVICE IDENTIFIER, not the marketing name (device-validated 2026-06-10)
 The `--architecture` h-numbers follow the hardware **device-identifier major version** (`iPhone18,1`,
 `Mac16,5`), NOT the marketing name ("iPhone 17 Pro", "M4 Max"):

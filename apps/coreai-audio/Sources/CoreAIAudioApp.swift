@@ -32,6 +32,9 @@ struct CoreAIAudioApp: App {
         if ProcessInfo.processInfo.environment["DIARIZE_SELFTEST"] != nil {
             Task.detached { await runDiarizeSelfTest() }
         }
+        if ProcessInfo.processInfo.environment["VIBEVOICE_SELFTEST"] != nil {
+            Task.detached { await runVibeVoiceSelfTest() }
+        }
     }
 
     var body: some Scene {
