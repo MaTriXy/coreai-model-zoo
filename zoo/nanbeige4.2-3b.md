@@ -30,7 +30,7 @@ replace int8.
 | Mixed int4/int8 candidates | **No-go:** layers 3/4/5 and the projection-role `up_proj` candidate both failed the Core AI reasoning gate decisively at token 0 (`margin=0.8542`); no mixed mode is exposed |
 | Core AI bundle load/cache smoke | **Pass:** load 2.34 s; one token produced logits and mutated all 44 cache layers |
 | Mac M4 Max, prompt 128 / generation 256 / 3 runs | **Pass:** 47.37 prefill / 46.35 decode tok/s average |
-| iPhone Release/AOT `h18p`, same workload | **Blocked:** connected iPhone 16 Pro is `h17p` on iOS 26.6; local AOT also needs Xcode's optional Metal Toolchain component |
+| iPhone Release/AOT `h18p`, same workload | **Compile pass; device pending:** Xcode 27 `h18p` GPU AOT exits 0; connected iPhone 16 Pro is `h17p` on iOS 26.6 and cannot satisfy the hardware gate |
 | Peak memory and maximum context actually tested | **9.17 GiB peak RSS**, zero swaps; full 4,096-token boundary passed at 29.83 prefill / 32.80 decode tok/s |
 
 The upstream config bytes are pinned by SHA-256
@@ -53,11 +53,12 @@ swaps. A discarded run with battery saving enabled averaged only 21.83 decode to
 and descriptor-driven single-token prefill/warmup fixes in `apps/coreai-pipelined-extra-states.patch` are
 required.
 
-The connected iPhone 16 Pro (`iPhone17,1`) runs iOS 26.6, so Xcode 27 cannot mount a compatible developer image
-and Core AI device execution is unavailable. It also targets `h17p`, while this release criterion requires
-`h18p`. iPhone acceptance therefore remains failed—not extrapolated from Mac results—until an iOS 27 `h18p`
-device is available. The local `h18p` AOT command currently exits before compilation with “Core AI requires the
-Metal Toolchain”; install Xcode 27’s optional Metal Toolchain component before repeating compile acceptance.
+The connected iPhone 16 Pro (`iPhone17,1`) runs iOS 26.6 and targets `h17p`, while this release criterion requires
+an iOS 27 `h18p` device. Xcode 27 can pair with the phone, but its measurements would not satisfy that gate.
+Mac-side compile acceptance passes with Xcode 27 (`27A5228h`) and Metal Toolchain `27A5228f`: `coreai-build`
+targeting iOS 27 GPU `h18p` exited 0 in 11.53 s and produced a 4,809,424 KiB `.aimodelc`. Its recorded
+source hash matches the published `.aimodel` SHA-256. Device acceptance remains pending—not extrapolated from
+Mac results—until matching hardware is available.
 
 For comparison only, the int4 candidate occupies 3.14 GiB and peaks at 6.24 GiB RSS with zero swaps. Its first
 128/256 run was still rising (38.01 prefill / 37.74 decode tok/s average); after the full-context warmup, the

@@ -227,11 +227,12 @@ The remaining credible optimization order is:
 
 ## Device status
 
-Mac acceptance passes. iPhone acceptance does not: the connected iPhone 16 Pro is `h17p` on iOS 26.6, so Xcode
-27 cannot mount a compatible developer image, and the release criterion requires an iOS 27 `h18p` device. No
-iPhone throughput or memory claim is extrapolated from Mac measurements. Local `h18p` AOT compile acceptance
-also stops before compilation because Xcode 27's optional Metal Toolchain component is not installed. Int4
-cannot be used as a fallback because it failed the same quality gate required of int8.
+Mac acceptance and Mac-side iOS compile acceptance pass. With Xcode 27 (`27A5228h`) and Metal Toolchain
+`27A5228f`, the int8 bundle compiled for iOS 27 GPU `h18p` in 11.53 s, producing a 4,809,424 KiB `.aimodelc`
+whose source hash matches the published `.aimodel` SHA-256. The connected iPhone 16 Pro is `h17p` on iOS 26.6,
+while the release criterion requires an iOS 27 `h18p` device, so no iPhone throughput or memory claim is
+extrapolated from Mac measurements. Int4 cannot be used as a fallback because it failed the same quality gate
+required of int8.
 
 ## Reproduction
 
@@ -252,6 +253,8 @@ python3 ../coreai-model-zoo/conversion/coreai_gate.py \
 ```
 
 The advertised 262K context is not claimed. The verified recipe remains 4K until larger contexts are measured on
-both target classes. No bundle has been uploaded and no external CoreAIKit catalog has been changed. Publication
-requires separate approval and successful iOS 27 `h18p` acceptance. The pinned vendor template is bundled and
-renders correctly with thinking enabled and disabled; both modes still need published-LanguageBundle review.
+both target classes. The int8 bundle is published at Hugging Face revision
+`5864ec7a5581940958e58354a6b6c46c8f06891e`; no external CoreAIKit catalog has been changed. CoreAIKit enrollment
+still requires separate approval and successful iOS 27 `h18p` device acceptance. The pinned vendor template is
+bundled and renders correctly with thinking enabled and disabled; both modes still need published-LanguageBundle
+review.

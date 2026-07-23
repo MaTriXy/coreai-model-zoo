@@ -56,6 +56,7 @@ notes = [
   "Published as ukint-vs/Nanbeige4.2-3B-CoreAI at revision 5864ec7a5581940958e58354a6b6c46c8f06891e.",
   "Local 4.59 GiB bundle passes fp32 and Core AI gates; M4 Max averages 47.4 prefill / 46.4 decode tok/s.",
   "The exported 4,096-token boundary passes at 29.8 prefill / 32.8 decode tok/s with 9.17 GiB peak RSS.",
+  "Xcode 27 h18p GPU AOT compile passes; device acceptance remains pending on matching iOS 27 hardware.",
   "int4hu is a measured no-go: 3.14 GiB and 56.1 warm decode tok/s, but it fails the decisive fp32 continuation gate.",
   "Mixed int4/int8 is also a no-go: the 4.41 GiB three-layer candidate fails the decisive Core AI reasoning gate.",
 ]
