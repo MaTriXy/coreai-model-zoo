@@ -2,8 +2,10 @@
 
 This report records the implementation and acceptance work for
 [`Nanbeige/Nanbeige4.2-3B`](https://huggingface.co/Nanbeige/Nanbeige4.2-3B) at immutable revision
-`5ff54fb7ed86ce8e216d78bff5417ab9981de3d4`. Conversion and Mac execution are implemented. Publication,
-published-LanguageBundle chat-template review, and iPhone acceptance remain pending.
+`5ff54fb7ed86ce8e216d78bff5417ab9981de3d4`. Conversion and Mac execution are implemented. The verified int8
+bundle is [published on Hugging Face](https://huggingface.co/ukint-vs/Nanbeige4.2-3B-CoreAI/tree/5864ec7a5581940958e58354a6b6c46c8f06891e)
+at immutable repository revision `5864ec7a5581940958e58354a6b6c46c8f06891e`; published-LanguageBundle
+chat-template review, iPhone acceptance, and CoreAIKit enrollment remain pending.
 
 Port by [Vadim Smirnov (@ukint-vs)](https://github.com/ukint-vs); tracked in
 [`john-rocky/coreai-model-zoo#5`](https://github.com/john-rocky/coreai-model-zoo/issues/5).

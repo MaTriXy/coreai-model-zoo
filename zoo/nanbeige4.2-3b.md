@@ -14,9 +14,11 @@ the [Nanbeige4.2 Core AI support report](../knowledge/nanbeige4.2-coreai-support
 
 ## Release status
 
-**Conversion support is implemented; publication is pending.** No artifact has been uploaded and no CoreAIKit
-catalog entry has been written. The shipping candidate is `int8hu --head-sym --static-ids`. The matching
-`int4hu` candidate was measured and is a **quality no-go**; it must not replace int8.
+**The verified int8 Mac bundle is published on Hugging Face** at immutable repository revision
+[`5864ec7a5581940958e58354a6b6c46c8f06891e`](https://huggingface.co/ukint-vs/Nanbeige4.2-3B-CoreAI/tree/5864ec7a5581940958e58354a6b6c46c8f06891e),
+under `gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1`. The CoreAIKit catalog entry and iPhone
+acceptance remain pending. The matching `int4hu` candidate was measured and is a **quality no-go**; it must not
+replace int8.
 
 | Required measurement | Result |
 |---|---|
@@ -107,13 +109,13 @@ python3 ../coreai-model-zoo/conversion/coreai_gate.py \
 The bundle interface remains `input_ids`, `position_ids`, mutable `k_cache`, `v_cache` → `logits`; cache tensors
 have shape `[44, 1, 8, max_context, 128]`. The existing static-S=1 pipelined runtime path is used on device.
 
-## Remaining acceptance gates before publication
+## Remaining device and catalog gates
 
 - Run the same Release benchmark and 24-token oracle gate on an iOS 27 `h18p` iPhone with the increased-memory
   entitlement. The evaluated int4 candidate has failed and cannot be used as a fallback.
 - Exercise both bundled chat-template modes through the published LanguageBundle; local rendering passes for
   `enable_thinking=true` and `enable_thinking=false`.
 
-After those results are recorded and publication is separately approved, upload the selected immutable bundle,
-add `nanbeige4.2-3b` to CoreAIKit with `kind: chat`, `engine: pipelined`, `thinking: true`, enroll the card in
-`cards.json`, and regenerate the managed “Use it” block.
+After those results are recorded and CoreAIKit publication is separately approved, add `nanbeige4.2-3b` with
+`kind: chat`, `engine: pipelined`, `thinking: true`, enroll the card in `cards.json`, and regenerate the managed
+“Use it” block.
