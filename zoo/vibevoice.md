@@ -9,6 +9,24 @@ The zoo's first **multi-speaker / dialogue (podcast-style)** TTS.
 > loop with the shipped [Streaming Sortformer](sortformer-diar.md) diarizer: synthesize a
 > conversation, then have the zoo tell you who spoke when.
 
+## Use it
+
+```swift
+import CoreAIKit
+
+let dialogue = try await KitDialogue(catalog: "vibevoice-realtime-0.5b")
+let (audio, turns) = try await dialogue.perform("""
+    Speaker 1: Did you know this runs entirely on the phone?
+    Speaker 2: No cloud at all? That is wild.
+    """)
+// audio.samples @ 24 kHz; turns[i].voice tells you which preset spoke
+// one line, one voice: try await dialogue.speak("Hello from Core AI.")
+```
+
+25 voice presets ship with the model (`dialogue.voices`). Free text needs no torch and no
+reference audio: the Qwen2.5 tokenizer plus an mmapped fp16 embedding table, with the voice
+arriving as a pre-computed prefill KV cache.
+
 ## How it works
 
 Dual Qwen2.5 LM — a **4-layer** text context LM (norm = Identity) and a **20-layer** speech trunk —

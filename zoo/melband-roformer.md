@@ -8,6 +8,14 @@ included — with a Swift host that only frames and overlap-adds.
 
 ## Use it
 
+```swift
+import CoreAIKit
+
+let separator = try await KitSeparator(catalog: "melband-roformer-vocal")
+let stems = try await separator.separate(contentsOf: songURL)   // or separate(mix) on [[Float]]
+// stems.vocals / stems.instrumental — [channel][sample] at 44.1 kHz
+```
+
 Ships in the **[coreai-audio](../apps/coreai-audio)** app, **Separate** tab: load the demo clip or
 pick a song from your library, get both stems back and play/export either. It pairs with the
 **Music** tab (Stable Audio Open Small): generate a track, then rip its stems.

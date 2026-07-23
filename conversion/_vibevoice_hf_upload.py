@@ -64,7 +64,9 @@ voice preset and the turns are concatenated — no multi-speaker prefill, no aco
 | `macos/vibevoice_decoder_fp16_t64.aimodel` | acoustic VAE decoder, `latents[1,64,64] -> audio[1,1,204800]` (656 MB) |
 | `ios/*.h18p.aimodelc` | the same five, AOT-compiled for A19 (h18p), GPU |
 | `voices/*.pt` | 25 upstream voice presets (EN/ZH/…): pre-computed prefill KV, so no acoustic encoder is shipped |
-| `embed_tokens_fp16.bin` | `(151936, 896)` fp16 embedding table for the host token lookup |
+| `coreai_host/voices/<name>/` | the same 25 presets as flat fp16 blobs a Swift host reads directly (no torch) |
+| `coreai_host/glue/` | type embeddings, EOS classifier, DPMSolver++ schedule, Qwen2.5 tokenizer |
+| `coreai_host/embed/embed_tokens_fp16.bin` | `(151936, 896)` fp16 embedding table, mmapped for the host token lookup |
 | `device_bundle/` | compact host inputs + `golden.f32` for the on-device self-test |
 
 **fp16 is required.** int8 LMs diverge inside the speech feedback loop (min cos 0.187, early EOS);
@@ -90,6 +92,16 @@ On device: 6 graph loads in **2.6 s** (warm), **24 latents / 3.20 s of audio in 
 
 ## Use it
 
+```swift
+import CoreAIKit
+
+let dialogue = try await KitDialogue(catalog: "vibevoice-realtime-0.5b")
+let (audio, turns) = try await dialogue.perform("""
+    Speaker 1: Did you know this runs entirely on the phone?
+    Speaker 2: No cloud at all? That is wild.
+    """)
+```
+
 Swift host reference: `ondevice/VibeVoiceRunner` (Mac) and `VibeVoiceSelfTest.swift` in the zoo's
 [coreai-audio](https://github.com/john-rocky/coreai-model-zoo/tree/main/apps/coreai-audio) app —
 raw Core AI stateful-KV loop + a Swift DPMSolver++ sampler. Python host + conversion recipe:
@@ -112,9 +124,17 @@ def main():
     shutil.copytree(VOICES, STAGE / "voices")
     shutil.copytree(CONV / "device_bundle", STAGE / "device_bundle")
 
+    # Swift-host assets (pack_voice_presets.py): flat voice caches + glue + tokenizer. Everything
+    # CoreAIKit's KitDialogue resolves lives under coreai_host/ — ModelStore downloads subtrees,
+    # so the embedding table goes in a directory of its own, not at the repo root.
+    host = CONV / "voices_coreai"
+    if host.exists():
+        shutil.copytree(host, STAGE / "coreai_host")
+    (STAGE / "coreai_host" / "embed").mkdir(parents=True, exist_ok=True)
+
     # host token lookup: the LMs take embeddings, so a free-text host needs the embedding table
     emb = load_file(SNAP)["model.language_model.embed_tokens.weight"].to(dtype=None).float().numpy()
-    emb.astype(np.float16).tofile(STAGE / "embed_tokens_fp16.bin")
+    emb.astype(np.float16).tofile(STAGE / "coreai_host" / "embed" / "embed_tokens_fp16.bin")
     print(f"embed_tokens {emb.shape} -> fp16 {(emb.size * 2) / 1e6:.0f} MB")
 
     (STAGE / "README.md").write_text(CARD)

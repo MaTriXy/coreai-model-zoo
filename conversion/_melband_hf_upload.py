@@ -73,6 +73,14 @@ cold first run is 3.82 s ~ 2.1x real-time (load 1.24 s), before the GPU clocks r
 
 ## Use it
 
+```swift
+import CoreAIKit
+
+let separator = try await KitSeparator(catalog: "melband-roformer-vocal")
+let stems = try await separator.separate(contentsOf: songURL)
+// stems.vocals / stems.instrumental — [channel][sample] at 44.1 kHz
+```
+
 Ships in the zoo's **[coreai-audio](https://github.com/john-rocky/coreai-model-zoo/tree/main/apps/coreai-audio)**
 app (**Separate** tab), which pairs it with the Music tab (Stable Audio Open Small): generate a
 track, then rip its stems. Conversion recipe and the Swift host reference:

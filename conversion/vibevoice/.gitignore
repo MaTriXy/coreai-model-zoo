@@ -2,6 +2,7 @@
 artifacts/
 artifacts_ios/
 device_bundle/
+voices_coreai/
 _code/
 _oracle/
 _oracle_out/
