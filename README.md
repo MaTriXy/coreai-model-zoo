@@ -85,6 +85,7 @@ snippet from that model's card — it's the same `catalog:` one-liner shown abov
 | ✅ [**LFM2.5-8B-A1B**](zoo/lfm2.5-8b-a1b-moe.md) (MoE, custom `gather_qmm` kernel — first iPhone MoE) | [🤗 LFM2.5-8B-A1B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-8B-A1B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | LFM Open License v1.0 |
 | ✅ [**Granite 4.0-H 1B / 350M**](zoo/granite-4.0-h.md) | [🤗 granite-4.0-h-CoreAI](https://huggingface.co/mlboydaisuke/granite-4.0-h-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) (1B) · 350M: [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
 | ✅ [**Nanbeige4.1-3B**](zoo/nanbeige4.1-3b.md) (dense reasoning/agentic, iPhone — 32B-class @ 3.93B) | [🤗 Nanbeige4.1-3B-CoreAI](https://huggingface.co/mlboydaisuke/Nanbeige4.1-3B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Apache-2.0 |
+| ✅ [**Nanbeige4.2-3B**](zoo/nanbeige4.2-3b.md) (looped Llama: 22 physical blocks × 2 passes, 44 KV layers; int8 46.4 tok/s on M4 Max; port by [Vadim Smirnov](https://github.com/ukint-vs)) | [🤗 Nanbeige4.2-3B-CoreAI](https://huggingface.co/ukint-vs/Nanbeige4.2-3B-CoreAI/tree/5864ec7a5581940958e58354a6b6c46c8f06891e) | App pending | Apache-2.0 |
 | ✅ [**MiniCPM5-1B**](zoo/minicpm5-1b.md) (1B-class on-device LLM, hybrid Think/No-Think, 128K, OpenBMB) | [🤗 MiniCPM5-1B-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM5-1B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Apache-2.0 |
 | ✅ [**Youtu-LLM-2B**](zoo/youtu.md) (dense **MLA** — zoo's first **iPhone** MLA & first **dense** MLA; DeepSeek-V2-style latent-KV attention at 1.96B with an absorbed flash-decode kernel, reasoning + agentic; Tencent) | [🤗 Youtu-LLM-2B-CoreAI](https://huggingface.co/mlboydaisuke/Youtu-LLM-2B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Other (youtu-llm) |
 | ✅ **BitCPM-8B** (zoo's first **1.58-bit ternary** LLM — every weight is {-1,0,+1}; MiniCPM4-8B arch, custom 2-bit packed-GEMM Metal kernel; 8B running in ~2.1 GB on iPhone GPU; OpenBMB) | [🤗 BitCPM-8B-CoreAI](https://huggingface.co/mlboydaisuke/BitCPM-8B-CoreAI) | [CoreAIChat](apps/CoreAIChat) ‡ | Apache-2.0 |
@@ -152,6 +153,7 @@ Third-party apps running zoo models. Built something? Open a
 | **LFM2.5-1.2B** | **45.4** | — | **276.5** |
 | **Granite 4.0-H 1B** | **36.3** | — | **136.5** |
 | **Nanbeige4.1-3B** | **15.9** | — | **114.5** |
+| **Nanbeige4.2-3B** (22 physical / 44 executed+cache layers; int8) | pending | — | **46.4** |
 | **MiniCPM5-1B** (OpenBMB, int8 — 24/24 exact vs HF) | **66.8** | — | 59.4 |
 | **Youtu-LLM-2B** (dense MLA, int8 — 16/16 device ≡ Mac ≡ HF) | **~19** (in-app ~24) | — | **102.8** |
 | **FastContext-1.0-4B** (repo-exploration agent, 4bit — AOT h18p; ANE inference unsupported) | **20.4** | ✗ | — |

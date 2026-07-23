@@ -21,9 +21,9 @@ explicitly for a new model that reuses an existing family's overlay. Run from a 
 whose sibling coreai-models has the zoo overlay applied (see zoo_convert.py doctor).
 
 Findings baked in here because they are documented nowhere else (2026-07-18 recovery):
-  - The engine needs COREAI_CHUNK_THRESHOLD=1 + variant coreai-pipelined + warmup off:
-    the default warmup does a synthetic 256-token prefill that a static-S=1 decode graph
-    cannot serve.
+  - The engine needs COREAI_CHUNK_THRESHOLD=1 + variant coreai-pipelined. This gate disables
+    warmup to isolate the checked generation; the runtime patch makes default warmup honor a
+    static-S=1 input descriptor instead of submitting a synthetic 256-token prefill.
   - `llm-runner --inference-engine-variant` help text is stale; the real values are
     auto / coreai-sequential / coreai-pipelined / static-shape.
   - The oracle steps S=1 but position_ids carries the FULL 0..t range each step
@@ -101,6 +101,7 @@ warnings.filterwarnings("ignore")
 import torch
 CTX = 4096
 arch, hf_id, prompt, n = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
+revision = (sys.argv[6] or None) if len(sys.argv) > 6 else None
 # Oracle weight dtype: fp32 is the strict ceiling, but a 35B in fp32 is ~140 GB — past
 # most machines. fp16 (the export's own trace dtype) fits and is a valid conversion check.
 FP32 = {"fp32": torch.float32, "fp16": torch.float16}[sys.argv[5] if len(sys.argv) > 5 else "fp32"]
@@ -127,11 +128,24 @@ def build(arch, hf_id):
         m = YoutuAbsorbedStatefulForCausalLM.from_causal_lm(youtu_absorbed_from_hf(hf_id, target_dtype=FP32))
         st = build_absorbed_decode_state(m.config, max_seq_len=CTX, dtype=FP32); order = ["kv_a","kv_b"]
     elif arch == "nanbeige":
+        from transformers import AutoConfig
         from coreai_models.models.macos.llama import LlamaForCausalLM
+        from coreai_models.models.macos.nanbeige import NanbeigeForCausalLM, create_cache_tensors
         from coreai_models.primitives.macos.cache import KVCache
-        m = LlamaForCausalLM.from_hf_memory_efficient(hf_id, max_context_length=CTX, target_dtype=FP32)
+        source_config = AutoConfig.from_pretrained(hf_id, revision=revision)
+        model_classes = {"llama": LlamaForCausalLM, "nanbeige": NanbeigeForCausalLM}
+        if source_config.model_type not in model_classes:
+            raise ValueError(f"unsupported Nanbeige gate model_type: {source_config.model_type}")
+        model_class = model_classes[source_config.model_type]
+        m = model_class.from_hf_memory_efficient(
+            hf_id, revision=revision, max_context_length=CTX, target_dtype=FP32
+        )
         saved = m.config.max_position_embeddings; m.config.max_position_embeddings = TRACE_KV_CACHE_SEQ_LEN
-        k, v = KVCache.create_cache_tensors(m.config, dtype=FP32); m.config.max_position_embeddings = saved
+        if source_config.model_type == "nanbeige":
+            k, v = create_cache_tensors(m.config, dtype=FP32)
+        else:
+            k, v = KVCache.create_cache_tensors(m.config, dtype=FP32)
+        m.config.max_position_embeddings = saved
         st = {"k_cache": k, "v_cache": v}; order = ["k_cache","v_cache"]
     elif arch == "lfm2_moe":
         from coreai_models.models.macos.lfm2_moe import lfm2_moe_from_hf, build_decode_state
@@ -154,14 +168,16 @@ def build(arch, hf_id):
 
 from transformers import AutoTokenizer
 try:
-    tok = AutoTokenizer.from_pretrained(hf_id)
+    tok = AutoTokenizer.from_pretrained(hf_id, revision=revision)
 except Exception:
     # Some repos (LFM2.5) name a tokenizer_class this transformers build lacks
     # ("TokenizersBackend"); load the fast tokenizer straight from tokenizer.json,
     # bypassing class resolution. config.eos_token_id still drives EOS below.
     from huggingface_hub import hf_hub_download
     from transformers import PreTrainedTokenizerFast
-    tok = PreTrainedTokenizerFast(tokenizer_file=hf_hub_download(hf_id, "tokenizer.json"))
+    tok = PreTrainedTokenizerFast(
+        tokenizer_file=hf_hub_download(hf_id, "tokenizer.json", revision=revision)
+    )
 ids = tok(prompt, return_tensors="pt").input_ids.to(torch.int32)
 model, states = build(arch, hf_id)
 eos = set()
@@ -188,13 +204,21 @@ print(json.dumps({"input_ids": ids[0].tolist(), "gen_ids": gen, "margins": margi
 '''
 
 
-def run_oracle(python: str, arch: str, hf_id: str, prompt: str, n: int, dtype: str) -> dict:
+def run_oracle(
+    python: str,
+    arch: str,
+    hf_id: str,
+    prompt: str,
+    n: int,
+    dtype: str,
+    revision: str | None,
+) -> dict:
     with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
         f.write(ORACLE_SRC)
         script = f.name
-    r = subprocess.run([python, script, arch, hf_id, prompt, str(n), dtype],
+    r = subprocess.run([python, script, arch, hf_id, prompt, str(n), dtype, revision or ""],
                        capture_output=True, text=True, cwd=tempfile.gettempdir())
-    line = next((l for l in r.stdout.splitlines() if l.startswith("{")), None)
+    line = next((line for line in r.stdout.splitlines() if line.startswith("{")), None)
     if not line:
         sys.exit("ORACLE FAILED:\n" + r.stdout[-1000:] + r.stderr[-1000:])
     return json.loads(line)
@@ -224,6 +248,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Gate an exported decode bundle against its fp32 oracle.")
     ap.add_argument("bundle")
     ap.add_argument("hf_id")
+    ap.add_argument("--revision", help="immutable Hugging Face checkpoint revision")
     ap.add_argument("--arch", choices=list(ARCH))
     ap.add_argument("--prompt", default="The capital of France is",
                     help="deterministic prompt; open-ended ones hit ties and aren't good gates")
@@ -231,15 +256,18 @@ def main() -> None:
     ap.add_argument("--oracle-dtype", choices=["fp32", "fp16"], default="fp32",
                     help="fp32 = strict ceiling; fp16 for models too big for fp32 (e.g. 35B needs ~140 GB)")
     ap.add_argument("--python", help="overlay interpreter (default: sibling coreai-models/.venv)")
+    ap.add_argument("--runner", help="llm-runner executable (default: sibling coreai-models build)")
     args = ap.parse_args()
 
     arch = args.arch or detect_arch(args.bundle, args.hf_id)
     if not arch:
         sys.exit(f"no arch mapping for {args.bundle} — pass --arch")
     python = resolve_python(args.python)
-    runner = resolve_runner()
+    runner = args.runner or resolve_runner()
 
-    oracle = run_oracle(python, arch, args.hf_id, args.prompt, args.n, args.oracle_dtype)
+    oracle = run_oracle(
+        python, arch, args.hf_id, args.prompt, args.n, args.oracle_dtype, args.revision
+    )
     engine = run_engine(runner, args.bundle, oracle["input_ids"], args.n)
 
     print("=== GATE:", Path(args.bundle).name, f"(arch={arch})")
@@ -253,11 +281,15 @@ def main() -> None:
         return
     from transformers import AutoTokenizer
     try:
-        tk = AutoTokenizer.from_pretrained(args.hf_id)
+        tk = AutoTokenizer.from_pretrained(args.hf_id, revision=args.revision)
     except Exception:
         from huggingface_hub import hf_hub_download
         from transformers import PreTrainedTokenizerFast
-        tk = PreTrainedTokenizerFast(tokenizer_file=hf_hub_download(args.hf_id, "tokenizer.json"))
+        tk = PreTrainedTokenizerFast(
+            tokenizer_file=hf_hub_download(
+                args.hf_id, "tokenizer.json", revision=args.revision
+            )
+        )
     eng_ids = tk(engine, add_special_tokens=False).input_ids
     ref, margins = oracle["gen_ids"], oracle.get("margins", [])
     d = next((i for i in range(min(len(eng_ids), len(ref))) if eng_ids[i] != ref[i]),

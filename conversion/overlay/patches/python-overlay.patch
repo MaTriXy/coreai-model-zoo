@@ -450,7 +450,22 @@ index ad04c99..8ba31a8 100644
  def _build_safetensors_key_index(
      safetensors_files: list[str],
      num_layers: int | None = None,
-@@ -446,7 +462,15 @@ class BaseForCausalLM(torch.nn.Module):
+@@ -414,4 +430,5 @@ class BaseForCausalLM(torch.nn.Module):
+         num_layers: int | None = None,
+         hf_config_attr: str | None = None,
+         hf_state_dict_prefix: str = "",
++        revision: str | None = None,
+     ) -> T:
+@@ -439,14 +456,24 @@ class BaseForCausalLM(torch.nn.Module):
+                 prefix are loaded. The prefix is stripped before assigning.
+                 Use for multimodal checkpoints where text weights live under
+                 a prefix (e.g. ``"language_model."``).
++            revision: Optional Hugging Face repository revision.
+         """
+         model_dir = snapshot_download(
+             huggingface_model_id,
+             allow_patterns=["*.safetensors", "*.safetensors.index.json", "config.json"],
++            revision=revision,
          )
  
          raw_config = AutoConfig.from_pretrained(model_dir)
@@ -467,7 +482,7 @@ index ad04c99..8ba31a8 100644
  
          config = cls._get_reauthored_config(hf_config, max_context_length, num_layers=num_layers)
  
-@@ -454,6 +478,8 @@ class BaseForCausalLM(torch.nn.Module):
+@@ -454,6 +481,8 @@ class BaseForCausalLM(torch.nn.Module):
          model.to(dtype=target_dtype)
  
          safetensors_files = _resolve_safetensors_files(model_dir)

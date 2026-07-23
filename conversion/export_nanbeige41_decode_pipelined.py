@@ -1,4 +1,4 @@
-"""Export a decode-pipelined Nanbeige4.1-3B bundle for the Core AI engine.
+"""Export a decode-pipelined Nanbeige4.1/4.2-3B bundle for the Core AI engine.
 
 Nanbeige4.1-3B is a textbook plain-Llama dense model (`model_type: "llama"`,
 GQA 20q/4kv head_dim128, SwiGLU, RoPE theta 70M, NO QK-norm / NO bias), so it
@@ -28,6 +28,11 @@ Run:  cd ~/code/coreai/coreai-models && .venv/bin/python \
       # smoke first:  ... int8hu --head-sym --num-layers 4
 GPU exclusivity: grab the community-repo _GPU_LOCK; this is GPU-gated behind any
 running diffgemma / coder-next export.
+
+Nanbeige4.2-3B (`model_type: "nanbeige"`) reuses the same physical Llama blocks
+twice, with a norm after each pass and disjoint 22-layer cache ranges. Its pinned
+release baseline is `int8hu --head-sym --static-ids`; int4 remains conditional on
+the identical quality gates. The 4.1 defaults above are intentionally unchanged.
 """
 from __future__ import annotations
 
@@ -49,6 +54,10 @@ from coreai_models.export._constants import (
 )
 from coreai_models.export.macos import export_to_coreai
 from coreai_models.models.macos.llama import LlamaForCausalLM
+from coreai_models.models.macos.nanbeige import (
+    NanbeigeForCausalLM,
+    create_cache_tensors as create_nanbeige_cache_tensors,
+)
 from coreai_models.primitives.macos.cache import KVCache
 
 DTYPE = torch.float16
@@ -127,7 +136,10 @@ def build_kv_reference(cfg, max_ctx: int, static_ids: bool = False):
 
     saved = cfg.max_position_embeddings
     cfg.max_position_embeddings = TRACE_KV_CACHE_SEQ_LEN
-    k_cache, v_cache = KVCache.create_cache_tensors(cfg, dtype=DTYPE)
+    if cfg.model_type == "nanbeige":
+        k_cache, v_cache = create_nanbeige_cache_tensors(cfg, dtype=DTYPE)
+    else:
+        k_cache, v_cache = KVCache.create_cache_tensors(cfg, dtype=DTYPE)
     cfg.max_position_embeddings = saved
 
     reference_inputs = {
@@ -145,15 +157,20 @@ def build_kv_reference(cfg, max_ctx: int, static_ids: bool = False):
     return reference_inputs, dynamic_shapes
 
 
-def write_bundle_metadata(out_dir: Path, name: str, hf_id: str, cfg, max_ctx: int) -> None:
+def write_bundle_metadata(
+    out_dir: Path, name: str, hf_id: str, revision: str | None, cfg, max_ctx: int, mode: str
+) -> None:
+    source = {"model_definition": "torch", "hf_model_id": hf_id}
+    if revision:
+        source["hf_revision"] = revision
     meta = {
         "metadata_version": "0.2", "kind": "llm", "name": name,
         "assets": {"main": f"{name}.aimodel"},
         "language": {"tokenizer": hf_id, "vocab_size": cfg.vocab_size,
                      "max_context_length": max_ctx, "embedded_tokenizer": True,
                      "function_map": {"main": ["main"]}},
-        "source": {"model_definition": "torch", "hf_model_id": hf_id},
-        "compression": None,
+        "source": source,
+        "compression": None if mode == "fp16" else {"scheme": mode},
         "compilation": {"date": datetime.now(timezone.utc).isoformat(), "targets": []},
     }
     (out_dir / "metadata.json").write_text(json.dumps(meta, indent=2))
@@ -164,6 +181,7 @@ def main() -> None:
     ap.add_argument("mode", nargs="?", default="int4hu",
                     choices=["fp16", "int8lin", "int8hu", "int4lin", "int4hu"])
     ap.add_argument("--hf-id", default="Nanbeige/Nanbeige4.1-3B")
+    ap.add_argument("--revision", help="immutable Hugging Face checkpoint revision")
     ap.add_argument("--out-dir", default="exports")
     ap.add_argument("--max-ctx", type=int, default=4096)
     ap.add_argument("--head-quant", default="block32",
@@ -185,9 +203,25 @@ def main() -> None:
     if args.num_layers is not None:
         name += f"_l{args.num_layers}"
 
+    from transformers import AutoConfig
+
+    source_config = AutoConfig.from_pretrained(args.hf_id, revision=args.revision)
+    model_classes = {"llama": LlamaForCausalLM, "nanbeige": NanbeigeForCausalLM}
+    try:
+        model_class = model_classes[source_config.model_type]
+    except KeyError:
+        raise ValueError(
+            f"unsupported model_type {source_config.model_type!r}; expected llama or nanbeige"
+        ) from None
+
     print(f"loading {args.hf_id} fp16 (memory-efficient) ...", flush=True)
-    model = LlamaForCausalLM.from_hf_memory_efficient(
-        args.hf_id, max_context_length=args.max_ctx, target_dtype=DTYPE, num_layers=args.num_layers)
+    model = model_class.from_hf_memory_efficient(
+        args.hf_id,
+        revision=args.revision,
+        max_context_length=args.max_ctx,
+        target_dtype=DTYPE,
+        num_layers=args.num_layers,
+    )
     model.eval()
     cfg = model.config
     print(f"hidden={cfg.hidden_size} layers={cfg.num_hidden_layers} "
@@ -232,10 +266,12 @@ def main() -> None:
     print(f"saving {aimodel} ...", flush=True)
     prog.save_asset(aimodel, rt.AIModelAssetMetadata())
 
-    write_bundle_metadata(out_dir, name, args.hf_id, cfg, args.max_ctx)
+    write_bundle_metadata(out_dir, name, args.hf_id, args.revision, cfg, args.max_ctx, args.mode)
     from transformers import AutoTokenizer
 
-    AutoTokenizer.from_pretrained(args.hf_id).save_pretrained(out_dir / "tokenizer")
+    AutoTokenizer.from_pretrained(args.hf_id, revision=args.revision).save_pretrained(
+        out_dir / "tokenizer"
+    )
     print(f"bundle ready: {out_dir}", flush=True)
     print(f"run: COREAI_CHUNK_THRESHOLD=1 llm-benchmark --model {out_dir} -p 128 -g 256 -n 3", flush=True)
 
