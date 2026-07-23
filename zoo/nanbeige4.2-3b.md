@@ -1,86 +1,58 @@
 # Nanbeige4.2-3B (text decoder) — Core AI
 
-Native recurrent-Llama authoring for the released
-[`Nanbeige/Nanbeige4.2-3B`](https://huggingface.co/Nanbeige/Nanbeige4.2-3B) checkpoint at immutable
-revision `5ff54fb7ed86ce8e216d78bff5417ab9981de3d4` (Apache-2.0). The checkpoint has **22 physical
-transformer layers** whose weights run twice; the exported decoder therefore executes 44 layer passes and keeps
-**44 independent KV cache layers** without duplicating the 22 trainable blocks.
+[`Nanbeige/Nanbeige4.2-3B`](https://huggingface.co/Nanbeige/Nanbeige4.2-3B) is a recurrent Llama decoder:
+**22 physical transformer blocks execute twice**, with an RMS norm after each pass and separate KV history.
+The Core AI model therefore executes 44 layer passes and uses **44 KV-cache layers**, while storing and
+quantizing only one copy of the 22 physical blocks.
 
-**Ported by [Vadim Smirnov (@ukint-vs)](https://github.com/ukint-vs).** Tracking issue:
+Source checkpoint: `5ff54fb7ed86ce8e216d78bff5417ab9981de3d4` (Apache-2.0).
+Ported by [Vadim Smirnov (@ukint-vs)](https://github.com/ukint-vs); tracked in
 [`john-rocky/coreai-model-zoo#5`](https://github.com/john-rocky/coreai-model-zoo/issues/5).
 
-The complete architecture, conversion, parity, quantization, runtime, hardware, and kernel investigation is in
-the [Nanbeige4.2 Core AI support report](../knowledge/nanbeige4.2-coreai-support.md).
+**⬇️ Verified int8 LanguageBundle:
+[ukint-vs/Nanbeige4.2-3B-CoreAI](https://huggingface.co/ukint-vs/Nanbeige4.2-3B-CoreAI/tree/5864ec7a5581940958e58354a6b6c46c8f06891e)**
 
-## Release status
+- immutable bundle revision: `5864ec7a5581940958e58354a6b6c46c8f06891e`
+- path: `gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1`
+- format: `int8hu --head-sym --static-ids`, complete tokenizer included
+- producer: `coreai-core 1.0.0b2`
 
-**The verified int8 Mac bundle is published on Hugging Face** at immutable repository revision
-[`5864ec7a5581940958e58354a6b6c46c8f06891e`](https://huggingface.co/ukint-vs/Nanbeige4.2-3B-CoreAI/tree/5864ec7a5581940958e58354a6b6c46c8f06891e),
-under `gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1`. The CoreAIKit catalog entry and iPhone
-acceptance remain pending. The matching `int4hu` candidate was measured and is a **quality no-go**; it must not
-replace int8.
+## Runtime contract
 
-| Required measurement | Result |
+The bundle uses the existing `coreai-pipelined` static-S=1 GPU path:
+
+```text
+input_ids, position_ids, k_cache, v_cache → logits
+```
+
+K/V states have shape `[44, 1, 8, max_context, 128]`. Pass 0 uses cache slots 0–21 and pass 1 uses 22–43.
+Quantization visits 111 physical linear modules; recurrent execution does not duplicate serialized weights.
+The bundled vendor chat template supports both `enable_thinking=true` and `enable_thinking=false`.
+
+## Verified
+
+| Check | Result |
 |---|---|
-| Bundle size | **4.59 GiB on disk** (`4,815,288 KiB`; `.aimodel` 4.57 GiB), int8hu baseline |
-| Float32 full/incremental parity | **Pass:** full and cached logits allclose at `rtol=1e-4`, `atol=1e-4`; identical 32-token greedy continuation |
-| Int8 authoring/oracle gate | **Pass:** prompt top-1 8/8, greedy 32/32, cosine 0.9997768, deterministic |
-| Int8 Core AI engine gate | **Pass:** token-exact vs fp32 for Paris (24 tokens), 0°C (16), and the 64-token-max reasoning smoke concluding 9.8 > 9.11; deterministic rerun |
-| Int4 candidate | **No-go:** 3.14 GiB and deterministic, but Paris diverged after 2/24 tokens, freezing after 3/16, and reasoning failed decisively at token 0 (`margin=0.8237`) |
-| Mixed int4/int8 candidates | **No-go:** layers 3/4/5 and the projection-role `up_proj` candidate both failed the Core AI reasoning gate decisively at token 0 (`margin=0.8542`); no mixed mode is exposed |
-| Core AI bundle load/cache smoke | **Pass:** load 2.34 s; one token produced logits and mutated all 44 cache layers |
-| Mac M4 Max, prompt 128 / generation 256 / 3 runs | **Pass:** 47.37 prefill / 46.35 decode tok/s average |
-| iPhone Release/AOT `h18p`, same workload | **Compile pass; device pending:** Xcode 27 `h18p` GPU AOT exits 0; connected iPhone 16 Pro is `h17p` on iOS 26.6 and cannot satisfy the hardware gate |
-| Peak memory and maximum context actually tested | **9.17 GiB peak RSS**, zero swaps; full 4,096-token boundary passed at 29.83 prefill / 32.80 decode tok/s |
+| Bundle | **4.59 GiB** (`4,815,288 KiB`), int8 |
+| Float32 parity | Full and cached logits pass at `rtol=1e-4`, `atol=1e-4`; identical 32-token greedy continuation |
+| Int8 authoring gate | Prompt top-1 8/8, greedy 32/32, cosine 0.9997768 |
+| Int8 engine gate | Token-exact vs fp32 on two factual prompts and the `9.11` versus `9.8` reasoning smoke; deterministic rerun |
+| M4 Max Release, prompt 128 / generation 256 / 3 runs | **47.37 prefill / 46.35 decode tok/s** |
+| Maximum context tested | **4,096 tokens**: 29.83 prefill / 32.80 decode tok/s, 9.17 GiB peak RSS, zero swaps |
+| iOS 27 GPU AOT `h18p` | Compile pass with Xcode 27; generated package source hash matches the published model |
+| iPhone `h18p` hardware | Pending; no iPhone throughput or memory claim |
 
-The upstream config bytes are pinned by SHA-256
-`f6cb15b22847664f3a6049dc4b58fdd10f1650d112ac99a1da3d051f17c2ca19`. The advertised 262K context is not
-claimed here; the recipe defaults to a 4K export until a larger context is measured on both target devices.
+The Mac benchmark used macOS 27.0, Xcode 27 beta 4, Core AI runtime `aff0bb2`, AC power, and High Power Mode.
+The checkpoint config SHA-256 is
+`f6cb15b22847664f3a6049dc4b58fdd10f1650d112ac99a1da3d051f17c2ca19`.
 
-The committed isolated official-checkpoint versus Core AI overlay gate reports `1.01566e-4` full and
-`2.09808e-5` incremental maximum absolute error at `rtol=1e-4`, `atol=1e-4`, with the same 32-token greedy
-continuation. The measured int8 quality results use the exact shipping quantization traversal (111 physical
-linear modules). The Release Core AI bundle on runtime
-`aff0bb2` then matched its pinned fp32 authoring oracle token-for-token for all three public prompts. The pinned
-tokenizer includes the vendor `chat_template.jinja`; rendering is verified with `enable_thinking=true` and
-`enable_thinking=false`. Review should exercise both modes through the published LanguageBundle.
+Int4 and mixed int4/int8 candidates are not published because they failed the same multi-token quality gates
+required of int8. Detailed architecture, parity, quantization, and optimization results are in the
+[support report](../knowledge/nanbeige4.2-coreai-support.md).
 
-The accepted M4 Max benchmark used macOS 27.0 (`26A5378n`), Xcode 27 beta 4, Core AI runtime `aff0bb2`,
-static-S=1, AC power, High Power Mode, prompt 128, generation 256, and three trials. Prefill was 48.84, 48.45,
-and 44.82 tok/s; decode was 46.74, 46.88, and 45.43 tok/s. The system reported no thermal or performance
-warning. The full exported boundary (3,840 prompt + 256 generation) completed with 9.17 GiB maximum RSS and no
-swaps. A discarded run with battery saving enabled averaged only 21.83 decode tok/s. The static-output capacity
-and descriptor-driven single-token prefill/warmup fixes in `apps/coreai-pipelined-extra-states.patch` are
-required.
+## Convert and verify
 
-The connected iPhone 16 Pro (`iPhone17,1`) runs iOS 26.6 and targets `h17p`, while this release criterion requires
-an iOS 27 `h18p` device. Xcode 27 can pair with the phone, but its measurements would not satisfy that gate.
-Mac-side compile acceptance passes with Xcode 27 (`27A5228h`) and Metal Toolchain `27A5228f`: `coreai-build`
-targeting iOS 27 GPU `h18p` exited 0 in 11.53 s and produced a 4,809,424 KiB `.aimodelc`. Its recorded
-source hash matches the published `.aimodel` SHA-256. Device acceptance remains pending—not extrapolated from
-Mac results—until matching hardware is available.
-
-For comparison only, the int4 candidate occupies 3.14 GiB and peaks at 6.24 GiB RSS with zero swaps. Its first
-128/256 run was still rising (38.01 prefill / 37.74 decode tok/s average); after the full-context warmup, the
-three stable trials averaged 58.91 prefill / 56.07 decode tok/s. The 4,096-token boundary passed at 45.47 prefill
-/ 44.46 decode tok/s. These speed and memory gains do not override the failed quality gate.
-
-A physical-layer mixed-precision sweep also failed. Twelve of 22 layers were individually harmless under the
-eager margin gate, but combining them accumulated decisive errors. The largest multi-layer survivors were
-exported: the four-layer (`3/4/5/10`) and three-layer (`3/4/5`) candidates both selected a different
-high-margin reasoning branch in Core AI. The smaller bundle was 4.41 GiB. It was not benchmarked because quality
-gates precede performance acceptance, and no experimental mixed mode remains in the conversion interface.
-
-Selecting int4 by projection role did not recover the candidate. `qkv_proj`, `o_proj`, `gate_proj`, and
-`down_proj` had decisive eager errors. `up_proj` alone reached all three eager continuations with only one
-`0.0302`-margin tie and produced a 4.27 GiB bundle, but the Core AI reasoning gate still diverged at token zero
-with margin `0.8542`. Dense int8 GEMV, fused gate/up, SDPA, TensorOps attention, and loop-draft kernel/pipeline
-experiments also failed their isolated speed or quality gate; measurements are in the support report. The
-shipping recipe therefore continues to use Core AI's stock int8 linear and SDPA paths.
-
-## Convert
-
-From a `coreai-models` checkout with this repository's Python overlay applied:
+From a checkout at the commit pinned in `conversion/overlay/BASE`, apply the Python overlay, then run:
 
 ```sh
 python3 ../coreai-model-zoo/conversion/zoo_convert.py run nanbeige4.2-3b --dry-run
@@ -88,35 +60,24 @@ python3 ../coreai-model-zoo/conversion/export_nanbeige41_decode_pipelined.py \
   int8hu --head-sym --static-ids \
   --hf-id Nanbeige/Nanbeige4.2-3B \
   --revision 5ff54fb7ed86ce8e216d78bff5417ab9981de3d4
+
+python3 ../coreai-model-zoo/conversion/coreai_gate.py \
+  exports/nanbeige4_2_3b_decode_int8hu_block32_sym_s1 \
+  Nanbeige/Nanbeige4.2-3B \
+  --revision 5ff54fb7ed86ce8e216d78bff5417ab9981de3d4 \
+  --arch nanbeige -n 24
 ```
 
-Reproduce the pinned official-vs-overlay float32 gate with the overlay interpreter and a separate
-vendor-compatible environment:
+Reproduce the isolated official-checkpoint parity gate with:
 
 ```sh
 python3 ../coreai-model-zoo/_smoke/verify_nanbeige42_checkpoint.py \
   --official-python /path/to/nanbeige-oracle/bin/python
 ```
 
-Gate an exported bundle through the Release runtime:
+The advertised 262K context is not claimed; the published bundle is verified to 4K. CoreAIKit enrollment and
+the generated “Use it” block remain pending until the iOS 27 `h18p` device gate passes.
 
-```sh
-python3 ../coreai-model-zoo/conversion/coreai_gate.py \
-  exports/nanbeige4_2_3b_decode_int8hu_block32_sym_s1 \
-  Nanbeige/Nanbeige4.2-3B \
-  --revision 5ff54fb7ed86ce8e216d78bff5417ab9981de3d4 --arch nanbeige -n 24
-```
+## License
 
-The bundle interface remains `input_ids`, `position_ids`, mutable `k_cache`, `v_cache` → `logits`; cache tensors
-have shape `[44, 1, 8, max_context, 128]`. The existing static-S=1 pipelined runtime path is used on device.
-
-## Remaining device and catalog gates
-
-- Run the same Release benchmark and 24-token oracle gate on an iOS 27 `h18p` iPhone with the increased-memory
-  entitlement. The evaluated int4 candidate has failed and cannot be used as a fallback.
-- Exercise both bundled chat-template modes through the published LanguageBundle; local rendering passes for
-  `enable_thinking=true` and `enable_thinking=false`.
-
-After those results are recorded and CoreAIKit publication is separately approved, add `nanbeige4.2-3b` with
-`kind: chat`, `engine: pipelined`, `thinking: true`, enroll the card in `cards.json`, and regenerate the managed
-“Use it” block.
+Model weights: **Apache-2.0** (Nanbeige LLM Lab). Conversion code: BSD-3-Clause.
