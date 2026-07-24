@@ -35,6 +35,9 @@ struct CoreAIAudioApp: App {
         if ProcessInfo.processInfo.environment["VIBEVOICE_SELFTEST"] != nil {
             Task.detached { await runVibeVoiceSelfTest() }
         }
+        if ProcessInfo.processInfo.environment["DIALOGUE_SELFTEST"] != nil {
+            Task.detached { await runDialogueSelfTest() }
+        }
     }
 
     var body: some Scene {
@@ -56,6 +59,8 @@ struct CoreAIAudioApp: App {
                     .tabItem { Label("Music", systemImage: "music.note") }
                 SeparateView()
                     .tabItem { Label("Separate", systemImage: "music.mic") }
+                DialogueView()
+                    .tabItem { Label("Dialogue", systemImage: "person.2.wave.2") }
             }
             // Non-blocking self-test (KOKORO_SELFTEST=1): the iOS launch watchdog
             // kills any main-thread block, so run it as a normal async task.

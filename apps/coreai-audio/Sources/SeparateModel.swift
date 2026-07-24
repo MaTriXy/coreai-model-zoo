@@ -1,9 +1,14 @@
-// SeparateModel — the "Separate" tab VM. Drives MelBandSeparator (Mel-Band RoFormer,
+// SeparateModel — the "Separate" tab VM. Drives CoreAIKit's `KitSeparator` (Mel-Band RoFormer,
 // zoo's first source separation) to split a song into vocals + instrumental, and plays
 // either stem. Pairs with the Music tab (generate a track, then rip its stems).
 //
+// The separation math lives in the kit (`KitSeparator`), not here — this tab is the same code
+// path any app gets from `KitSeparator(catalog: "melband-roformer-vocal")`, just pointed at the
+// sideloaded bundle instead of the download cache.
+//
 // Assets: `SeparateAssets` root (dev symlink -> conversion/melband_roformer/ship_macos)
 // holds mbr_full_fp16.aimodel (macOS) / .h18p.aimodelc (device) + metadata + golden_*.f32.
+import CoreAIKit
 import CoreAIKitVision
 import Foundation
 import SwiftUI
@@ -34,7 +39,7 @@ enum SeparateAssets {
         guard let r = root,
               let d = try? Data(contentsOf: r.appendingPathComponent("golden_raw.f32")) else { return nil }
         let all = d.withUnsafeBytes { Array($0.bindMemory(to: Float.self)) }
-        let C = MelBandSeparator.C
+        let C = KitSeparator.chunkSamples
         guard all.count >= 2 * C else { return nil }
         return [Array(all[0..<C]), Array(all[C..<2 * C])]
     }
@@ -49,11 +54,11 @@ final class SeparateModel: ObservableObject {
     @Published var stats = ""
     @Published var haveResult = false
 
-    private var sep: MelBandSeparator?
+    private var sep: KitSeparator?
     private let player = AudioPlayer()
     private var vocals: [[Float]] = []
     private var instrumental: [[Float]] = []
-    private let sr = Double(MelBandSeparator.sr)
+    private let sr = Double(KitSeparator.sampleRate)
 
     func load() async {
         busy = true; defer { busy = false }
@@ -62,7 +67,7 @@ final class SeparateModel: ObservableObject {
         }
         status = "Loading Mel-Band RoFormer…"
         do {
-            sep = try await MelBandSeparator(model: url, computeUnits: .gpu)
+            sep = try await KitSeparator(bundleAt: url, computeUnits: .gpu)
             loaded = true
             status = "Ready. Choose a song or use the demo clip."
         } catch { status = "Load failed: \(error)" }
@@ -76,7 +81,8 @@ final class SeparateModel: ObservableObject {
         status = "Separating…"
         do {
             let clock = ContinuousClock(); let t0 = clock.now
-            let (v, i) = try await sep.separate(input) { p in Task { @MainActor in self.progress = p } }
+            let stems = try await sep.separate(input) { p in Task { @MainActor in self.progress = p } }
+            let (v, i) = (stems.vocals, stems.instrumental)
             let el = clock.now - t0
             let ms = Double(el.components.seconds) * 1000 + Double(el.components.attoseconds) / 1e15
             vocals = v; instrumental = i; haveResult = true
@@ -102,7 +108,7 @@ final class SeparateModel: ObservableObject {
     func saveWav(_ which: Bool, to url: URL) {   // true = vocals, false = instrumental
         let s = which ? vocals : instrumental
         guard s.count == 2, s[0].count > 0 else { return }
-        let n = s[0].count, ch = 2, bytes = 2, dataLen = n * ch * bytes, srI = MelBandSeparator.sr
+        let n = s[0].count, ch = 2, bytes = 2, dataLen = n * ch * bytes, srI = KitSeparator.sampleRate
         var d = Data()
         func u32(_ v: UInt32) { var x = v.littleEndian; d.append(Data(bytes: &x, count: 4)) }
         func u16(_ v: UInt16) { var x = v.littleEndian; d.append(Data(bytes: &x, count: 2)) }

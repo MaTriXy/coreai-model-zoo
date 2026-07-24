@@ -31,6 +31,15 @@ done
 # compact host inputs + golden (device_bundle/) — meta.json is the root marker
 for f in "$HERE"/device_bundle/*; do copy "$f"; done
 
+# CoreAIKit host assets (voices_coreai/, built by pack_voice_presets.py + the embed table):
+# the Dialogue tab drives KitDialogue, which wants glue/ + voices/ + embed/ next to the graphs.
+# Skipped automatically if the tree hasn't been packed yet (the self-test doesn't need them).
+if [ -d "$HERE/voices_coreai" ]; then
+  for sub in glue voices embed; do
+    [ -d "$HERE/voices_coreai/$sub" ] && copy "$HERE/voices_coreai/$sub"
+  done
+fi
+
 echo "Done. Headless gate:"
 echo "  xcrun devicectl device process launch --device $DEV \\"
 echo "    --environment-variables '{\"VIBEVOICE_SELFTEST\":\"1\",\"VV_RESULT\":\"/tmp/vv.txt\"}' $BID"

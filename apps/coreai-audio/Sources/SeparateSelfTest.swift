@@ -1,6 +1,8 @@
-// Headless self-test for the Separate tab (SEPARATE_SELFTEST=1): load Mel-Band RoFormer,
+// Headless self-test for the Separate tab (SEPARATE_SELFTEST=1): load Mel-Band RoFormer
+// through CoreAIKit's `KitSeparator`,
 // separate the golden 8 s chunk, compare vs golden_vocals.f32 (cos + rms ratio — cos alone
 // misses a global scale error), write a wav. Runs without the GUI (init()-launched).
+import CoreAIKit
 import Foundation
 
 func runSeparateSelfTest() async {
@@ -22,16 +24,16 @@ func runSeparateSelfTest() async {
     guard let rawFlat = readF32("golden_raw.f32"), let goldFlat = readF32("golden_vocals.f32") else {
         log("FAIL: golden_raw/golden_vocals.f32 missing"); finish(2)
     }
-    let C = MelBandSeparator.C
+    let C = KitSeparator.chunkSamples
     let mix = [Array(rawFlat[0..<C]), Array(rawFlat[C..<2 * C])]
     do {
         let t0 = ContinuousClock().now
-        let sep = try await MelBandSeparator(model: murl, computeUnits: .gpu)
+        let sep = try await KitSeparator(bundleAt: murl, computeUnits: .gpu)
         log("loaded in \(ms(since: t0))")
         let g0 = ContinuousClock().now
         let voc = try await sep.separateChunk(mix)               // single-chunk path (matches golden)
         let dt = msVal(since: g0) / 1000
-        log(String(format: "separate 8s chunk in %.2fs (%.1f× real-time)", dt, Double(C) / Double(MelBandSeparator.sr) / dt))
+        log(String(format: "separate 8s chunk in %.2fs (%.1f× real-time)", dt, Double(C) / Double(KitSeparator.sampleRate) / dt))
 
         // cos + rms ratio vs golden (ch0 then ch1)
         let out = voc[0] + voc[1]
@@ -41,7 +43,7 @@ func runSeparateSelfTest() async {
         let rmsRatio = (na / nb).squareRoot()
         log(String(format: "vs golden: cos=%.6f  rms_ratio=%.4f", cos, rmsRatio))
         let pass = cos >= 0.99 && abs(rmsRatio - 1) < 0.05
-        writeStereoWav(voc, sr: MelBandSeparator.sr,
+        writeStereoWav(voc, sr: KitSeparator.sampleRate,
                        to: URL(fileURLWithPath: ProcessInfo.processInfo.environment["SEP_OUT"] ?? "/tmp/separate_selftest.wav"))
         log(pass ? "PASS" : "CHECK (cos or rms off — likely a host DSP mismatch)")
         finish(pass ? 0 : 3)
