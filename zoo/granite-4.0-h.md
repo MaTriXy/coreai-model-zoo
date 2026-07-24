@@ -29,6 +29,15 @@ shows no fp16-matmul amplification; the SSM step itself computes in fp32 in-grap
 <!-- gen-cards:use-it begin id=granite-4.0-h-1b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
 ## Use it
 
+⚡ **One line** — run the kit's task op on this model
+(`import CoreAIOps`; no session, no model plumbing, downloads on first use):
+
+```swift
+let tldr = try await CoreAI.summarize(text, options: .model("granite-4.0-h-1b"))
+```
+
+Twenty ops, one shape — [Cookbook](https://github.com/john-rocky/coreai-kit/blob/main/docs/COOKBOOK.md).
+
 ▶️ **Run it (source)** — the [ChatDemo runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo)
 (GUI + CLI, one app for every chat model in the catalog):
 
@@ -65,7 +74,7 @@ conversation history; `streamResponse(to:)` yields tokens as they decode.
 - SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKit**
 - Info.plist: none needed
 - Entitlements: none needed
-- First run downloads the model — 1.7 GB (Mac) / 1.9 GB (iPhone) — then it loads from the
+- First run downloads the model — 1.6 GB (Mac) / 1.8 GB (iPhone) — then it loads from the
   local cache (Application Support; progress via the `downloadProgress` callback)
 - Measure in Release — Debug is ~3× slower on per-token host work
 <!-- gen-cards:use-it end -->

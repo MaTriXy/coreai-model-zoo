@@ -17,6 +17,15 @@ including on the iPhone **Neural Engine**.
 <!-- gen-cards:use-it begin id=qwen3.5-2b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
 ## Use it
 
+⚡ **One line** — run the kit's task op on this model
+(`import CoreAIOps`; no session, no model plumbing, downloads on first use):
+
+```swift
+let tldr = try await CoreAI.summarize(text, options: .model("qwen3.5-2b"))
+```
+
+Twenty ops, one shape — [Cookbook](https://github.com/john-rocky/coreai-kit/blob/main/docs/COOKBOOK.md).
+
 ▶️ **Run it (source)** — the [ChatDemo runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo)
 (GUI + CLI, one app for every chat model in the catalog):
 

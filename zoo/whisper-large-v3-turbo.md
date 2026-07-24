@@ -15,6 +15,15 @@ Bundle: [🤗 mlboydaisuke/whisper-large-v3-turbo-CoreAI-official](https://huggi
 
 ## Use it
 
+⚡ **One line** — this model is the default behind the kit's task op
+(`import CoreAIOps`; no session, no model plumbing, downloads on first use):
+
+```swift
+let text = try await CoreAI.transcribe(audioURL)
+```
+
+Twenty ops, one shape — [Cookbook](https://github.com/john-rocky/coreai-kit/blob/main/docs/COOKBOOK.md).
+
 ▶️ **Run it (source)** — the [Transcribe runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/Transcribe)
 (GUI + CLI, one app for every speech-to-text model in the catalog):
 

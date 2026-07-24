@@ -23,6 +23,15 @@ the architecture — only resolution, decoder depth and window count change:
 <!-- gen-cards:use-it begin id=rf-detr (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
 ## Use it
 
+⚡ **One line** — this model is the default behind the kit's task op
+(`import CoreAIOps`; no session, no model plumbing, downloads on first use):
+
+```swift
+let boxes = try await CoreAI.detect(inImageAt: url)
+```
+
+Twenty ops, one shape — [Cookbook](https://github.com/john-rocky/coreai-kit/blob/main/docs/COOKBOOK.md).
+
 ▶️ **Run it (source)** — the [DetectCamera runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/DetectCamera)
 (real-time object detection on the zero-copy camera path):
 

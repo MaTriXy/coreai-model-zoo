@@ -19,6 +19,15 @@ port that the runtime can run as-is.
 <!-- gen-cards:use-it begin id=unlimited-ocr (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
 ## Use it
 
+⚡ **One line** — run the kit's task op on this model
+(`import CoreAIOps`; no session, no model plumbing, downloads on first use):
+
+```swift
+let markdown = try await CoreAI.read(documentAt: url, options: .model("unlimited-ocr"))
+```
+
+Twenty ops, one shape — [Cookbook](https://github.com/john-rocky/coreai-kit/blob/main/docs/COOKBOOK.md).
+
 ▶️ **Run it (source)** — the [ReadDoc runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ReadDoc)
 (GUI + CLI, one app for every document-OCR model in the catalog):
 

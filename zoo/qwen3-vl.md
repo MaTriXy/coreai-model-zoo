@@ -44,6 +44,15 @@ bundles convert from the same recipe (`--hf-id Qwen/Qwen3-VL-4B-Instruct` /
 
 ## Use it
 
+⚡ **One line** — this model is the default behind the kit's task op
+(`import CoreAIOps`; no session, no model plumbing, downloads on first use):
+
+```swift
+let caption = try await CoreAI.caption(imageAt: url)
+```
+
+Twenty ops, one shape — [Cookbook](https://github.com/john-rocky/coreai-kit/blob/main/docs/COOKBOOK.md).
+
 ▶️ **Run it (source)** — the [VLChat runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/VLChat)
 (GUI + CLI, one app for every vision-language model in the catalog):
 

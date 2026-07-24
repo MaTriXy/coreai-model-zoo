@@ -27,6 +27,15 @@ original `…_int8lin` decoder + fp16 `minicpmv46_vision` kept for compatibility
 <!-- gen-cards:use-it begin id=minicpm-v-4.6 (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
 ## Use it
 
+⚡ **One line** — run the kit's task op on this model
+(`import CoreAIOps`; no session, no model plumbing, downloads on first use):
+
+```swift
+let caption = try await CoreAI.caption(imageAt: url, options: .model("minicpm-v-4.6"))
+```
+
+Twenty ops, one shape — [Cookbook](https://github.com/john-rocky/coreai-kit/blob/main/docs/COOKBOOK.md).
+
 ▶️ **Run it (source)** — the [VLChat runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/VLChat)
 (GUI + CLI, one app for every vision-language model in the catalog):
 

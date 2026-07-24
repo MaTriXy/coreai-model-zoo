@@ -14,6 +14,15 @@ alongside. Catalog id: **`vjepa2-vitl-ssv2`**.
 <!-- gen-cards:use-it begin id=vjepa2-vitl-ssv2 (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
 ## Use it
 
+⚡ **One line** — this model is the default behind the kit's task op
+(`import CoreAIOps`; no session, no model plumbing, downloads on first use):
+
+```swift
+let actions = try await CoreAI.recognizeAction(videoAt: videoURL)
+```
+
+Twenty ops, one shape — [Cookbook](https://github.com/john-rocky/coreai-kit/blob/main/docs/COOKBOOK.md).
+
 ▶️ **Run it (source)** — the [ActionCamera runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ActionCamera)
 (live camera action recognition, one app for every video model in the catalog):
 

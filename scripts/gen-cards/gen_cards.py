@@ -141,6 +141,10 @@ def gate_snippet_compiles(snippet: str, kit_url: str, local_kit: Path | None,
     scratch = HERE / ".scratch" / "SnippetCheck"
     src = scratch / "Sources" / "SnippetCheck"
     src.mkdir(parents=True, exist_ok=True)
+    # A branch dep pins to a revision in Package.resolved and never auto-updates — a
+    # stale lockfile from an earlier run silently compiles against old kit main (or
+    # fails on products that didn't exist yet). Force re-resolution every gate.
+    (scratch / "Package.resolved").unlink(missing_ok=True)
     dep = (f'.package(path: "{local_kit}")' if local_kit
            else f'.package(url: "{kit_url}", branch: "main")')
     (scratch / "Package.swift").write_text(f"""// swift-tools-version: 6.0
@@ -209,6 +213,22 @@ def render_block(model_id: str, entry: dict, cfg: dict, top: dict,
     if doors["green"]:
         parts.append(doors["green"] + "\n")
 
+    # ⚡ door: the kit's task layer — one line, model resolved behind the op (cards.json
+    # `op`; gated by the same scratch compile as 💻, against product CoreAIOps).
+    if doors.get("op"):
+        o = cfg["op"]
+        lead = ("this model is the default behind the kit's task op"
+                if o.get("isDefault") else "run the kit's task op on this model")
+        parts.append(
+            f"⚡ **One line** — {lead}\n"
+            "(`import CoreAIOps`; no session, no model plumbing, downloads on first use):\n"
+            "\n"
+            "```swift\n"
+            f"let {o['result']} = try await {o['call']}\n"
+            "```\n"
+            "\n"
+            f"Twenty ops, one shape — [Cookbook]({kit_url}/blob/main/docs/COOKBOOK.md).\n")
+
     # Engine-showcase models (custom backends the generic kit path can't drive yet):
     # the ▶️ door points at their zoo app; 💻 is omitted until the backend is ported
     # into kit (design §4).
@@ -243,6 +263,16 @@ def render_block(model_id: str, entry: dict, cfg: dict, top: dict,
         sizes = " / ".join(
             f"{v['sizeMB'] / 1000:.1f} GB ({top['variantLabels'][k]})"
             for k, v in entry["variants"].items())
+        # FM-provider pitch (chat-family cards): cards.json `fmProvider` names the
+        # provider type (KitLanguageModel / KitGemmaModel); wording is fixed here.
+        fm_note = ""
+        if cfg.get("fmProvider"):
+            fm_note = (
+                f"Also runs behind **Apple's FoundationModels API** — CoreAIKit's "
+                f"[`{cfg['fmProvider']}`]({kit_url}#works-with-apples-foundationmodels-api) "
+                "plugs this bundle into the system `LanguageModelSession`; capabilities "
+                "(tool calling, guided generation) auto-detect per model.\n"
+                "\n")
         parts.append(
             "💻 **Build with it** — complete; the glue is kit API, copy-paste runs:\n"
             "\n"
@@ -250,6 +280,7 @@ def render_block(model_id: str, entry: dict, cfg: dict, top: dict,
             f"{snippet}\n"
             "```\n"
             "\n"
+            + fm_note +
             f"The take-home is [`{cfg['quickstart']}`]({kit_url}/blob/main/{cfg['quickstart']})\n"
             + cfg.get("takeHomeTagline",
                       "— this exact code as one typed function, no UI; both the runner's GUI "
@@ -332,7 +363,7 @@ def main() -> int:
         log("model", f"{model_id} ({entry['name']})")
 
         doors: dict = {"green": None, "runner": False, "snippet": False, "hero": None,
-                       "appDoor": False}
+                       "appDoor": False, "op": False}
         snippet = None
 
         if "appDoor" in cfg:
@@ -347,6 +378,7 @@ def main() -> int:
             doors["runner"] = True
             snippet = extract_snippet(kit, cfg, model_id)
             doors["snippet"] = snippet is not None
+            doors["op"] = bool(cfg.get("op"))
         else:
             runner_dir = kit / cfg["runner"]["dir"]
             ok = gate_regen_diff(kit, runner_dir, cfg["runner"]["xcodeproj"])
@@ -359,6 +391,14 @@ def main() -> int:
                 snippet, top["kitURL"], kit if args.local_kit_dep else None,
                 cfg.get("snippetFreeVars", {"url": "URL"}),
                 product=cfg.get("product", "CoreAIKit"))
+            if cfg.get("op"):
+                o = cfg["op"]
+                # CoreGraphics: CGImage free vars (upscale / estimateDepth) need the type.
+                op_line = ("import CoreAIOps\nimport CoreGraphics\n\n"
+                           f"let {o['result']} = try await {o['call']}")
+                doors["op"] = gate_snippet_compiles(
+                    op_line, top["kitURL"], kit if args.local_kit_dep else None,
+                    o.get("freeVars", {}), product="CoreAIOps")
 
         if cfg.get("testflightURL") or cfg.get("dmgURL"):
             fail("green door configured but its template is not implemented yet")

@@ -18,6 +18,15 @@ reported number).
 <!-- gen-cards:use-it begin id=yolox-s (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
 ## Use it
 
+⚡ **One line** — run the kit's task op on this model
+(`import CoreAIOps`; no session, no model plumbing, downloads on first use):
+
+```swift
+let boxes = try await CoreAI.detect(inImageAt: url, options: .model("yolox-s"))
+```
+
+Twenty ops, one shape — [Cookbook](https://github.com/john-rocky/coreai-kit/blob/main/docs/COOKBOOK.md).
+
 ▶️ **Run it (source)** — the [DetectCamera runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/DetectCamera)
 (real-time object detection on the zero-copy camera path):
 

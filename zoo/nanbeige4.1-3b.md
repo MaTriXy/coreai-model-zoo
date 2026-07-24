@@ -20,6 +20,15 @@ existing overlay with one norm removed — see `models/macos/llama.py`. Pure-att
 <!-- gen-cards:use-it begin id=nanbeige4.1-3b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
 ## Use it
 
+⚡ **One line** — run the kit's task op on this model
+(`import CoreAIOps`; no session, no model plumbing, downloads on first use):
+
+```swift
+let tldr = try await CoreAI.summarize(text, options: .model("nanbeige4.1-3b"))
+```
+
+Twenty ops, one shape — [Cookbook](https://github.com/john-rocky/coreai-kit/blob/main/docs/COOKBOOK.md).
+
 ▶️ **Run it (source)** — the [ChatDemo runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo)
 (GUI + CLI, one app for every chat model in the catalog):
 
@@ -56,7 +65,7 @@ conversation history; `streamResponse(to:)` yields tokens as they decode.
 - SPM: `https://github.com/john-rocky/coreai-kit` → product **CoreAIKit**
 - Info.plist: none needed
 - Entitlements (iOS): `com.apple.developer.kernel.increased-memory-limit`
-- First run downloads the model — 3.9 GB (Mac) / 3.9 GB (iPhone) — then it loads from the
+- First run downloads the model — 4.4 GB (Mac) / 4.4 GB (iPhone) — then it loads from the
   local cache (Application Support; progress via the `downloadProgress` callback)
 - Measure in Release — Debug is ~3× slower on per-token host work
 <!-- gen-cards:use-it end -->

@@ -23,6 +23,15 @@ eliminated by `optimize()` because only `depth`/`depth_conf` are graph outputs.
 <!-- gen-cards:use-it begin id=depth-anything-3-small (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
 ## Use it
 
+⚡ **One line** — this model is the default behind the kit's task op
+(`import CoreAIOps`; no session, no model plumbing, downloads on first use):
+
+```swift
+let map = try await CoreAI.estimateDepth(in: image)
+```
+
+Twenty ops, one shape — [Cookbook](https://github.com/john-rocky/coreai-kit/blob/main/docs/COOKBOOK.md).
+
 ▶️ **Run it (source)** — the [DepthCamera runner](https://github.com/john-rocky/coreai-kit/tree/main/Examples/DepthCamera)
 (live camera depth, one app for every depth model in the catalog):
 
