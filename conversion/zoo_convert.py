@@ -8,8 +8,8 @@
 
 This is a thin index over conversion/export_*.py — it does not convert anything the
 scripts can't. It remembers the configuration that produced each published bundle
-(recipes.toml), states the prerequisites that configuration depends on, checks the
-environment, and runs the right script with the right interpreter.
+(models/<family>/recipe.toml), states the prerequisites that configuration depends on,
+checks the environment, and runs the right script with the right interpreter.
 
 Two rules it enforces, because both failures are silent:
 
@@ -35,14 +35,20 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
-RECIPES = HERE / "recipes.toml"
+MODELS = REPO / "models"
 # Import that only succeeds when the zoo overlay is applied (not stock upstream).
 OVERLAY_CANARY = "coreai_models.models.macos.qwen3_5"
 
 
 def load_recipes() -> dict:
-    with open(RECIPES, "rb") as fh:
-        return tomllib.load(fh)
+    """Every models/<family>/recipe.toml, merged. The family is where the card lives."""
+    out: dict[str, dict] = {}
+    for path in sorted(MODELS.glob("*/recipe.toml")):
+        with open(path, "rb") as fh:
+            for name, recipe in tomllib.load(fh).items():
+                recipe["family"] = path.parent.name
+                out[name] = recipe
+    return dict(sorted(out.items()))
 
 
 def resolve_python(flag: str | None) -> str:
@@ -131,7 +137,8 @@ def cmd_list(recipes: dict, show_unverified: bool) -> None:
 def cmd_show(recipes: dict, name: str, python: str) -> None:
     r = get(recipes, name)
     print(f"recipe    {name}   [{r.get('status', 'unknown')}]")
-    print(f"card      {r.get('card', '-')}")
+    family = r.get("family")
+    print(f"card      models/{family}/{r.get('card', 'README.md')}" if family else "card      -")
     if repo := r.get("hf_repo"):
         print(f"published https://huggingface.co/{repo}"
               + (f"  ->  {r['bundle']}" if r.get("bundle") else ""))

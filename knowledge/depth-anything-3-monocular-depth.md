@@ -94,4 +94,4 @@ descriptor, so the same Swift path drives the fp16 bundle.
 | mono-large · fp32 | 334.2M | 1.34 GB | cos 1.000000 | 118 ms |
 
 `small · fp16` is the on-device hero. App: [`apps/CoreAIDepth`](../apps/CoreAIDepth) (photo + live
-camera, iOS + macOS). Card: [`zoo/depth-anything-3.md`](../zoo/depth-anything-3.md).
+camera, iOS + macOS). Card: [`models/depth-anything-3/README.md`](../models/depth-anything-3/README.md).

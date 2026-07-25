@@ -1,0 +1,25 @@
+# Recipe for depth-anything-3 — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["depth-anything-3-small"]
+script = "export_da3.py"
+args = ["--variant", "small", "--dtype", "float16", "--res", "504"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Depth-Anything-3-CoreAI"
+bundle = "small/da3-small_float16.aimodel"
+status = "verified"
+needs = ["--ckpt <DA3-SMALL checkout> and --da3-src <depth_anything_3 source tree> (the card's command)."]
+notes = [
+  "One square R x R graph (R=504); the host resizes in and out. Aspect distortion cancels for",
+  "relative depth — measured, not assumed. float32 twins are published as the parity reference.",
+]
+
+["depth-anything-3-base"]
+script = "export_da3.py"
+args = ["--variant", "base", "--dtype", "float16", "--res", "504"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Depth-Anything-3-CoreAI"
+bundle = "base/da3-base_float16.aimodel"
+status = "verified"
+needs = ["--ckpt <DA3-BASE checkout> and --da3-src <depth_anything_3 source tree>."]

@@ -1,0 +1,18 @@
+# Recipe for gemma4-e4b — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["gemma-4-e4b"]
+script = "export_gemma4_decode_pipelined.py"
+args = ["int4lin", "--hf-id", "google/gemma-4-E4B-it-qat-q4_0-unquantized"]
+card = "README.md"
+hf_repo = "mlboydaisuke/gemma-4-E4B-CoreAI"
+bundle = "gpu-pipelined/gemma4_e4b_qat_decode_int4lin"
+status = "verified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+aot = "xcrun coreai-build compile <bundle>.aimodel --output <out>/ --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = [
+  "The card documents this command verbatim; the _tbl variant beside it adds --tbl --raw-dir",
+  "(gather-table dump from ondevice/export_gemma4_gather_raw.py).",
+]

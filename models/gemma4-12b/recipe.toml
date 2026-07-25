@@ -1,0 +1,30 @@
+# Recipe for gemma4-12b — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["gemma-4-12b"]
+script = "export_gemma4_12b_decode_pipelined.py"
+args = ["int4lin", "--lin-sym", "--metal-sdpa", "--max-ctx", "4096"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Gemma-4-12B-CoreAI"
+bundle = "gpu-pipelined/gemma4_12b_qat_decode_int4linsym_msdpa_g8"
+status = "verified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "--lin-sym is the QAT-grid-aligned absmax variant (q4_0 = per-block-32 absmax), hence the",
+  "`int4linsym` in the name; --metal-sdpa adds the custom flash-decode kernel (_msdpa_g8 = the",
+  "default split factor 8). Mac-only.",
+  "int8lin --metal-sdpa is published beside it — see gemma-4-12b-int8.",
+]
+
+["gemma-4-12b-int8"]
+script = "export_gemma4_12b_decode_pipelined.py"
+args = ["int8lin", "--metal-sdpa", "--max-ctx", "4096"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Gemma-4-12B-CoreAI"
+bundle = "gpu-pipelined/gemma4_12b_qat_decode_int8lin_msdpa_g8"
+status = "verified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = ["The int8 twin of gemma-4-12b, same graph and kernel, both published."]

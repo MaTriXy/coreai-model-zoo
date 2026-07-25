@@ -78,8 +78,8 @@ final class SpecDecodeEngine {
     }
 
     init(targetURL: URL, draftURL: URL) async throws {
-        target = try await WindowedModel(bundleURL: targetURL)
-        draft = try await WindowedModel(bundleURL: draftURL)
+        target = try await WindowedModel(bundleURL: targetURL, role: "target")
+        draft = try await WindowedModel(bundleURL: draftURL, role: "draft")
         guard target.vocab == draft.vocab else {
             throw Self.err("draft vocab \(draft.vocab) ≠ target vocab \(target.vocab) — "
                            + "spec-decode needs a same-tokenizer draft")
@@ -129,8 +129,11 @@ final class SpecDecodeEngine {
     /// Greedy generation through the verify graph. `specOn=false` runs the exact same
     /// window discipline with no drafts (the lossless A/B baseline) — outputs are
     /// byte-identical either way, only the forward count changes.
-    func generate(history: [[String: any Sendable]], specOn: Bool,
+    func generate(history: [[String: any Sendable]], specOn specOnRequested: Bool,
                   onUpdate: @MainActor (String, Stats) -> Void) async throws -> (text: String, stats: Stats) {
+        // SPEC_OFF forces the no-draft baseline (pure greedy through the verify graph) so a
+        // bench run can A/B the two paths for byte-identical output — bench only.
+        let specOn = specOnRequested && ProcessInfo.processInfo.environment["SPEC_OFF"] == nil
         // Fit prompt + generation inside the KV capacity; drop the oldest turns first.
         var msgs = history
         var ids = promptIds(history: msgs)
@@ -153,8 +156,8 @@ final class SpecDecodeEngine {
         // exact multiple of S would otherwise anchor off a pad row).
         let held = ids.removeLast()
         try await target.append(ids)
-        let (bootFlat, bootBase) = try await target.peek([held])
-        var pending = argmaxRow(bootFlat, row: bootBase, vocab: target.vocab)
+        let bootBase = try await target.peek([held])
+        var pending = target.argmax(row: bootBase)
         try await target.append([held])
         try await draft.append(ids + [held])
 
@@ -162,19 +165,22 @@ final class SpecDecodeEngine {
         var lastEmit = SuspendingClock.now
         var stopped = false
 
+        // Decode-only timer (excludes prefill/anchor bootstrap) for the SPEC_BENCH A/B.
+        let decodeStart = SuspendingClock.now
+
         while gen.count < maxNewTokens && !stopped {
             if stopIds.contains(pending) { break }
             let k = specOn ? min(Self.maxDraftK, target.room()) : 0
             let drafts = k > 0 ? try await propose(k: k, anchor: pending) : []
 
-            let (flat, base) = try await target.verifyRound(anchor: pending, drafts: drafts)
+            let base = try await target.verifyRound(anchor: pending, drafts: drafts)
             var accepted = 0
             while accepted < drafts.count,
-                  argmaxRow(flat, row: base + accepted, vocab: target.vocab) == drafts[accepted] {
+                  target.argmax(row: base + accepted) == drafts[accepted] {
                 accepted += 1
             }
             let committed = [pending] + drafts.prefix(accepted)
-            pending = argmaxRow(flat, row: base + accepted, vocab: target.vocab)
+            pending = target.argmax(row: base + accepted)
             try await target.commitOrRestore(accepted: committed, allDrafts: drafts.count)
             try await draft.append(committed)   // drafter absorbs the committed delta
 
@@ -199,7 +205,24 @@ final class SpecDecodeEngine {
         stats.generated = gen.count
         stats.targetForwards = target.forwards
         stats.draftForwards = draft.forwards
+
+        // SPEC_BENCH: emit a decode-only line (tok/s comparable to the shipped 15.9 decode).
+        if ProcessInfo.processInfo.environment["SPEC_BENCH"] != nil {
+            let dt = SuspendingClock.now - decodeStart
+            let secs = Double(dt.components.seconds) + Double(dt.components.attoseconds) / 1e18
+            let tps = secs > 0 ? Double(gen.count) / secs : 0
+            let alpha = stats.rounds > 0 ? Double(stats.acceptedDrafts) / Double(stats.rounds) : 0
+            let perFwd = Double(gen.count) / Double(max(stats.targetForwards, 1))
+            FileHandle.standardError.write(Data(String(
+                format: "SPEC STATS spec=%@ gen=%d decode_s=%.3f decode_tps=%.2f alpha=%.2f tok/fwd=%.2f tgt_fwd=%d draft_fwd=%d\n",
+                specOn ? "on" : "off", gen.count, secs, tps, alpha, perFwd,
+                stats.targetForwards, stats.draftForwards).utf8))
+        }
+
         let text = decode(gen)
+        if ProcessInfo.processInfo.environment["SPEC_BENCH"] != nil {
+            FileHandle.standardError.write(Data("SPEC TEXT[\(specOn ? "on" : "off")]<<<\(text)>>>\n".utf8))
+        }
         onUpdate(text, stats)
         return (text, stats)
     }
@@ -211,25 +234,14 @@ final class SpecDecodeEngine {
         guard cap > 0 else { return [] }
         var drafts: [Int32] = []
         while drafts.count < cap {
-            let (flat, base) = try await draft.peek([anchor] + drafts)
-            drafts.append(argmaxRow(flat, row: base + drafts.count, vocab: draft.vocab))
+            let base = try await draft.peek([anchor] + drafts)
+            drafts.append(draft.argmax(row: base + drafts.count))
         }
         return drafts
     }
 
     private func decode(_ tokens: [Int32]) -> String {
         tokenizer.decode(tokens: tokens.map { Int($0) }, skipSpecialTokens: true)
-    }
-
-    private func argmaxRow(_ flat: [Float], row: Int, vocab: Int) -> Int32 {
-        let base = row * vocab
-        var bestIndex = 0
-        var bestValue = -Float.infinity
-        for j in 0..<vocab where flat[base + j] > bestValue {
-            bestValue = flat[base + j]
-            bestIndex = j
-        }
-        return Int32(bestIndex)
     }
 
     fileprivate static func err(_ message: String) -> NSError {
@@ -248,7 +260,9 @@ final class WindowedModel {
     let s: Int                    // verify window (query length), from bundle metadata
     let vocab: Int
     let kvCapacity: Int
+    let role: String              // "target" / "draft" — SPEC_BENCH per-forward labelling
     private(set) var forwards = 0
+    private let benchForwards = ProcessInfo.processInfo.environment["SPEC_BENCH"] != nil
 
     private let fn: InferenceFunction
     private let desc: InferenceFunctionDescriptor
@@ -257,15 +271,49 @@ final class WindowedModel {
     private let logitsName: String
     private let padToken: Int32 = 0
 
+    // Owned-buffer forward path (mirrors CoreAIPipelinedEngine): every forward binds the
+    // SAME persistent MTLBuffers via function.encode(...to: computeStream) so Core AI never
+    // re-allocates per-call scratch — this is the 135ms(raw fn.run) → 63ms(engine kernels)
+    // win that makes the loop beat the shipped 15.9 tok/s decode. The stream is drained
+    // (currentWorkCompleted) after each encode because the spec loop is strictly sequential:
+    // a round can't propose until it has read the previous round's logits.
+    private let device: MTLDevice
+    private let commandQueue: MTLCommandQueue
+    // ComputeStream is a non-Sendable final class; currentWorkCompleted() suspends, which
+    // would "send" it off @MainActor. Access is serialized (the spec loop awaits each forward
+    // to completion before the next), so the stream is never touched concurrently.
+    nonisolated(unsafe) private let computeStream: ComputeStream
+
+    private let idBuffer: MTLBuffer          // [1, s]  Int32 — query tokens (fixed S)
+    private let posBuffer: MTLBuffer         // [1, kvCapacity] Int32 — pre-filled 0..<kvCapacity
+    private let logitsBuffer: MTLBuffer      // [1, s, vocab] Float16
+    private let idScalar: NDArray.ScalarType
+    private let posScalar: NDArray.ScalarType
+    private let inDesc: NDArrayDescriptor
+    private let posDesc: NDArrayDescriptor
+    private let logitsDesc: NDArrayDescriptor
+
+    // Model states as owned buffers (KV pair + GDN conv/rec). Distinct locals are rebuilt
+    // per forward for the MutableViews lifetime rule; the buffers persist.
+    private struct StateBinding {
+        let name: String
+        let buffer: MTLBuffer
+        let scalarType: NDArray.ScalarType
+        let shape: [Int]
+        let strides: [Int]
+        let byteCount: Int
+    }
+    private var stateBindings: [StateBinding] = []
+    private var snapshotStates: [String: [UInt8]] = [:]     // conv/rec only — see header
+
     private var model: AIModel?                             // keeps the mapped weights alive
-    private var states: [String: NDArray] = [:]
-    private var snapshotStates: [String: [Float16]] = [:]   // conv/rec only — see header
     private(set) var stream: [Int32] = []                   // committed tokens C
     private var anchor = 0                                  // m: device state covers C[:m]
     private var roundDrafts = 0
     private var roundPad = 0
 
-    init(bundleURL: URL) async throws {
+    init(bundleURL: URL, role: String) async throws {
+        self.role = role
         let metaData = try Data(contentsOf: bundleURL.appendingPathComponent("metadata.json"))
         let meta = (try? JSONSerialization.jsonObject(with: metaData)) as? [String: Any] ?? [:]
         guard let windowLen = meta["verify_query_len"] as? Int else {
@@ -316,35 +364,77 @@ final class WindowedModel {
         inName = desc.inputNames[0]
         posName = desc.inputNames[1]
         logitsName = desc.outputNames[0]
-        guard case .ndArray(let logDesc)? = desc.outputDescriptor(of: logitsName),
+        guard case .ndArray(let inputDesc)? = desc.inputDescriptor(of: inName),
+              case .ndArray(let positionDesc)? = desc.inputDescriptor(of: posName),
+              case .ndArray(let logDesc)? = desc.outputDescriptor(of: logitsName),
               let v = logDesc.shape.last, v > 0 else {
-            throw SpecDecodeEngine.err("no logits output")
+            throw SpecDecodeEngine.err("missing input_ids/position_ids/logits descriptors")
         }
         vocab = v
         self.model = model
-        try allocStates()
+        inDesc = inputDesc
+        posDesc = positionDesc
+        logitsDesc = logDesc
+        idScalar = inputDesc.scalarType
+        posScalar = positionDesc.scalarType
+
+        guard let dev = MTLCreateSystemDefaultDevice(),
+              let queue = dev.makeCommandQueue() else {
+            throw SpecDecodeEngine.err("no Metal device/command queue")
+        }
+        queue.label = "SpecDecode.\(bundleURL.lastPathComponent)"
+        device = dev
+        commandQueue = queue
+        computeStream = ComputeStream(commandQueue: queue)
+
+        // Persistent input/position/logits buffers, sized once: S is fixed and positions
+        // never exceed kvCapacity, so the shape set is closed and Core AI reuses them.
+        let idBytes = inputDesc.resolvingDynamicDimensions([1, s]).minimumByteCount
+        let posBytes = positionDesc.resolvingDynamicDimensions([1, kvCapacity]).minimumByteCount
+        let logitsBytes = logDesc.resolvingDynamicDimensions([1, s, v]).minimumByteCount
+        guard let idBuf = dev.makeBuffer(length: idBytes, options: .storageModeShared),
+              let posBuf = dev.makeBuffer(length: posBytes, options: .storageModeShared),
+              let logitsBuf = dev.makeBuffer(length: logitsBytes, options: .storageModeShared) else {
+            throw SpecDecodeEngine.err("input/logits buffer allocation failed")
+        }
+        idBuffer = idBuf
+        logitsBuffer = logitsBuf
+        // position_ids are the constant ramp 0,1,2,… — write once, bind a [1, positions] prefix.
+        let posPtr = posBuf.contents().bindMemory(to: Int32.self, capacity: kvCapacity)
+        for i in 0..<kvCapacity { posPtr[i] = Int32(i) }
+        posBuffer = posBuf
+
+        try allocStateBuffers()
         snapshot()
     }
 
     // MARK: state plumbing
 
-    private func allocStates() throws {
-        states = [:]
+    private func allocStateBuffers() throws {
+        stateBindings = []
         for name in desc.stateNames {
             guard case .ndArray(let sd)? = desc.stateDescriptor(of: name) else {
                 throw SpecDecodeEngine.err("state descriptor \(name)")
             }
             let shape = sd.shape.map { $0 < 0 ? kvCapacity : $0 }
-            var array = NDArray(descriptor: sd.resolvingDynamicDimensions(shape))
-            fillNDArray(&array, as: Float16.self,
-                        with: [Float16](repeating: 0, count: shape.reduce(1, *)))
-            states[name] = array
+            let resolved = sd.resolvingDynamicDimensions(shape)
+            let byteCount = resolved.minimumByteCount
+            guard let buffer = device.makeBuffer(length: byteCount, options: .storageModeShared) else {
+                throw SpecDecodeEngine.err("state buffer \(name) (\(byteCount) bytes)")
+            }
+            memset(buffer.contents(), 0, byteCount)
+            stateBindings.append(StateBinding(
+                name: name, buffer: buffer, scalarType: sd.scalarType,
+                shape: shape, strides: resolved.preferredStrides, byteCount: byteCount))
         }
     }
 
-    /// Fresh stream (per chat turn): zeroed states, empty committed stream.
+    /// Fresh stream (per chat turn): zeroed states, empty committed stream. The owned
+    /// buffers are reused (memset to zero) rather than re-allocated.
     func resetStream() {
-        try? allocStates()
+        for binding in stateBindings {
+            memset(binding.buffer.contents(), 0, binding.byteCount)
+        }
         stream = []
         anchor = 0
         snapshot()
@@ -352,69 +442,118 @@ final class WindowedModel {
 
     // Only the cumulative GDN states need snapshotting; KV rows at positions ≥ m are
     // rewritten by every feed before they can be attended.
-    private var cumulativeStateNames: [String] {
-        desc.stateNames.filter { $0.localizedCaseInsensitiveContains("conv")
-            || $0.localizedCaseInsensitiveContains("rec") }
+    private var cumulativeStates: [StateBinding] {
+        stateBindings.filter { $0.name.localizedCaseInsensitiveContains("conv")
+            || $0.name.localizedCaseInsensitiveContains("rec") }
     }
 
     private func snapshot() {
-        for name in cumulativeStateNames {
-            guard let array = states[name] else { continue }
-            let count = array.shape.reduce(1, *)
-            snapshotStates[name] = readNDArray(array, as: Float16.self, count: count)
+        for binding in cumulativeStates {
+            var bytes = [UInt8](repeating: 0, count: binding.byteCount)
+            bytes.withUnsafeMutableBytes { dst in
+                memcpy(dst.baseAddress!, binding.buffer.contents(), binding.byteCount)
+            }
+            snapshotStates[binding.name] = bytes
         }
     }
 
     private func restore() {
-        for name in cumulativeStateNames {
-            guard var array = states[name], let saved = snapshotStates[name] else { continue }
-            fillNDArray(&array, as: Float16.self, with: saved)
-            states[name] = array
+        for binding in cumulativeStates {
+            guard let saved = snapshotStates[binding.name] else { continue }
+            saved.withUnsafeBytes { src in
+                memcpy(binding.buffer.contents(), src.baseAddress!, binding.byteCount)
+            }
         }
     }
 
     // MARK: forward
 
-    private func forward(_ tokens: [Int32]) async throws -> [Float] {
+    private func forward(_ tokens: [Int32]) async throws {
         precondition(tokens.count == s, "window feed must be exactly S tokens")
-        guard case .ndArray(let inDesc)? = desc.inputDescriptor(of: inName),
-              case .ndArray(let posDesc)? = desc.inputDescriptor(of: posName),
-              case .ndArray(let logDesc)? = desc.outputDescriptor(of: logitsName) else {
-            throw SpecDecodeEngine.err("descriptor")
+        guard stateBindings.count == 4 else {
+            throw SpecDecodeEngine.err("expected 4 hybrid states, got \(stateBindings.count)")
         }
         let positions = anchor + s
-        var idArray = NDArray(descriptor: inDesc.resolvingDynamicDimensions([1, s]))
-        fillNDArray(&idArray, as: Int32.self, with: tokens)
-        var posArray = NDArray(descriptor: posDesc.resolvingDynamicDimensions([1, positions]))
-        fillNDArray(&posArray, as: Int32.self, with: (0..<positions).map(Int32.init))
-        var logits = NDArray(descriptor: logDesc.resolvingDynamicDimensions([1, s, vocab]))
 
-        // States threaded like the iOS backend: distinct locals in, run, write back.
-        // MutableViews is ~Escapable — its lifetime depends on each inserted borrow, and
-        // an array-element borrow (&arr[i]) ends at the statement, so only plain local
-        // vars satisfy the checker. The qwen3_5 hybrid family always has exactly 4 states
-        // (keyCache, valueCache, convState, recState).
-        let names = desc.stateNames
-        guard names.count == 4,
-              var s0 = states[names[0]], var s1 = states[names[1]],
-              var s2 = states[names[2]], var s3 = states[names[3]] else {
-            throw SpecDecodeEngine.err("expected 4 hybrid states, got \(desc.stateNames.count)")
-        }
-        var stateViews = InferenceFunction.MutableViews()
-        stateViews.insert(&s0, for: names[0])
-        stateViews.insert(&s1, for: names[1])
-        stateViews.insert(&s2, for: names[2])
-        stateViews.insert(&s3, for: names[3])
-        var outputViews = InferenceFunction.MutableViews()
-        outputViews.insert(&logits, for: logitsName)
-        _ = try await fn.run(inputs: [inName: idArray, posName: posArray],
-                             states: consume stateViews, outputViews: consume outputViews)
-        states[names[0]] = s0
-        states[names[1]] = s1
-        states[names[2]] = s2
-        states[names[3]] = s3
+        // Write the S query tokens into the owned ids buffer (position_ids ride the pre-filled ramp).
+        let idPtr = idBuffer.contents().bindMemory(to: Int32.self, capacity: s)
+        for i in 0..<s { idPtr[i] = tokens[i] }
+
+        let idShape = [1, s]
+        let idStrides = try resolvedStrides(descriptor: inDesc, shape: idShape)
+        let idValue = InferenceFunction.AsyncValue(
+            unsafeBuffer: idBuffer, byteOffset: 0,
+            scalarType: idScalar, shape: idShape, strides: idStrides)
+        let posShape = [1, positions]
+        let posStrides = try resolvedStrides(descriptor: posDesc, shape: posShape)
+        let posValue = InferenceFunction.AsyncValue(
+            unsafeBuffer: posBuffer, byteOffset: 0,
+            scalarType: posScalar, shape: posShape, strides: posStrides)
+
+        // States bound in place over the owned buffers (Core AI updates them on the GPU).
+        // Distinct locals for the AsyncMutableViews lifetime rule — the view's lifetime is
+        // tied to each inserted value VARIABLE, so an array-element borrow won't satisfy the
+        // checker. The qwen3_5 hybrid always exposes exactly 4 (key, value, conv, rec).
+        let b0 = stateBindings[0], b1 = stateBindings[1]
+        let b2 = stateBindings[2], b3 = stateBindings[3]
+        var s0 = InferenceFunction.AsyncMutableValue(
+            unsafeBuffer: b0.buffer, byteOffset: 0, scalarType: b0.scalarType,
+            shape: b0.shape, strides: b0.strides)
+        var s1 = InferenceFunction.AsyncMutableValue(
+            unsafeBuffer: b1.buffer, byteOffset: 0, scalarType: b1.scalarType,
+            shape: b1.shape, strides: b1.strides)
+        var s2 = InferenceFunction.AsyncMutableValue(
+            unsafeBuffer: b2.buffer, byteOffset: 0, scalarType: b2.scalarType,
+            shape: b2.shape, strides: b2.strides)
+        var s3 = InferenceFunction.AsyncMutableValue(
+            unsafeBuffer: b3.buffer, byteOffset: 0, scalarType: b3.scalarType,
+            shape: b3.shape, strides: b3.strides)
+        var stateViews = InferenceFunction.AsyncMutableViews()
+        stateViews.insert(&s0, for: b0.name)
+        stateViews.insert(&s1, for: b1.name)
+        stateViews.insert(&s2, for: b2.name)
+        stateViews.insert(&s3, for: b3.name)
+
+        let logitsShape = [1, s, vocab]
+        let logitsStrides = try resolvedStrides(descriptor: logitsDesc, shape: logitsShape)
+        var logitsOut = InferenceFunction.AsyncMutableValue(
+            unsafeBuffer: logitsBuffer, byteOffset: 0, scalarType: .float16,
+            shape: logitsShape, strides: logitsStrides)
+        var outputViews = InferenceFunction.AsyncMutableViews()
+        outputViews.insert(&logitsOut, for: logitsName)
+
+        let t0 = benchForwards ? ContinuousClock.now : nil
+        let _ = try fn.encode(
+            inputs: [inName: idValue, posName: posValue],
+            states: consume stateViews, outputViews: consume outputViews, to: computeStream)
+        let t1 = benchForwards ? ContinuousClock.now : nil
+        // Sequential loop: the next round can't propose until it reads these logits, so drain.
+        await computeStream.currentWorkCompleted()
         forwards += 1
-        return flattenAsFloat(logits)
+        if let t0, let t1 {
+            func ms(_ a: ContinuousClock.Instant, _ b: ContinuousClock.Instant) -> Double {
+                let d = b - a
+                return (Double(d.components.seconds) + Double(d.components.attoseconds) / 1e18) * 1000
+            }
+            FileHandle.standardError.write(Data(String(
+                format: "FWD role=%@ pos=%d enc=%.1f drain=%.1f n=%d\n",
+                role, positions, ms(t0, t1), ms(t1, .now), forwards).utf8))
+        }
+    }
+
+    /// Greedy argmax over ONE logits row, read straight from the fp16 output buffer — no
+    /// [1,S,vocab] flatten (that CPU pass, 2.2M elems/forward, was ~half the decode wall).
+    /// Valid until the next forward overwrites the buffer, which the sequential loop honours.
+    func argmax(row: Int) -> Int32 {
+        let ptr = logitsBuffer.contents().bindMemory(to: Float16.self, capacity: s * vocab)
+        let base = row * vocab
+        var bestIndex = 0
+        var bestValue: Float16 = -.infinity
+        for j in 0..<vocab where ptr[base + j] > bestValue {
+            bestValue = ptr[base + j]
+            bestIndex = j
+        }
+        return Int32(bestIndex)
     }
 
     // MARK: committed-stream ops (python WindowedModel one-to-one)
@@ -436,27 +575,27 @@ final class WindowedModel {
         try await reanchorIfFull()
     }
 
-    /// Logits for feed = tail+extra+pad, discarding the state advance. Row `base-1+i`
-    /// is the prediction after extra[i-1].
-    func peek(_ extra: [Int32]) async throws -> (flat: [Float], base: Int) {
+    /// Runs feed = tail+extra+pad, discarding the state advance, and returns the row base:
+    /// `argmax(row: base + i)` is the prediction after extra[i-1] (row `base-1+i` overall).
+    func peek(_ extra: [Int32]) async throws -> Int {
         let t = tail
         precondition(t.count + extra.count <= s, "peek overflows the window")
         let feed = t + extra + [Int32](repeating: padToken, count: s - t.count - extra.count)
-        let flat = try await forward(feed)
+        try await forward(feed)
         restore()
-        return (flat, t.count)
+        return t.count
     }
 
-    /// One verify forward: feed = tail+[a0]+drafts+pad. Caller decides acceptance and
-    /// then calls commitOrRestore.
-    func verifyRound(anchor a0: Int32, drafts: [Int32]) async throws -> (flat: [Float], base: Int) {
+    /// One verify forward: feed = tail+[a0]+drafts+pad. Returns the row base; the caller
+    /// argmaxes rows base..base+drafts.count, decides acceptance, then calls commitOrRestore.
+    func verifyRound(anchor a0: Int32, drafts: [Int32]) async throws -> Int {
         let t = tail
         precondition(t.count + 1 + drafts.count <= s, "verify round overflows the window")
         roundDrafts = drafts.count
         roundPad = s - t.count - 1 - drafts.count
         let feed = t + [a0] + drafts + [Int32](repeating: padToken, count: roundPad)
-        let flat = try await forward(feed)
-        return (flat, t.count)
+        try await forward(feed)
+        return t.count
     }
 
     /// Keep the round's state advance only when the whole window was committed tokens

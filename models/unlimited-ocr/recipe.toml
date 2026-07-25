@@ -1,0 +1,18 @@
+# Recipe for unlimited-ocr — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["unlimited-ocr"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Unlimited-OCR-CoreAI"
+status = "unverified"
+overlay = true
+steps = [
+  { script = "unlimited_ocr/export_vision.py", args = [], bundle = "vision/unlimited_ocr_vision.aimodel" },
+  { script = "unlimited_ocr/export_decoder.py", args = [], bundle = "decoder/unlimited_ocr_decoder.aimodel" },
+]
+open_questions = ["Do either of these exporters take flags that changed the published bundles? Not recorded."]
+
+# ===========================================================================
+# Ternary / bitnet
+# ===========================================================================

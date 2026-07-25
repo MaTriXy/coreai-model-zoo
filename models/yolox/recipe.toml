@@ -1,0 +1,11 @@
+# Recipe for yolox — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["yolox-s"]
+script = "export_yolox.py"
+args = ["--dtype", "float32"]
+card = "README.md"
+hf_repo = "mlboydaisuke/YOLOX-CoreAI"
+bundle = "yolox-s_float32.aimodel"
+status = "verified"

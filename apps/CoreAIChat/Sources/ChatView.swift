@@ -72,6 +72,7 @@ struct ChatView: View {
                 case .gemma4vl: engine.mode = .gemma4vl
                 case .rwkv7: engine.mode = .rwkv7
                 case .qwen3spec: engine.mode = .qwen3spec
+                case .rawMetal: engine.mode = .rawMetal
                 }
             })
     }
@@ -376,6 +377,7 @@ struct ChatView: View {
                     case .gemma4vl: "~4.7"
                     case .rwkv7: "~2.0"
                     case .qwen3spec: "~2.1"
+                    case .rawMetal: "~2.2"
                     }
                     Label("Download \(engine.mode.downloadLabel) set (\(size) GB)",
                           systemImage: "arrow.down.circle")

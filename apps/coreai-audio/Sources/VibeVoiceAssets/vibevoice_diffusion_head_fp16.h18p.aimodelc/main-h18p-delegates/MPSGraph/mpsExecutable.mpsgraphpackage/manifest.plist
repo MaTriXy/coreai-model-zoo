@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Package Version</key>
+	<dict>
+		<key>7.0.56</key>
+		<dict>
+			<key>ANERegionsHash</key>
+			<dict>
+				<key>h18p</key>
+				<string>CB3FA77A6B0458BC550AB7C272729A68FA6D74ED03463EC907576A0DD82B027D_E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855</string>
+			</dict>
+			<key>Adapters by rank</key>
+			<dict/>
+			<key>Binary File Resources</key>
+			<dict/>
+			<key>Callables</key>
+			<dict/>
+			<key>CallablesHash</key>
+			<integer>0</integer>
+			<key>Data File Names</key>
+			<array/>
+			<key>Optimized Modules</key>
+			<dict>
+				<key>[
+  "{\n  \"entryFunctionName\" : \"main_9wemocz7YmEwKSHhsD5JpQ\",\n  \"deviceDescriptor\" : [\n    0,\n    6,\n    \"h18p\"\n  ],\n  \"compilationDescriptor\" : {\n    \"enableANECValidationWorkflow\" : true,\n    \"reducedPrecisionFastMath\" : 0,\n    \"entryFunctionName\" : \"\",\n    \"enableCompileResourcesForPackage\" : true,\n    \"useANELLIR\" : true,\n    \"shapeShifterCacheThreads\" : 1,\n    \"disableShapeFolding\" : false,\n    \"optimizationProfile\" : 0,\n    \"enableANEFWToFWSignal\" : false,\n    \"optimizationLevel\" : 1,\n    \"includeDebugInfo\" : false,\n    \"addUniqueIdToMLIRLocations\" : true,\n    \"maximumNumberOfParallelEncodingRegions\" : 1,\n    \"aneCompilerSpatialSplitting\" : 3,\n    \"compilerOptions\" : 1691023,\n    \"preferredDevice\" : 1,\n    \"enableMLIRDiagnostics\" : false,\n    \"enableShapeEquivalence\" : false,\n    \"enableShapeShifter\" : true,\n    \"enableShapeShifterCache\" : false,\n    \"shapeShifterTILevel\" : 0,\n    \"verifyTypeInference\" : false,\n    \"printANEPlacementAnalysis\" : false,\n    \"inputShapeRanges\" : null,\n    \"enableANELateLatch\" : false,\n    \"minimumNumberOfOpsInParallelRegion\" : 100,\n    \"enableANECHWRankPromotion\" : true,\n    \"enableParallelEncode\" : true,\n    \"allowedComputeDevices\" : 1,\n    \"aneBondedCompileMode\" : 0,\n    \"enableMemrefBufferization\" : true\n  },\n  \"inputShapesCount\" : 11,\n  \"inputShapes\" : [\n    268435472,\n    2,\n    2,\n    64,\n    268435472,\n    1,\n    2,\n    268435472,\n    2,\n    2,\n    896\n  ],\n  \"callablesHash\" : 0\n}"
+]</key>
+				<dict>
+					<key>Entry Function Attributes</key>
+					<dict>
+						<key>main_9wemocz7YmEwKSHhsD5JpQ_0</key>
+						<array>
+							<string>mps.aneAlignedIO</string>
+							<string>mps.disablePreAllocate</string>
+						</array>
+					</dict>
+					<key>File Name</key>
+					<string>specialized_model_1.mpsgraph</string>
+					<key>Key to Symbol Name</key>
+					<dict>
+						<key>{
+  "entryFunctionName" : "main_9wemocz7YmEwKSHhsD5JpQ",
+  "deviceDescriptor" : [
+    0,
+    6,
+    "h18p"
+  ],
+  "compilationDescriptor" : {
+    "enableANECValidationWorkflow" : true,
+    "reducedPrecisionFastMath" : 0,
+    "entryFunctionName" : "",
+    "enableCompileResourcesForPackage" : true,
+    "useANELLIR" : true,
+    "shapeShifterCacheThreads" : 1,
+    "disableShapeFolding" : false,
+    "optimizationProfile" : 0,
+    "enableANEFWToFWSignal" : false,
+    "optimizationLevel" : 1,
+    "includeDebugInfo" : false,
+    "addUniqueIdToMLIRLocations" : true,
+    "maximumNumberOfParallelEncodingRegions" : 1,
+    "aneCompilerSpatialSplitting" : 3,
+    "compilerOptions" : 1691023,
+    "preferredDevice" : 1,
+    "enableMLIRDiagnostics" : false,
+    "enableShapeEquivalence" : false,
+    "enableShapeShifter" : true,
+    "enableShapeShifterCache" : false,
+    "shapeShifterTILevel" : 0,
+    "verifyTypeInference" : false,
+    "printANEPlacementAnalysis" : false,
+    "inputShapeRanges" : null,
+    "enableANELateLatch" : false,
+    "minimumNumberOfOpsInParallelRegion" : 100,
+    "enableANECHWRankPromotion" : true,
+    "enableParallelEncode" : true,
+    "allowedComputeDevices" : 1,
+    "aneBondedCompileMode" : 0,
+    "enableMemrefBufferization" : true
+  },
+  "inputShapesCount" : 11,
+  "inputShapes" : [
+    268435472,
+    2,
+    2,
+    64,
+    268435472,
+    1,
+    2,
+    268435472,
+    2,
+    2,
+    896
+  ],
+  "callablesHash" : 0
+}</key>
+						<string>main_9wemocz7YmEwKSHhsD5JpQ_0</string>
+					</dict>
+					<key>Used In Cache</key>
+					<array>
+						<string>{
+  "entryFunctionName" : "main_9wemocz7YmEwKSHhsD5JpQ",
+  "deviceDescriptor" : [
+    0,
+    6,
+    "h18p"
+  ],
+  "compilationDescriptor" : {
+    "enableANECValidationWorkflow" : true,
+    "reducedPrecisionFastMath" : 0,
+    "entryFunctionName" : "",
+    "enableCompileResourcesForPackage" : true,
+    "useANELLIR" : true,
+    "shapeShifterCacheThreads" : 1,
+    "disableShapeFolding" : false,
+    "optimizationProfile" : 0,
+    "enableANEFWToFWSignal" : false,
+    "optimizationLevel" : 1,
+    "includeDebugInfo" : false,
+    "addUniqueIdToMLIRLocations" : true,
+    "maximumNumberOfParallelEncodingRegions" : 1,
+    "aneCompilerSpatialSplitting" : 3,
+    "compilerOptions" : 1691023,
+    "preferredDevice" : 1,
+    "enableMLIRDiagnostics" : false,
+    "enableShapeEquivalence" : false,
+    "enableShapeShifter" : true,
+    "enableShapeShifterCache" : false,
+    "shapeShifterTILevel" : 0,
+    "verifyTypeInference" : false,
+    "printANEPlacementAnalysis" : false,
+    "inputShapeRanges" : null,
+    "enableANELateLatch" : false,
+    "minimumNumberOfOpsInParallelRegion" : 100,
+    "enableANECHWRankPromotion" : true,
+    "enableParallelEncode" : true,
+    "allowedComputeDevices" : 1,
+    "aneBondedCompileMode" : 0,
+    "enableMemrefBufferization" : true
+  },
+  "inputShapesCount" : 11,
+  "inputShapes" : [
+    268435472,
+    2,
+    2,
+    64,
+    268435472,
+    1,
+    2,
+    268435472,
+    2,
+    2,
+    896
+  ],
+  "callablesHash" : 0
+}</string>
+					</array>
+				</dict>
+			</dict>
+			<key>Optimized No Device Modules</key>
+			<dict/>
+			<key>Optimized No Device Resources Used</key>
+			<dict/>
+			<key>Optimized Resources Used</key>
+			<dict>
+				<key>[
+  "{\n  \"entryFunctionName\" : \"main_9wemocz7YmEwKSHhsD5JpQ\",\n  \"deviceDescriptor\" : [\n    0,\n    6,\n    \"h18p\"\n  ],\n  \"compilationDescriptor\" : {\n    \"enableANECValidationWorkflow\" : true,\n    \"reducedPrecisionFastMath\" : 0,\n    \"entryFunctionName\" : \"\",\n    \"enableCompileResourcesForPackage\" : true,\n    \"useANELLIR\" : true,\n    \"shapeShifterCacheThreads\" : 1,\n    \"disableShapeFolding\" : false,\n    \"optimizationProfile\" : 0,\n    \"enableANEFWToFWSignal\" : false,\n    \"optimizationLevel\" : 1,\n    \"includeDebugInfo\" : false,\n    \"addUniqueIdToMLIRLocations\" : true,\n    \"maximumNumberOfParallelEncodingRegions\" : 1,\n    \"aneCompilerSpatialSplitting\" : 3,\n    \"compilerOptions\" : 1691023,\n    \"preferredDevice\" : 1,\n    \"enableMLIRDiagnostics\" : false,\n    \"enableShapeEquivalence\" : false,\n    \"enableShapeShifter\" : true,\n    \"enableShapeShifterCache\" : false,\n    \"shapeShifterTILevel\" : 0,\n    \"verifyTypeInference\" : false,\n    \"printANEPlacementAnalysis\" : false,\n    \"inputShapeRanges\" : null,\n    \"enableANELateLatch\" : false,\n    \"minimumNumberOfOpsInParallelRegion\" : 100,\n    \"enableANECHWRankPromotion\" : true,\n    \"enableParallelEncode\" : true,\n    \"allowedComputeDevices\" : 1,\n    \"aneBondedCompileMode\" : 0,\n    \"enableMemrefBufferization\" : true\n  },\n  \"inputShapesCount\" : 11,\n  \"inputShapes\" : [\n    268435472,\n    2,\n    2,\n    64,\n    268435472,\n    1,\n    2,\n    268435472,\n    2,\n    2,\n    896\n  ],\n  \"callablesHash\" : 0\n}"
+]</key>
+				<array>
+					<string>resource_16364534520397583092</string>
+					<string>tmp_45</string>
+					<string>tmp_56</string>
+					<string>tmp_51</string>
+					<string>tmp_62</string>
+					<string>tmp_47</string>
+					<string>tmp_58</string>
+					<string>tmp_53</string>
+					<string>resource_5695722201123655892</string>
+					<string>tmp_64</string>
+					<string>tmp_49</string>
+					<string>tmp_44</string>
+					<string>tmp_55</string>
+					<string>tmp_50</string>
+					<string>resource_12752867012910627319</string>
+					<string>tmp_61</string>
+					<string>resource_4448000082836726428</string>
+					<string>tmp_46</string>
+					<string>tmp_57</string>
+					<string>tmp_52</string>
+					<string>tmp_63</string>
+					<string>tmp_48</string>
+					<string>tmp_59</string>
+					<string>tmp_54</string>
+					<string>tmp_65</string>
+					<string>tmp_60</string>
+				</array>
+			</dict>
+			<key>Original</key>
+			<string>original_model_0.mpsgraph</string>
+			<key>Original Module Serialized</key>
+			<true/>
+			<key>Original Resources Used</key>
+			<array>
+				<string>resource_16364534520397583092</string>
+				<string>resource_5821498998292580173</string>
+				<string>resource_3199427565915027922</string>
+				<string>resource_2369403861589708915</string>
+				<string>resource_4363453779911587353</string>
+				<string>resource_3352758933851886877</string>
+				<string>resource_5695722201123655892</string>
+				<string>resource_13664051811892319253</string>
+				<string>resource_2377481550743995710</string>
+				<string>resource_17238088773600027120</string>
+				<string>resource_12752867012910627319</string>
+				<string>resource_14432257737577958094</string>
+				<string>resource_4448000082836726428</string>
+				<string>resource_18187215487940435737</string>
+				<string>resource_13895389380582748481</string>
+				<string>resource_4391916668456125903</string>
+				<string>resource_1506799294852068679</string>
+				<string>resource_8302012015227529868</string>
+				<string>resource_15070199057050560790</string>
+				<string>resource_6913683932824621946</string>
+				<string>resource_14313099903522312774</string>
+				<string>resource_7895204605385803446</string>
+				<string>resource_9630964157414570987</string>
+				<string>resource_12639531139535909867</string>
+				<string>resource_11411819651231364851</string>
+				<string>resource_16572813203206509721</string>
+			</array>
+			<key>RDFFMap</key>
+			<dict/>
+			<key>Resource Offsets</key>
+			<dict>
+				<key>resource_11411819651231364851</key>
+				<integer>48631391</integer>
+				<key>resource_12639531139535909867</key>
+				<integer>34180679</integer>
+				<key>resource_12752867012910627319</key>
+				<integer>14909469</integer>
+				<key>resource_13664051811892319253</key>
+				<integer>97605063</integer>
+				<key>resource_13895389380582748481</key>
+				<integer>87971255</integer>
+				<key>resource_14313099903522312774</key>
+				<integer>70194579</integer>
+				<key>resource_14432257737577958094</key>
+				<integer>157130039</integer>
+				<key>resource_1506799294852068679</key>
+				<integer>24546871</integer>
+				<key>resource_15070199057050560790</key>
+				<integer>4816907</integer>
+				<key>resource_16364534520397583092</key>
+				<integer>19728169</integer>
+				<key>resource_16572813203206509721</key>
+				<integer>92788159</integer>
+				<key>resource_17238088773600027120</key>
+				<integer>132929031</integer>
+				<key>resource_18187215487940435737</key>
+				<integer>14911267</integer>
+				<key>resource_2369403861589708915</key>
+				<integer>120083951</integer>
+				<key>resource_2377481550743995710</key>
+				<integer>9633808</integer>
+				<key>resource_3199427565915027922</key>
+				<integer>152313135</integer>
+				<key>resource_3352758933851886877</key>
+				<integer>29363775</integer>
+				<key>resource_4363453779911587353</key>
+				<integer>110450143</integer>
+				<key>resource_4391916668456125903</key>
+				<integer>79943076</integer>
+				<key>resource_4448000082836726428</key>
+				<integer>152311337</integer>
+				<key>resource_5695722201123655892</key>
+				<integer>63770241</integer>
+				<key>resource_5821498998292580173</key>
+				<integer>53448292</integer>
+				<key>resource_6913683932824621946</key>
+				<integer>161946940</integer>
+				<key>resource_7895204605385803446</key>
+				<integer>75011480</integer>
+				<key>resource_8302012015227529868</key>
+				<integer>43814487</integer>
+				<key>resource_9630964157414570987</key>
+				<integer>142562839</integer>
+				<key>tmp_44</key>
+				<integer>147379740</integer>
+				<key>tmp_45</key>
+				<integer>129717759</integer>
+				<key>tmp_46</key>
+				<integer>105633239</integer>
+				<key>tmp_47</key>
+				<integer>83154351</integer>
+				<key>tmp_48</key>
+				<integer>75126175</integer>
+				<key>tmp_49</key>
+				<integer>58953339</integer>
+				<key>tmp_50</key>
+				<integer>63772039</integer>
+				<key>tmp_51</key>
+				<integer>53677679</integer>
+				<key>tmp_52</key>
+				<integer>38997583</integer>
+				<key>tmp_53</key>
+				<integer>19729967</integer>
+				<key>tmp_54</key>
+				<integer>10092567</integer>
+				<key>tmp_55</key>
+				<integer>3</integer>
+				<key>tmp_56</key>
+				<integer>163552579</integer>
+				<key>tmp_57</key>
+				<integer>147494435</integer>
+				<key>tmp_58</key>
+				<integer>137745935</integer>
+				<key>tmp_59</key>
+				<integer>115267047</integer>
+				<key>tmp_60</key>
+				<integer>124900855</integer>
+				<key>tmp_61</key>
+				<integer>100816335</integer>
+				<key>tmp_62</key>
+				<integer>81548712</integer>
+				<key>tmp_63</key>
+				<integer>68588940</integer>
+				<key>tmp_64</key>
+				<integer>58494580</integer>
+				<key>tmp_65</key>
+				<integer>53562984</integer>
+			</dict>
+			<key>Resource Storage Mode</key>
+			<integer>1</integer>
+		</dict>
+	</dict>
+</dict>
+</plist>

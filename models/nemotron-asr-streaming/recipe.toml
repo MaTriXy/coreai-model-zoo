@@ -1,0 +1,17 @@
+# Recipe for nemotron-asr-streaming — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["nemotron-3.5-asr-streaming"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI"
+status = "unverified"
+steps = [
+  { script = "nemotron_asr/export_encoder_streaming.py", args = [], bundle = "macos/nemotron_asr_stream_conformer_a_float16.aimodel" },
+  { script = "nemotron_asr/export_decoder.py", args = [], bundle = "macos/nemotron_asr_predict_float32.aimodel" },
+]
+open_questions = [
+  "Six graphs ship per platform (pre / pre_first / conformer_a / conformer_b / predict / joint).",
+  "Which invocation emits which, and does the non-streaming export_encoder.py contribute any?",
+]
+notes = ["conversion/nemotron_asr/sideload_ios.sh records the device-side install."]

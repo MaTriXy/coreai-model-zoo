@@ -109,7 +109,7 @@ let argmax/top-5 decide. Re-run parity after any OS/toolchain bump (the runtime 
 
 ## Detection transformers
 
-Found by the RF-DETR port (zoo's first detector, [zoo/rf-detr.md](../zoo/rf-detr.md)). Four
+Found by the RF-DETR port (zoo's first detector, [models/rf-detr/README.md](../models/rf-detr/README.md)). Four
 platform bugs, each pinned by a minimal repro; all four bite ANY model, not just detection —
 detection transformers just happen to use the trigger ops (sine position embeds, bilinear
 sampling masks, coordinate floors).

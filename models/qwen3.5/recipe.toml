@@ -1,0 +1,35 @@
+# Recipe for qwen3.5 — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["qwen3.5-0.8b"]
+script = "export_qwen3_5_decode_pipelined.py"
+args = ["int8hu", "--head-sym"]
+card = "README.md"
+hf_repo = "mlboydaisuke/qwen3.5-0.8B-CoreAI"
+bundle = "gpu-pipelined/qwen3_5_0_8b_decode_int8hu_block32_sym"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "Ship config: per-block-32 absmax int8 head (int8lin fp16-head is the slower fallback).",
+  "M4 Max 210 tok/s / iPhone 17 Pro 69.7-74.0 tok/s.",
+  "The repo also publishes int8lin and an int8hu perchan_sym build; perchan is documented BROKEN",
+  "on the beta GPU delegate and is kept only as evidence.",
+]
+
+["qwen3.5-2b"]
+script = "export_qwen3_5_decode_pipelined.py"
+args = ["int8hu", "--head-sym", "--hf-id", "Qwen/Qwen3.5-2B"]
+card = "README.md"
+hf_repo = "mlboydaisuke/qwen3.5-2B-CoreAI"
+bundle = "gpu-pipelined/qwen3_5_2b_decode_int8hu_block32_sym"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "Same ship config as 0.8B, HF-id swap only.",
+  "M4 Max 161 tok/s / iPhone 17 Pro 28-30 tok/s.",
+]

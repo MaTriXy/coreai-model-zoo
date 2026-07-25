@@ -1,0 +1,17 @@
+# Recipe for melband-roformer — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["melband-roformer-vocal"]
+script = "melband_roformer/export_full2_ship.py"
+args = []
+card = "README.md"
+hf_repo = "mlboydaisuke/MelBandRoformer-Vocal-CoreAI"
+bundle = "mbr_full_fp16.aimodel"
+status = "verified"
+aot = "xcrun coreai-build compile conversion/melband_roformer/ship_macos/mbr_full_fp16.aimodel --output conversion/melband_roformer/artifacts/ios_full_h18p --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = [
+  "The card documents this exact script as the ship path: fp16 export + Mac GPU gate -> ship_macos/.",
+  "The other export_core*.py scripts in that directory are bring-up stages, not the ship.",
+  "Device-verified cos 1.000000, 6.5x realtime.",
+]

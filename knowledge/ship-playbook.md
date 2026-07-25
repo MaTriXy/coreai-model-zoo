@@ -60,7 +60,7 @@ xcrun devicectl device copy from --device <UDID> --domain-type appDataContainer 
 
 **7. Publish (USER-GATED).** HF upload (`conversion/_<x>_hf_upload.py`: stage → `upload_folder`;
 **patch `tokenizer_class`** at stage time). `zoo/<x>.md` (pipeline, graph contracts, on-device speed,
-"lessons", convert-yourself) + a `zoo/README.md` row + a **root `README.md`** row (don't forget this
+"lessons", convert-yourself) + a `models/README.md` row + a **root `README.md`** row (don't forget this
 one). Commit (explicit paths). Draft the X post with the measured RTF — **post is the user's.**
 
 ## Cross-cutting traps (each cost real time)

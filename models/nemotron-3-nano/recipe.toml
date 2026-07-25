@@ -1,0 +1,23 @@
+# Recipe for nemotron-3-nano — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["nemotron-3-nano-4b"]
+script = "export_nemotron_h_decode_pipelined.py"
+args = ["int8hu"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Nemotron-3-Nano-4B-CoreAI"
+bundle = "gpu-pipelined/nemotron_3_nano_4b_decode_int8hu"
+status = "unverified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+open_questions = [
+  "Was --head-sym (and --head-quant) passed? This exporter feeds them into the lm_head spec but",
+  "does not encode them in the bundle name, and the card documents no command — so the published",
+  "name is consistent with both. Every other model in this family ships --head-sym.",
+]
+notes = ["The card states int8 at 16.0 tok/s is the ship shape. An iOS AOT twin is published too."]
+
+# ===========================================================================
+# MoE text LLMs — the gather-kernel family
+# ===========================================================================

@@ -18,33 +18,33 @@ configuration; a single bundle answers that question by itself.
 | published repos | 123 |
 | Core AI repos | 70 |
 | Core AI bundles inside them | 238 |
-| Core AI repos with a card in `zoo/` | 52 |
-| repos with a recipe in `conversion/recipes.toml` | 52 |
+| Core AI repos with a `models/<family>/` card | 52 |
+| repos covered by a recipe | 52 |
 | Core AI repos with 0 downloads in the last 30 days | 55 |
 
 ## All repos, by 30-day downloads
 
-| repo | 30d DL | ♥ | fmt | role | bundles | tier-1 | card | recipe | kit |
+| repo | 30d DL | ♥ | fmt | role | bundles | tier-1 | model | recipe | kit |
 | --- | ---: | ---: | --- | --- | ---: | --- | --- | --- | --- |
-| [mlboydaisuke/LFM2.5-1.2B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-1.2B-CoreAI) | 771 | 0 | coreai | port | 3 | 3 pass | [lfm2.5](../zoo/lfm2.5.md) | `lfm2.5-1.2b` | `lfm2.5-1.2b` |
-| [mlboydaisuke/LFM2.5-8B-A1B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-8B-A1B-CoreAI) | 699 | 1 | coreai | port | 1 | 1 pass | [lfm2.5-8b-a1b-moe](../zoo/lfm2.5-8b-a1b-moe.md) | `lfm2.5-8b-a1b` | `lfm2.5-8b-a1b` |
-| [mlboydaisuke/qwen3.5-0.8B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreAI) | 559 | 0 | coreai | port | 9 | 7 pass 2 skipped | [qwen3.5](../zoo/qwen3.5.md) | `qwen3.5-0.8b`, `qwen3.5-2b` | `qwen3.5-2b` |
+| [mlboydaisuke/LFM2.5-1.2B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-1.2B-CoreAI) | 771 | 0 | coreai | port | 3 | 3 pass | [lfm2.5](lfm2.5/README.md) | `lfm2.5-1.2b` | `lfm2.5-1.2b` |
+| [mlboydaisuke/LFM2.5-8B-A1B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-8B-A1B-CoreAI) | 699 | 1 | coreai | port | 1 | 1 pass | [lfm2.5-8b-a1b-moe](lfm2.5-8b-a1b-moe/README.md) | `lfm2.5-8b-a1b` | `lfm2.5-8b-a1b` |
+| [mlboydaisuke/qwen3.5-0.8B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreAI) | 559 | 0 | coreai | port | 9 | 7 pass 2 skipped | [qwen3.5](qwen3.5/README.md) | `qwen3.5-0.8b`, `qwen3.5-2b` | `qwen3.5-2b` |
 | [mlboydaisuke/Ministral-3-3B-Instruct-2512-LiteRT](https://huggingface.co/mlboydaisuke/Ministral-3-3B-Instruct-2512-LiteRT) | 511 | 1 | litert | port | 0 | — | — | — | — |
-| [mlboydaisuke/Ornith-1.0-9B-CoreAI](https://huggingface.co/mlboydaisuke/Ornith-1.0-9B-CoreAI) | 490 | 1 | coreai | port | 2 | 2 pass | [ornith-1.0-9b](../zoo/ornith-1.0-9b.md) | `ornith-1.0-9b` | — |
-| [mlboydaisuke/gemma-4-E2B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI) | 395 | 1 | coreai | port | 22 | **7 FAIL** **2 DIFF** 10 pass 3 skipped | [gemma4-e2b](../zoo/gemma4-e2b.md), [gemma4-vl](../zoo/gemma4-vl.md) | `gemma-4-e2b`, `gemma-4-e2b-vl` | `gemma-4-e2b` |
-| [mlboydaisuke/Qwen3.6-27B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-27B-CoreAI) | 393 | 1 | coreai | port | 1 | 1 pass | [qwen3.6-27b](../zoo/qwen3.6-27b.md) | `qwen3.6-27b` | `qwen3.6-27b` |
-| [mlboydaisuke/Qwen3.6-35B-A3B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-35B-A3B-CoreAI) | 385 | 5 | coreai | port | 1 | 1 pass | [qwen3.6](../zoo/qwen3.6.md) | `qwen3.6-35b-a3b` | `qwen3.6-35b-a3b` |
+| [mlboydaisuke/Ornith-1.0-9B-CoreAI](https://huggingface.co/mlboydaisuke/Ornith-1.0-9B-CoreAI) | 490 | 1 | coreai | port | 2 | 2 pass | [ornith-1.0-9b](ornith-1.0-9b/README.md) | `ornith-1.0-9b` | — |
+| [mlboydaisuke/gemma-4-E2B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI) | 395 | 1 | coreai | port | 22 | **7 FAIL** **2 DIFF** 10 pass 3 skipped | [gemma4-e2b](gemma4-e2b/README.md), [gemma4-vl](gemma4-vl/README.md) | `gemma-4-e2b`, `gemma-4-e2b-vl` | `gemma-4-e2b` |
+| [mlboydaisuke/Qwen3.6-27B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-27B-CoreAI) | 393 | 1 | coreai | port | 1 | 1 pass | [qwen3.6-27b](qwen3.6-27b/README.md) | `qwen3.6-27b` | `qwen3.6-27b` |
+| [mlboydaisuke/Qwen3.6-35B-A3B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-35B-A3B-CoreAI) | 385 | 5 | coreai | port | 1 | 1 pass | [qwen3.6](qwen3.6/README.md) | `qwen3.6-35b-a3b` | `qwen3.6-35b-a3b` |
 | [mlboydaisuke/qwen3.5-2B-CoreML](https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreML) | 343 | 0 | coreml | port | 0 | — | — | — | — |
 | [mlboydaisuke/qwen3.5-0.8B-CoreML](https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreML) | 315 | 0 | coreml | port | 0 | — | — | — | — |
 | [mlboydaisuke/gemma-4-E2B-coreml](https://huggingface.co/mlboydaisuke/gemma-4-E2B-coreml) | 249 | 9 | coreml | port | 0 | — | — | — | — |
-| [mlboydaisuke/RF-DETR-CoreAI](https://huggingface.co/mlboydaisuke/RF-DETR-CoreAI) | 179 | 1 | coreai | port | 14 | 10 pass 4 skipped | [rf-detr](../zoo/rf-detr.md) | `rf-detr` | `rf-detr` |
-| [mlboydaisuke/gemma-4-E4B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E4B-CoreAI) | 163 | 0 | coreai | port | 3 | **3 FAIL** | [gemma4-e4b](../zoo/gemma4-e4b.md) | `gemma-4-e4b` | `gemma-4-e4b` |
-| [mlboydaisuke/qwen3.5-2B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreAI) | 114 | 1 | coreai | port | 4 | 4 pass | [qwen3.5](../zoo/qwen3.5.md) | `qwen3.5-0.8b`, `qwen3.5-2b` | `qwen3.5-2b` |
-| [mlboydaisuke/granite-4.0-h-CoreAI](https://huggingface.co/mlboydaisuke/granite-4.0-h-CoreAI) | 104 | 0 | coreai | port | 4 | 4 pass | [granite-4.0-h](../zoo/granite-4.0-h.md) | `granite-4.0-h-1b`, `granite-4.0-h-350m` | `granite-4.0-h-1b` |
+| [mlboydaisuke/RF-DETR-CoreAI](https://huggingface.co/mlboydaisuke/RF-DETR-CoreAI) | 179 | 1 | coreai | port | 14 | 10 pass 4 skipped | [rf-detr](rf-detr/README.md) | `rf-detr` | `rf-detr` |
+| [mlboydaisuke/gemma-4-E4B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E4B-CoreAI) | 163 | 0 | coreai | port | 3 | **3 FAIL** | [gemma4-e4b](gemma4-e4b/README.md) | `gemma-4-e4b` | `gemma-4-e4b` |
+| [mlboydaisuke/qwen3.5-2B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreAI) | 114 | 1 | coreai | port | 4 | 4 pass | [qwen3.5](qwen3.5/README.md) | `qwen3.5-0.8b`, `qwen3.5-2b` | `qwen3.5-2b` |
+| [mlboydaisuke/granite-4.0-h-CoreAI](https://huggingface.co/mlboydaisuke/granite-4.0-h-CoreAI) | 104 | 0 | coreai | port | 4 | 4 pass | [granite-4.0-h](granite-4.0-h/README.md) | `granite-4.0-h-1b`, `granite-4.0-h-350m` | `granite-4.0-h-1b` |
 | [mlboydaisuke/Llama-3.2-3B-Instruct-LiteRT](https://huggingface.co/mlboydaisuke/Llama-3.2-3B-Instruct-LiteRT) | 100 | 1 | litert | port | 0 | — | — | — | — |
-| [mlboydaisuke/Qwen3-VL-4B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-VL-4B-CoreAI) | 96 | 0 | coreai | port | 3 | 2 pass 1 skipped | [qwen3-vl](../zoo/qwen3-vl.md) | `qwen3-vl-2b`, `qwen3-vl-4b`, `qwen3-vl-8b` | `qwen3-vl-2b` |
-| [mlboydaisuke/Qwen3-VL-2B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-VL-2B-CoreAI) | 92 | 0 | coreai | port | 3 | 2 pass 1 skipped | [qwen3-vl](../zoo/qwen3-vl.md) | `qwen3-vl-2b`, `qwen3-vl-4b`, `qwen3-vl-8b` | `qwen3-vl-2b` |
-| [mlboydaisuke/Qwen3-VL-8B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-VL-8B-CoreAI) | 89 | 0 | coreai | port | 3 | 2 pass 1 skipped | [qwen3-vl](../zoo/qwen3-vl.md) | `qwen3-vl-2b`, `qwen3-vl-4b`, `qwen3-vl-8b` | `qwen3-vl-2b` |
+| [mlboydaisuke/Qwen3-VL-4B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-VL-4B-CoreAI) | 96 | 0 | coreai | port | 3 | 2 pass 1 skipped | [qwen3-vl](qwen3-vl/README.md) | `qwen3-vl-2b`, `qwen3-vl-4b`, `qwen3-vl-8b` | `qwen3-vl-2b` |
+| [mlboydaisuke/Qwen3-VL-2B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-VL-2B-CoreAI) | 92 | 0 | coreai | port | 3 | 2 pass 1 skipped | [qwen3-vl](qwen3-vl/README.md) | `qwen3-vl-2b`, `qwen3-vl-4b`, `qwen3-vl-8b` | `qwen3-vl-2b` |
+| [mlboydaisuke/Qwen3-VL-8B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-VL-8B-CoreAI) | 89 | 0 | coreai | port | 3 | 2 pass 1 skipped | [qwen3-vl](qwen3-vl/README.md) | `qwen3-vl-2b`, `qwen3-vl-4b`, `qwen3-vl-8b` | `qwen3-vl-2b` |
 | [mlboydaisuke/qwen3-vl-2b-stateful-coreml](https://huggingface.co/mlboydaisuke/qwen3-vl-2b-stateful-coreml) | 88 | 0 | coreml | port | 0 | — | — | — | — |
 | [mlboydaisuke/qwen3-vl-2b-coreml](https://huggingface.co/mlboydaisuke/qwen3-vl-2b-coreml) | 78 | 0 | coreml | port | 0 | — | — | — | — |
 | [mlboydaisuke/qwen3-vl-4b-stateful-coreml](https://huggingface.co/mlboydaisuke/qwen3-vl-4b-stateful-coreml) | 74 | 0 | coreml | port | 0 | — | — | — | — |
@@ -52,7 +52,7 @@ configuration; a single bundle answers that question by itself.
 | [mlboydaisuke/Dia2-1B-LiteRT](https://huggingface.co/mlboydaisuke/Dia2-1B-LiteRT) | 68 | 0 | litert | port | 0 | — | — | — | — |
 | [mlboydaisuke/Matcha-TTS-LiteRT](https://huggingface.co/mlboydaisuke/Matcha-TTS-LiteRT) | 68 | 1 | litert | port | 0 | — | — | — | — |
 | [mlboydaisuke/DeepSeek-R1-Distill-Qwen-1.5B-LiteRT](https://huggingface.co/mlboydaisuke/DeepSeek-R1-Distill-Qwen-1.5B-LiteRT) | 64 | 1 | litert | port | 0 | — | — | — | — |
-| [mlboydaisuke/Youtu-LLM-2B-CoreAI](https://huggingface.co/mlboydaisuke/Youtu-LLM-2B-CoreAI) | 64 | 1 | coreai | port | 3 | 3 pass | [youtu](../zoo/youtu.md) | `youtu-llm-2b` | — |
+| [mlboydaisuke/Youtu-LLM-2B-CoreAI](https://huggingface.co/mlboydaisuke/Youtu-LLM-2B-CoreAI) | 64 | 1 | coreai | port | 3 | 3 pass | [youtu](youtu/README.md) | `youtu-llm-2b` | — |
 | [mlboydaisuke/VibeVoice-Realtime-0.5B-LiteRT](https://huggingface.co/mlboydaisuke/VibeVoice-Realtime-0.5B-LiteRT) | 56 | 1 | litert | port | 0 | — | — | — | — |
 | [mlboydaisuke/Kokoro-82M-LiteRT](https://huggingface.co/mlboydaisuke/Kokoro-82M-LiteRT) | 51 | 1 | litert | port | 0 | — | — | — | — |
 | [mlboydaisuke/DeepSeek-R1-Distill-Qwen-7B-LiteRT](https://huggingface.co/mlboydaisuke/DeepSeek-R1-Distill-Qwen-7B-LiteRT) | 35 | 0 | litert | port | 0 | — | — | — | — |
@@ -87,68 +87,68 @@ configuration; a single bundle answers that question by itself.
 | [mlboydaisuke/DAC-16kHz-LiteRT](https://huggingface.co/mlboydaisuke/DAC-16kHz-LiteRT) | 6 | 0 | litert | port | 0 | — | — | — | — |
 | [mlboydaisuke/clip-vit-b32-litert](https://huggingface.co/mlboydaisuke/clip-vit-b32-litert) | 5 | 0 | litert | port | 0 | — | — | — | — |
 | [mlboydaisuke/AdcSR-CoreAI](https://huggingface.co/mlboydaisuke/AdcSR-CoreAI) | 0 | 3 | coreai | port | 1 | 1 pass | — | — | — |
-| [mlboydaisuke/BitCPM-8B-CoreAI](https://huggingface.co/mlboydaisuke/BitCPM-8B-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [bitcpm-8b](../zoo/bitcpm-8b.md) | `bitcpm-8b` | — |
-| [mlboydaisuke/BitVLA-CoreAI](https://huggingface.co/mlboydaisuke/BitVLA-CoreAI) | 0 | 0 | coreai | port | 4 | 4 skipped | [bitvla](../zoo/bitvla.md) | `bitvla` | — |
+| [mlboydaisuke/BitCPM-8B-CoreAI](https://huggingface.co/mlboydaisuke/BitCPM-8B-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [bitcpm-8b](bitcpm-8b/README.md) | `bitcpm-8b` | — |
+| [mlboydaisuke/BitVLA-CoreAI](https://huggingface.co/mlboydaisuke/BitVLA-CoreAI) | 0 | 0 | coreai | port | 4 | 4 skipped | [bitvla](bitvla/README.md) | `bitvla` | — |
 | [mlboydaisuke/clip-vit-base-patch32-CoreAI-official](https://huggingface.co/mlboydaisuke/clip-vit-base-patch32-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
-| [mlboydaisuke/ColModernVBERT-CoreAI](https://huggingface.co/mlboydaisuke/ColModernVBERT-CoreAI) | 0 | 0 | coreai | port | 4 | 4 pass | [colmodernvbert](../zoo/colmodernvbert.md) | `colmodernvbert` | `colmodernvbert` |
+| [mlboydaisuke/ColModernVBERT-CoreAI](https://huggingface.co/mlboydaisuke/ColModernVBERT-CoreAI) | 0 | 0 | coreai | port | 4 | 4 pass | [colmodernvbert](colmodernvbert/README.md) | `colmodernvbert` | `colmodernvbert` |
 | [mlboydaisuke/coreml-zoo](https://huggingface.co/mlboydaisuke/coreml-zoo) | 0 | 1 | other | port | 0 | — | — | — | — |
-| [mlboydaisuke/Depth-Anything-3-CoreAI](https://huggingface.co/mlboydaisuke/Depth-Anything-3-CoreAI) | 0 | 1 | coreai | port | 4 | 4 pass | [depth-anything-3](../zoo/depth-anything-3.md) | `depth-anything-3-base`, `depth-anything-3-small` | `depth-anything-3-small` |
-| [mlboydaisuke/embeddinggemma-300m-CoreAI](https://huggingface.co/mlboydaisuke/embeddinggemma-300m-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [qwen3-embedding](../zoo/qwen3-embedding.md) | `embeddinggemma-300m`, `qwen3-embedding-0.6b` | — |
+| [mlboydaisuke/Depth-Anything-3-CoreAI](https://huggingface.co/mlboydaisuke/Depth-Anything-3-CoreAI) | 0 | 1 | coreai | port | 4 | 4 pass | [depth-anything-3](depth-anything-3/README.md) | `depth-anything-3-base`, `depth-anything-3-small` | `depth-anything-3-small` |
+| [mlboydaisuke/embeddinggemma-300m-CoreAI](https://huggingface.co/mlboydaisuke/embeddinggemma-300m-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [qwen3-embedding](qwen3-embedding/README.md) | `embeddinggemma-300m`, `qwen3-embedding-0.6b` | — |
 | [mlboydaisuke/embeddinggemma-300m-coreml](https://huggingface.co/mlboydaisuke/embeddinggemma-300m-coreml) | 0 | 0 | coreml | port | 0 | — | — | — | — |
-| [mlboydaisuke/FastContext-1.0-4B-CoreAI](https://huggingface.co/mlboydaisuke/FastContext-1.0-4B-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [fastcontext](../zoo/fastcontext.md) | `fastcontext-4b` | — |
+| [mlboydaisuke/FastContext-1.0-4B-CoreAI](https://huggingface.co/mlboydaisuke/FastContext-1.0-4B-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [fastcontext](fastcontext/README.md) | `fastcontext-4b` | — |
 | [mlboydaisuke/FLUX.2-klein-4B-CoreAI](https://huggingface.co/mlboydaisuke/FLUX.2-klein-4B-CoreAI) | 0 | 3 | coreai | port | 7 | 7 skipped | — | — | — |
 | [mlboydaisuke/functiongemma-270m-coreml](https://huggingface.co/mlboydaisuke/functiongemma-270m-coreml) | 0 | 0 | coreml | port | 0 | — | — | — | — |
 | [mlboydaisuke/gemma-3-12b-it-CoreAI-official](https://huggingface.co/mlboydaisuke/gemma-3-12b-it-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
 | [mlboydaisuke/gemma-3-4b-it-CoreAI-official](https://huggingface.co/mlboydaisuke/gemma-3-4b-it-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
-| [mlboydaisuke/Gemma-4-12B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-12B-CoreAI) | 0 | 1 | coreai | port | 2 | **2 DIFF** | [gemma4-12b](../zoo/gemma4-12b.md) | `gemma-4-12b`, `gemma-4-12b-int8` | `gemma-4-12b` |
-| [mlboydaisuke/Gemma-4-31B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-31B-CoreAI) | 0 | 1 | coreai | port | 1 | **1 DIFF** | [gemma4-31b](../zoo/gemma4-31b.md) | `gemma-4-31b` | `gemma-4-31b` |
+| [mlboydaisuke/Gemma-4-12B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-12B-CoreAI) | 0 | 1 | coreai | port | 2 | **2 DIFF** | [gemma4-12b](gemma4-12b/README.md) | `gemma-4-12b`, `gemma-4-12b-int8` | `gemma-4-12b` |
+| [mlboydaisuke/Gemma-4-31B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-31B-CoreAI) | 0 | 1 | coreai | port | 1 | **1 DIFF** | [gemma4-31b](gemma4-31b/README.md) | `gemma-4-31b` | `gemma-4-31b` |
 | [mlboydaisuke/gemma-4-E2B-stateful-coreml](https://huggingface.co/mlboydaisuke/gemma-4-E2B-stateful-coreml) | 0 | 0 | coreml | port | 0 | — | — | — | — |
 | [mlboydaisuke/gemma-4-E4B-coreml](https://huggingface.co/mlboydaisuke/gemma-4-E4B-coreml) | 0 | 2 | coreml | port | 0 | — | — | — | — |
 | [mlboydaisuke/gemma-4-E4B-multimodal-coreml](https://huggingface.co/mlboydaisuke/gemma-4-E4B-multimodal-coreml) | 0 | 0 | coreml | port | 0 | — | — | — | — |
-| [mlboydaisuke/GLiNER2-PII-CoreAI](https://huggingface.co/mlboydaisuke/GLiNER2-PII-CoreAI) | 0 | 0 | coreai | port | 2 | 2 pass | [gliner2-pii](../zoo/gliner2-pii.md) | `gliner2-pii` | — |
-| [mlboydaisuke/GLM-4.7-Flash-CoreAI](https://huggingface.co/mlboydaisuke/GLM-4.7-Flash-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [glm-4.7-flash](../zoo/glm-4.7-flash.md) | `glm-4.7-flash` | `glm-4.7-flash` |
-| [mlboydaisuke/GLM-Image-CoreAI](https://huggingface.co/mlboydaisuke/GLM-Image-CoreAI) | 0 | 1 | coreai | port | 5 | 5 skipped | [glm-image](../zoo/glm-image.md) | `glm-image` | — |
-| [mlboydaisuke/GLM-OCR-CoreAI](https://huggingface.co/mlboydaisuke/GLM-OCR-CoreAI) | 0 | 5 | coreai | port | 2 | 1 pass 1 skipped | [glm-ocr](../zoo/glm-ocr.md) | `glm-ocr` | — |
+| [mlboydaisuke/GLiNER2-PII-CoreAI](https://huggingface.co/mlboydaisuke/GLiNER2-PII-CoreAI) | 0 | 0 | coreai | port | 2 | 2 pass | [gliner2-pii](gliner2-pii/README.md) | `gliner2-pii` | — |
+| [mlboydaisuke/GLM-4.7-Flash-CoreAI](https://huggingface.co/mlboydaisuke/GLM-4.7-Flash-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [glm-4.7-flash](glm-4.7-flash/README.md) | `glm-4.7-flash` | `glm-4.7-flash` |
+| [mlboydaisuke/GLM-Image-CoreAI](https://huggingface.co/mlboydaisuke/GLM-Image-CoreAI) | 0 | 1 | coreai | port | 5 | 5 skipped | [glm-image](glm-image/README.md) | `glm-image` | — |
+| [mlboydaisuke/GLM-OCR-CoreAI](https://huggingface.co/mlboydaisuke/GLM-OCR-CoreAI) | 0 | 5 | coreai | port | 2 | 1 pass 1 skipped | [glm-ocr](glm-ocr/README.md) | `glm-ocr` | — |
 | [mlboydaisuke/gpt-oss-20b-CoreAI-official](https://huggingface.co/mlboydaisuke/gpt-oss-20b-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
-| [mlboydaisuke/Holo2-4B-CoreAI](https://huggingface.co/mlboydaisuke/Holo2-4B-CoreAI) | 0 | 2 | coreai | port | 2 | 1 pass 1 skipped | [holo2](../zoo/holo2.md) | `holo2-4b` | `holo2-4b` |
-| [mlboydaisuke/Kokoro-82M-CoreAI](https://huggingface.co/mlboydaisuke/Kokoro-82M-CoreAI) | 0 | 1 | coreai | port | 3 | 3 skipped | [kokoro-82m](../zoo/kokoro-82m.md) | `kokoro-82m` | `kokoro-82m` |
+| [mlboydaisuke/Holo2-4B-CoreAI](https://huggingface.co/mlboydaisuke/Holo2-4B-CoreAI) | 0 | 2 | coreai | port | 2 | 1 pass 1 skipped | [holo2](holo2/README.md) | `holo2-4b` | `holo2-4b` |
+| [mlboydaisuke/Kokoro-82M-CoreAI](https://huggingface.co/mlboydaisuke/Kokoro-82M-CoreAI) | 0 | 1 | coreai | port | 3 | 3 skipped | [kokoro-82m](kokoro-82m/README.md) | `kokoro-82m` | `kokoro-82m` |
 | [mlboydaisuke/lfm2.5-350m-coreml](https://huggingface.co/mlboydaisuke/lfm2.5-350m-coreml) | 0 | 0 | coreml | port | 0 | — | — | — | — |
-| [mlboydaisuke/LLaDA-8B-dLLM-CoreAI](https://huggingface.co/mlboydaisuke/LLaDA-8B-dLLM-CoreAI) | 0 | 2 | coreai | port | 1 | 1 pass | [llada-8b](../zoo/llada-8b.md) | `llada-8b-dllm` | `llada-8b` |
-| [mlboydaisuke/LTX-Video-2B-CoreAI](https://huggingface.co/mlboydaisuke/LTX-Video-2B-CoreAI) | 0 | 2 | coreai | port | 3 | 3 pass | [ltxvideo](../zoo/ltxvideo.md) | `ltx-video-2b` | `ltx-video-2b` |
+| [mlboydaisuke/LLaDA-8B-dLLM-CoreAI](https://huggingface.co/mlboydaisuke/LLaDA-8B-dLLM-CoreAI) | 0 | 2 | coreai | port | 1 | 1 pass | [llada-8b](llada-8b/README.md) | `llada-8b-dllm` | `llada-8b` |
+| [mlboydaisuke/LTX-Video-2B-CoreAI](https://huggingface.co/mlboydaisuke/LTX-Video-2B-CoreAI) | 0 | 2 | coreai | port | 3 | 3 pass | [ltxvideo](ltxvideo/README.md) | `ltx-video-2b` | `ltx-video-2b` |
 | [mlboydaisuke/magenta-arbitrary-style-transfer-litert](https://huggingface.co/mlboydaisuke/magenta-arbitrary-style-transfer-litert) | 0 | 0 | other | port | 0 | — | — | — | — |
-| [mlboydaisuke/MelBandRoformer-Vocal-CoreAI](https://huggingface.co/mlboydaisuke/MelBandRoformer-Vocal-CoreAI) | 0 | 0 | coreai | port | 2 | 2 pass | [melband-roformer](../zoo/melband-roformer.md) | `melband-roformer-vocal` | — |
-| [mlboydaisuke/MinerU2.5-Pro-CoreAI](https://huggingface.co/mlboydaisuke/MinerU2.5-Pro-CoreAI) | 0 | 0 | coreai | port | 4 | 2 pass 2 skipped | [mineru](../zoo/mineru.md) | `mineru-2.5-pro` | — |
-| [mlboydaisuke/MiniCPM-V-4.6-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM-V-4.6-CoreAI) | 0 | 2 | coreai | port | 4 | 3 pass 1 skipped | [minicpm-v-4.6](../zoo/minicpm-v-4.6.md) | `minicpm-v-4.6` | `minicpm-v-4.6` |
-| [mlboydaisuke/MiniCPM5-1B-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM5-1B-CoreAI) | 0 | 0 | coreai | port | 1 | **1 DIFF** | [minicpm5-1b](../zoo/minicpm5-1b.md) | `minicpm5-1b` | `minicpm5-1b` |
+| [mlboydaisuke/MelBandRoformer-Vocal-CoreAI](https://huggingface.co/mlboydaisuke/MelBandRoformer-Vocal-CoreAI) | 0 | 0 | coreai | port | 2 | 2 pass | [melband-roformer](melband-roformer/README.md) | `melband-roformer-vocal` | — |
+| [mlboydaisuke/MinerU2.5-Pro-CoreAI](https://huggingface.co/mlboydaisuke/MinerU2.5-Pro-CoreAI) | 0 | 0 | coreai | port | 4 | 2 pass 2 skipped | [mineru](mineru/README.md) | `mineru-2.5-pro` | — |
+| [mlboydaisuke/MiniCPM-V-4.6-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM-V-4.6-CoreAI) | 0 | 2 | coreai | port | 4 | 3 pass 1 skipped | [minicpm-v-4.6](minicpm-v-4.6/README.md) | `minicpm-v-4.6` | `minicpm-v-4.6` |
+| [mlboydaisuke/MiniCPM5-1B-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM5-1B-CoreAI) | 0 | 0 | coreai | port | 1 | **1 DIFF** | [minicpm5-1b](minicpm5-1b/README.md) | `minicpm5-1b` | `minicpm5-1b` |
 | [mlboydaisuke/mistral-7b-v0.3-CoreAI-official](https://huggingface.co/mlboydaisuke/mistral-7b-v0.3-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
-| [mlboydaisuke/Nanbeige4.1-3B-CoreAI](https://huggingface.co/mlboydaisuke/Nanbeige4.1-3B-CoreAI) | 0 | 0 | coreai | port | 2 | 2 pass | [nanbeige4.1-3b](../zoo/nanbeige4.1-3b.md) | `nanbeige4.1-3b` | `nanbeige4.1-3b` |
-| [mlboydaisuke/Nemotron-3-Nano-4B-CoreAI](https://huggingface.co/mlboydaisuke/Nemotron-3-Nano-4B-CoreAI) | 0 | 0 | coreai | port | 2 | **2 DIFF** | [nemotron-3-nano](../zoo/nemotron-3-nano.md) | `nemotron-3-nano-4b` | `nemotron-3-nano-4b` |
-| [mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI](https://huggingface.co/mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI) | 0 | 0 | coreai | port | 12 | 12 pass | [nemotron-asr-streaming](../zoo/nemotron-asr-streaming.md), [whisper-large-v3-turbo](../zoo/whisper-large-v3-turbo.md) | `nemotron-3.5-asr-streaming`, `whisper-large-v3-turbo` | `whisper-large-v3-turbo` |
-| [mlboydaisuke/Parakeet-TDT-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Parakeet-TDT-0.6B-CoreAI) | 0 | 0 | coreai | port | 3 | 3 pass | [parakeet](../zoo/parakeet.md) | `parakeet-tdt-0.6b` | `parakeet-tdt-0.6b-v3` |
+| [mlboydaisuke/Nanbeige4.1-3B-CoreAI](https://huggingface.co/mlboydaisuke/Nanbeige4.1-3B-CoreAI) | 0 | 0 | coreai | port | 2 | 2 pass | [nanbeige4.1-3b](nanbeige4.1-3b/README.md) | `nanbeige4.1-3b` | `nanbeige4.1-3b` |
+| [mlboydaisuke/Nemotron-3-Nano-4B-CoreAI](https://huggingface.co/mlboydaisuke/Nemotron-3-Nano-4B-CoreAI) | 0 | 0 | coreai | port | 2 | **2 DIFF** | [nemotron-3-nano](nemotron-3-nano/README.md) | `nemotron-3-nano-4b` | `nemotron-3-nano-4b` |
+| [mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI](https://huggingface.co/mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI) | 0 | 0 | coreai | port | 12 | 12 pass | [nemotron-asr-streaming](nemotron-asr-streaming/README.md), [whisper-large-v3-turbo](whisper-large-v3-turbo/README.md) | `nemotron-3.5-asr-streaming`, `whisper-large-v3-turbo` | `whisper-large-v3-turbo` |
+| [mlboydaisuke/Parakeet-TDT-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Parakeet-TDT-0.6B-CoreAI) | 0 | 0 | coreai | port | 3 | 3 pass | [parakeet](parakeet/README.md) | `parakeet-tdt-0.6b` | `parakeet-tdt-0.6b-v3` |
 | [mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI](https://huggingface.co/mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI) | 0 | 1 | coreai | port | 3 | 3 pass | — | — | — |
 | [mlboydaisuke/qwen3-0.6b-CoreAI-official](https://huggingface.co/mlboydaisuke/qwen3-0.6b-CoreAI-official) | 0 | 0 | coreai | official | 3 | — | — | — | — |
 | [mlboydaisuke/qwen3-1.7b-CoreAI-official](https://huggingface.co/mlboydaisuke/qwen3-1.7b-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
 | [mlboydaisuke/qwen3-4b-CoreAI-official](https://huggingface.co/mlboydaisuke/qwen3-4b-CoreAI-official) | 0 | 0 | coreai | official | 2 | — | — | — | — |
 | [mlboydaisuke/qwen3-8b-CoreAI-official](https://huggingface.co/mlboydaisuke/qwen3-8b-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
-| [mlboydaisuke/Qwen3-ASR-1.7B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-ASR-1.7B-CoreAI) | 0 | 2 | coreai | port | 2 | 2 pass | [qwen3-asr](../zoo/qwen3-asr.md) | `qwen3-asr-1.7b` | `qwen3-asr-1.7b` |
-| [mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [qwen3-embedding](../zoo/qwen3-embedding.md) | `embeddinggemma-300m`, `qwen3-embedding-0.6b` | — |
-| [mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [qwen3-reranker](../zoo/qwen3-reranker.md) | `qwen3-reranker-0.6b` | — |
+| [mlboydaisuke/Qwen3-ASR-1.7B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-ASR-1.7B-CoreAI) | 0 | 2 | coreai | port | 2 | 2 pass | [qwen3-asr](qwen3-asr/README.md) | `qwen3-asr-1.7b` | `qwen3-asr-1.7b` |
+| [mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [qwen3-embedding](qwen3-embedding/README.md) | `embeddinggemma-300m`, `qwen3-embedding-0.6b` | — |
+| [mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [qwen3-reranker](qwen3-reranker/README.md) | `qwen3-reranker-0.6b` | — |
 | [mlboydaisuke/qwen3.5-4B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-4B-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | — | — | — |
 | [mlboydaisuke/RWKV7-Goose-1.5B-CoreAI](https://huggingface.co/mlboydaisuke/RWKV7-Goose-1.5B-CoreAI) | 0 | 0 | coreai | port | 2 | 2 skipped | — | — | — |
 | [mlboydaisuke/sam3-CoreAI-official](https://huggingface.co/mlboydaisuke/sam3-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
 | [mlboydaisuke/Stable-Audio-Open-Small-CoreAI](https://huggingface.co/mlboydaisuke/Stable-Audio-Open-Small-CoreAI) | 0 | 1 | coreai | port | 1 | 1 skipped | — | — | — |
-| [mlboydaisuke/Streaming-Sortformer-Diar-CoreAI](https://huggingface.co/mlboydaisuke/Streaming-Sortformer-Diar-CoreAI) | 0 | 2 | coreai | port | 2 | 2 pass | [sortformer-diar](../zoo/sortformer-diar.md) | `sortformer-diar` | — |
-| [mlboydaisuke/TimesFM-2.5-200M-CoreAI](https://huggingface.co/mlboydaisuke/TimesFM-2.5-200M-CoreAI) | 0 | 1 | coreai | port | 2 | 2 pass | [timesfm](../zoo/timesfm.md) | `timesfm-2.5-200m` | — |
-| [mlboydaisuke/TripoSplat-CoreAI](https://huggingface.co/mlboydaisuke/TripoSplat-CoreAI) | 0 | 7 | coreai | port | 6 | 6 pass | [triposplat](../zoo/triposplat.md) | `triposplat` | `triposplat` |
-| [mlboydaisuke/Unlimited-OCR-CoreAI](https://huggingface.co/mlboydaisuke/Unlimited-OCR-CoreAI) | 0 | 6 | coreai | port | 2 | 2 skipped | [unlimited-ocr](../zoo/unlimited-ocr.md) | `unlimited-ocr` | `unlimited-ocr` |
-| [mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI](https://huggingface.co/mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI) | 0 | 0 | coreai | port | 10 | 10 pass | [vibevoice](../zoo/vibevoice.md) | `vibevoice-realtime-0.5b` | — |
-| [mlboydaisuke/VJEPA2-ViTL-SSv2-CoreAI](https://huggingface.co/mlboydaisuke/VJEPA2-ViTL-SSv2-CoreAI) | 0 | 0 | coreai | port | 2 | 1 pass 1 skipped | [vjepa2](../zoo/vjepa2.md) | `vjepa2-vitl-ssv2` | `vjepa2-vitl-ssv2` |
+| [mlboydaisuke/Streaming-Sortformer-Diar-CoreAI](https://huggingface.co/mlboydaisuke/Streaming-Sortformer-Diar-CoreAI) | 0 | 2 | coreai | port | 2 | 2 pass | [sortformer-diar](sortformer-diar/README.md) | `sortformer-diar` | — |
+| [mlboydaisuke/TimesFM-2.5-200M-CoreAI](https://huggingface.co/mlboydaisuke/TimesFM-2.5-200M-CoreAI) | 0 | 1 | coreai | port | 2 | 2 pass | [timesfm](timesfm/README.md) | `timesfm-2.5-200m` | — |
+| [mlboydaisuke/TripoSplat-CoreAI](https://huggingface.co/mlboydaisuke/TripoSplat-CoreAI) | 0 | 7 | coreai | port | 6 | 6 pass | [triposplat](triposplat/README.md) | `triposplat` | `triposplat` |
+| [mlboydaisuke/Unlimited-OCR-CoreAI](https://huggingface.co/mlboydaisuke/Unlimited-OCR-CoreAI) | 0 | 6 | coreai | port | 2 | 2 skipped | [unlimited-ocr](unlimited-ocr/README.md) | `unlimited-ocr` | `unlimited-ocr` |
+| [mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI](https://huggingface.co/mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI) | 0 | 0 | coreai | port | 10 | 10 pass | [vibevoice](vibevoice/README.md) | `vibevoice-realtime-0.5b` | — |
+| [mlboydaisuke/VJEPA2-ViTL-SSv2-CoreAI](https://huggingface.co/mlboydaisuke/VJEPA2-ViTL-SSv2-CoreAI) | 0 | 0 | coreai | port | 2 | 1 pass 1 skipped | [vjepa2](vjepa2/README.md) | `vjepa2-vitl-ssv2` | `vjepa2-vitl-ssv2` |
 | [mlboydaisuke/VoxCPM-0.5B-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM-0.5B-CoreAI) | 0 | 0 | coreai | port | 14 | 14 pass | — | — | — |
 | [mlboydaisuke/VoxCPM2-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM2-CoreAI) | 0 | 3 | coreai | port | 14 | 14 pass | — | — | — |
-| [mlboydaisuke/whisper-large-v3-turbo-CoreAI-official](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official) | 0 | 0 | coreai | official | 3 | — | [whisper-large-v3-turbo](../zoo/whisper-large-v3-turbo.md) | `whisper-large-v3-turbo` | `whisper-large-v3-turbo` |
-| [mlboydaisuke/YOLOX-CoreAI](https://huggingface.co/mlboydaisuke/YOLOX-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [yolox](../zoo/yolox.md) | `yolox-s` | `yolox-s` |
-| [mlboydaisuke/Z-Image-Turbo-CoreAI](https://huggingface.co/mlboydaisuke/Z-Image-Turbo-CoreAI) | 0 | 0 | coreai | port | 6 | 6 pass | [z-image-turbo](../zoo/z-image-turbo.md) | `z-image-turbo` | — |
-| [ukint-vs/Nanbeige4.2-3B-CoreAI](https://huggingface.co/ukint-vs/Nanbeige4.2-3B-CoreAI) | 0 | 1 | coreai | port | 1 | 1 pass | [nanbeige4.2-3b](../zoo/nanbeige4.2-3b.md) | `nanbeige4.2-3b` | `nanbeige4.2-3b` |
+| [mlboydaisuke/whisper-large-v3-turbo-CoreAI-official](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official) | 0 | 0 | coreai | official | 3 | — | [whisper-large-v3-turbo](whisper-large-v3-turbo/README.md) | `whisper-large-v3-turbo` | `whisper-large-v3-turbo` |
+| [mlboydaisuke/YOLOX-CoreAI](https://huggingface.co/mlboydaisuke/YOLOX-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [yolox](yolox/README.md) | `yolox-s` | `yolox-s` |
+| [mlboydaisuke/Z-Image-Turbo-CoreAI](https://huggingface.co/mlboydaisuke/Z-Image-Turbo-CoreAI) | 0 | 0 | coreai | port | 6 | 6 pass | [z-image-turbo](z-image-turbo/README.md) | `z-image-turbo` | — |
+| [ukint-vs/Nanbeige4.2-3B-CoreAI](https://huggingface.co/ukint-vs/Nanbeige4.2-3B-CoreAI) | 0 | 1 | coreai | port | 1 | 1 pass | [nanbeige4.2-3b](nanbeige4.2-3b/README.md) | `nanbeige4.2-3b` | `nanbeige4.2-3b` |
 
 ## Tier-1 defects
 
@@ -158,7 +158,7 @@ compared against the source repository it names in its `metadata.json`. No
 oracle, no device, no weights.
 
 **FAIL** = wrong on its own terms. **DIFF** = deviates from the source with no
-recorded reason; record the expectation in `models/<name>/verify.toml` and it
+recorded reason; record the expectation in `models/<family>/verify.toml` and it
 becomes the bar instead of the deviation.
 
 | repo | bundle | verdict | what |
@@ -214,29 +214,29 @@ published configuration. **Do not guess their `args`.**
 
 ### 3. Recipes recorded, shipped configuration unknown
 
-18 of the 56 entries in `conversion/recipes.toml` carry
-`status = "unverified"`: the script is known, the arguments that produced the published
-bundle are not, and nothing in the repo records them. `zoo_convert.py` refuses to run
-these without `--force`. Each needs one answer from the owner.
+18 of the 56 recipes carry `status = "unverified"`:
+the script is known, the arguments that produced the published bundle are not,
+and nothing in the repo records them. `zoo_convert.py` refuses to run these
+without `--force`. Each needs one answer from the owner.
 
-- **`nemotron-3-nano-4b`** (mlboydaisuke/Nemotron-3-Nano-4B-CoreAI) — Was --head-sym (and --head-quant) passed? This exporter feeds them into the lm_head spec but does not encode them in the bundle name, and the card documents no command — so the published name is consistent with both. Every other model in this family ships --head-sym.
-- **`qwen3.6-35b-a3b`** (mlboydaisuke/Qwen3.6-35B-A3B-CoreAI) — Was --head-sym / --head-quant passed? The exporter feeds both into the lm_head spec but leaves them out of the bundle name, and the card names the script without its flags. `sym8` is certain (it is the only choice); the head configuration is not recoverable from anything published.
-- **`glm-4.7-flash`** (mlboydaisuke/GLM-4.7-Flash-CoreAI) — Same head-flag ambiguity as qwen3.6-35b-a3b: --head-sym / --head-quant change the artifact and do not appear in the name.
-- **`glm-ocr`** (mlboydaisuke/GLM-OCR-CoreAI) — The repo publishes `decoder/` and `vision/glm_ocr_vision.aimodel`, but the decoder bundle's own metadata names its source as the zoo repo rather than the upstream model, and the card lists fp16 / int8lin / int8hu side by side without saying which produced the published decoder. export_glm_ocr_pipelined.py names bundles glm_ocr_decode_<mode>, so the published `decoder/` directory name carries no mode either. Which mode shipped?
-- **`mineru-2.5-pro`** (mlboydaisuke/MinerU2.5-Pro-CoreAI) — Same shape as glm-ocr: published as `decoder/` + `vision/mineru_vision.aimodel` (plus a `layout/` pair), and the exporter's mode is not in the published directory names. Which mode produced each? Note the layout decoder's metadata records a local absolute path as its hf_model_id — that is published on Hugging Face and should be corrected.
-- **`unlimited-ocr`** (mlboydaisuke/Unlimited-OCR-CoreAI) — Do either of these exporters take flags that changed the published bundles? Not recorded.
 - **`bitvla`** (mlboydaisuke/BitVLA-CoreAI) — Which flags produced the published pair? Neither the card nor the bundle names record them.
-- **`minicpm5-1b`** (mlboydaisuke/MiniCPM5-1B-CoreAI) — The exact stock-CLI invocation is not recorded — the card describes the compression config (symmetric per-channel int8 absmax, conversion/minicpm5_int8sym.yaml) but not the command line or the context length that produced the published `int8/` bundle (its metadata says 131072).
-- **`embeddinggemma-300m`** (mlboydaisuke/embeddinggemma-300m-CoreAI) — float32 is in the bundle name, but the static sequence length is not — the exporter defaults to 256 and the published name cannot confirm it. Which --seq-len shipped?
-- **`triposplat`** (mlboydaisuke/TripoSplat-CoreAI) — Six graphs are published (dinov3, dit, vae, gs, octree, decode) but conversion/triposplat/ holds no export_*.py — the scripts that produced them are not in this repository.
-- **`ltx-video-2b`** (mlboydaisuke/LTX-Video-2B-CoreAI) — Three graphs are published (dit_fp16, t5_bf16, vae_fp16); conversion/ltxvideo/ holds shared helpers (_common.py) but no export entrypoint. Which scripts produced them?
+- **`glm-4.7-flash`** (mlboydaisuke/GLM-4.7-Flash-CoreAI) — Same head-flag ambiguity as qwen3.6-35b-a3b: --head-sym / --head-quant change the artifact and do not appear in the name.
 - **`glm-image`** (mlboydaisuke/GLM-Image-CoreAI) — Resolution-specific bundles (512 and 1024) ship for the DiT and the VAE — which flag selects the resolution, and was the fp32 VAE exporter (export_glm_image_vae_fp32.py) used for either? This port is still in flight; the card is not final.
-- **`z-image-turbo`** (mlboydaisuke/Z-Image-Turbo-CoreAI) — The DiT bundle name encodes size/cap/mode/dynamic-axis flags (512, cap32, native bf16, dyncap, dynimg, iofp32) and the VAE ships at three resolutions — the exact flag set per bundle is not recorded anywhere. bf16 is load-bearing here: fp16 NaNs this model.
-- **`parakeet-tdt-0.6b`** (mlboydaisuke/Parakeet-TDT-0.6B-CoreAI) — The encoder name pins a 2885-frame input (L2885) and the decoder splits into predict + joint; which flags set the frame count and produced each of the three published graphs?
-- **`nemotron-3.5-asr-streaming`** (mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI) — Six graphs ship per platform (pre / pre_first / conformer_a / conformer_b / predict / joint). Which invocation emits which, and does the non-streaming export_encoder.py contribute any?
-- **`qwen3-asr-1.7b`** (mlboydaisuke/Qwen3-ASR-1.7B-CoreAI) — The decoder is int8hu with a 390-token audio prefix (n390) and a static S=1 graph; the encoder pins k30. Which flags set n390/k30, and was --head-sym used? conversion/qwen3_asr/STATE.md is the port's own record and should be able to answer this.
+- **`glm-ocr`** (mlboydaisuke/GLM-OCR-CoreAI) — The repo publishes `decoder/` and `vision/glm_ocr_vision.aimodel`, but the decoder bundle's own metadata names its source as the zoo repo rather than the upstream model, and the card lists fp16 / int8lin / int8hu side by side without saying which produced the published decoder. export_glm_ocr_pipelined.py names bundles glm_ocr_decode_<mode>, so the published `decoder/` directory name carries no mode either. Which mode shipped?
 - **`kokoro-82m`** (mlboydaisuke/Kokoro-82M-CoreAI) — One run emits all three published graphs (predictor / prosody / vocoder), but the card's command shows optional --token-bucket 128 --frame-bucket 512 and the bundle names do not record the bucket sizes. Were the defaults used?
 - **`llada-8b-dllm`** (mlboydaisuke/LLaDA-8B-dLLM-CoreAI) — The published bundle sits in a bare `macos/` directory with a 256-token context; the exporter's flags are not recorded in the name. Which produced it?
+- **`ltx-video-2b`** (mlboydaisuke/LTX-Video-2B-CoreAI) — Three graphs are published (dit_fp16, t5_bf16, vae_fp16); conversion/ltxvideo/ holds shared helpers (_common.py) but no export entrypoint. Which scripts produced them?
+- **`mineru-2.5-pro`** (mlboydaisuke/MinerU2.5-Pro-CoreAI) — Same shape as glm-ocr: published as `decoder/` + `vision/mineru_vision.aimodel` (plus a `layout/` pair), and the exporter's mode is not in the published directory names. Which mode produced each? Note the layout decoder's metadata records a local absolute path as its hf_model_id — that is published on Hugging Face and should be corrected.
+- **`minicpm5-1b`** (mlboydaisuke/MiniCPM5-1B-CoreAI) — The exact stock-CLI invocation is not recorded — the card describes the compression config (symmetric per-channel int8 absmax, conversion/minicpm5_int8sym.yaml) but not the command line or the context length that produced the published `int8/` bundle (its metadata says 131072).
+- **`nemotron-3-nano-4b`** (mlboydaisuke/Nemotron-3-Nano-4B-CoreAI) — Was --head-sym (and --head-quant) passed? This exporter feeds them into the lm_head spec but does not encode them in the bundle name, and the card documents no command — so the published name is consistent with both. Every other model in this family ships --head-sym.
+- **`nemotron-3.5-asr-streaming`** (mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI) — Six graphs ship per platform (pre / pre_first / conformer_a / conformer_b / predict / joint). Which invocation emits which, and does the non-streaming export_encoder.py contribute any?
+- **`parakeet-tdt-0.6b`** (mlboydaisuke/Parakeet-TDT-0.6B-CoreAI) — The encoder name pins a 2885-frame input (L2885) and the decoder splits into predict + joint; which flags set the frame count and produced each of the three published graphs?
+- **`qwen3-asr-1.7b`** (mlboydaisuke/Qwen3-ASR-1.7B-CoreAI) — The decoder is int8hu with a 390-token audio prefix (n390) and a static S=1 graph; the encoder pins k30. Which flags set n390/k30, and was --head-sym used? conversion/qwen3_asr/STATE.md is the port's own record and should be able to answer this.
+- **`embeddinggemma-300m`** (mlboydaisuke/embeddinggemma-300m-CoreAI) — float32 is in the bundle name, but the static sequence length is not — the exporter defaults to 256 and the published name cannot confirm it. Which --seq-len shipped?
+- **`qwen3.6-35b-a3b`** (mlboydaisuke/Qwen3.6-35B-A3B-CoreAI) — Was --head-sym / --head-quant passed? The exporter feeds both into the lm_head spec but leaves them out of the bundle name, and the card names the script without its flags. `sym8` is certain (it is the only choice); the head configuration is not recoverable from anything published.
+- **`triposplat`** (mlboydaisuke/TripoSplat-CoreAI) — Six graphs are published (dinov3, dit, vae, gs, octree, decode) but conversion/triposplat/ holds no export_*.py — the scripts that produced them are not in this repository.
+- **`unlimited-ocr`** (mlboydaisuke/Unlimited-OCR-CoreAI) — Do either of these exporters take flags that changed the published bundles? Not recorded.
+- **`z-image-turbo`** (mlboydaisuke/Z-Image-Turbo-CoreAI) — The DiT bundle name encodes size/cap/mode/dynamic-axis flags (512, cap32, native bf16, dyncap, dynimg, iofp32) and the VAE ships at three resolutions — the exact flag set per bundle is not recorded anywhere. bf16 is load-bearing here: fp16 NaNs this model.
 
 ### 4. Carded, exactly one bundle, no recipe
 

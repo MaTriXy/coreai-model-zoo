@@ -1,0 +1,12 @@
+# Recipe for triposplat — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["triposplat"]
+card = "README.md"
+hf_repo = "mlboydaisuke/TripoSplat-CoreAI"
+status = "unverified"
+open_questions = [
+  "Six graphs are published (dinov3, dit, vae, gs, octree, decode) but conversion/triposplat/",
+  "holds no export_*.py — the scripts that produced them are not in this repository.",
+]

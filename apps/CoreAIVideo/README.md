@@ -5,7 +5,7 @@ bundles. The zoo's first video app — the desktop counterpart to [`CoreAIImageG
 
 All three heavy nets (T5-XXL text encoder, the flow-matching DiT, the causal video VAE) run as
 Core AI `.aimodel` bundles; only LTX's FlowMatch sampler loop runs on host. See the model card
-[`zoo/ltxvideo.md`](../../zoo/ltxvideo.md) and recipe [`conversion/ltxvideo/`](../../conversion/ltxvideo).
+[`models/ltxvideo/README.md`](../../models/ltxvideo/README.md) and recipe [`conversion/ltxvideo/`](../../conversion/ltxvideo).
 
 512×768 · 49 frames · 8 steps → **~14 s on a Mac GPU** (Apple silicon).
 

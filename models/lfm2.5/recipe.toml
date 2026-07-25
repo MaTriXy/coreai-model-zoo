@@ -1,0 +1,19 @@
+# Recipe for lfm2.5 — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["lfm2.5-1.2b"]
+script = "export_lfm2_decode_pipelined.py"
+args = ["int8hu", "--head-sym"]
+card = "README.md"
+hf_repo = "mlboydaisuke/LFM2.5-1.2B-CoreAI"
+bundle = "gpu-pipelined/lfm2_5_1_2b_instruct_decode_int8hu_block32_sym"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch", "apps/coreai-shared-product.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "conv+attention hybrid, loop-free by construction. Oracle gate 16/16.",
+  "M4 Max 276.5 tok/s with int8 head (253 int8lin / 162 fp16).",
+  "Model overlay bakes in two macOS-27-beta GPU-delegate workarounds (see script header).",
+]

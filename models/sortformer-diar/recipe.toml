@@ -1,0 +1,16 @@
+# Recipe for sortformer-diar — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["sortformer-diar"]
+script = "sortformer_diar/export_sortformer.py"
+args = ["--dtype", "float16"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Streaming-Sortformer-Diar-CoreAI"
+bundle = "sortformer_float16.aimodel"
+status = "verified"
+aot = "xcrun coreai-build compile sortformer_float16.aimodel --output ship_ios/ --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = [
+  "Bundle name is sortformer_<dtype>.aimodel, so the name determines the argument.",
+  "The kit composes this with an ASR model as MeetingTranscriber (diarize, then transcribe turns).",
+]

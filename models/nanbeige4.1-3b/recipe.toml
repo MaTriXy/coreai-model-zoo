@@ -1,0 +1,18 @@
+# Recipe for nanbeige4.1-3b — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["nanbeige4.1-3b"]
+script = "export_nanbeige41_decode_pipelined.py"
+args = ["int8hu", "--head-sym", "--static-ids"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Nanbeige4.1-3B-CoreAI"
+bundle = "gpu-pipelined/nanbeige4_1_3b_decode_int8hu_block32_sym_s1"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = ["--static-ids emits the static S=1 decode graph (the _s1 suffix in the bundle name)."]
+
+# Staged exception: conversion, Mac gates, and the immutable HF artifact are
+# verified; iPhone and CoreAIKit enrollment remain pending in the card.

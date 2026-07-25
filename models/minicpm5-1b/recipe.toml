@@ -1,0 +1,26 @@
+# Recipe for minicpm5-1b — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["minicpm5-1b"]
+command = ["coreai.llm.export", "openbmb/MiniCPM5-1B", "--compression-config", "minicpm5_int8sym.yaml"]
+card = "README.md"
+hf_repo = "mlboydaisuke/MiniCPM5-1B-CoreAI"
+bundle = "int8"
+status = "unverified"
+overlay = true
+needs = [
+  "Two one-time coreai_models edits documented in export_minicpm5.py: registry MODEL_TYPE_REMAPPING",
+  "llama -> mistral, and an AIModelMetadataFields entry for openbmb/MiniCPM5-1B. Both belong in",
+  "conversion/overlay/ but are not there yet.",
+]
+open_questions = [
+  "The exact stock-CLI invocation is not recorded — the card describes the compression config",
+  "(symmetric per-channel int8 absmax, conversion/minicpm5_int8sym.yaml) but not the command line",
+  "or the context length that produced the published `int8/` bundle (its metadata says 131072).",
+]
+notes = ["Plain LlamaForCausalLM, so it rides the stock exporter rather than a pipelined script."]
+
+# ===========================================================================
+# Encoders — embeddings, retrieval, extraction
+# ===========================================================================

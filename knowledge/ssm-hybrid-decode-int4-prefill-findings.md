@@ -1,7 +1,7 @@
 # SSM-hybrid decode, int4, and chunked prefill on Core AI — session findings (2026-07-10/11)
 
 Cross-cutting lessons from porting Nemotron-3-Nano-4B (Mamba2 hybrid) and probing int4 on it and
-on LFM2.5. The per-model tables live in `zoo/nemotron-3-nano.md`, `zoo/lfm2.5*.md`, and the
+on LFM2.5. The per-model tables live in `models/nemotron-3-nano/README.md`, `zoo/lfm2.5*.md`, and the
 working notes in `~/code/mamba-metal-scan/coreai/*_RESULTS.md`. This file is the transferable part.
 
 ---

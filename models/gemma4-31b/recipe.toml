@@ -1,0 +1,14 @@
+# Recipe for gemma4-31b — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["gemma-4-31b"]
+script = "export_gemma4_12b_decode_pipelined.py"
+args = ["int4lin", "--lin-sym", "--metal-sdpa", "--hf-id", "google/gemma-4-31B-it-qat-q4_0-unquantized"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Gemma-4-31B-CoreAI"
+bundle = "gpu-pipelined/gemma4_31b_qat_decode_int4linsym_msdpa_g8"
+status = "verified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = ["Same exporter as the 12B — the size comes from the checkpoint id. Mac-only."]

@@ -1,0 +1,13 @@
+{
+  "name": "coreai-zoo-skills",
+  "description": "Skills for reproducing, verifying, and porting models in the Core AI model zoo — community ports of open models to Apple's Core AI runtime.",
+  "version": "0.1.0",
+  "author": {
+    "name": "coreai-model-zoo"
+  },
+  "keywords": [
+    "coreai",
+    "on-device-ai",
+    "model-zoo"
+  ]
+}

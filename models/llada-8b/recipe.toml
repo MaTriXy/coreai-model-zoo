@@ -1,0 +1,16 @@
+# Recipe for llada-8b — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["llada-8b-dllm"]
+script = "dllm/export_llada.py"
+args = []
+card = "README.md"
+hf_repo = "mlboydaisuke/LLaDA-8B-dLLM-CoreAI"
+bundle = "macos"
+status = "unverified"
+open_questions = [
+  "The published bundle sits in a bare `macos/` directory with a 256-token context; the exporter's",
+  "flags are not recorded in the name. Which produced it?",
+]
+notes = ["Diffusion LLM: no KV cache, whole-sequence denoising. Mac-only."]

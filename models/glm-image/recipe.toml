@@ -1,0 +1,19 @@
+# Recipe for glm-image — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["glm-image"]
+card = "README.md"
+hf_repo = "mlboydaisuke/GLM-Image-CoreAI"
+status = "unverified"
+overlay = true
+steps = [
+  { script = "export_glm_image_ar.py", args = [], bundle = "glm_image_ar.aimodelc" },
+  { script = "export_glm_image_dit.py", args = [], bundle = "glm_image_dit_1024.aimodelc" },
+  { script = "export_glm_image_vae.py", args = [], bundle = "glm_image_vae_1024.aimodel" },
+]
+open_questions = [
+  "Resolution-specific bundles (512 and 1024) ship for the DiT and the VAE — which flag selects",
+  "the resolution, and was the fp32 VAE exporter (export_glm_image_vae_fp32.py) used for either?",
+  "This port is still in flight; the card is not final.",
+]

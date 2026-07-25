@@ -1,0 +1,16 @@
+# Recipe for rf-detr — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["rf-detr"]
+script = "export_rf_detr.py"
+args = ["--variant", "medium", "--dtype", "float32"]
+card = "README.md"
+hf_repo = "mlboydaisuke/RF-DETR-CoreAI"
+bundle = "rfdetr-medium_float32.aimodel"
+status = "verified"
+notes = [
+  "Ten variants ship (nano/small/medium/large + seg-*), each `rfdetr-<variant>_float32.aimodel`",
+  "from the same command with --variant swapped — the name determines the argument.",
+  "--split additionally emits the backbone/head pair published under split/.",
+]

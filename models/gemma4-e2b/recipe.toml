@@ -1,0 +1,27 @@
+# Recipe for gemma4-e2b — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["gemma-4-e2b"]
+script = "export_gemma4_decode_pipelined.py"
+args = ["int4lin", "--tbl", "--hf-id", "google/gemma-4-E2B-it-qat-q4_0-unquantized"]
+card = "README.md"
+hf_repo = "mlboydaisuke/gemma-4-E2B-CoreAI"
+bundle = "gpu-pipelined/gemma4_e2b_qat_decode_int4lin_tbl"
+status = "verified"
+overlay = true
+needs = [
+  "--raw-dir: the Per-Layer-Embedding gather-table dump (embed_per_layer.i8 + .scale.f32 +",
+  "meta.json) produced by ondevice/export_gemma4_gather_raw.py --hf-id <same id>. --tbl rides the",
+  "table as a STATIC graph input, which is what makes decode fully pipelined.",
+]
+runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+aot = "xcrun coreai-build compile <bundle>.aimodel --output <out>/ --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = [
+  "int4lin --tbl: 77.0/87.1 tok/s on M4 Max, 30.3/38.9 on iPhone 17 Pro (AOT h18p).",
+  "The _aotc_h18p bundle beside it is this bundle after the AOT step, not a second export.",
+  "The repo also publishes the non-QAT checkpoint build (--hf-id google/gemma-4-E2B-it) and the",
+  "raw-Metal kernel sets under ios-gpu/, ios-ane/, macos/ — those come from the hand-written",
+  "kernel track in conversion/gemma4_raw_metal/, not from this exporter.",
+]

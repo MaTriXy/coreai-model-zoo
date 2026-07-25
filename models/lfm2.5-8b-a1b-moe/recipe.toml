@@ -1,0 +1,20 @@
+# Recipe for lfm2.5-8b-a1b-moe — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["lfm2.5-8b-a1b"]
+script = "export_lfm2_moe_metal_decode_pipelined.py"
+args = ["sym8"]
+card = "README.md"
+hf_repo = "mlboydaisuke/LFM2.5-8B-A1B-CoreAI"
+bundle = "gpu-pipelined/lfm2_5_8b_a1b_decode_sym8_gather"
+status = "verified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "sym8 = symmetric-linear int8, per-K-block-32 scale, read through the gather_qmm Metal kernel.",
+  "Card: 8.8 GB, 140.4 tok/s on M4 Max, clean (+1 flip/41 = the fp16 ceiling) — the shipped one.",
+  "int8km is superseded (k-means is lossier); int4km runs on iPhone but is not clean, so neither",
+  "is published.",
+  "This exporter has no head-quantization flags, so the bundle name determines the command.",
+]

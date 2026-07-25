@@ -1,0 +1,13 @@
+# Recipe for vjepa2 — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["vjepa2-vitl-ssv2"]
+script = "vjepa2/export_fp16.py"
+args = []
+card = "README.md"
+hf_repo = "mlboydaisuke/VJEPA2-ViTL-SSv2-CoreAI"
+bundle = "macos"
+status = "verified"
+aot = "xcrun coreai-build compile vjepa2_ssv2_fp16.aimodel --output ios/ --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = ["Fixed output name (vjepa2_ssv2_fp16.aimodel); the script takes no configuration flags."]

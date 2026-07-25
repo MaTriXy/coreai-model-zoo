@@ -1,0 +1,18 @@
+# Recipe for bitcpm-8b — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["bitcpm-8b"]
+script = "export_bitcpm8b_decode_pipelined.py"
+args = ["--static-ids"]
+card = "README.md"
+hf_repo = "mlboydaisuke/BitCPM-8B-CoreAI"
+bundle = "gpu-pipelined/bitcpm_8b_decode_ternary_s1"
+status = "verified"
+overlay = true
+needs = [
+  "ZOO_WORK_ROOT/_bitcpm_ckpt/bitcpm4-8b-tq2_0.gguf (ternary weights) and",
+  "ZOO_WORK_ROOT/_bitcpm_ckpt/hf (tokenizer + config) — see conversion/_paths.py.",
+]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = ["Ternary is the only mode; --static-ids adds the _s1 static decode graph."]

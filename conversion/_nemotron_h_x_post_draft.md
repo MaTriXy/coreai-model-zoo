@@ -86,4 +86,4 @@ Notes:
 - D's figures: granite-4.0-h-350m, 32 layers. Paired median stock/fused = 1.060 (v1),
   1.031 (v2), 1.078 (v3), 8 interleaved reps each. Unpaired singles of the same configs
   ranged 0.89x–1.19x.
-- Card: zoo/nemotron-3-nano.md
+- Card: models/nemotron-3-nano/README.md

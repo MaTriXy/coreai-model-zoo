@@ -4,7 +4,8 @@
 > the zoo ships and why*; this plan only makes what is already shipped reproducible and
 > verifiable. Where the two disagree, the blueprint wins.
 >
-> Status: **C0, C1 and C2 are done** (2026-07-25). C3 and C4 are not started.
+> Status: **C0, C1, C2 and the layout half of C4 are done** (2026-07-25). C3 (oracles)
+> and C4.1 (device tier) are not started.
 > No step here publishes anything — see [Guardrails](#guardrails).
 
 ## Why this is not a new pillar
@@ -14,7 +15,7 @@ The blueprint's pillars need this work but do not describe it:
 | Blueprint pillar | What it assumes | What this plan supplies |
 | --- | --- | --- |
 | **P1 Model coverage** — keep shipping models Apple doesn't | that a shipped port stays shipped across SDK betas | a check that runs over the whole catalog in minutes after each beta |
-| **P5 Knowledge** — the porting playbook | that "how it was made" is written down | the machine-readable half of it: `conversion/recipes.toml` |
+| **P5 Knowledge** — the porting playbook | that "how it was made" is written down | the machine-readable half of it: `models/<model>/recipe.toml` |
 | **P6 Community ops** — monthly drops, contributions | that a contributor can reproduce a bundle without asking | `zoo_convert.py run <name>` plus the prerequisites it needs |
 
 **Numbering:** the blueprint owns `P1`–`P6` for pillars. This plan's phases are `C0`–`C4` so
@@ -31,7 +32,7 @@ Measured 2026-07-25 by `scripts/gen_inventory.py`; the full table is
 | Published Hugging Face repos | **123** (122 owned + 1 contributor-owned) |
 | Of those, Core AI repos | **70** (the rest: pre-Core-AI Core ML ports, LiteRT collaboration repos) |
 | Bundles inside them | **238** |
-| Core AI repos with a card in `zoo/` | **52** |
+| Core AI repos with a card in `models/<model>/` | **52** |
 | Repos with a recipe | **52** (was 6) |
 | Bundles with an automated tier-1 check | **222** (was ~0) |
 | Core AI repos with no downloads in 30 days | **55** |
@@ -76,7 +77,7 @@ weights: eos/bos, chat template, context length, declared precision.
 
 **Change from the draft:** expectations are **read from the source repository at run time**
 rather than transcribed into 50 hand-written `verify.toml` files. A transcription can be wrong
-and goes stale; the source repo cannot. `models/<name>/verify.toml` is now only for recording a
+and goes stale; the source repo cannot. `models/<model>/verify.toml` is now only for recording a
 *deliberate* deviation — and once recorded, the recorded value becomes the bar.
 
 First full run over 222 bundles: **162 PASS, 8 DIFF, 10 FAIL, 42 SKIPPED**.
@@ -96,7 +97,8 @@ source ships one; E2B is the most-downloaded text model in the catalog.
 
 ### C2 — recipes for the carded catalog ✅ done
 
-`conversion/recipes.toml`: 6 → **56 entries**, 38 `verified` and 18 `unverified`.
+6 → **56 recipes**, 38 `verified` and 18 `unverified`, one `recipe.toml` per model
+directory beside its card.
 
 Recipes are **derived, not remembered**: the exporters build their bundle name from their
 arguments, so a published name inverts back to a command, and where a card also documents a
@@ -125,19 +127,24 @@ Mac-GPU work in this phase takes the `_GPU_LOCK` at the work root
 
 *Accept*: the top 20 models by downloads pass tiers 1–3 or have a recorded reason they cannot.
 
-### C4 — device tier and layout (not started, and C4.2 needs a decision)
+### C4 — device tier and layout (C4.2/C4.3 done; C4.1 not started)
 
 - **C4.1** Wire the nightly device gate to a `[device]` expectation. `require_backend` must fail
   on silent CPU fallback, not warn.
-- **C4.2 Layout.** The draft proposed moving cards to `models/<family>/README.md` to mirror
-  `apple/coreai-models`. **This conflicts with a working mechanism**: `scripts/gen-cards`
-  generates the "Use it" block inside `zoo/<model>.md` between markers and pushes byte-identical
-  content to the model's Hugging Face README. Moving the cards breaks that contract, and the
-  blueprint never asks for the mirror — it asks for the things Apple's repo does not have
-  (device numbers, apps, knowledge). Recommendation: keep `zoo/` canonical, keep recipes in
-  `conversion/recipes.toml`, and add `models/` only for what is genuinely new (the inventory,
-  verification results, per-model `verify.toml`). Owner's call.
-- **C4.3** A `skills/` entry describing how an agent reproduces and verifies a model here.
+- **C4.2 Layout ✅ done.** Cards moved to `models/<model>/README.md` beside their
+  `recipe.toml`, mirroring `apple/coreai-models` (which is `models/<family>/README.md` +
+  optional `export.py` / `*.yaml`). Two deliberate differences: the exporters stay in
+  `conversion/` because several families share one (the Qwen3.5 script also drives Ornith and
+  Qwen3.6-27B), and `recipe.toml` / `verify.toml` are our additions — Apple has no equivalent.
+  The gen-cards conflict was resolved rather than avoided: `cards.json` now points at the new
+  paths, so the "Use it" block still round-trips byte-identically to the Hugging Face README.
+  Every old `zoo/<model>.md` path stays as a redirect stub, because ~50 published Hugging Face
+  READMEs link to it. **`scripts/gen-cards` has not been re-run** — it builds Swift and needs
+  the kit checkout; the owner should run it once to confirm the round-trip.
+- **C4.3 ✅ done.** `skills/` mirrors Apple's agent-plugin layout (`.claude-plugin`,
+  `.codex-plugin`, `gemini-extension.json`, `skills/<name>/SKILL.md`) with two skills:
+  `reproduce-a-zoo-model` and `port-a-model-to-the-zoo`. `models/index.json` is the
+  machine-readable catalog they read first.
 
 *Accept*: an agent given only this repo's README can reproduce and verify one model end to end.
 

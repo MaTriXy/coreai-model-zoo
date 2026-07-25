@@ -1,0 +1,43 @@
+# Recipe for qwen3-vl — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["qwen3-vl-2b"]
+script = "export_qwen3_vl_pipelined.py"
+args = ["int8hu"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Qwen3-VL-2B-CoreAI"
+bundle = "gpu-pipelined/qwen3_vl_2b_instruct_decode_int8hu_s1"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "One run emits the decoder, its static S=1 gate twin (_s1 — the published one) and the fp16",
+  "vision tower. int8lin_s1 is published beside it as the fallback.",
+  "--prefill-chunk N additionally emits the multifunction _pfN bundle (chunked prefill).",
+]
+
+["qwen3-vl-4b"]
+script = "export_qwen3_vl_pipelined.py"
+args = ["int8hu", "--hf-id", "Qwen/Qwen3-VL-4B-Instruct"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Qwen3-VL-4B-CoreAI"
+bundle = "gpu-pipelined/qwen3_vl_4b_instruct_decode_int8hu_s1"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = ["HF-id swap only."]
+
+["qwen3-vl-8b"]
+script = "export_qwen3_vl_pipelined.py"
+args = ["int8hu", "--hf-id", "Qwen/Qwen3-VL-8B-Instruct"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Qwen3-VL-8B-CoreAI"
+bundle = "gpu-pipelined/qwen3_vl_8b_instruct_decode_int8hu_s1"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = ["HF-id swap only. Mac-class; the 2B is the phone one."]

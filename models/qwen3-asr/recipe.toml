@@ -1,0 +1,19 @@
+# Recipe for qwen3-asr — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["qwen3-asr-1.7b"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Qwen3-ASR-1.7B-CoreAI"
+status = "unverified"
+overlay = true
+steps = [
+  { script = "qwen3_asr/export_encoder.py", args = [], bundle = "gpu-pipelined/qwen3_asr_1.7b_audio_encoder_fp16_k30/qwen3_asr_1.7b_audio_encoder_fp16_k30.aimodel" },
+  { script = "qwen3_asr/export_decoder.py", args = [], bundle = "gpu-pipelined/qwen3_asr_1.7b_decode_int8hu_n390_s1" },
+]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+open_questions = [
+  "The decoder is int8hu with a 390-token audio prefix (n390) and a static S=1 graph; the encoder",
+  "pins k30. Which flags set n390/k30, and was --head-sym used? conversion/qwen3_asr/STATE.md is",
+  "the port's own record and should be able to answer this.",
+]

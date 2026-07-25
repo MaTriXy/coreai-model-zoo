@@ -1,0 +1,30 @@
+# Recipe for granite-4.0-h — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["granite-4.0-h-1b"]
+script = "export_granite4h_decode_pipelined.py"
+args = ["int8lin"]
+card = "README.md"
+hf_repo = "mlboydaisuke/granite-4.0-h-CoreAI"
+bundle = "gpu-pipelined/granite_4_0_h_1b_decode_int8lin"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch", "apps/coreai-shared-product.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "The card names int8lin as the ship config (Mac + iPhone); the int8hu block32-sym build is",
+  "published beside it as the faster-head variant.",
+]
+
+["granite-4.0-h-350m"]
+script = "export_granite4h_decode_pipelined.py"
+args = ["fp16", "--hf-id", "ibm-granite/granite-4.0-h-350m"]
+card = "README.md"
+hf_repo = "mlboydaisuke/granite-4.0-h-CoreAI"
+bundle = "gpu-pipelined/granite_4_0_h_350m_decode_fp16"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch", "apps/coreai-shared-product.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = ["fp16 at this size: quantization risk buys nothing under ~1.5 GB."]

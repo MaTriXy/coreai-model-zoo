@@ -65,9 +65,20 @@ The remaining gap, where it survives, decomposes into three independent multipli
    custom gather kernel, but does **not** beat MLX — MLX's sparse dispatch is already good.
 3. **MLA / exotic attention** → Core AI loses; the structural kernel (absorbed-MLA latent staging)
    is unsolved, so it stays below even Core AI's own dense models.
-4. **ANE / iPhone** → not a raw-tok/s contest. MLX can win raw speed (Qwen3-ASR 2.6× over
-   WhisperKit-ANE) but can't run on ANE/iPhone at all; Core AI's axis there is energy, always-on,
-   and Foundation Models integration — not the tok/s race.
+4. **ANE / iPhone** → not a raw-tok/s contest — and now measured (iPhone 17 Pro,
+   DeepSeek-R1-1.5B, matched 4-bit bytes ANE 0.97 / GPU 0.95 / MLX 0.95 GB, cold short-chat
+   median-of-3; `litertlm-convert/reports/coreai-ane-gpu-parity-addendum.md`):
+   decode **ANE 83.3 / CA-GPU 75.9 / MLX 73.0 tok/s**; energy **ANE 6,144 / MLX 5,662 /
+   CA-GPU 4,506 tok per 1% battery**. The ANE-vs-GPU delta sign-flips across sibling models →
+   **throughput parity**, not an ANE speed win. And the ANE *energy* edge over MLX-GPU is only
+   **~+8.5%** (it's +36% over CA's own GPU — MLX's GPU path is energy-efficient); the robust
+   ANE win is **GPU exclusivity** (UI/rendering don't contend). MLX DOES run on iPhone (GPU,
+   via mlx-swift) — *correction 2026-07-24: an earlier note here claimed it "can't run on
+   ANE/iPhone at all"; only the ANE is closed to MLX*.
+   (Foundation Models integration is NOT an exclusive: the `LanguageModel` protocol is public
+   and MLX plugs in via `MLXLanguageModel` — see fm-provider.md; CA's edge is only the official
+   zero-code adapter. And the ANE LLM path is static-shape + palettization-required +
+   host-driven — no pipelined loop exists on ANE, see compute-units-and-authoring.md.)
 
 ## 4. Takeaway for porting decisions
 
@@ -76,5 +87,52 @@ The remaining gap, where it survives, decomposes into three independent multipli
   MLX. With the kernel you reach parity (the ceiling), not a win.
 - Porting **MLA**: parity/win is not currently reachable; ship for coverage/quality, not speed,
   until absorbed-MLA latent-staging lands.
-- The genuine, non-speed moat is **ANE energy + iPhone reach + Foundation Models integration** —
-  optimize for that axis, not for beating MLX on Mac-GPU tok/s.
+- The genuine, non-speed differential is **thinner than this doc previously claimed** — see §5.
+  It reduces to: ANE **GPU exclusivity + a thin energy edge** (conditional: static+palettized,
+  host-driven loop), AOT first-launch *control*, and the official zero-code FM adapter.
+  NOT "iPhone reach" (mlx-swift runs on iPhone GPU too); NOT "FM integration" (the protocol is
+  public and MLX plugs in); NOT "no bundled runtime" (see §5.1). Optimize for that axis — or
+  for ecosystem positioning — not for beating MLX on tok/s.
+
+## 5. Audited non-speed differentials (2026-07-24)
+
+Claims in earlier revisions of this doc, re-checked against artifacts. Net: the technical
+differential for *LLM execution* is thin; most of the advertised deployment gap was illusory.
+
+### 5.1 "OS-resident runtime / nothing to bundle" — HALF-FALSE
+
+Only the **graph compiler + executor** (`CoreAI.framework`) is OS-resident. The LLM runtime —
+`EngineFactory`, the `coreai-pipelined` engine, `LanguageBundle`, on-GPU sampling, KV growth —
+is Swift code from `coreai-models` that **you compile into the app** (proof: we patch it —
+`apps/coreai-pipelined-extra-states.patch`; you can't patch an OS framework). MLX draws the
+same line one layer lower: it bundles its tensor framework + kernels on top of OS-resident
+Metal/MPS. The binary-size delta is tens of MB against GB-class model assets — noise.
+
+OS-residency is also **double-edged** (all incidents verified in this repo): beta seed-to-seed
+ABI churn kills TestFlight launches (`FoundationModels` must be weak-linked, see
+reference_fm_beta_abi_churn); the OS reclaims model assets into 6-byte zeroed stubs; the
+~O(p²) prefill scratch lives in the closed compiler and **cannot be fixed app-side** (MLX's
+stack is fully open — every layer is fixable). "The OS owns it" = "you can't repair it."
+
+### 5.2 AOT startup control — real, but mostly self-remediation
+
+Cold GPU specialization is Core AI's own cost (0.8B ≈ 4.8 s, 2.3 GB ≈ 29 s on iPhone;
+pipelined-engine.md). AOT / `AIModelCache` gives *control over* that first-run cost; MLX's
+runtime kernel JIT is light enough that it never had the problem. Deterministic first-launch
+is a genuine product knob, but don't sell it as an advantage *over MLX*.
+
+### 5.3 Reverse differential: logits / guided generation favor MLX
+
+FM guided generation (`@Generable`) needs engine logits, and the GPU-pipelined fast path
+**does not expose logits** (fm-provider.md). MLX exposes logits trivially → structured
+generation, logprobs tooling, and sampler experiments are *easier* on MLX than on Core AI's
+fast path.
+
+### 5.4 What each side genuinely keeps
+
+- **Core AI**: ANE access (throughput parity, ~+8.5% energy vs MLX-GPU, **GPU exclusivity** —
+  the one structural fact MLX can never reach); AOT first-launch control; official zero-code
+  FM adapter; closed compiler improves with OS updates (double-edged, §5.1).
+- **MLX**: fully-OSS stack (every layer fixable); no conversion step → new-arch turnaround in
+  days; mature 4-bit affine quant (CA ships int8 — int4 flips argmax for non-QAT); free logits
+  (§5.3); no O(p²) prefill-scratch wall.

@@ -8,7 +8,7 @@
   },
   "models": {
     "whisper-large-v3-turbo": {
-      "zooCard": "zoo/whisper-large-v3-turbo.md",
+      "zooCard": "models/whisper-large-v3-turbo/README.md",
       "mediaCaption": "Whisper large-v3-turbo on iPhone 17 Pro — the zoo's coreai-audio app, real speed.",
       "runner": {
         "dir": "Examples/Transcribe",
@@ -38,7 +38,7 @@
       }
     },
     "qwen3.5-2b": {
-      "zooCard": "zoo/qwen3.5.md",
+      "zooCard": "models/qwen3.5/README.md",
       "runner": {
         "dir": "Examples/ChatDemo",
         "xcodeproj": "ChatDemo.xcodeproj",
@@ -69,7 +69,7 @@
       "fmProvider": "KitLanguageModel"
     },
     "qwen3.6-27b": {
-      "zooCard": "zoo/qwen3.6-27b.md",
+      "zooCard": "models/qwen3.6-27b/README.md",
       "runner": {
         "dir": "Examples/ChatDemo",
         "xcodeproj": "ChatDemo.xcodeproj",
@@ -100,7 +100,7 @@
       "fmProvider": "KitLanguageModel"
     },
     "granite-4.0-h-1b": {
-      "zooCard": "zoo/granite-4.0-h.md",
+      "zooCard": "models/granite-4.0-h/README.md",
       "runner": {
         "dir": "Examples/ChatDemo",
         "xcodeproj": "ChatDemo.xcodeproj",
@@ -131,7 +131,7 @@
       "fmProvider": "KitLanguageModel"
     },
     "gemma-4-12b": {
-      "zooCard": "zoo/gemma4-12b.md",
+      "zooCard": "models/gemma4-12b/README.md",
       "runner": {
         "dir": "Examples/ChatDemo",
         "xcodeproj": "ChatDemo.xcodeproj",
@@ -162,7 +162,7 @@
       "fmProvider": "KitLanguageModel"
     },
     "gemma-4-31b": {
-      "zooCard": "zoo/gemma4-31b.md",
+      "zooCard": "models/gemma4-31b/README.md",
       "runner": {
         "dir": "Examples/ChatDemo",
         "xcodeproj": "ChatDemo.xcodeproj",
@@ -338,7 +338,7 @@
       }
     },
     "minicpm5-1b": {
-      "zooCard": "zoo/minicpm5-1b.md",
+      "zooCard": "models/minicpm5-1b/README.md",
       "runner": {
         "dir": "Examples/ChatDemo",
         "xcodeproj": "ChatDemo.xcodeproj",
@@ -368,7 +368,7 @@
       }
     },
     "nanbeige4.1-3b": {
-      "zooCard": "zoo/nanbeige4.1-3b.md",
+      "zooCard": "models/nanbeige4.1-3b/README.md",
       "runner": {
         "dir": "Examples/ChatDemo",
         "xcodeproj": "ChatDemo.xcodeproj",
@@ -399,7 +399,7 @@
       "fmProvider": "KitLanguageModel"
     },
     "nanbeige4.2-3b": {
-      "zooCard": "zoo/nanbeige4.2-3b.md",
+      "zooCard": "models/nanbeige4.2-3b/README.md",
       "runner": {
         "dir": "Examples/ChatDemo",
         "xcodeproj": "ChatDemo.xcodeproj",
@@ -421,7 +421,7 @@
       "checklistEntitlements": "Entitlements (iOS): `com.apple.developer.kernel.increased-memory-limit`"
     },
     "lfm2.5-1.2b": {
-      "zooCard": "zoo/lfm2.5.md",
+      "zooCard": "models/lfm2.5/README.md",
       "runner": {
         "dir": "Examples/ChatDemo",
         "xcodeproj": "ChatDemo.xcodeproj",
@@ -510,7 +510,7 @@
       }
     },
     "lfm2.5-8b-a1b": {
-      "zooCard": "zoo/lfm2.5-8b-a1b-moe.md",
+      "zooCard": "models/lfm2.5-8b-a1b-moe/README.md",
       "runner": {
         "dir": "Examples/ChatDemo",
         "xcodeproj": "ChatDemo.xcodeproj",
@@ -541,7 +541,7 @@
       "fmProvider": "KitLanguageModel"
     },
     "qwen3.6-35b-a3b": {
-      "zooCard": "zoo/qwen3.6.md",
+      "zooCard": "models/qwen3.6/README.md",
       "runner": {
         "dir": "Examples/ChatDemo",
         "xcodeproj": "ChatDemo.xcodeproj",
@@ -572,7 +572,7 @@
       "fmProvider": "KitLanguageModel"
     },
     "glm-4.7-flash": {
-      "zooCard": "zoo/glm-4.7-flash.md",
+      "zooCard": "models/glm-4.7-flash/README.md",
       "runner": {
         "dir": "Examples/ChatDemo",
         "xcodeproj": "ChatDemo.xcodeproj",
@@ -603,7 +603,7 @@
       "fmProvider": "KitLanguageModel"
     },
     "qwen3-vl-2b": {
-      "zooCard": "zoo/qwen3-vl.md",
+      "zooCard": "models/qwen3-vl/README.md",
       "mediaCaption": "Qwen3-VL 2B on iPhone 17 Pro — in the zoo's CoreAIChat app, real speed.",
       "runner": {
         "dir": "Examples/VLChat",
@@ -704,7 +704,7 @@
       }
     },
     "depth-anything-3-small": {
-      "zooCard": "zoo/depth-anything-3.md",
+      "zooCard": "models/depth-anything-3/README.md",
       "runner": {
         "dir": "Examples/DepthCamera",
         "xcodeproj": "DepthCamera.xcodeproj",
@@ -734,7 +734,7 @@
       }
     },
     "rf-detr": {
-      "zooCard": "zoo/rf-detr.md",
+      "zooCard": "models/rf-detr/README.md",
       "runner": {
         "dir": "Examples/DetectCamera",
         "xcodeproj": "DetectCamera.xcodeproj",
@@ -825,7 +825,7 @@
       }
     },
     "qwen3-asr-1.7b": {
-      "zooCard": "zoo/qwen3-asr.md",
+      "zooCard": "models/qwen3-asr/README.md",
       "runner": {
         "dir": "Examples/Transcribe",
         "xcodeproj": "Transcribe.xcodeproj",
@@ -854,7 +854,7 @@
       }
     },
     "parakeet-tdt-0.6b-v3": {
-      "zooCard": "zoo/parakeet.md",
+      "zooCard": "models/parakeet/README.md",
       "mediaCaption": "Parakeet-TDT 0.6B on iPhone 17 Pro — the zoo's coreai-audio app, real speed.",
       "runner": {
         "dir": "Examples/Transcribe",
@@ -914,7 +914,7 @@
       }
     },
     "yolox-s": {
-      "zooCard": "zoo/yolox.md",
+      "zooCard": "models/yolox/README.md",
       "runner": {
         "dir": "Examples/DetectCamera",
         "xcodeproj": "DetectCamera.xcodeproj",
@@ -1007,7 +1007,7 @@
       }
     },
     "holo2-4b": {
-      "zooCard": "zoo/holo2.md",
+      "zooCard": "models/holo2/README.md",
       "runner": {
         "dir": "Examples/VLChat",
         "xcodeproj": "VLChat.xcodeproj",
@@ -1033,7 +1033,7 @@
       "checklistEntitlements": "Entitlements (iOS): `com.apple.developer.kernel.increased-memory-limit`"
     },
     "kokoro-82m": {
-      "zooCard": "zoo/kokoro-82m.md",
+      "zooCard": "models/kokoro-82m/README.md",
       "runner": {
         "dir": "Examples/Speak",
         "xcodeproj": "Speak.xcodeproj",
@@ -1063,7 +1063,7 @@
       }
     },
     "vjepa2-vitl-ssv2": {
-      "zooCard": "zoo/vjepa2.md",
+      "zooCard": "models/vjepa2/README.md",
       "runner": {
         "dir": "Examples/ActionCamera",
         "xcodeproj": "ActionCamera.xcodeproj",
@@ -1093,7 +1093,7 @@
       }
     },
     "unlimited-ocr": {
-      "zooCard": "zoo/unlimited-ocr.md",
+      "zooCard": "models/unlimited-ocr/README.md",
       "runner": {
         "dir": "Examples/ReadDoc",
         "xcodeproj": "ReadDoc.xcodeproj",
@@ -1123,7 +1123,7 @@
       }
     },
     "llada-8b": {
-      "zooCard": "zoo/llada-8b.md",
+      "zooCard": "models/llada-8b/README.md",
       "runner": {
         "dir": "Examples/DiffuseChat",
         "xcodeproj": "DiffuseChat.xcodeproj",
@@ -1146,7 +1146,7 @@
       "checklistEntitlements": "Entitlements: none needed"
     },
     "ltx-video-2b": {
-      "zooCard": "zoo/ltxvideo.md",
+      "zooCard": "models/ltxvideo/README.md",
       "name": "LTX-Video 2B (distilled)",
       "repo": "mlboydaisuke/LTX-Video-2B-CoreAI",
       "appDoor": {
@@ -1155,7 +1155,7 @@
       }
     },
     "triposplat": {
-      "zooCard": "zoo/triposplat.md",
+      "zooCard": "models/triposplat/README.md",
       "name": "TripoSplat",
       "repo": "mlboydaisuke/TripoSplat-CoreAI",
       "appDoor": {
@@ -1164,7 +1164,7 @@
       }
     },
     "gemma-4-e2b": {
-      "zooCard": "zoo/gemma4-e2b.md",
+      "zooCard": "models/gemma4-e2b/README.md",
       "runner": {
         "dir": "Examples/ChatDemo",
         "xcodeproj": "ChatDemo.xcodeproj",
@@ -1195,7 +1195,7 @@
       "fmProvider": "KitGemmaModel"
     },
     "gemma-4-e4b": {
-      "zooCard": "zoo/gemma4-e4b.md",
+      "zooCard": "models/gemma4-e4b/README.md",
       "runner": {
         "dir": "Examples/ChatDemo",
         "xcodeproj": "ChatDemo.xcodeproj",
@@ -1226,7 +1226,7 @@
       "fmProvider": "KitGemmaModel"
     },
     "minicpm-v-4.6": {
-      "zooCard": "zoo/minicpm-v-4.6.md",
+      "zooCard": "models/minicpm-v-4.6/README.md",
       "runner": {
         "dir": "Examples/VLChat",
         "xcodeproj": "VLChat.xcodeproj",
@@ -1260,7 +1260,7 @@
       }
     },
     "colmodernvbert": {
-      "zooCard": "zoo/colmodernvbert.md",
+      "zooCard": "models/colmodernvbert/README.md",
       "runner": {
         "dir": "Examples/DocSearch",
         "xcodeproj": "DocSearch.xcodeproj",
@@ -1283,7 +1283,7 @@
       "checklistEntitlements": "Entitlements: none needed"
     },
     "nemotron-3-nano-4b": {
-      "zooCard": "zoo/nemotron-3-nano.md",
+      "zooCard": "models/nemotron-3-nano/README.md",
       "runner": {
         "dir": "Examples/ChatDemo",
         "xcodeproj": "ChatDemo.xcodeproj",

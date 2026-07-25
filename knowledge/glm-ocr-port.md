@@ -2,7 +2,7 @@
 
 GLM-OCR (`zai-org/GLM-OCR`, 0.9B, MIT) is a small OCR variant of **GLM-4.V** (`Glm4v`) — transformers'
 `modular_glm_ocr.py` inherits every class from `glm4v`. So the port is the shipped
-[Qwen3-VL](../zoo/qwen3-vl.md) vision idiom + a GLM text decode; no R-SWA, no MoE, no MLA.
+[Qwen3-VL](../models/qwen3-vl/README.md) vision idiom + a GLM text decode; no R-SWA, no MoE, no MLA.
 
 ## Model definition (`coreai_models/models/macos/glm_ocr.py`)
 

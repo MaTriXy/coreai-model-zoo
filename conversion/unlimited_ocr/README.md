@@ -3,7 +3,7 @@
 Port of [`baidu/Unlimited-OCR`](https://huggingface.co/baidu/Unlimited-OCR) (3B-A0.5B MoE doc-OCR,
 MIT) to Core AI: a fp16 DeepEncoder vision `.aimodel` + a sym8 DeepseekV2 **R-SWA** MoE decoder
 (unified `prefill`+`decode` bundle) driven on the **stock `coreai.runtime`** (no engine patch). See
-[`../../zoo/unlimited-ocr.md`](../../zoo/unlimited-ocr.md) and
+[`../../models/unlimited-ocr/README.md`](../../models/unlimited-ocr/README.md) and
 [`../../knowledge/unlimited-ocr-rswa-static-decode.md`](../../knowledge/unlimited-ocr-rswa-static-decode.md).
 
 ## Files

@@ -2,7 +2,7 @@
 
 Verified engineering notes from porting [`tencent/Youtu-LLM-2B`](https://huggingface.co/tencent/Youtu-LLM-2B)
 (dense DeepSeek-V2/V3 Multi-head Latent Attention, 1.96B) to Core AI. This is the zoo's
-**first MLA model that runs on iPhone** and its **first dense MLA** — [GLM-4.7-Flash](../zoo/glm-4.7-flash.md)
+**first MLA model that runs on iPhone** and its **first dense MLA** — [GLM-4.7-Flash](../models/glm-4.7-flash/README.md)
 brought MLA but as a 30B Mac-only MoE. The whole port is mostly reuse of the GLM MLA path.
 
 ## The reuse: dense MLA == GLM's MLA minus the MoE
@@ -80,5 +80,5 @@ cd coreai-models   # with the youtu overlay (../conversion)
 ```
 
 Overlay: `models/macos/youtu.py` (+ `youtu_absorbed.py`). See the [pipelined engine notes](pipelined-engine.md)
-for the decode-only static-`[1,1]` run contract, and the [GLM-4.7-Flash card](../zoo/glm-4.7-flash.md)
+for the decode-only static-`[1,1]` run contract, and the [GLM-4.7-Flash card](../models/glm-4.7-flash/README.md)
 for the shared MLA / absorbed-cache machinery.

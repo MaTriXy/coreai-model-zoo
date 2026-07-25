@@ -222,7 +222,7 @@ Source of truth: `QwenLM/Qwen3-ASR` repo `qwen_asr/core/transformers_backend/mod
   transcript). Reuses `AudioMelPreprocessor.qwen2_5Omni()` (same Whisper mel) — no Package.swift
   change (ASR/ is auto-included in the CoreAIKit target). SHIP decoder regenerated =
   `qwen3_asr_1.7b_decode_int8hu_n390_s1` (eager-int8 first-token=golden).
-  **P6 prep ✅:** zoo card `zoo/qwen3-asr.md` written.
+  **P6 prep ✅:** zoo card `models/qwen3-asr/README.md` written.
   **APP ✅ WIRED (device-test pending):** zoo `apps/coreai-audio` got a **Transcribe** tab
   (`TranscribeModel.swift` + `TranscribeView.swift`, added to the TabView). `project.yml` points
   coreai-kit at the LOCAL checkout (`path:` = your `coreai-kit` clone, to pick up the
@@ -243,7 +243,7 @@ Source of truth: `QwenLM/Qwen3-ASR` repo `qwen_asr/core/transformers_backend/mod
   `Contents/MacOS/Frameworks` for a standalone launch (Xcode Cmd+R sets the search paths, user flow OK).
   Remaining = iPhone device test (user) + commit kit ASR + HF upload (confirm).
 - **P6 ship** — HF `mlboydaisuke/Qwen3-ASR-1.7B-CoreAI` (encoder/ + decoder/ + assets/ + tokenizer/,
-  Apache-2.0) + zoo card `zoo/qwen3-asr.md` + conversion script + README row + knowledge note.
+  Apache-2.0) + zoo card `models/qwen3-asr/README.md` + conversion script + README row + knowledge note.
   0.6B falls out of the same config-driven script (encoder d896/18L/14h, FFN 3584, output_dim 1024).
 
 ## Risks / open items

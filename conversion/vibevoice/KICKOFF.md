@@ -90,7 +90,7 @@ py3.11, torch2.12.1, transformers==4.51.3, `-e ./_code`). ⚠️ patch `weights_
    read the result from `VV_RESULT=<container>/Documents/vv_result.txt` via `devicectl copy from`.)
 6. ✅ **shipped 2026-07-23** — HF [`mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI`](https://huggingface.co/mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI)
    (5 macOS `.aimodel` + 5 iOS h18p `.aimodelc` + 25 voice presets + host embedding table +
-   `device_bundle/`), zoo card `zoo/vibevoice.md` + README row, knowledge
+   `device_bundle/`), zoo card `models/vibevoice/README.md` + README row, knowledge
    `knowledge/vibevoice-multispeaker-tts.md`. Upload script = `conversion/_vibevoice_hf_upload.py`.
    Re-gated end-to-end on the day of the ship (the earlier bundles were lost to a disk sweep):
    all 5 graphs re-exported, host E2E wav cos **0.999479**, iPhone 17 Pro **cos 0.998308, 10.6 tok/s**.

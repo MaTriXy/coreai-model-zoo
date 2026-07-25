@@ -1,0 +1,15 @@
+# Recipe for whisper-large-v3-turbo — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["whisper-large-v3-turbo"]
+script = "export_whisper_fixed.py"
+args = ["--dtype", "float16"]
+card = "README.md"
+hf_repo = "mlboydaisuke/whisper-large-v3-turbo-CoreAI-official"
+bundle = "whisper-large-v3-turbo_float16_fixed128.aimodel"
+status = "verified"
+notes = [
+  "Fixed 128-frame decode window (the _fixed128 in the name is not configurable).",
+  "Published under the -official suffix because it re-exports Apple's own model choice.",
+]

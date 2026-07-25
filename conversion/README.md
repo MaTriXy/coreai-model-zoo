@@ -2,8 +2,9 @@
 
 PyTorch → Core AI `.aimodel`: re-authored models + convert / verify / compress scripts.
 
-**One-command entry point**: verified ship configs are indexed in [`recipes.toml`](recipes.toml)
-and run through [`zoo_convert.py`](zoo_convert.py) —
+**One-command entry point**: the configuration that produced each published bundle lives beside
+its card in [`models/<model>/recipe.toml`](../models/) and runs through
+[`zoo_convert.py`](zoo_convert.py) —
 `python3 zoo_convert.py doctor` checks your venv + overlay wiring, then
 `python3 zoo_convert.py run qwen3.5-0.8b`. The model authoring code the scripts import is
 packaged in [`overlay/`](overlay/) (pinned apple/coreai-models base + patch + files).
@@ -36,7 +37,11 @@ These are packaged as a pinned-base patch set + file overlay in [`overlay/`](ove
 conversion environment byte-for-byte (verified 2026-07-03). After new porting work on the live
 checkout, refresh it with `overlay/regen.sh`.
 
-## Scripts (current locations, to be consolidated here)
+## Scripts
+
+Several families share one exporter (the Qwen3.5 script also drives Ornith and
+Qwen3.6-27B), which is why the scripts live here rather than under `models/<model>/` as in
+Apple's repo; each recipe names the script it runs.
 
 - **FastContext-1.0-4B-SFT (STOCK — no re-authoring): `coreai.llm.export fastcontext-4b`** —
   Microsoft's Qwen3-4B-arch repo-exploration agent is byte-identical to `Qwen/Qwen3-4B`, so it
@@ -47,7 +52,7 @@ checkout, refresh it with `overlay/regen.sh`.
   On-device the 4B graph can't specialize, so ship the **AOT** bundle:
   `coreai-build compile exports/fastcontext_4b_dynamic/*.aimodel --platform iOS --preferred-compute gpu --architecture h18p`
   → the `gpu/` `.aimodelc` (see [`../knowledge/aot-and-specialization.md`](../knowledge/aot-and-specialization.md)
-  and [`../zoo/fastcontext.md`](../zoo/fastcontext.md)). The zoo's first stock-architecture model —
+  and [`../models/fastcontext/README.md`](../models/fastcontext/README.md)). The zoo's first stock-architecture model —
   the template for "drop-in any HF model the stock exporter already supports."
 - **Holo2-4B (STOCK Qwen3-VL drop-in): `export_qwen3_vl_pipelined.py int8lin --hf-id Hcompany/Holo2-4B`** —
   H Company's GUI-grounding / computer-use VLM is byte-identical to Qwen3-VL-4B, so the zoo's Qwen3-VL
@@ -56,7 +61,7 @@ checkout, refresh it with `overlay/regen.sh`.
   steps token-exact**. The decode `_s1` is a STATIC graph → specializes on-device, no AOT (unlike a
   dense 4B *dynamic* bundle). Gate harness for tf-4.57: `_smoke/qwen3vl_capture_ref.py` +
   `test_qwen3vl_aimodel_gate.py` patched (rope_scaling/get_image_features-tuple/get_rope_index sig;
-  `QWEN3VL_MID`/`QWEN3VL_REF`/`QWEN3VL_NLAYERS=36` envs). See [`../zoo/holo2.md`](../zoo/holo2.md). The
+  `QWEN3VL_MID`/`QWEN3VL_REF`/`QWEN3VL_NLAYERS=36` envs). See [`../models/holo2/README.md`](../models/holo2/README.md). The
   VLM analogue of the FastContext stock-drop-in template.
 - Gemma 4: `convert.py` / `convert_palettize.py` (int8 `all8`) / `convert_stateful*.py` (stateful +
   ring) / `convert_head.py` / `check_pipeline.py` / `verify_*` — the full convert+verify harness.
@@ -77,7 +82,7 @@ checkout, refresh it with `overlay/regen.sh`.
   (`int8hu --head-sym`) / 162 fp16 on M4 Max**, oracle gate 16/16 (all three). Model overlay: `models/macos/lfm2.py` on the `coreai-models` checkout — it bakes in
   two macOS-27-beta GPU-delegate workarounds (fused single conv-state write; fp32 attention
   projections). Same engine patch + `COREAI_CHUNK_THRESHOLD=1` run contract. See
-  [`../zoo/lfm2.5.md`](../zoo/lfm2.5.md).
+  [`../models/lfm2.5/README.md`](../models/lfm2.5/README.md).
 - **Gemma 4 E2B / E4B pipelined fast path (in this dir): `export_gemma4_decode_pipelined.py [int4lin]`** —
   decode-only S=1 bundle whose per-layer-embedding rows arrive as a per-token INPUT (the 9.4 GB
   PLE table stays a host mmap): in-graph embed + softcapped head, ONE unified padded KV pair,
@@ -98,7 +103,7 @@ checkout, refresh it with `overlay/regen.sh`.
   absmax int4, so these bundles carry Google's "≈ bf16" QAT quality claim. Regenerate the
   PLE dump (`--out`) and the oracle (`gen_gemma4_prompt.py --tag`) from the same
   checkpoint; `--lin-sym` exports the literal-q4_0-grid (absmax) variant (measured: same
-  gate, same speed). See [`../zoo/gemma4-e4b.md`](../zoo/gemma4-e4b.md).
+  gate, same speed). See [`../models/gemma4-e4b/README.md`](../models/gemma4-e4b/README.md).
 - **Granite 4.0-H pipelined (in this dir): `export_granite4h_decode_pipelined.py [fp16|int8lin|int8hu]`** —
   the first Mamba2/SSM-scan rider: at S=1 the selective scan is a single recurrence step
   (loop-free, no while_loop), states = KV (4 attn layers) + conv/SSM stacks (= the ≤2
@@ -107,7 +112,7 @@ checkout, refresh it with `overlay/regen.sh`.
   pending, the qwen "Mac no-win ≠ device no-win" pattern); `--hf-id ibm-granite/granite-4.0-h-350m` exports the 350m (ship fp16 there, 191
   tok/s — int8 fails the gate at that scale and is no faster). Model overlay:
   `models/macos/granite4h.py`. Same engine patch + `COREAI_CHUNK_THRESHOLD=1` run contract.
-  See [`../zoo/granite-4.0-h.md`](../zoo/granite-4.0-h.md).
+  See [`../models/granite-4.0-h/README.md`](../models/granite-4.0-h/README.md).
 - **Qwen3-VL 2B pipelined — the first VLM (in this dir): `export_qwen3_vl_pipelined.py [fp16|int8lin|int8hu]`** —
   emits the text-decoder bundle (+ a `_s1` static-query twin that carries the python
   oracle gates) AND the fixed-grid vision encoder `.aimodel`. Multimodal state rides the
@@ -115,7 +120,7 @@ checkout, refresh it with `overlay/regen.sh`.
   as extension ids `V+slot`, interleaved M-RoPE derived in-graph from (ids, pos) + two
   `[1] i32` shift inputs. int8hu **187.6 tok/s decode** on M4 Max, multimodal oracle
   gates 4/4+16/16+HF-seeded vs fp32-HF; iPhone numerics 24/24 (text AND image prompts).
-  Model overlay: `models/macos/qwen3_vl.py`. See [`../zoo/qwen3-vl.md`](../zoo/qwen3-vl.md).
+  Model overlay: `models/macos/qwen3_vl.py`. See [`../models/qwen3-vl/README.md`](../models/qwen3-vl/README.md).
 - **Gemma 4 E2B VISION pipelined — the second VLM (in this dir): `export_gemma4_vl_pipelined.py [fp16|int8lin|int4lin] [--lin-sym] [--tbl]`** —
   the Qwen3-VL rider recipe on the shipped gemma4 decoder: a fixed-grid SigLIP-class vision
   tower (48×48 patches = 768×768 square → 256 soft tokens, checkpoint-calibrated activation
@@ -126,7 +131,7 @@ checkout, refresh it with `overlay/regen.sh`.
   prefill / 82.4 decode tok/s**; iPhone provider mode **41.2 / 25.5** (the tbl gather overflows
   the iOS ~208 KB per-encode MPSGraph scratch heap — an engine bug, second reproducer).
   Model overlay: `models/macos/gemma4_vision.py` + the `Gemma4VLPipelined*` subclasses in
-  `models/macos/gemma4_pipelined.py`. See [`../zoo/gemma4-vl.md`](../zoo/gemma4-vl.md).
+  `models/macos/gemma4_pipelined.py`. See [`../models/gemma4-vl/README.md`](../models/gemma4-vl/README.md).
 - **Unlimited-OCR — document OCR, zoo's first doc-OCR, on the STOCK runtime (no patch): [`unlimited_ocr/`](unlimited_ocr)** —
   baidu/Unlimited-OCR (3B-A0.5B MoE, MIT) → fp16 DeepEncoder vision `.aimodel` + a sym8 DeepseekV2
   **R-SWA** MoE decoder (unified `prefill`+`decode` bundle). Driven on `inputs_embeds` directly, so
@@ -134,20 +139,20 @@ checkout, refresh it with `overlay/regen.sh`.
   full fixed-buffer R-SWA mask, `pos [1]` as a value not a shape) → no per-step recompile (a growing
   shape *faults* on Metal 4) → **flat 12.7 ms/token**. Image→markdown (tables→HTML, formulas→LaTeX);
   arrangement assets shipped raw for host-side assembly. App: `apps/CoreAIOCR` (drives the stock
-  runtime via `InferenceFunction.MutableViews`). See [`../zoo/unlimited-ocr.md`](../zoo/unlimited-ocr.md)
+  runtime via `InferenceFunction.MutableViews`). See [`../models/unlimited-ocr/README.md`](../models/unlimited-ocr/README.md)
   + [`../knowledge/unlimited-ocr-rswa-static-decode.md`](../knowledge/unlimited-ocr-rswa-static-decode.md).
 - **GLM-OCR — doc-OCR (GLM-4.V small): `export_glm_ocr_pipelined.py [fp16|int8lin|int8hu] [--grid-h H --grid-w W]`** —
   zai-org/GLM-OCR (0.9B, MIT) → CogViT vision `.aimodel` (fp16) + a GLM text decoder (int8hu) on the
   pipelined rope-shift rider (`image_embeds` + `rope_shift_start`/`rope_shift_amount`). GLM ChatML
   (`[gMASK]<sop>…<|assistant|>`), single-pass `Text Recognition:`, tables → Markdown. App: `KitGlmOcrReader`
-  in `Examples/ReadDoc`. See [`../zoo/glm-ocr.md`](../zoo/glm-ocr.md)
+  in `Examples/ReadDoc`. See [`../models/glm-ocr/README.md`](../models/glm-ocr/README.md)
   + [`../knowledge/glm-ocr-port.md`](../knowledge/glm-ocr-port.md).
 - **MinerU2.5-Pro — whole-page auto-structuring doc-OCR (stock Qwen2-VL): `export_mineru_pipelined.py [fp16|int8lin] [--grid-h H --grid-w W] [--prefill-chunk 64]`** —
   opendatalab/MinerU2.5-Pro (1.2B, Apache-2.0) → Qwen2-VL ViT vision `.aimodel` (fp16) + Qwen2-0.5B
   int8lin decoder on the same rider. **Two grids**: 768 (32×24 portrait) recognition + 1036² (37×37
   square) layout for the 2-stage pipeline (`Layout Detection:` → per-region recognition → `json2md`,
   tables → `<table>` HTML via OTSL). `--prefill-chunk 64` = `pf64` multifunction chunked prefill. App:
-  `KitMineruReader.readStructured` in `Examples/ReadDoc`. See [`../zoo/mineru.md`](../zoo/mineru.md)
+  `KitMineruReader.readStructured` in `Examples/ReadDoc`. See [`../models/mineru/README.md`](../models/mineru/README.md)
   + [`../knowledge/mineru-port.md`](../knowledge/mineru-port.md).
 - **Qwen3.6-35B-A3B pipelined — the first MoE (in this dir): `export_qwen3_6_decode_pipelined.py [int8lin|int8hu]`** —
   Qwen3.5's hybrid decoder + a 256-expert top-8 sparse-MoE FFN (+ shared expert), 40 layers,
@@ -160,7 +165,7 @@ checkout, refresh it with `overlay/regen.sh`.
   packed-expert loader) on top of `qwen3_5.py` (which gained the GVA head-repeat). **NOTE:
   raw `AIModel.load(gpu)` aborts on the MoE→ANE path (`ANE compilation writeToFile failed!`
   / 100 GB temp blowup); the real engine's `expectFrequentReshapes` avoids it — run via
-  `llm-benchmark`/`llm-runner`, not raw load.** See [`../zoo/qwen3.6.md`](../zoo/qwen3.6.md).
+  `llm-benchmark`/`llm-runner`, not raw load.** See [`../models/qwen3.6/README.md`](../models/qwen3.6/README.md).
 - **Qwen3.6-27B (dense) pipelined — reuse the qwen3.5 script: `export_qwen3_5_decode_pipelined.py int8hu --head-sym --hf-id Qwen/Qwen3.6-27B`** —
   the **dense** Mac-class companion to the 35B-A3B: the *same* Qwen3.5 hybrid decoder (3:1
   GatedDeltaNet + gated full attention, head_dim 256) run **without MoE**, 64 layers, GVA
@@ -171,7 +176,7 @@ checkout, refresh it with `overlay/regen.sh`.
   int8 == full precision at every confident position (teacher-forced vs bf16 oracle; the lone
   confident oracle disagreement is an fp16-identical bf16 artifact). Mac-only (28 GB > iPhone
   jetsam). No MoE files — reuses `models/macos/qwen3_5.py` directly. See
-  [`../zoo/qwen3.6-27b.md`](../zoo/qwen3.6-27b.md).
+  [`../models/qwen3.6-27b/README.md`](../models/qwen3.6-27b/README.md).
 - **Ornith-1.0-9B (agentic coding) pipelined — reuse the qwen3.5 script: `export_qwen3_5_decode_pipelined.py int8hu --head-sym --hf-id deepreinforce-ai/Ornith-1.0-9B --max-ctx 8192`** —
   DeepReinforce's self-scaffolding agentic coder is a **stock Qwen3.5 hybrid decoder**
   (`model_type qwen3_5`, 32 layers, GVA 32v/16k, GQA 16/4 hd256, untied 248320 head at the
@@ -183,7 +188,7 @@ checkout, refresh it with `overlay/regen.sh`.
   fp16, int8hu AND int4lin; release `llm-runner` greedy on raw prompt ids **12/12 ≡ oracle** (both bundles).
   Oracle/gate scripts: [`../_smoke/gen_ornith9b_ref.py`](../_smoke/gen_ornith9b_ref.py) +
   [`../_smoke/test_ornith9b_eager_gate.py`](../_smoke/test_ornith9b_eager_gate.py).
-  Mac ship (9.8 GB > iPhone jetsam). See [`../zoo/ornith-1.0-9b.md`](../zoo/ornith-1.0-9b.md).
+  Mac ship (9.8 GB > iPhone jetsam). See [`../models/ornith-1.0-9b/README.md`](../models/ornith-1.0-9b/README.md).
 - **Gemma 4 12B (dense) pipelined (in this dir): `export_gemma4_12b_decode_pipelined.py [int4lin|int8lin|fp16] [--lin-sym] [--metal-sdpa]`** —
   the 12B-class **clean dense** Gemma 4 (`gemma4_unified`): no PLE/AltUp/Laurel/MoE/KV-sharing,
   48 layers, dual head_dim 256/512, dual KV-head count via `attention_k_eq_v` (full layers = 1 KV
@@ -198,13 +203,13 @@ checkout, refresh it with `overlay/regen.sh`.
   `int4lin --lin-sym --metal-sdpa` (faster 4-bit, 33.0 tok/s). Overlays:
   `models/macos/gemma4_dense_{text,pipelined,metal_sdpa}.py`. Gate via
   `_smoke/engine_tokenmatch_gemma4_12b.py`, run SOLO (parallel python-GPU → MTL4CommandQueueError).
-  See [`../zoo/gemma4-12b.md`](../zoo/gemma4-12b.md).
+  See [`../models/gemma4-12b/README.md`](../models/gemma4-12b/README.md).
 - **Gemma 4 31B (dense) pipelined (same script): `export_gemma4_12b_decode_pipelined.py int4lin --lin-sym --metal-sdpa --hf-id google/gemma-4-31B-it-qat-q4_0-unquantized`** —
   the **frontier dense** twin of the 12B (60 layers, hidden 5376, 32 heads, **4 global KV heads**,
   same dual head_dim 256/512). Reuses the 12B overlay verbatim — the `--metal-sdpa` kernel does
   block GQA over the unified cache (`repeat_interleave` replication: correct for the 31B's 4 global
   heads, a no-op for the 12B's 1). Same #27 scratch-heap bypass. Ship = `int4lin --lin-sym`
-  (q4_0 QAT, ~19 GB Mac-only, M4 Max 17.2 tok/s decode). See [`../zoo/gemma4-31b.md`](../zoo/gemma4-31b.md).
+  (q4_0 QAT, ~19 GB Mac-only, M4 Max 17.2 tok/s decode). See [`../models/gemma4-31b/README.md`](../models/gemma4-31b/README.md).
 
 - **RF-DETR (object detection, in this dir): `export_rf_detr.py --variant {nano|small|medium|large}`** —
   the zoo's first detector ([apple/coreai-models#14](https://github.com/apple/coreai-models/issues/14)):
@@ -217,7 +222,7 @@ checkout, refresh it with `overlay/regen.sh`.
   `--variant seg-nano…seg-2xlarge` = RF-DETR-Seg instance segmentation (6 sizes, masks
   [1,Q,R/4,R/4], gated mask-IoU 1.000) and `--split` = backbone/head bundles for per-stage
   compute units. `pip install rfdetr==1.7.1`, torch ≤ 2.11.
-  See [`../zoo/rf-detr.md`](../zoo/rf-detr.md).
+  See [`../models/rf-detr/README.md`](../models/rf-detr/README.md).
 
 - **YOLOX (single-stage anchor-free detection, in this dir): `export_yolox.py --variant s`** —
   the zoo's first YOLO-family / dense detector (CNN counterpart to RF-DETR's DETR):
@@ -232,7 +237,7 @@ checkout, refresh it with `overlay/regen.sh`.
   cpu+gpu vs torch fp32. `--variant {nano,tiny,s,m,l,x}`, `--verify-image <img> --unit
   {cpu,gpu}` gates end-to-end. Needs a
   [YOLOX](https://github.com/Megvii-BaseDetection/YOLOX) checkout + `yolox_s.pth` +
-  `pip install loguru`, torch ≤ 2.11. See [`../zoo/yolox.md`](../zoo/yolox.md).
+  `pip install loguru`, torch ≤ 2.11. See [`../models/yolox/README.md`](../models/yolox/README.md).
 
 - **Kokoro-82M (text-to-speech, the zoo's first TTS, in this dir): `export_kokoro.py`** —
   StyleTTS2 + iSTFTNet cut into **three** fixed-bucket `.aimodel` bundles around the
@@ -249,7 +254,7 @@ checkout, refresh it with `overlay/regen.sh`.
   conv1d (symbolic length / all-zeros on the engine). Run on the **CPU** compute unit
   (unrolled LSTM ~8 ms). Spectral gate (`--verify`): magspec-corr 0.999 vs torch
   (waveform 0.98 = bounded pad-boundary effect). `pip install kokoro misaki soundfile`,
-  torch ≤ 2.11. See [`../zoo/kokoro-82m.md`](../zoo/kokoro-82m.md).
+  torch ≤ 2.11. See [`../models/kokoro-82m/README.md`](../models/kokoro-82m/README.md).
 
 ## Reproduce (env)
 

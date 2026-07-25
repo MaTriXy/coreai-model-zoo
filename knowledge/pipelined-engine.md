@@ -336,7 +336,7 @@ at 210. CoreAIChat downloads the ship bundle since 2026-06-11 (chat-surface deco
 ## VLM rider: Qwen3-VL (the id-space trick)
 
 A text-only engine can carry a full VLM without engine changes — proven by
-Qwen3-VL 2B (zoo/qwen3-vl.md, 187.6 tok/s M4 Max, iPhone numerics 24/24):
+Qwen3-VL 2B (models/qwen3-vl/README.md, 187.6 tok/s M4 Max, iPhone numerics 24/24):
 
 - **Vision tower = a separate plain `.aimodel`** run once per image; at a
   fixed grid every positional computation (pos-embed interpolation, 2D
@@ -365,7 +365,7 @@ at all (gate via a static-S=1 twin bundle).
 
 ### Second rider: Gemma 4 E2B VL (and what it added to the recipe)
 
-Gemma 4 E2B vision (zoo/gemma4-vl.md, 82.4 tok/s M4 Max / 25.5 iPhone) reuses
+Gemma 4 E2B vision (models/gemma4-vl/README.md, 82.4 tok/s M4 Max / 25.5 iPhone) reuses
 the id-space trick on an ALREADY-SHIPPED text decoder — same checkpoint, same
 PLE tables — and is simpler than Qwen3-VL (no M-RoPE, no DeepStack, standard
 positions). New, generalizable findings:
@@ -419,7 +419,7 @@ positions). New, generalizable findings:
   higher fraction than qwen-0.8B's ~60%; cold specialization 6.8 s / warm 1.6 s, no AOT),
   oracle gate 16/16 both, engine path ≡ python 24/24, iPhone ≡ Mac-GPU 24/24 on both fixed
   prompts — needed the two GPU-delegate workarounds above, see
-  [`../zoo/lfm2.5.md`](../zoo/lfm2.5.md)), Mamba2+attention (Granite-4.0-H /
+  [`../models/lfm2.5/README.md`](../models/lfm2.5/README.md)), Mamba2+attention (Granite-4.0-H /
   Falcon-H1-class: conv + ssm state = exactly 2 — **verified 2026-06-11 on
   Granite-4.0-h-1b + 350m, Mac AND iPhone, the first SSM-scan rider**: at S=1 the Mamba2
   selective scan is a single recurrence step (the HF `use_precomputed_states` branch),
@@ -432,7 +432,7 @@ positions). New, generalizable findings:
   step, see the margin rule below) *and* is no faster (overhead-bound at 0.7 GB); neither
   LFM2.5 delegate workaround needed — per-layer `SSMState` writes compile fine and NoPE
   attention shows no fp16 amplification, see
-  [`../zoo/granite-4.0-h.md`](../zoo/granite-4.0-h.md)), GDN hybrids (qwen3.5 family incl. 2B —
+  [`../models/granite-4.0-h/README.md`](../models/granite-4.0-h/README.md)), GDN hybrids (qwen3.5 family incl. 2B —
   **verified 2026-06-11, Mac AND iPhone**: same script via `--hf-id Qwen/Qwen3.5-2B`, zero new
   work; ship config adds the per-block-32 absmax int8 head → **161 tok/s M4 Max,
   28–30 tok/s iPhone** (≥ the CoreML-2B port's ~27), oracle gate 16/16, 24/24 ≡ Mac-GPU

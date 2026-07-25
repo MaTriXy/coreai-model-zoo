@@ -37,9 +37,12 @@ zoo's own pre-b2 artifacts are being migrated for the same reason.
 3. **Host the bundle on your own Hugging Face account** — that's fine and encouraged (your
    models, your name). The CoreAIKit catalog pins a specific revision hash, so apps get the
    exact verified bytes regardless of where the repo lives.
-4. **Open a PR here** with: `zoo/<model-id>.md` (the card — copy an existing one's structure),
-   the conversion script under `conversion/`, and the gate outputs (parity numbers + measured
-   speed, environment noted).
+4. **Open a PR here** with: `models/<model-id>/README.md` (the card — copy an existing one's
+   structure), `models/<model-id>/recipe.toml` (the exact configuration that produced the bundle
+   you published — `python3 conversion/zoo_convert.py show <name>` must print a complete
+   command), the conversion script under `conversion/`, and the gate outputs (parity numbers +
+   measured speed, environment noted). `python3 conversion/zoo_verify.py <your-hf-repo>` should
+   report no FAIL.
 5. **Review + enrollment** — after review, the model is enrolled in the
    [coreai-kit](https://github.com/john-rocky/coreai-kit) catalog with its revision pin (plus
    engine/runtime glue if it's a new capability kind), and the card gets its generated

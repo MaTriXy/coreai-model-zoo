@@ -62,7 +62,7 @@ and 85.2 tok/s on an M4 Max GPU. Greedy output is token-identical to the fp32
 Requires `COREAI_CHUNK_THRESHOLD=1` (S=1 bundle) and an engine that carries two extra
 fixed-shape states (the Mamba conv columns + SSM state) alongside the KV cache.
 
-Port + recipe: [coreai-model-zoo / nemotron-3-nano](https://github.com/john-rocky/coreai-model-zoo/blob/main/zoo/nemotron-3-nano.md)
+Port + recipe: [coreai-model-zoo / nemotron-3-nano](https://github.com/john-rocky/coreai-model-zoo/blob/main/models/nemotron-3-nano/README.md)
 """
 
 

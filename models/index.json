@@ -1,0 +1,1688 @@
+{
+ "generated": "2026-07-25",
+ "how_to_use": {
+  "list": "python3 conversion/zoo_convert.py list",
+  "show": "python3 conversion/zoo_convert.py show <recipe>",
+  "reproduce": "python3 conversion/zoo_convert.py run <recipe>",
+  "verify": "python3 conversion/zoo_verify.py <hf_repo>",
+  "skill": "skills/skills/reproduce-a-zoo-model/SKILL.md"
+ },
+ "models": [
+  {
+   "family": "bitcpm-8b",
+   "card": "models/bitcpm-8b/README.md",
+   "recipes": [
+    {
+     "name": "bitcpm-8b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/BitCPM-8B-CoreAI",
+     "bundle": "gpu-pipelined/bitcpm_8b_decode_ternary_s1",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run bitcpm-8b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/BitCPM-8B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu-pipelined/bitcpm_8b_decode_ternary_s1"
+     ],
+     "tier1": {
+      "PASS": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "bitvla",
+   "card": "models/bitvla/README.md",
+   "recipes": [
+    {
+     "name": "bitvla",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/BitVLA-CoreAI",
+     "bundle": null,
+     "steps": 2,
+     "run": "python3 conversion/zoo_convert.py run bitvla",
+     "open_questions": [
+      "Which flags produced the published pair? Neither the card nor the bundle names record them."
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/BitVLA-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "aimodel/bitvla_llm_act/bitvla_llm_act.aimodel",
+      "aimodel/bitvla_vision/bitvla_vision.aimodel",
+      "h18p/bitvla_llm_act/bitvla_llm_act.h18p.aimodelc",
+      "h18p/bitvla_vision/bitvla_vision.h18p.aimodelc"
+     ],
+     "tier1": {
+      "SKIPPED": 4
+     }
+    }
+   ]
+  },
+  {
+   "family": "colmodernvbert",
+   "card": "models/colmodernvbert/README.md",
+   "recipes": [
+    {
+     "name": "colmodernvbert",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/ColModernVBERT-CoreAI",
+     "bundle": null,
+     "steps": 2,
+     "run": "python3 conversion/zoo_convert.py run colmodernvbert",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/ColModernVBERT-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "doc/colmodernvbert-doc_float16_s89_static.aimodel",
+      "fp32/doc/colmodernvbert-doc_float32_s89_static.aimodel",
+      "fp32/query/colmodernvbert-query_float32_s32_static.aimodel",
+      "query/colmodernvbert-query_float16_s32_static.aimodel"
+     ],
+     "tier1": {
+      "PASS": 4
+     }
+    }
+   ]
+  },
+  {
+   "family": "depth-anything-3",
+   "card": "models/depth-anything-3/README.md",
+   "recipes": [
+    {
+     "name": "depth-anything-3-small",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Depth-Anything-3-CoreAI",
+     "bundle": "small/da3-small_float16.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run depth-anything-3-small",
+     "open_questions": []
+    },
+    {
+     "name": "depth-anything-3-base",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Depth-Anything-3-CoreAI",
+     "bundle": "base/da3-base_float16.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run depth-anything-3-base",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Depth-Anything-3-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "base/da3-base_float16.aimodel",
+      "base/da3-base_float32.aimodel",
+      "small/da3-small_float16.aimodel",
+      "small/da3-small_float32.aimodel"
+     ],
+     "tier1": {
+      "PASS": 4
+     }
+    }
+   ]
+  },
+  {
+   "family": "fastcontext",
+   "card": "models/fastcontext/README.md",
+   "recipes": [
+    {
+     "name": "fastcontext-4b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/FastContext-1.0-4B-CoreAI",
+     "bundle": "gpu",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run fastcontext-4b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/FastContext-1.0-4B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu"
+     ],
+     "tier1": {
+      "PASS": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "gemma4-12b",
+   "card": "models/gemma4-12b/README.md",
+   "recipes": [
+    {
+     "name": "gemma-4-12b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Gemma-4-12B-CoreAI",
+     "bundle": "gpu-pipelined/gemma4_12b_qat_decode_int4linsym_msdpa_g8",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run gemma-4-12b",
+     "open_questions": []
+    },
+    {
+     "name": "gemma-4-12b-int8",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Gemma-4-12B-CoreAI",
+     "bundle": "gpu-pipelined/gemma4_12b_qat_decode_int8lin_msdpa_g8",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run gemma-4-12b-int8",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Gemma-4-12B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu-pipelined/gemma4_12b_qat_decode_int4linsym_msdpa_g8",
+      "gpu-pipelined/gemma4_12b_qat_decode_int8lin_msdpa_g8"
+     ],
+     "tier1": {
+      "DIFF": 2
+     }
+    }
+   ]
+  },
+  {
+   "family": "gemma4-31b",
+   "card": "models/gemma4-31b/README.md",
+   "recipes": [
+    {
+     "name": "gemma-4-31b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Gemma-4-31B-CoreAI",
+     "bundle": "gpu-pipelined/gemma4_31b_qat_decode_int4linsym_msdpa_g8",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run gemma-4-31b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Gemma-4-31B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu-pipelined/gemma4_31b_qat_decode_int4linsym_msdpa_g8"
+     ],
+     "tier1": {
+      "DIFF": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "gemma4-e2b",
+   "card": "models/gemma4-e2b/README.md",
+   "recipes": [
+    {
+     "name": "gemma-4-e2b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/gemma-4-E2B-CoreAI",
+     "bundle": "gpu-pipelined/gemma4_e2b_qat_decode_int4lin_tbl",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run gemma-4-e2b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/gemma-4-E2B-CoreAI",
+     "downloads_30d": 395,
+     "bundles": [
+      "gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl",
+      "gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl_aotc_h18p",
+      "gpu-pipelined/gemma4_e2b_decode_int4lin_tbl",
+      "gpu-pipelined/gemma4_e2b_decode_int4lin_tbl_aotc_h18p",
+      "gpu-pipelined/gemma4_e2b_qat_decode_int4lin_tbl",
+      "gpu-pipelined/gemma4_e2b_qat_decode_int4lin_tbl_aotc_h18p",
+      "gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym",
+      "gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym_aotc_h18p",
+      "gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym_tbl",
+      "gpu-pipelined/gemma4_e2b_qat_vl_vision/gemma4_e2b_qat_vl_vision.aimodel",
+      "ios-ane/gemma4_e2b_head_argmax_int8.aimodel",
+      "ios-ane/gemma4_e2b_hostcache_chunk1_int8.aimodel",
+      "ios-ane/gemma4_e2b_hostcache_chunk2_int8.aimodel",
+      "ios-ane/gemma4_e2b_hostcache_chunk3_int8.aimodel",
+      "ios-ane/gemma4_e2b_hostcache_chunk4_int8.aimodel",
+      "ios-ane/gemma4_e2b_hostcache_chunk5_int8.aimodel",
+      "ios-ane/gemma4_e2b_hostcache_chunk6_int8.aimodel",
+      "ios-gpu/gemma4_e2b_head_argmax_int4km.aimodel",
+      "ios-gpu/gemma4_e2b_metal_int4km_L35.aimodel",
+      "macos/gemma4_e2b_frontend_int8.aimodel",
+      "macos/gemma4_e2b_head_argmax_kernel.aimodel",
+      "macos/gemma4_e2b_metal_int8v3_L35.aimodel"
+     ],
+     "tier1": {
+      "PASS": 10,
+      "DIFF": 2,
+      "FAIL": 7,
+      "SKIPPED": 3
+     }
+    }
+   ]
+  },
+  {
+   "family": "gemma4-e4b",
+   "card": "models/gemma4-e4b/README.md",
+   "recipes": [
+    {
+     "name": "gemma-4-e4b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/gemma-4-E4B-CoreAI",
+     "bundle": "gpu-pipelined/gemma4_e4b_qat_decode_int4lin",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run gemma-4-e4b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/gemma-4-E4B-CoreAI",
+     "downloads_30d": 163,
+     "bundles": [
+      "gpu-pipelined/gemma4_e4b_qat_decode_int4lin",
+      "gpu-pipelined/gemma4_e4b_qat_decode_int4lin_aotc_h18p",
+      "gpu-pipelined/gemma4_e4b_qat_decode_int4lin_tbl"
+     ],
+     "tier1": {
+      "FAIL": 3
+     }
+    }
+   ]
+  },
+  {
+   "family": "gemma4-vl",
+   "card": "models/gemma4-vl/README.md",
+   "recipes": [
+    {
+     "name": "gemma-4-e2b-vl",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/gemma-4-E2B-CoreAI",
+     "bundle": "gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym_tbl",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run gemma-4-e2b-vl",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/gemma-4-E2B-CoreAI",
+     "downloads_30d": 395,
+     "bundles": [
+      "gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl",
+      "gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl_aotc_h18p",
+      "gpu-pipelined/gemma4_e2b_decode_int4lin_tbl",
+      "gpu-pipelined/gemma4_e2b_decode_int4lin_tbl_aotc_h18p",
+      "gpu-pipelined/gemma4_e2b_qat_decode_int4lin_tbl",
+      "gpu-pipelined/gemma4_e2b_qat_decode_int4lin_tbl_aotc_h18p",
+      "gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym",
+      "gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym_aotc_h18p",
+      "gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym_tbl",
+      "gpu-pipelined/gemma4_e2b_qat_vl_vision/gemma4_e2b_qat_vl_vision.aimodel",
+      "ios-ane/gemma4_e2b_head_argmax_int8.aimodel",
+      "ios-ane/gemma4_e2b_hostcache_chunk1_int8.aimodel",
+      "ios-ane/gemma4_e2b_hostcache_chunk2_int8.aimodel",
+      "ios-ane/gemma4_e2b_hostcache_chunk3_int8.aimodel",
+      "ios-ane/gemma4_e2b_hostcache_chunk4_int8.aimodel",
+      "ios-ane/gemma4_e2b_hostcache_chunk5_int8.aimodel",
+      "ios-ane/gemma4_e2b_hostcache_chunk6_int8.aimodel",
+      "ios-gpu/gemma4_e2b_head_argmax_int4km.aimodel",
+      "ios-gpu/gemma4_e2b_metal_int4km_L35.aimodel",
+      "macos/gemma4_e2b_frontend_int8.aimodel",
+      "macos/gemma4_e2b_head_argmax_kernel.aimodel",
+      "macos/gemma4_e2b_metal_int8v3_L35.aimodel"
+     ],
+     "tier1": {
+      "PASS": 10,
+      "DIFF": 2,
+      "FAIL": 7,
+      "SKIPPED": 3
+     }
+    }
+   ]
+  },
+  {
+   "family": "gliner2-pii",
+   "card": "models/gliner2-pii/README.md",
+   "recipes": [
+    {
+     "name": "gliner2-pii",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/GLiNER2-PII-CoreAI",
+     "bundle": "macos/gliner2-pii_float16_s256_t96_m16.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run gliner2-pii",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/GLiNER2-PII-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "ios/gliner2-pii_float16_s256_t96_m16.aimodel",
+      "macos/gliner2-pii_float16_s256_t96_m16.aimodel"
+     ],
+     "tier1": {
+      "PASS": 2
+     }
+    }
+   ]
+  },
+  {
+   "family": "glm-4.7-flash",
+   "card": "models/glm-4.7-flash/README.md",
+   "recipes": [
+    {
+     "name": "glm-4.7-flash",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/GLM-4.7-Flash-CoreAI",
+     "bundle": "gpu-pipelined/glm_4_7_flash_decode_sym8_gather",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run glm-4.7-flash",
+     "open_questions": [
+      "Same head-flag ambiguity as qwen3.6-35b-a3b: --head-sym / --head-quant change the artifact and",
+      "do not appear in the name."
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/GLM-4.7-Flash-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu-pipelined/glm_4_7_flash_decode_sym8_gather"
+     ],
+     "tier1": {
+      "PASS": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "glm-image",
+   "card": "models/glm-image/README.md",
+   "recipes": [
+    {
+     "name": "glm-image",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/GLM-Image-CoreAI",
+     "bundle": null,
+     "steps": 3,
+     "run": "python3 conversion/zoo_convert.py run glm-image",
+     "open_questions": [
+      "Resolution-specific bundles (512 and 1024) ship for the DiT and the VAE \u2014 which flag selects",
+      "the resolution, and was the fp32 VAE exporter (export_glm_image_vae_fp32.py) used for either?",
+      "This port is still in flight; the card is not final."
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/GLM-Image-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "glm_image_ar.aimodelc",
+      "glm_image_dit_1024.aimodelc",
+      "glm_image_dit_512.aimodelc",
+      "glm_image_vae_1024.aimodel",
+      "glm_image_vae_512.aimodel"
+     ],
+     "tier1": {
+      "SKIPPED": 5
+     }
+    }
+   ]
+  },
+  {
+   "family": "glm-ocr",
+   "card": "models/glm-ocr/README.md",
+   "recipes": [
+    {
+     "name": "glm-ocr",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/GLM-OCR-CoreAI",
+     "bundle": null,
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run glm-ocr",
+     "open_questions": [
+      "The repo publishes `decoder/` and `vision/glm_ocr_vision.aimodel`, but the decoder bundle's",
+      "own metadata names its source as the zoo repo rather than the upstream model, and the card",
+      "lists fp16 / int8lin / int8hu side by side without saying which produced the published",
+      "decoder. export_glm_ocr_pipelined.py names bundles glm_ocr_decode_<mode>, so the published",
+      "`decoder/` directory name carries no mode either. Which mode shipped?"
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/GLM-OCR-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "decoder",
+      "vision/glm_ocr_vision.aimodel"
+     ],
+     "tier1": {
+      "PASS": 1,
+      "SKIPPED": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "granite-4.0-h",
+   "card": "models/granite-4.0-h/README.md",
+   "recipes": [
+    {
+     "name": "granite-4.0-h-1b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/granite-4.0-h-CoreAI",
+     "bundle": "gpu-pipelined/granite_4_0_h_1b_decode_int8lin",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run granite-4.0-h-1b",
+     "open_questions": []
+    },
+    {
+     "name": "granite-4.0-h-350m",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/granite-4.0-h-CoreAI",
+     "bundle": "gpu-pipelined/granite_4_0_h_350m_decode_fp16",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run granite-4.0-h-350m",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/granite-4.0-h-CoreAI",
+     "downloads_30d": 104,
+     "bundles": [
+      "gpu-pipelined-b2/granite_4_0_h_1b_decode_int8hu_block32_sym",
+      "gpu-pipelined/granite_4_0_h_1b_decode_int8hu_block32_sym",
+      "gpu-pipelined/granite_4_0_h_1b_decode_int8lin",
+      "gpu-pipelined/granite_4_0_h_350m_decode_fp16"
+     ],
+     "tier1": {
+      "PASS": 4
+     }
+    }
+   ]
+  },
+  {
+   "family": "holo2",
+   "card": "models/holo2/README.md",
+   "recipes": [
+    {
+     "name": "holo2-4b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Holo2-4B-CoreAI",
+     "bundle": "gpu-pipelined/holo2_4b_decode_int8lin_s1",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run holo2-4b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Holo2-4B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu-pipelined/holo2_4b_decode_int8lin_s1",
+      "gpu-pipelined/holo2_4b_vision/holo2_4b_vision.aimodel"
+     ],
+     "tier1": {
+      "PASS": 1,
+      "SKIPPED": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "kokoro-82m",
+   "card": "models/kokoro-82m/README.md",
+   "recipes": [
+    {
+     "name": "kokoro-82m",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/Kokoro-82M-CoreAI",
+     "bundle": "kokoro_predictor.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run kokoro-82m",
+     "open_questions": [
+      "One run emits all three published graphs (predictor / prosody / vocoder), but the card's",
+      "command shows optional --token-bucket 128 --frame-bucket 512 and the bundle names do not",
+      "record the bucket sizes. Were the defaults used?"
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Kokoro-82M-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "kokoro_predictor.aimodel",
+      "kokoro_prosody.aimodel",
+      "kokoro_vocoder.aimodel"
+     ],
+     "tier1": {
+      "SKIPPED": 3
+     }
+    }
+   ]
+  },
+  {
+   "family": "lfm2.5",
+   "card": "models/lfm2.5/README.md",
+   "recipes": [
+    {
+     "name": "lfm2.5-1.2b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/LFM2.5-1.2B-CoreAI",
+     "bundle": "gpu-pipelined/lfm2_5_1_2b_instruct_decode_int8hu_block32_sym",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run lfm2.5-1.2b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/LFM2.5-1.2B-CoreAI",
+     "downloads_30d": 771,
+     "bundles": [
+      "gpu-pipelined-b2/lfm2_5_1_2b_instruct_decode_int8hu_block32_sym",
+      "gpu-pipelined/lfm2_5_1_2b_instruct_decode_int8hu_block32_sym",
+      "gpu-pipelined/lfm2_5_1_2b_instruct_decode_int8lin"
+     ],
+     "tier1": {
+      "PASS": 3
+     }
+    }
+   ]
+  },
+  {
+   "family": "lfm2.5-8b-a1b-moe",
+   "card": "models/lfm2.5-8b-a1b-moe/README.md",
+   "recipes": [
+    {
+     "name": "lfm2.5-8b-a1b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/LFM2.5-8B-A1B-CoreAI",
+     "bundle": "gpu-pipelined/lfm2_5_8b_a1b_decode_sym8_gather",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run lfm2.5-8b-a1b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/LFM2.5-8B-A1B-CoreAI",
+     "downloads_30d": 699,
+     "bundles": [
+      "gpu-pipelined/lfm2_5_8b_a1b_decode_sym8_gather"
+     ],
+     "tier1": {
+      "PASS": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "llada-8b",
+   "card": "models/llada-8b/README.md",
+   "recipes": [
+    {
+     "name": "llada-8b-dllm",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/LLaDA-8B-dLLM-CoreAI",
+     "bundle": "macos",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run llada-8b-dllm",
+     "open_questions": [
+      "The published bundle sits in a bare `macos/` directory with a 256-token context; the exporter's",
+      "flags are not recorded in the name. Which produced it?"
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/LLaDA-8B-dLLM-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "macos"
+     ],
+     "tier1": {
+      "PASS": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "ltxvideo",
+   "card": "models/ltxvideo/README.md",
+   "recipes": [
+    {
+     "name": "ltx-video-2b",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/LTX-Video-2B-CoreAI",
+     "bundle": null,
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run ltx-video-2b",
+     "open_questions": [
+      "Three graphs are published (dit_fp16, t5_bf16, vae_fp16); conversion/ltxvideo/ holds shared",
+      "helpers (_common.py) but no export entrypoint. Which scripts produced them?"
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/LTX-Video-2B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "dit_fp16.aimodel",
+      "t5_bf16.aimodel",
+      "vae_fp16.aimodel"
+     ],
+     "tier1": {
+      "PASS": 3
+     }
+    }
+   ]
+  },
+  {
+   "family": "melband-roformer",
+   "card": "models/melband-roformer/README.md",
+   "recipes": [
+    {
+     "name": "melband-roformer-vocal",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/MelBandRoformer-Vocal-CoreAI",
+     "bundle": "mbr_full_fp16.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run melband-roformer-vocal",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/MelBandRoformer-Vocal-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "mbr_full_fp16.aimodel",
+      "mbr_full_fp16.h18p.aimodelc"
+     ],
+     "tier1": {
+      "PASS": 2
+     }
+    }
+   ]
+  },
+  {
+   "family": "mineru",
+   "card": "models/mineru/README.md",
+   "recipes": [
+    {
+     "name": "mineru-2.5-pro",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/MinerU2.5-Pro-CoreAI",
+     "bundle": null,
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run mineru-2.5-pro",
+     "open_questions": [
+      "Same shape as glm-ocr: published as `decoder/` + `vision/mineru_vision.aimodel` (plus a",
+      "`layout/` pair), and the exporter's mode is not in the published directory names.",
+      "Which mode produced each? Note the layout decoder's metadata records a local absolute path",
+      "as its hf_model_id \u2014 that is published on Hugging Face and should be corrected."
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/MinerU2.5-Pro-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "decoder",
+      "layout/decoder",
+      "layout/vision/mineru_vision.aimodel",
+      "vision/mineru_vision.aimodel"
+     ],
+     "tier1": {
+      "PASS": 2,
+      "SKIPPED": 2
+     }
+    }
+   ]
+  },
+  {
+   "family": "minicpm-v-4.6",
+   "card": "models/minicpm-v-4.6/README.md",
+   "recipes": [
+    {
+     "name": "minicpm-v-4.6",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/MiniCPM-V-4.6-CoreAI",
+     "bundle": null,
+     "steps": 2,
+     "run": "python3 conversion/zoo_convert.py run minicpm-v-4.6",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/MiniCPM-V-4.6-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu-pipelined/minicpmv46_vision",
+      "gpu-pipelined/minicpmv46_vision_int8lin",
+      "gpu-pipelined/minicpmv46_vlm_decode_int8hu",
+      "gpu-pipelined/minicpmv46_vlm_decode_int8lin"
+     ],
+     "tier1": {
+      "PASS": 3,
+      "SKIPPED": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "minicpm5-1b",
+   "card": "models/minicpm5-1b/README.md",
+   "recipes": [
+    {
+     "name": "minicpm5-1b",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/MiniCPM5-1B-CoreAI",
+     "bundle": "int8",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run minicpm5-1b",
+     "open_questions": [
+      "The exact stock-CLI invocation is not recorded \u2014 the card describes the compression config",
+      "(symmetric per-channel int8 absmax, conversion/minicpm5_int8sym.yaml) but not the command line",
+      "or the context length that produced the published `int8/` bundle (its metadata says 131072)."
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/MiniCPM5-1B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "int8"
+     ],
+     "tier1": {
+      "DIFF": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "nanbeige4.1-3b",
+   "card": "models/nanbeige4.1-3b/README.md",
+   "recipes": [
+    {
+     "name": "nanbeige4.1-3b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Nanbeige4.1-3B-CoreAI",
+     "bundle": "gpu-pipelined/nanbeige4_1_3b_decode_int8hu_block32_sym_s1",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run nanbeige4.1-3b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Nanbeige4.1-3B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu-pipelined-b2/nanbeige4_1_3b_decode_int8hu_block32_sym",
+      "gpu-pipelined/nanbeige4_1_3b_decode_int8hu_block32_sym_s1"
+     ],
+     "tier1": {
+      "PASS": 2
+     }
+    }
+   ]
+  },
+  {
+   "family": "nanbeige4.2-3b",
+   "card": "models/nanbeige4.2-3b/README.md",
+   "recipes": [
+    {
+     "name": "nanbeige4.2-3b",
+     "status": "verified",
+     "hf_repo": "ukint-vs/Nanbeige4.2-3B-CoreAI",
+     "bundle": "gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run nanbeige4.2-3b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "ukint-vs/Nanbeige4.2-3B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1"
+     ],
+     "tier1": {
+      "PASS": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "nemotron-3-nano",
+   "card": "models/nemotron-3-nano/README.md",
+   "recipes": [
+    {
+     "name": "nemotron-3-nano-4b",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/Nemotron-3-Nano-4B-CoreAI",
+     "bundle": "gpu-pipelined/nemotron_3_nano_4b_decode_int8hu",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run nemotron-3-nano-4b",
+     "open_questions": [
+      "Was --head-sym (and --head-quant) passed? This exporter feeds them into the lm_head spec but",
+      "does not encode them in the bundle name, and the card documents no command \u2014 so the published",
+      "name is consistent with both. Every other model in this family ships --head-sym."
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Nemotron-3-Nano-4B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu-pipelined/nemotron_3_nano_4b_decode_int8hu",
+      "ios-h18p/nemotron_3_nano_4b_decode_int8hu"
+     ],
+     "tier1": {
+      "DIFF": 2
+     }
+    }
+   ]
+  },
+  {
+   "family": "nemotron-asr-streaming",
+   "card": "models/nemotron-asr-streaming/README.md",
+   "recipes": [
+    {
+     "name": "nemotron-3.5-asr-streaming",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI",
+     "bundle": null,
+     "steps": 2,
+     "run": "python3 conversion/zoo_convert.py run nemotron-3.5-asr-streaming",
+     "open_questions": [
+      "Six graphs ship per platform (pre / pre_first / conformer_a / conformer_b / predict / joint).",
+      "Which invocation emits which, and does the non-streaming export_encoder.py contribute any?"
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "ios/nemotron_asr_joint_float32.aimodel",
+      "ios/nemotron_asr_predict_float32.aimodel",
+      "ios/nemotron_asr_stream_conformer_a_float16.h18p.aimodelc",
+      "ios/nemotron_asr_stream_conformer_b_float16.h18p.aimodelc",
+      "ios/nemotron_asr_stream_pre_first_float16.aimodel",
+      "ios/nemotron_asr_stream_pre_float16.aimodel",
+      "macos/nemotron_asr_joint_float32.aimodel",
+      "macos/nemotron_asr_predict_float32.aimodel",
+      "macos/nemotron_asr_stream_conformer_a_float16.aimodel",
+      "macos/nemotron_asr_stream_conformer_b_float16.aimodel",
+      "macos/nemotron_asr_stream_pre_first_float16.aimodel",
+      "macos/nemotron_asr_stream_pre_float16.aimodel"
+     ],
+     "tier1": {
+      "PASS": 12
+     }
+    }
+   ]
+  },
+  {
+   "family": "ornith-1.0-9b",
+   "card": "models/ornith-1.0-9b/README.md",
+   "recipes": [
+    {
+     "name": "ornith-1.0-9b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Ornith-1.0-9B-CoreAI",
+     "bundle": "gpu-pipelined/ornith_1_0_9b_decode_int8hu_block32_sym",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run ornith-1.0-9b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Ornith-1.0-9B-CoreAI",
+     "downloads_30d": 490,
+     "bundles": [
+      "gpu-pipelined/ornith_1_0_9b_decode_int4lin",
+      "gpu-pipelined/ornith_1_0_9b_decode_int8hu_block32_sym"
+     ],
+     "tier1": {
+      "PASS": 2
+     }
+    }
+   ]
+  },
+  {
+   "family": "parakeet",
+   "card": "models/parakeet/README.md",
+   "recipes": [
+    {
+     "name": "parakeet-tdt-0.6b",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/Parakeet-TDT-0.6B-CoreAI",
+     "bundle": null,
+     "steps": 2,
+     "run": "python3 conversion/zoo_convert.py run parakeet-tdt-0.6b",
+     "open_questions": [
+      "The encoder name pins a 2885-frame input (L2885) and the decoder splits into predict + joint;",
+      "which flags set the frame count and produced each of the three published graphs?"
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Parakeet-TDT-0.6B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "parakeet_encoder_float16_L2885.aimodel",
+      "parakeet_joint_float32.aimodel",
+      "parakeet_predict_float32.aimodel"
+     ],
+     "tier1": {
+      "PASS": 3
+     }
+    }
+   ]
+  },
+  {
+   "family": "qwen3-asr",
+   "card": "models/qwen3-asr/README.md",
+   "recipes": [
+    {
+     "name": "qwen3-asr-1.7b",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/Qwen3-ASR-1.7B-CoreAI",
+     "bundle": null,
+     "steps": 2,
+     "run": "python3 conversion/zoo_convert.py run qwen3-asr-1.7b",
+     "open_questions": [
+      "The decoder is int8hu with a 390-token audio prefix (n390) and a static S=1 graph; the encoder",
+      "pins k30. Which flags set n390/k30, and was --head-sym used? conversion/qwen3_asr/STATE.md is",
+      "the port's own record and should be able to answer this."
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Qwen3-ASR-1.7B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu-pipelined/qwen3_asr_1.7b_audio_encoder_fp16_k30/qwen3_asr_1.7b_audio_encoder_fp16_k30.aimodel",
+      "gpu-pipelined/qwen3_asr_1.7b_decode_int8hu_n390_s1"
+     ],
+     "tier1": {
+      "PASS": 2
+     }
+    }
+   ]
+  },
+  {
+   "family": "qwen3-embedding",
+   "card": "models/qwen3-embedding/README.md",
+   "recipes": [
+    {
+     "name": "qwen3-embedding-0.6b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI",
+     "bundle": "qwen3-embedding-0.6b_float16_s512_static.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run qwen3-embedding-0.6b",
+     "open_questions": []
+    },
+    {
+     "name": "embeddinggemma-300m",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/embeddinggemma-300m-CoreAI",
+     "bundle": "model/embeddinggemma-300m_float32_static.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run embeddinggemma-300m",
+     "open_questions": [
+      "float32 is in the bundle name, but the static sequence length is not \u2014 the exporter defaults",
+      "to 256 and the published name cannot confirm it. Which --seq-len shipped?"
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/embeddinggemma-300m-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "model/embeddinggemma-300m_float32_static.aimodel"
+     ],
+     "tier1": {
+      "PASS": 1
+     }
+    },
+    {
+     "id": "mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "qwen3-embedding-0.6b_float16_s512_static.aimodel"
+     ],
+     "tier1": {
+      "PASS": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "qwen3-reranker",
+   "card": "models/qwen3-reranker/README.md",
+   "recipes": [
+    {
+     "name": "qwen3-reranker-0.6b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI",
+     "bundle": "qwen3-reranker-0.6b_float16_s512_static.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run qwen3-reranker-0.6b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "qwen3-reranker-0.6b_float16_s512_static.aimodel"
+     ],
+     "tier1": {
+      "PASS": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "qwen3-vl",
+   "card": "models/qwen3-vl/README.md",
+   "recipes": [
+    {
+     "name": "qwen3-vl-2b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Qwen3-VL-2B-CoreAI",
+     "bundle": "gpu-pipelined/qwen3_vl_2b_instruct_decode_int8hu_s1",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run qwen3-vl-2b",
+     "open_questions": []
+    },
+    {
+     "name": "qwen3-vl-4b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Qwen3-VL-4B-CoreAI",
+     "bundle": "gpu-pipelined/qwen3_vl_4b_instruct_decode_int8hu_s1",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run qwen3-vl-4b",
+     "open_questions": []
+    },
+    {
+     "name": "qwen3-vl-8b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Qwen3-VL-8B-CoreAI",
+     "bundle": "gpu-pipelined/qwen3_vl_8b_instruct_decode_int8hu_s1",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run qwen3-vl-8b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Qwen3-VL-4B-CoreAI",
+     "downloads_30d": 96,
+     "bundles": [
+      "gpu-pipelined/qwen3_vl_4b_instruct_decode_int8hu_s1",
+      "gpu-pipelined/qwen3_vl_4b_instruct_decode_int8lin_s1",
+      "gpu-pipelined/qwen3_vl_4b_instruct_vision/qwen3_vl_4b_instruct_vision.aimodel"
+     ],
+     "tier1": {
+      "PASS": 2,
+      "SKIPPED": 1
+     }
+    },
+    {
+     "id": "mlboydaisuke/Qwen3-VL-2B-CoreAI",
+     "downloads_30d": 92,
+     "bundles": [
+      "gpu-pipelined/qwen3_vl_2b_instruct_decode_int8hu_s1",
+      "gpu-pipelined/qwen3_vl_2b_instruct_decode_int8lin_s1",
+      "gpu-pipelined/qwen3_vl_2b_instruct_vision/qwen3_vl_2b_instruct_vision.aimodel"
+     ],
+     "tier1": {
+      "PASS": 2,
+      "SKIPPED": 1
+     }
+    },
+    {
+     "id": "mlboydaisuke/Qwen3-VL-8B-CoreAI",
+     "downloads_30d": 89,
+     "bundles": [
+      "gpu-pipelined/qwen3_vl_8b_instruct_decode_int8hu_s1",
+      "gpu-pipelined/qwen3_vl_8b_instruct_decode_int8lin_s1",
+      "gpu-pipelined/qwen3_vl_8b_instruct_vision/qwen3_vl_8b_instruct_vision.aimodel"
+     ],
+     "tier1": {
+      "PASS": 2,
+      "SKIPPED": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "qwen3.5",
+   "card": "models/qwen3.5/README.md",
+   "recipes": [
+    {
+     "name": "qwen3.5-0.8b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/qwen3.5-0.8B-CoreAI",
+     "bundle": "gpu-pipelined/qwen3_5_0_8b_decode_int8hu_block32_sym",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run qwen3.5-0.8b",
+     "open_questions": []
+    },
+    {
+     "name": "qwen3.5-2b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/qwen3.5-2B-CoreAI",
+     "bundle": "gpu-pipelined/qwen3_5_2b_decode_int8hu_block32_sym",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run qwen3.5-2b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/qwen3.5-0.8B-CoreAI",
+     "downloads_30d": 559,
+     "bundles": [
+      "gpu-pipelined-b2/qwen3_5_0_8b_decode_int8hu_block32_sym",
+      "gpu-pipelined/qwen3_5_0_8b_decode_int8hu_block32_sym",
+      "gpu-pipelined/qwen3_5_0_8b_decode_int8hu_perchan_sym",
+      "gpu-pipelined/qwen3_5_0_8b_decode_int8lin",
+      "ios-ane/qwen3_5_0_8b_decode_int8.aimodel",
+      "ios-gpu/qwen3_5_0_8b_ios_hc0.aimodel",
+      "ios-gpu/qwen3_5_0_8b_ios_hc0_int8v3.aimodel",
+      "ios-gpu/qwen3_5_0_8b_ios_hc_prefill_q16_b2048_int8.aimodel",
+      "macos/qwen3_5_0_8b_decode_int8.aimodel"
+     ],
+     "tier1": {
+      "PASS": 7,
+      "SKIPPED": 2
+     }
+    },
+    {
+     "id": "mlboydaisuke/qwen3.5-2B-CoreAI",
+     "downloads_30d": 114,
+     "bundles": [
+      "gpu-pipelined-b2/qwen3_5_2b_decode_int8hu_block32_sym",
+      "gpu-pipelined/qwen3_5_2b_decode_int8hu_block32_sym",
+      "gpu-pipelined/qwen3_5_2b_decode_int8hu_perchan_sym",
+      "gpu-pipelined/qwen3_5_2b_decode_int8lin"
+     ],
+     "tier1": {
+      "PASS": 4
+     }
+    }
+   ]
+  },
+  {
+   "family": "qwen3.6",
+   "card": "models/qwen3.6/README.md",
+   "recipes": [
+    {
+     "name": "qwen3.6-35b-a3b",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/Qwen3.6-35B-A3B-CoreAI",
+     "bundle": "gpu-pipelined/qwen3_6_35b_a3b_decode_sym8_gather",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run qwen3.6-35b-a3b",
+     "open_questions": [
+      "Was --head-sym / --head-quant passed? The exporter feeds both into the lm_head spec but leaves",
+      "them out of the bundle name, and the card names the script without its flags. `sym8` is certain",
+      "(it is the only choice); the head configuration is not recoverable from anything published."
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Qwen3.6-35B-A3B-CoreAI",
+     "downloads_30d": 385,
+     "bundles": [
+      "gpu-pipelined/qwen3_6_35b_a3b_decode_sym8_gather"
+     ],
+     "tier1": {
+      "PASS": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "qwen3.6-27b",
+   "card": "models/qwen3.6-27b/README.md",
+   "recipes": [
+    {
+     "name": "qwen3.6-27b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Qwen3.6-27B-CoreAI",
+     "bundle": "gpu-pipelined/qwen3_6_27b_decode_int8hu_block32_sym",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run qwen3.6-27b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Qwen3.6-27B-CoreAI",
+     "downloads_30d": 393,
+     "bundles": [
+      "gpu-pipelined/qwen3_6_27b_decode_int8hu_block32_sym"
+     ],
+     "tier1": {
+      "PASS": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "rf-detr",
+   "card": "models/rf-detr/README.md",
+   "recipes": [
+    {
+     "name": "rf-detr",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/RF-DETR-CoreAI",
+     "bundle": "rfdetr-medium_float32.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run rf-detr",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/RF-DETR-CoreAI",
+     "downloads_30d": 179,
+     "bundles": [
+      "rfdetr-large_float32.aimodel",
+      "rfdetr-medium_float32.aimodel",
+      "rfdetr-nano_float32.aimodel",
+      "rfdetr-seg-2xlarge_float32.aimodel",
+      "rfdetr-seg-large_float32.aimodel",
+      "rfdetr-seg-medium_float32.aimodel",
+      "rfdetr-seg-nano_float32.aimodel",
+      "rfdetr-seg-small_float32.aimodel",
+      "rfdetr-seg-xlarge_float32.aimodel",
+      "rfdetr-small_float32.aimodel",
+      "split/rfdetr-medium_backbone.aimodel",
+      "split/rfdetr-medium_head.aimodel",
+      "split/rfdetr-nano_backbone.aimodel",
+      "split/rfdetr-nano_head.aimodel"
+     ],
+     "tier1": {
+      "PASS": 10,
+      "SKIPPED": 4
+     }
+    }
+   ]
+  },
+  {
+   "family": "sortformer-diar",
+   "card": "models/sortformer-diar/README.md",
+   "recipes": [
+    {
+     "name": "sortformer-diar",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Streaming-Sortformer-Diar-CoreAI",
+     "bundle": "sortformer_float16.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run sortformer-diar",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Streaming-Sortformer-Diar-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "sortformer_float16.aimodel",
+      "sortformer_float16.h18p.aimodelc"
+     ],
+     "tier1": {
+      "PASS": 2
+     }
+    }
+   ]
+  },
+  {
+   "family": "timesfm",
+   "card": "models/timesfm/README.md",
+   "recipes": [
+    {
+     "name": "timesfm-2.5-200m",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/TimesFM-2.5-200M-CoreAI",
+     "bundle": "timesfm_2p5_200m_ctx2048_fp16.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run timesfm-2.5-200m",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/TimesFM-2.5-200M-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "ios/timesfm_2p5_200m_ctx2048_fp16.h18p.aimodelc",
+      "timesfm_2p5_200m_ctx2048_fp16.aimodel"
+     ],
+     "tier1": {
+      "PASS": 2
+     }
+    }
+   ]
+  },
+  {
+   "family": "triposplat",
+   "card": "models/triposplat/README.md",
+   "recipes": [
+    {
+     "name": "triposplat",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/TripoSplat-CoreAI",
+     "bundle": null,
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run triposplat",
+     "open_questions": [
+      "Six graphs are published (dinov3, dit, vae, gs, octree, decode) but conversion/triposplat/",
+      "holds no export_*.py \u2014 the scripts that produced them are not in this repository."
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/TripoSplat-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "decode_fp32.aimodel",
+      "dinov3_fp16.aimodel",
+      "dit_fp16.aimodel",
+      "gs_fp16.aimodel",
+      "octree_fp32.aimodel",
+      "vae_fp16.aimodel"
+     ],
+     "tier1": {
+      "PASS": 6
+     }
+    }
+   ]
+  },
+  {
+   "family": "unlimited-ocr",
+   "card": "models/unlimited-ocr/README.md",
+   "recipes": [
+    {
+     "name": "unlimited-ocr",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/Unlimited-OCR-CoreAI",
+     "bundle": null,
+     "steps": 2,
+     "run": "python3 conversion/zoo_convert.py run unlimited-ocr",
+     "open_questions": [
+      "Do either of these exporters take flags that changed the published bundles? Not recorded."
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Unlimited-OCR-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "decoder/unlimited_ocr_decoder.aimodel",
+      "vision/unlimited_ocr_vision.aimodel"
+     ],
+     "tier1": {
+      "SKIPPED": 2
+     }
+    }
+   ]
+  },
+  {
+   "family": "vibevoice",
+   "card": "models/vibevoice/README.md",
+   "recipes": [
+    {
+     "name": "vibevoice-realtime-0.5b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI",
+     "bundle": null,
+     "steps": 3,
+     "run": "python3 conversion/zoo_convert.py run vibevoice-realtime-0.5b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "ios/vibevoice_connector_fp16.h18p.aimodelc",
+      "ios/vibevoice_decoder_fp16_t64.h18p.aimodelc",
+      "ios/vibevoice_diffusion_head_fp16.h18p.aimodelc",
+      "ios/vibevoice_mainlm_fp16_decode_cl512.h18p.aimodelc",
+      "ios/vibevoice_ttslm_fp16_decode_cl512.h18p.aimodelc",
+      "macos/vibevoice_connector_fp16.aimodel",
+      "macos/vibevoice_decoder_fp16_t64.aimodel",
+      "macos/vibevoice_diffusion_head_fp16.aimodel",
+      "macos/vibevoice_mainlm_fp16_decode_cl512.aimodel",
+      "macos/vibevoice_ttslm_fp16_decode_cl512.aimodel"
+     ],
+     "tier1": {
+      "PASS": 10
+     }
+    }
+   ]
+  },
+  {
+   "family": "vjepa2",
+   "card": "models/vjepa2/README.md",
+   "recipes": [
+    {
+     "name": "vjepa2-vitl-ssv2",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/VJEPA2-ViTL-SSv2-CoreAI",
+     "bundle": "macos",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run vjepa2-vitl-ssv2",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/VJEPA2-ViTL-SSv2-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "ios/vjepa2_ssv2_fp16.h18p.aimodelc",
+      "macos"
+     ],
+     "tier1": {
+      "PASS": 1,
+      "SKIPPED": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "whisper-large-v3-turbo",
+   "card": "models/whisper-large-v3-turbo/README.md",
+   "recipes": [
+    {
+     "name": "whisper-large-v3-turbo",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/whisper-large-v3-turbo-CoreAI-official",
+     "bundle": "whisper-large-v3-turbo_float16_fixed128.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run whisper-large-v3-turbo",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "ios/nemotron_asr_joint_float32.aimodel",
+      "ios/nemotron_asr_predict_float32.aimodel",
+      "ios/nemotron_asr_stream_conformer_a_float16.h18p.aimodelc",
+      "ios/nemotron_asr_stream_conformer_b_float16.h18p.aimodelc",
+      "ios/nemotron_asr_stream_pre_first_float16.aimodel",
+      "ios/nemotron_asr_stream_pre_float16.aimodel",
+      "macos/nemotron_asr_joint_float32.aimodel",
+      "macos/nemotron_asr_predict_float32.aimodel",
+      "macos/nemotron_asr_stream_conformer_a_float16.aimodel",
+      "macos/nemotron_asr_stream_conformer_b_float16.aimodel",
+      "macos/nemotron_asr_stream_pre_first_float16.aimodel",
+      "macos/nemotron_asr_stream_pre_float16.aimodel"
+     ],
+     "tier1": {
+      "PASS": 12
+     }
+    },
+    {
+     "id": "mlboydaisuke/whisper-large-v3-turbo-CoreAI-official",
+     "downloads_30d": 0,
+     "bundles": [
+      "ios/whisper-large-v3-turbo_float16_fixed128.aimodel",
+      "macos/whisper-large-v3-turbo_float16_fixed128.aimodel",
+      "whisper-large-v3-turbo_float16_fixed128.aimodel"
+     ],
+     "tier1": {}
+    }
+   ]
+  },
+  {
+   "family": "yolox",
+   "card": "models/yolox/README.md",
+   "recipes": [
+    {
+     "name": "yolox-s",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/YOLOX-CoreAI",
+     "bundle": "yolox-s_float32.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run yolox-s",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/YOLOX-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "yolox-s_float32.aimodel"
+     ],
+     "tier1": {
+      "PASS": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "youtu",
+   "card": "models/youtu/README.md",
+   "recipes": [
+    {
+     "name": "youtu-llm-2b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Youtu-LLM-2B-CoreAI",
+     "bundle": "gpu-pipelined/youtu_llm_2b_decode_absorbed_int8_msdpa",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run youtu-llm-2b",
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Youtu-LLM-2B-CoreAI",
+     "downloads_30d": 64,
+     "bundles": [
+      "gpu-pipelined-b2/youtu_llm_2b_decode_absorbed_int8_msdpa_g32",
+      "gpu-pipelined/youtu_llm_2b_decode_absorbed_int8_msdpa",
+      "gpu-pipelined/youtu_llm_2b_decode_absorbed_msdpa"
+     ],
+     "tier1": {
+      "PASS": 3
+     }
+    }
+   ]
+  },
+  {
+   "family": "z-image-turbo",
+   "card": "models/z-image-turbo/README.md",
+   "recipes": [
+    {
+     "name": "z-image-turbo",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/Z-Image-Turbo-CoreAI",
+     "bundle": null,
+     "steps": 4,
+     "run": "python3 conversion/zoo_convert.py run z-image-turbo",
+     "open_questions": [
+      "The DiT bundle name encodes size/cap/mode/dynamic-axis flags (512, cap32, native bf16, dyncap,",
+      "dynimg, iofp32) and the VAE ships at three resolutions \u2014 the exact flag set per bundle is not",
+      "recorded anywhere. bf16 is load-bearing here: fp16 NaNs this model."
+     ]
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Z-Image-Turbo-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "glue/zimage_t_embedder_fp32/zimage_t_embedder_fp32.aimodel",
+      "zimage_dit_512_cap32_full_native_bf16_dyncap_dynimg_iofp32.aimodel",
+      "zimage_encoder_seq64_full_bf16_ids_iofp32.aimodel",
+      "zimage_vae_1024_fp32.aimodel",
+      "zimage_vae_256_fp32.aimodel",
+      "zimage_vae_512_fp32.aimodel"
+     ],
+     "tier1": {
+      "PASS": 6
+     }
+    }
+   ]
+  }
+ ]
+}

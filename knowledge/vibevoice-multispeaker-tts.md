@@ -2,7 +2,7 @@
 
 Porting notes from the zoo's first **multi-speaker / dialogue** TTS
 ([`microsoft/VibeVoice-Realtime-0.5B`](https://huggingface.co/microsoft/VibeVoice-Realtime-0.5B), MIT).
-Card: [`zoo/vibevoice.md`](../zoo/vibevoice.md). Recipe: [`conversion/vibevoice`](../conversion/vibevoice).
+Card: [`models/vibevoice/README.md`](../models/vibevoice/README.md). Recipe: [`conversion/vibevoice`](../conversion/vibevoice).
 
 ## Export boundary
 

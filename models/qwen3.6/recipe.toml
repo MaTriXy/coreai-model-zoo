@@ -1,0 +1,23 @@
+# Recipe for qwen3.6 — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["qwen3.6-35b-a3b"]
+script = "export_qwen3_6_moe_metal_decode_pipelined.py"
+args = ["sym8"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Qwen3.6-35B-A3B-CoreAI"
+bundle = "gpu-pipelined/qwen3_6_35b_a3b_decode_sym8_gather"
+status = "unverified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+open_questions = [
+  "Was --head-sym / --head-quant passed? The exporter feeds both into the lm_head spec but leaves",
+  "them out of the bundle name, and the card names the script without its flags. `sym8` is certain",
+  "(it is the only choice); the head configuration is not recoverable from anything published.",
+]
+notes = [
+  "Card: the sym8 gather build IS the ship (35 GB, 65.3 tok/s decode, 0 introduced flips/18).",
+  "The card's own 'convert with' line points at export_qwen3_6_decode_pipelined.py int8hu",
+  "--head-sym, which produces a differently-named bundle that was not published.",
+]

@@ -1,0 +1,20 @@
+# Recipe for bitvla — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["bitvla"]
+card = "README.md"
+hf_repo = "mlboydaisuke/BitVLA-CoreAI"
+status = "unverified"
+overlay = true
+steps = [
+  { script = "export_bitvla_vision.py", args = [], bundle = "aimodel/bitvla_vision/bitvla_vision.aimodel" },
+  { script = "export_bitvla_llm_decode_pipelined.py", args = [], bundle = "aimodel/bitvla_llm_act/bitvla_llm_act.aimodel" },
+]
+needs = ["ZOO_WORK_ROOT/_bitvla_ckpt/bitvla_bf16 (checkpoint) + oracle.npz — see conversion/_paths.py."]
+open_questions = ["Which flags produced the published pair? Neither the card nor the bundle names record them."]
+notes = ["h18p/ holds the AOT-compiled twins of the same two graphs."]
+
+# ===========================================================================
+# Stock-exporter ports (no re-authored model code)
+# ===========================================================================

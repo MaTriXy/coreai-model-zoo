@@ -18,7 +18,7 @@ greedy-exact (top-1 vs the HF eager reference) on an iPhone 17 Pro running the i
 | [`QwenChatFast/`](QwenChatFast/) | **Qwen3.5-0.8B** (hybrid linear+full attention) — static-shape loop-free decode, fused int8 Metal kernels + GPU argmax head, q16 chunked prefill, host-managed KV + SSM conv/rec state | **GPU 42.5–45.4 tok/s** decode · **147 tok/s** prefill (int8 kernels, ctx 2048; `QWEN_KIND=fp16` selects the previous fp16 path, 27.7) |
 
 Measured numbers, bundle sizes, and per-config caveats live in the zoo cards:
-[`zoo/gemma4-e2b.md`](../zoo/gemma4-e2b.md) · [`zoo/qwen3.5.md`](../zoo/qwen3.5.md).
+[`models/gemma4-e2b/README.md`](../models/gemma4-e2b/README.md) · [`models/qwen3.5/README.md`](../models/qwen3.5/README.md).
 
 ### macOS chat — CoreAIChatMac
 
@@ -50,7 +50,7 @@ Diffusion 0.9B) loaded via **Local…**.
 
 | App | Model | Video @ 8 steps |
 |---|---|---|
-| [`CoreAIVideo/`](CoreAIVideo/) | **LTX-Video 2B distilled** (text→video, **macOS**) — [card](../zoo/ltxvideo.md) · [HF bundle](https://huggingface.co/mlboydaisuke/LTX-Video-2B-CoreAI) | macOS 512×768 × 49f ≈ 14 s |
+| [`CoreAIVideo/`](CoreAIVideo/) | **LTX-Video 2B distilled** (text→video, **macOS**) — [card](../models/ltxvideo/README.md) · [HF bundle](https://huggingface.co/mlboydaisuke/LTX-Video-2B-CoreAI) | macOS 512×768 × 49f ≈ 14 s |
 
 The zoo's first **video** app — a SwiftUI front-end over a resident Python backend that runs all
 three nets (T5 + DiT + causal video VAE) as Core AI bundles; only LTX's FlowMatch sampler is on
@@ -99,7 +99,7 @@ Two modes — a still photo from the library, or live camera depth at a few FPS.
 `DepthEstimator` (DINOv2 ViT-S + DPT head, 504² monocular, small fp16 ≈ 54 MB, engine cos 1.000000
 vs torch, ~15 ms/frame on an M4 Max GPU). Depth is rendered with the DA3 colormap (inverse-depth,
 percentile-normalized, Spectral — far = red, near = blue). See [`CoreAIDepth/README.md`](CoreAIDepth/)
-and [`zoo/depth-anything-3.md`](../zoo/depth-anything-3.md).
+and [`models/depth-anything-3/README.md`](../models/depth-anything-3/README.md).
 
 ### Vision-language (VLM)
 

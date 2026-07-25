@@ -93,7 +93,7 @@ with a pure-text fallback (Ornith); `lfm2_5` = `lfm2_from_hf(stateful=True)`;
 
 ## Recovery loop (per model)
 
-1. Export with 0.4.1 using the model's recorded ship command (`recipes.toml`, or the zoo
+1. Export with 0.4.1 using the model's recorded ship command (`models/<model>/recipe.toml`, or the zoo
    card / knowledge note).
 2. Gate: `coreai_gate.py <bundle> <hf-id>` → PASS.
 3. Upload to HF (bundle path unchanged where possible; `perchan_sym`→`block32_sym` and

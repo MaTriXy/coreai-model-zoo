@@ -1,0 +1,18 @@
+# Recipe for youtu — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["youtu-llm-2b"]
+script = "export_youtu_decode_pipelined.py"
+args = ["--hf-id", "tencent/Youtu-LLM-2B", "--split-g", "8"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Youtu-LLM-2B-CoreAI"
+bundle = "gpu-pipelined/youtu_llm_2b_decode_absorbed_int8_msdpa"
+status = "verified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "The zoo's first dense-MLA port: absorbed decode + a custom flash-decode Metal SDPA.",
+  "--split-g 8 is the ship split factor and stays unsuffixed in the bundle name; other values",
+  "now get a _gN tag so they cannot overwrite it.",
+]

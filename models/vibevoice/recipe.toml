@@ -1,0 +1,23 @@
+# Recipe for vibevoice — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["vibevoice-realtime-0.5b"]
+card = "README.md"
+hf_repo = "mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI"
+status = "verified"
+steps = [
+  { script = "vibevoice/export_backbone.py", args = ["--mode", "fp16", "--which", "both"], bundle = "macos/vibevoice_mainlm_fp16_decode_cl512.aimodel" },
+  { script = "vibevoice/export_diffusion_head.py", args = ["--dtype", "fp16"], bundle = "macos/vibevoice_diffusion_head_fp16.aimodel" },
+  { script = "vibevoice/export_decoder.py", args = ["--tframes", "64", "--dtype", "fp16"], bundle = "macos/vibevoice_decoder_fp16_t64.aimodel" },
+]
+needs = [
+  "The upstream snapshot is pinned to revision 6bce5f06044837fe6d2c5d7a71a84f0416bd57e4 inside the",
+  "export scripts (hf_snapshot(..., revision=REVISION)).",
+]
+aot = "xcrun coreai-build compile <each>.aimodel --output artifacts_ios/ --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = [
+  "All five published macOS graphs come from these three commands: --which both emits the context",
+  "LM and the speech trunk, and the diffusion-head export also emits the connector.",
+  "ios/ holds the AOT twins. Voice presets are packed separately (pack_voice_presets.py).",
+]

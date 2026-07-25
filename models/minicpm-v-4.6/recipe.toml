@@ -1,0 +1,22 @@
+# Recipe for minicpm-v-4.6 — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["minicpm-v-4.6"]
+card = "README.md"
+hf_repo = "mlboydaisuke/MiniCPM-V-4.6-CoreAI"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+steps = [
+  { script = "export_minicpmv46_vision.py", args = [], bundle = "gpu-pipelined/minicpmv46_vision" },
+  { script = "export_minicpmv46_vlm_pipelined.py", args = ["int8lin"], bundle = "gpu-pipelined/minicpmv46_vlm_decode_int8lin" },
+]
+notes = [
+  "The card documents four commands; these two produce the published pair. The other two",
+  "(export_minicpmv46_decode_pipelined.py, export_minicpmv46_core_decode_pipelined.py) build the",
+  "text-only decoder variants used during bring-up and are not published.",
+  "An int8hu VLM decode bundle and an int8lin vision tower are published beside them.",
+  "export_minicpmv46_chunked_prefill.py adds the _pfN chunked-prefill variant.",
+]

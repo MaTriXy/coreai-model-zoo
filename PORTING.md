@@ -9,8 +9,8 @@ every port reduces to:
 
 | Track | Model | Archetype | Why it teaches |
 |---|---|---|---|
-| **V** (start here) | [Depth Anything 3](zoo/depth-anything-3.md) (`conversion/export_da3.py`) | **Stateless single graph** — image in, depth out. No tokenizer, no state, no host loop. | The full pipeline with the fewest moving parts. A first port should look like this. |
-| **L** (full course) | [Qwen3.5](zoo/qwen3.5.md) (`conversion/export_qwen3_5_decode_pipelined.py`) | **Stateful autoregressive LLM** — KV cache, prefill/decode, tokenizer, host sampling loop. | Everything Track V has, plus state and a host loop. Most of the zoo is this shape. |
+| **V** (start here) | [Depth Anything 3](models/depth-anything-3/README.md) (`conversion/export_da3.py`) | **Stateless single graph** — image in, depth out. No tokenizer, no state, no host loop. | The full pipeline with the fewest moving parts. A first port should look like this. |
+| **L** (full course) | [Qwen3.5](models/qwen3.5/README.md) (`conversion/export_qwen3_5_decode_pipelined.py`) | **Stateful autoregressive LLM** — KV cache, prefill/decode, tokenizer, host sampling loop. | Everything Track V has, plus state and a host loop. Most of the zoo is this shape. |
 
 The per-topic deep dives live in [`knowledge/`](knowledge/) — this page is the *path*; those are
 the *depth*. When a stage says "see X", the path still makes sense without opening X; open it when
@@ -300,12 +300,21 @@ A zoo submission is a PR with four things:
    it is driven by `tokenizer.json`.
 2. **The export + gate scripts** in `conversion/` (self-contained: plain-torch re-author, oracle,
    Gate A/B). This is the reproducibility contract — anyone can re-derive your bundle.
-3. **A model card** in `zoo/<model>.md` — copy the structure of
-   [`zoo/depth-anything-3.md`](zoo/depth-anything-3.md) (Track V) or
-   [`zoo/qwen3.5.md`](zoo/qwen3.5.md) (Track L): pipeline, graph contracts, measured speeds,
+3. **A model card** in `models/<model>/README.md` — copy the structure of
+   [`models/depth-anything-3/README.md`](models/depth-anything-3/README.md) (Track V) or
+   [`models/qwen3.5/README.md`](models/qwen3.5/README.md) (Track L): pipeline, graph contracts, measured speeds,
    lessons learned. The "lessons" section is not optional decoration; it is where the next
    porter's afternoon gets saved.
-4. **A row in the README model table** linking your HF repo and card.
+4. **A recipe** in `models/<model>/recipe.toml` — the script, the exact arguments that
+   produced the bundle you published, the prerequisites (`overlay`, `needs`, `runtime_patches`,
+   `runtime_env`), and `status = "verified"`. If a flag changed the artifact but cannot be
+   recovered from the bundle later, record the question in `open_questions` and mark it
+   `unverified` instead of guessing.
+5. **A row in the README model table** linking your HF repo and card.
+
+Then run `python3 conversion/zoo_verify.py <your-hf-repo>` — it compares what you published
+against the source model and catches the two most common publishing mistakes (a missing chat
+template, a tokenizer that disagrees with the source).
 
 **Review bar** (what gets checked, so you can pre-check it): Gate A numbers as claimed and
 re-runnable · host processing NumPy-gated · license clean · card complete with measured,

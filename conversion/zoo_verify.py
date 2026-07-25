@@ -57,14 +57,26 @@ OK, DIFF, FAIL, INFO, SKIP = "ok", "DIFF", "FAIL", "info", "skipped"
 # expectations
 
 
-def load_expected(model_key: str) -> dict:
-    """Declared expectations for a bundle, if anyone wrote them down.
+def family_of(repo_id: str) -> str | None:
+    """models/<family>/ that claims this Hugging Face repo, via its recipe."""
+    for path in sorted((REPO / "models").glob("*/recipe.toml")):
+        with open(path, "rb") as fh:
+            for recipe in tomllib.load(fh).values():
+                if recipe.get("hf_repo") == repo_id:
+                    return path.parent.name
+    return None
 
-    `models/<key>/verify.toml`, `[config]` section. Present only where a port
-    deviates from its source on purpose (or where the source is unreachable).
+
+def load_expected(repo_id: str) -> dict:
+    """Declared expectations for a repo's bundles, if anyone wrote them down.
+
+    `models/<family>/verify.toml`, `[config]` section — beside the card and the
+    recipe. Present only where a port deviates from its source on purpose (or
+    where the source cannot be reached).
     """
-    path = REPO / "models" / model_key / "verify.toml"
-    if not path.exists():
+    family = family_of(repo_id)
+    path = REPO / "models" / (family or "") / "verify.toml"
+    if not family or not path.exists():
         return {}
     with open(path, "rb") as fh:
         return tomllib.load(fh).get("config", {})
@@ -282,8 +294,7 @@ def main() -> int:
         for bundle in bundles_of(files):
             if args.bundle and args.bundle not in bundle:
                 continue
-            key = rid.split("/", 1)[-1]
-            rows.extend(verify_bundle(cat, rid, bundle, files, load_expected(key)))
+            rows.extend(verify_bundle(cat, rid, bundle, files, load_expected(rid)))
 
     if not args.quiet:
         print_report(rows)

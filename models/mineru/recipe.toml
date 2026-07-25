@@ -1,0 +1,17 @@
+# Recipe for mineru — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["mineru-2.5-pro"]
+card = "README.md"
+hf_repo = "mlboydaisuke/MinerU2.5-Pro-CoreAI"
+status = "unverified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+open_questions = [
+  "Same shape as glm-ocr: published as `decoder/` + `vision/mineru_vision.aimodel` (plus a",
+  "`layout/` pair), and the exporter's mode is not in the published directory names.",
+  "Which mode produced each? Note the layout decoder's metadata records a local absolute path",
+  "as its hf_model_id — that is published on Hugging Face and should be corrected.",
+]
+notes = ["Downloaded checkpoint dir: ZOO_WORK_ROOT/_mineru_dl (see conversion/_paths.py)."]

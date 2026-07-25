@@ -1,0 +1,18 @@
+# Recipe for glm-ocr — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["glm-ocr"]
+card = "README.md"
+hf_repo = "mlboydaisuke/GLM-OCR-CoreAI"
+status = "unverified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+open_questions = [
+  "The repo publishes `decoder/` and `vision/glm_ocr_vision.aimodel`, but the decoder bundle's",
+  "own metadata names its source as the zoo repo rather than the upstream model, and the card",
+  "lists fp16 / int8lin / int8hu side by side without saying which produced the published",
+  "decoder. export_glm_ocr_pipelined.py names bundles glm_ocr_decode_<mode>, so the published",
+  "`decoder/` directory name carries no mode either. Which mode shipped?",
+]
+notes = ["Downloaded checkpoint dir: ZOO_WORK_ROOT/_glmocr_dl (see conversion/_paths.py)."]

@@ -11,11 +11,11 @@ Four tabs, all fully on-device:
     Downloads from [🤗 whisper-large-v3-turbo-CoreAI-official](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official)
     on both platforms. See [`knowledge/whisper-asr-fixed-decode.md`](../../knowledge/whisper-asr-fixed-decode.md).
   - **Qwen3-ASR-1.7B** — the zoo's first ASR (AuT encoder + Qwen3 decoder on the pipelined engine),
-    via `KitASRModel`. 52 languages, ≤30 s. See [`zoo/qwen3-asr.md`](../../zoo/qwen3-asr.md).
+    via `KitASRModel`. 52 languages, ≤30 s. See [`models/qwen3-asr/README.md`](../../models/qwen3-asr/README.md).
   - **Parakeet-TDT-0.6B** — the zoo's first **transducer / TDT (RNN-T family)** (NVIDIA FastConformer
     encoder + LSTM predictor + joint, 3 graphs driven by a host greedy TDT loop), via
     `KitParakeetModel`. 25 EU languages, ≤30 s; **iPhone 17 Pro 47.9× real-time**. See
-    [`zoo/parakeet.md`](../../zoo/parakeet.md).
+    [`models/parakeet/README.md`](../../models/parakeet/README.md).
   - **Diarize — who said what** (toggle): **Streaming Sortformer 4-spk v2** (NVIDIA, CC-BY-4.0) labels
     each speaker turn on Core AI, then the chosen ASR transcribes it → *"Speaker 1 [0.3–4.1s]: …"*.
     A pure host port (NeMo 128-mel + streaming loop + AOSC speaker-cache compression) driving the
@@ -26,7 +26,7 @@ Four tabs, all fully on-device:
 - **Speak** — **Kokoro-82M** (StyleTTS2 + iSTFTNet) text-to-speech on Core AI: pick a voice and a
   phrase, hear it spoken. Three `.aimodel` bundles (predictor / prosody / vocoder) on the CPU
   compute unit + the host DSP (alignment + hn-nsf source) in Swift; ~0.7 s/utterance, magspec-corr
-  0.999 vs the PyTorch reference. See [`zoo/kokoro-82m.md`](../../zoo/kokoro-82m.md). The demo
+  0.999 vs the PyTorch reference. See [`models/kokoro-82m/README.md`](../../models/kokoro-82m/README.md). The demo
   phrases are phonemized ahead of time (host-side G2P), so this build needs no MLX/espeak; the three
   bundles come from [🤗 Kokoro-82M-CoreAI](https://huggingface.co/mlboydaisuke/Kokoro-82M-CoreAI)
   (`KokoroAssets/` ships the voices + tokenizer; drop the `.aimodel` there or in Documents).

@@ -30,7 +30,7 @@ fp16 head (4.7 GiB); int8hu - int8lin + absmax int8 lm_head (4.3 GiB, the SHIP c
 the head is untied here and a fat-tailed 131k-vocab head needs absmax, not clipping).
 
 **4-bit does not ship for this model, and the reason is not quality alone** (see
-`zoo/nemotron-3-nano.md`): symmetric int4 dequants cheaper than int8 but flips 4-6 of the
+`models/nemotron-3-nano/README.md`): symmetric int4 dequants cheaper than int8 but flips 4-6 of the
 33 margin-clean oracle positions at every block size; asymmetric int4 at block-16 is the
 only 4-bit scheme that gates 33/33, yet its zero-point dequant costs ~0.42 ms/layer and
 lands at 3.0-3.5 tok/s on device (4.6x slower than int8) despite reading 1.45x fewer bytes;

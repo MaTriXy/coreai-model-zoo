@@ -55,14 +55,14 @@
 - **MoE**: `SwitchLinear` + composite `GatherMM` (cast expert idx to uint16). `gpu_rules.md:262-276`.
   ⚠️ **Decode speed**: `GatherMM` gathers then runs a DENSE matmul — it does NOT read only the
   routed experts, so MoE decode is over-read-bound, not active-param-bound (Qwen3.6-35B-A3B
-  int8 sits at ~25% of BW; see `zoo/qwen3.6.md`). The over-read traffic scales *super-linearly*
+  int8 sits at ~25% of BW; see `models/qwen3.6/README.md`). The over-read traffic scales *super-linearly*
   with weight dtype: on LFM2.5-8B-A1B (the first direct Core-AI int4-vs-int8 MoE measurement)
   int8 decode = 39 tok/s (8.8 GB bundle, 345 GB/s ≈ full-read BW-saturated) vs int4 = 170 tok/s
   (5.0 GB; 848 GB/s effective > physical BW ⇒ int4 is NOT full-reading). So dropping a MoE to
   int4 buys ~4× decode here, not the ~2× the byte ratio predicts — but non-QAT int4 flips
   structural tokens (broken grammar), so int8 stays the quality floor. Engine-load only:
   raw `AIModel.load(.gpu)` of a MoE graph aborts (GatherMM→ANE); the pipelined engine's
-  `expectFrequentReshapes` steers it off ANE (`zoo/qwen3.6.md`).
+  `expectFrequentReshapes` steers it off ANE (`models/qwen3.6/README.md`).
   ✅ **FIXED — the `gather_qmm` custom Metal kernel landed** (`models/macos/moe_metal.py`,
   2026-06-13; `ondevice/_gather_qmm_RESULTS.md`). A `coreai_torch.TorchMetalKernel` matvec
   takes the routed expert indices as a kernel INPUT and reads ONLY the top-k experts' weight

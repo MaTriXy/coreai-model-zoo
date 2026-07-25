@@ -1,0 +1,20 @@
+# Recipe for ornith-1.0-9b — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["ornith-1.0-9b"]
+script = "export_qwen3_5_decode_pipelined.py"
+args = ["int8hu", "--head-sym", "--hf-id", "deepreinforce-ai/Ornith-1.0-9B", "--max-ctx", "8192"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Ornith-1.0-9B-CoreAI"
+bundle = "gpu-pipelined/ornith_1_0_9b_decode_int8hu_block32_sym"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "Qwen3.5 architecture, so it rides the 0.8B/2B exporter unchanged.",
+  "Card states int8hu is the ship shape and int4lin is published as the verified alternative",
+  "(58.9 vs 48.3 tok/s decode on M4 Max, 7.5 vs 9.8 GB) — int8hu carries the quality claim.",
+  "Mac-only: 9.8 GB exceeds the iPhone jetsam ceiling.",
+]

@@ -48,8 +48,12 @@
 
 ## Decision implication
 - For **peak speed**, Core AI on the Mac GPU is **near its ceiling**; going materially faster means leaving
-  Core AI (MLX / llama.cpp hand-tuned Metal) — which forfeits the ANE path and Foundation Models integration.
-- So Core AI's real differentiation is **on-device privacy + ANE energy-efficiency + the Foundation Models /
-  guided-generation integration**, *not* winning a GPU tok/s race. Optimize for the right axis.
+  Core AI (MLX / llama.cpp hand-tuned Metal) — which forfeits only the ANE path. *(Correction 2026-07-24:
+  an earlier revision said it also forfeits Foundation Models integration — false; the `LanguageModel`
+  protocol is public and MLX plugs in. See coreai-vs-mlx-speed.md §5.)*
+- So Core AI's real differentiation is **on-device privacy + ANE GPU-exclusivity and (thin, ~+8.5% vs
+  MLX-GPU) energy edge + the official zero-code FM adapter**, *not* winning a GPU tok/s race — and note
+  guided generation needs logits, which the GPU-pipelined fast path doesn't expose (coreai-vs-mlx-speed.md
+  §5.3). Optimize for the right axis.
 - Practical: **ship the GPU path at current numbers**; treat ANE as an energy play (parked on the Apple
   KV-write fix); use AOT for first-run UX + (for gemma4-iOS) to potentially **un-chunk**, not for throughput.

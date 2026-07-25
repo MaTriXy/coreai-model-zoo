@@ -2,7 +2,7 @@
 
 Porting notes from the zoo's first source-separation model
 ([`KimberleyJSN/melbandroformer`](https://huggingface.co/KimberleyJSN/melbandroformer), MIT, ~228 M).
-The shipped card is [`zoo/melband-roformer.md`](../zoo/melband-roformer.md); the recipe lives in
+The shipped card is [`models/melband-roformer/README.md`](../models/melband-roformer/README.md); the recipe lives in
 [`conversion/melband_roformer`](../conversion/melband_roformer).
 
 ## The shape of the problem

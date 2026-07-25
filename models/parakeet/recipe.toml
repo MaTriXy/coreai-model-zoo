@@ -1,0 +1,16 @@
+# Recipe for parakeet — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["parakeet-tdt-0.6b"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Parakeet-TDT-0.6B-CoreAI"
+status = "unverified"
+steps = [
+  { script = "parakeet/export_encoder.py", args = [], bundle = "parakeet_encoder_float16_L2885.aimodel" },
+  { script = "parakeet/export_decoder.py", args = [], bundle = "parakeet_predict_float32.aimodel" },
+]
+open_questions = [
+  "The encoder name pins a 2885-frame input (L2885) and the decoder splits into predict + joint;",
+  "which flags set the frame count and produced each of the three published graphs?",
+]

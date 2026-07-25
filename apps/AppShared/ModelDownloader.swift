@@ -67,6 +67,16 @@ final class ModelDownloader: ObservableObject {
     // Per-chunk retry budget (a failed chunk re-fetches only its own ≤chunkSize slice). Each retry
     // re-hits the HF resolve URL, so it re-rolls onto a possibly-different (live) CDN.
     private nonisolated static let maxChunkRetries = 6
+    // Per-chunk wall-clock deadline (passed to `dataWithDeadline`). It must absorb a COLD Xet read:
+    // HF now stores these LFS files in Xet content-addressed storage, and the FIRST access to a byte
+    // range of a freshly-uploaded large file is served by reconstructing it on the fly, which can
+    // crawl (measured ~0.8 MB/s cold for some ranges of the 2 GB Gemma-⚡ bundle vs ~4.5 MB/s once the
+    // edge is warm). A flat 30 s for a 16 MiB chunk was a 0.5 MB/s floor — the cold ranges tripped it
+    // on a mobile link and failed the whole bundle ("chunk stalled > 30s"). Express it as a low
+    // throughput floor instead so it tracks `chunkSize`: ~0.18 MB/s ⇒ ~91 s for 16 MiB. Patience is
+    // safe — a truly wedged (0-byte) transfer is still cut fast by the 25 s idle timeout below, and a
+    // cut chunk's retry usually lands quickly because the first touch warmed the edge cache.
+    private nonisolated static let chunkDeadlineSeconds: UInt64 = UInt64(chunkSize / (180 * 1024))
     // Re-applies the Range header across the HF→CDN 302. Without it a redirect that dropped Range
     // would answer 200 with the WHOLE file, and data(for:) would buffer ~30 GB into RAM and crash.
     private nonisolated static let redirector = RangePreservingRedirector()
@@ -231,7 +241,7 @@ final class ModelDownloader: ObservableObject {
                     guard let seg = iterator.next() else { break }
                     let s = slot; slot += 1
                     let sess = pool[s]
-                    group.addTask { try await Self.fetchChunk(seg, via: sess, deadline: 30); return (seg, s) }
+                    group.addTask { try await Self.fetchChunk(seg, via: sess, deadline: Self.chunkDeadlineSeconds); return (seg, s) }
                     inFlight += 1
                 }
                 while inFlight > 0 {
@@ -249,7 +259,7 @@ final class ModelDownloader: ObservableObject {
                     }
                     if let next = iterator.next() {
                         let sess = pool[freed]
-                        group.addTask { try await Self.fetchChunk(next, via: sess, deadline: 30); return (next, freed) }
+                        group.addTask { try await Self.fetchChunk(next, via: sess, deadline: Self.chunkDeadlineSeconds); return (next, freed) }
                         inFlight += 1
                     }
                 }
@@ -344,8 +354,9 @@ final class ModelDownloader: ObservableObject {
     // shared HTTP/2 connection sometimes does this, stalling all in-flight chunks at once) never
     // trips it and the download wedges at a fixed byte count. This races the transfer against a hard
     // timeout and cancels it, so a stalled/crawling chunk fails fast and the retry re-rolls the HF
-    // resolve onto a fresh connection (and possibly a different CDN). 30 s for 16 MiB = a 0.5 MB/s
-    // floor — far below real Wi-Fi, so only genuinely stuck transfers are cut.
+    // resolve onto a fresh connection (and possibly a different CDN). The deadline (`chunkDeadlineSeconds`,
+    // ~91 s for 16 MiB) is deliberately patient so a cold Xet reconstruction isn't mistaken for a stall;
+    // a genuine 0-byte wedge is cut far sooner by the 25 s idle `timeoutIntervalForRequest`.
     private nonisolated static func dataWithDeadline(_ req: URLRequest, via session: URLSession,
                                                      seconds: UInt64) async throws -> (Data, URLResponse) {
         try await withThrowingTaskGroup(of: (Data, URLResponse).self) { group in

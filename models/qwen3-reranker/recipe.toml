@@ -1,0 +1,11 @@
+# Recipe for qwen3-reranker — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["qwen3-reranker-0.6b"]
+script = "export_qwen3_reranker.py"
+args = ["--dtype", "float16", "--seq-len", "512"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI"
+bundle = "qwen3-reranker-0.6b_float16_s512_static.aimodel"
+status = "verified"

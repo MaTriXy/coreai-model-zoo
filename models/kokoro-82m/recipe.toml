@@ -1,0 +1,20 @@
+# Recipe for kokoro-82m — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["kokoro-82m"]
+script = "export_kokoro.py"
+args = []
+card = "README.md"
+hf_repo = "mlboydaisuke/Kokoro-82M-CoreAI"
+bundle = "kokoro_predictor.aimodel"
+status = "unverified"
+open_questions = [
+  "One run emits all three published graphs (predictor / prosody / vocoder), but the card's",
+  "command shows optional --token-bucket 128 --frame-bucket 512 and the bundle names do not",
+  "record the bucket sizes. Were the defaults used?",
+]
+
+# ===========================================================================
+# Other modalities
+# ===========================================================================

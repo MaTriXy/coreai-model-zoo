@@ -24,6 +24,11 @@ targets:
       - path: Resources/tokenizer
         type: folder
         buildPhase: resources
+      # raw-Metal Gemma4 kernels + oracle refs (Gemma4MetalBackend) — .txt so Xcode
+      # doesn't try to compile them; the engine compiles them at load (mathMode .safe).
+      - path: Resources/g4msl
+        type: folder
+        buildPhase: resources
       - path: Assets.xcassets
     dependencies:
       - package: coreai-models

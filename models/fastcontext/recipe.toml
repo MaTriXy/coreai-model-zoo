@@ -1,0 +1,18 @@
+# Recipe for fastcontext — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["fastcontext-4b"]
+command = ["coreai.llm.export", "fastcontext-4b"]
+card = "README.md"
+hf_repo = "mlboydaisuke/FastContext-1.0-4B-CoreAI"
+bundle = "gpu"
+status = "verified"
+overlay = true
+aot = "coreai-build compile exports/fastcontext_4b_dynamic/*.aimodel --platform iOS --preferred-compute gpu --architecture h18p"
+notes = [
+  "STOCK architecture (byte-identical to Qwen/Qwen3-4B) — no re-authoring, rides the stock qwen3 graph.",
+  "Needs the overlay only for the model_registry short-name preset + metadata entry.",
+  "iOS: dense 4B dynamic graph can't specialize on device -> ship the AOT bundle.",
+  "Parity 23/24 argmax (ppl 1.41) vs HF fp16.",
+]

@@ -1,0 +1,18 @@
+{
+  "name": "coreai-model-zoo",
+  "metadata": {
+    "description": "Agent skills for reproducing, verifying, and porting the Core AI model zoo's community model ports.",
+    "version": "0.1.0"
+  },
+  "owner": {
+    "name": "coreai-model-zoo"
+  },
+  "plugins": [
+    {
+      "name": "coreai-zoo-skills",
+      "description": "Skills for reproducing, verifying, and porting models in the Core AI model zoo.",
+      "version": "0.1.0",
+      "source": "./skills"
+    }
+  ]
+}

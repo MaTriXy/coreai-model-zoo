@@ -1,0 +1,12 @@
+# Recipe for ltxvideo — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["ltx-video-2b"]
+card = "README.md"
+hf_repo = "mlboydaisuke/LTX-Video-2B-CoreAI"
+status = "unverified"
+open_questions = [
+  "Three graphs are published (dit_fp16, t5_bf16, vae_fp16); conversion/ltxvideo/ holds shared",
+  "helpers (_common.py) but no export entrypoint. Which scripts produced them?",
+]

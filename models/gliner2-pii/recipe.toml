@@ -1,0 +1,22 @@
+# Recipe for gliner2-pii — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["gliner2-pii"]
+script = "export_gliner2_pii.py"
+args = ["--dtype", "float16"]
+card = "README.md"
+hf_repo = "mlboydaisuke/GLiNER2-PII-CoreAI"
+bundle = "macos/gliner2-pii_float16_s256_t96_m16.aimodel"
+status = "verified"
+notes = [
+  "The card documents this command; the s256_t96_m16 in the name are the exporter defaults",
+  "(-S 256 -T 96 --mmax 16), so the name confirms them.",
+  "Schema-agnostic: runtime label sets never seen at export time still decode correctly",
+  "(conversion/verify_schema_agnostic.py). ios/ holds the same graph for the phone.",
+  "Kit note: GraphModel cannot be driven concurrently — the kit serialises calls.",
+]
+
+# ===========================================================================
+# Vision — detection, depth, segmentation, world models
+# ===========================================================================

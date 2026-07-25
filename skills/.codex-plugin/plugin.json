@@ -1,0 +1,22 @@
+{
+  "name": "coreai-zoo-skills",
+  "version": "0.1.0",
+  "description": "Skills for reproducing, verifying, and porting models in the Core AI model zoo — community ports of open models to Apple's Core AI runtime.",
+  "author": {
+    "name": "coreai-model-zoo"
+  },
+  "keywords": [
+    "coreai",
+    "on-device-ai",
+    "model-zoo"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Core AI model zoo skills",
+    "shortDescription": "Reproduce, verify, and port on-device models for Apple's Core AI runtime",
+    "longDescription": "The Core AI model zoo publishes community ports of open models as .aimodel bundles, each with the recipe that produced it. These skills cover choosing a model from the catalog, reproducing a published bundle with one command and its prerequisites, verifying that a bundle agrees with the model it came from, and porting a new model with the zoo's oracle-first gating method.",
+    "developerName": "coreai-model-zoo",
+    "category": "Coding",
+    "capabilities": ["Read", "Write"]
+  }
+}

@@ -95,5 +95,5 @@ into `embed_tokens(input_ids)` at the `<image>` (id 128815) positions, where
 **exactly** (cos 1.000000, |Δ| = 0). Ship `embed_tokens` + `image_newline` + `view_seperator` +
 `prompt_input_ids` as raw tensors so the host (Swift) does the arrangement without the full model.
 
-See [`zoo/unlimited-ocr.md`](../zoo/unlimited-ocr.md), [`conversion/unlimited_ocr/`](../conversion/unlimited_ocr),
+See [`models/unlimited-ocr/README.md`](../models/unlimited-ocr/README.md), [`conversion/unlimited_ocr/`](../conversion/unlimited_ocr),
 [`apps/CoreAIOCR`](../apps/CoreAIOCR).

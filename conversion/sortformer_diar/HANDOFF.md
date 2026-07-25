@@ -135,7 +135,7 @@ APP=build/Build/Products/Release/coreai-audio.app; \
 Kit enroll SHIPPED (coreai-kit `6a3738d`, pushed; live catalog has `sortformer-diar-v2`, kind
 `diarization`): `KitDiarizer` + `MeetingTranscriber` (diarize-then-transcribe-each-turn as a kit
 API) + `Examples/Meeting` CLI. Both golden gates 100% on Mac GPU; ModelStore seeded from
-`ship_macos/`. **Remaining here**: update `zoo/sortformer-diar.md` "Use it" (via `cards.json` +
+`ship_macos/`. **Remaining here**: update `models/sortformer-diar/README.md` "Use it" (via `cards.json` +
 `scripts/gen-cards/gen_cards.py sortformer-diar --write`) to add the kit snippet —
 ```swift
 let meeting = try await MeetingTranscriber(asr: "whisper-large-v3-turbo")

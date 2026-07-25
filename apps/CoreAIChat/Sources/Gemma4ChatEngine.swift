@@ -44,7 +44,8 @@ enum ChatModel: String, CaseIterable, Identifiable {
          lfm2 = "LFM2.5 1.2B", granite = "Granite 1B", minicpm5 = "MiniCPM5 1B",
          fastcontext = "BitCPM-8B 1.58bit",
          qwen3vl = "Qwen3-VL 2B", qwen3vl4b = "Qwen3-VL 4B", gemma4vl = "Gemma 4 VL",
-         holo2vl = "Holo2 4B", rwkv7 = "RWKV-7 1.5B", qwen3spec = "Qwen3-4B ⚡Spec"
+         holo2vl = "Holo2 4B", rwkv7 = "RWKV-7 1.5B", qwen3spec = "Qwen3-4B ⚡Spec",
+         rawMetal = "Gemma 4 ⚡raw-Metal"
     var id: String { rawValue }
 }
 
@@ -57,7 +58,8 @@ enum GemmaMode: String, CaseIterable, Identifiable {
          qwen2b = "Qwen2B", lfm2 = "LFM", granite = "Granite", minicpm5 = "MiniCPM5",
          fastcontext = "BitCPM",
          qwen3vl = "Qwen3VL", qwen3vl4b = "Qwen3VL4B", gemma4vl = "Gemma4VL",
-         holo2vl = "Holo2VL", rwkv7 = "RWKV7", qwen3spec = "Qwen3Spec"
+         holo2vl = "Holo2VL", rwkv7 = "RWKV7", qwen3spec = "Qwen3Spec",
+         rawMetal = "RawMetal"
     var id: String { rawValue }
     /// The model family this engine mode belongs to (the picker's top level).
     var chatModel: ChatModel {
@@ -75,6 +77,7 @@ enum GemmaMode: String, CaseIterable, Identifiable {
         case .holo2vl: .holo2vl
         case .rwkv7: .rwkv7
         case .qwen3spec: .qwen3spec
+        case .rawMetal: .rawMetal
         }
     }
     /// User-facing label for the download panel (model, plus unit where it matters).
@@ -95,6 +98,7 @@ enum GemmaMode: String, CaseIterable, Identifiable {
         case .holo2vl: "Holo2 4B (GUI grounding)"
         case .rwkv7: "RWKV-7 Goose 1.5B (recurrent)"
         case .qwen3spec: "Qwen3-4B ⚡Spec (lossless spec-decode)"
+        case .rawMetal: "Gemma 4 E2B ⚡raw-Metal (hand-written kernels)"
         }
     }
     /// Non-nil for the modes that ride the coreai-pipelined engine.
@@ -107,7 +111,8 @@ enum GemmaMode: String, CaseIterable, Identifiable {
         case .granite: PipelinedBackend.granite
         case .minicpm5: PipelinedBackend.minicpm5
         case .fastcontext: PipelinedBackend.bitcpm  // DEMO: fastcontext mode repurposed for BitCPM-8B ternary
-        case .gpu, .ane, .qwen3vl, .qwen3vl4b, .gemma4vl, .holo2vl, .rwkv7, .qwen3spec: nil  // VLMs + RWKV-7 + spec-decode drive their own backends
+        case .gpu, .ane, .qwen3vl, .qwen3vl4b, .gemma4vl, .holo2vl, .rwkv7, .qwen3spec,
+             .rawMetal: nil  // VLMs + RWKV-7 + spec-decode + raw-Metal drive their own backends
         }
     }
     /// Non-nil for the Qwen3-VL modes (own backend with a fixed-grid vision tower).
@@ -139,6 +144,7 @@ final class Gemma4ChatEngine: ObservableObject {
     private var gvl: Gemma4VLBackend?         // .gemma4vl (provider mode + vision tower)
     private var rwkv7: RWKV7Backend?          // .rwkv7 (custom no-KV recurrent backend, own loop)
     private var specDecode: SpecDecodeBackend?  // .qwen3spec (greedy n-gram spec-decode, own loop)
+    private var rawMetal: Gemma4MetalBackend?   // .rawMetal (hand-written Metal loop, own loop)
     @Published var specDecodeOn = true          // .qwen3spec: ⚡Spec (n-gram verify) vs plain greedy
     @Published var vlImageAttached = false
     private var loadedMode: GemmaMode?  // mode the current backend was loaded for
@@ -162,6 +168,7 @@ final class Gemma4ChatEngine: ObservableObject {
         case "holo2", "holo2vl", "holo": mode = .holo2vl
         case "rwkv7", "rwkv": mode = .rwkv7
         case "qwen3spec", "spec": mode = .qwen3spec
+        case "rawmetal", "g4m": mode = .rawMetal
         default: mode = .gpu
         }
     }
@@ -187,7 +194,11 @@ final class Gemma4ChatEngine: ObservableObject {
         case .rwkv7: "https://huggingface.co/mlboydaisuke/RWKV7-Goose-1.5B-CoreAI"
         // Dense AOT verify bundle (sideloaded for now; HF repo TBD on ship).
         case .qwen3spec: "https://huggingface.co/mlboydaisuke/Qwen3-4B-CoreAI"
-        case .gpu, .ane, .gemmaTbl, .gemma4vl: "https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI"
+        case .gpu, .ane, .gemmaTbl,
+             .gemma4vl: "https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI"
+        // Standalone neutral engine repo (raw-Metal series) — weights live outside
+        // the CoreAI-branded repos.
+        case .rawMetal: "https://huggingface.co/mlboydaisuke/gemma-4-E2B-metal"
         }
     }
 
@@ -205,6 +216,11 @@ final class Gemma4ChatEngine: ObservableObject {
             // Custom backend: one bundle dir (AOT .aimodelc + rwkv_vocab.tsv). In-app Download
             // pulls it from h18p/<dir> in the HF repo -> Documents/models/<dir>.
             return [("h18p/" + RWKV7Backend.modelDir, RWKV7Backend.modelDir)]
+        case .rawMetal:
+            // Raw-Metal pack: one dir (gemma4_pack.bin + gemma4_pack.json) at the root of the
+            // standalone gemma-4-E2B-metal repo. Kernels ride the app bundle (Resources/g4msl);
+            // the gemma tokenizer is the bundled one.
+            return [(Gemma4MetalBackend.modelDir, Gemma4MetalBackend.modelDir)]
         case .qwen3spec:
             // Spec-decode: one dense AOT bundle dir (verify graph + tokenizer); sideloaded.
             return [(SpecDecodeBackend.modelDir, SpecDecodeBackend.modelDir)]
@@ -300,6 +316,7 @@ final class Gemma4ChatEngine: ObservableObject {
         gvl?.unload(); gvl = nil
         rwkv7?.unload(); rwkv7 = nil
         specDecode?.unload(); specDecode = nil
+        rawMetal?.unload(); rawMetal = nil
         vlImageAttached = false
         loadedMode = nil
         ready = false
@@ -317,6 +334,7 @@ final class Gemma4ChatEngine: ObservableObject {
         gvl?.unload(); gvl = nil
         rwkv7?.unload(); rwkv7 = nil
         specDecode?.unload(); specDecode = nil
+        rawMetal?.unload(); rawMetal = nil
         vlImageAttached = false
         loadedMode = nil
         ready = false
@@ -341,6 +359,7 @@ final class Gemma4ChatEngine: ObservableObject {
         vl?.unload(); vl = nil; gvl?.unload(); gvl = nil
         rwkv7?.unload(); rwkv7 = nil
         specDecode?.unload(); specDecode = nil
+        rawMetal?.unload(); rawMetal = nil
         vlImageAttached = false; loadedMode = nil
         let target = mode
         // Files for this mode aren't on disk yet — don't attempt a load that can only fail with a
@@ -389,6 +408,13 @@ final class Gemma4ChatEngine: ObservableObject {
                 loadedMode = target
                 ready = true
                 status = "\(SpecDecodeBackend.label) ready · lossless · ctx \(b.ctx)"
+            } else if target == .rawMetal {
+                let b = Gemma4MetalBackend()
+                try await b.load()
+                rawMetal = b
+                loadedMode = target
+                ready = true
+                status = "\(Gemma4MetalBackend.label) ready · ctx \(b.ctx)"
             } else {
                 let be: Gemma4Backend = (target == .gpu) ? Gemma4MonolithBackend() : Gemma4ChunkBackend()
                 try await be.load()
@@ -433,6 +459,10 @@ final class Gemma4ChatEngine: ObservableObject {
         }
         if mode == .qwen3spec {
             await generateSpec(prompt, maxNew: maxNew)
+            return
+        }
+        if mode == .rawMetal {
+            await generateRawMetal(prompt, maxNew: maxNew)
             return
         }
         guard let be = backend else { return }
@@ -540,6 +570,23 @@ final class Gemma4ChatEngine: ObservableObject {
         let specOn = ProcessInfo.processInfo.environment["GEMMA_SPEC"].map { $0 != "0" } ?? specDecodeOn
         do {
             let st = try await sd.generate(prompt, spec: specOn, maxNew: maxNew ?? 1024) { [weak self] text in
+                self?.output = text  // live stream
+            }
+            stats = st.summary
+        } catch {
+            output = "generation error: \(error.localizedDescription)"
+        }
+    }
+
+    // Raw-Metal path: the hand-written Metal decode loop (own kernels, own tokenizer,
+    // on-GPU argmax). The backend streams the decoded text; KV prefix reuse lives in
+    // the engine, so no per-turn reset is needed.
+    private func generateRawMetal(_ prompt: String, maxNew: Int?) async {
+        guard let rm = rawMetal else { return }
+        busy = true; output = ""; stats = ""
+        defer { busy = false }
+        do {
+            let st = try await rm.generate(prompt, maxNew: maxNew ?? 1024) { [weak self] text in
                 self?.output = text  // live stream
             }
             stats = st.summary

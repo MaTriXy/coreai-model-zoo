@@ -1,0 +1,26 @@
+# Recipe for glm-4.7-flash — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["glm-4.7-flash"]
+script = "export_glm47_moe_metal_decode_pipelined.py"
+args = ["sym8"]
+card = "README.md"
+hf_repo = "mlboydaisuke/GLM-4.7-Flash-CoreAI"
+bundle = "gpu-pipelined/glm_4_7_flash_decode_sym8_gather"
+status = "unverified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+open_questions = [
+  "Same head-flag ambiguity as qwen3.6-35b-a3b: --head-sym / --head-quant change the artifact and",
+  "do not appear in the name.",
+]
+notes = [
+  "The zoo's first MLA + MoE port. Card: sym8 gather = SHIP (30 GB, 53.6 tok/s, clean).",
+  "The card's 'convert with' line names export_glm47_decode_pipelined.py int8hu --head-sym, which",
+  "is the pre-gather-kernel build and was not the artifact published.",
+]
+
+# ===========================================================================
+# Gemma 4 — QAT int4, PLE table, Metal SDPA
+# ===========================================================================

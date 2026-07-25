@@ -1,0 +1,19 @@
+# Recipe for holo2 — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["holo2-4b"]
+script = "export_qwen3_vl_pipelined.py"
+args = ["int8lin", "--hf-id", "Hcompany/Holo2-4B"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Holo2-4B-CoreAI"
+bundle = "gpu-pipelined/holo2_4b_decode_int8lin_s1"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "Stock Qwen3-VL-4B drop-in: HF-id swap only, no model code.",
+  "Emits decoder + _s1 gate twin + fp16 vision tower; _s1 is static so no AOT needed.",
+  "Parity vs fp32 HF: vision cos 0.9999, decoder 4/4 + 16/16 decode steps token-exact.",
+]

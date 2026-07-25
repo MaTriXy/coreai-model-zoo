@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
-"""Generate models/_INVENTORY.md — one row per published Hugging Face repo.
+"""Generate models/_INVENTORY.md and models/index.json — the catalog's worklist and its
+machine-readable index.
 
-The catalog's worklist. For every repo the zoo publishes it records what the repo
-actually contains (bundle count, format), whether this repository carries a card
-and a machine-readable recipe for it, and how often it is downloaded — so later
-work can be ordered by reach instead of by guess.
+For every repo the zoo publishes, records what the repo actually contains (bundle count,
+format), which `models/<family>/` documents it, whether that family carries a recipe, the
+tier-1 verification verdict, and how often it is downloaded — so work can be ordered by
+reach instead of by guess.
 
-    python3 scripts/gen_inventory.py            # refresh models/_INVENTORY.md
-    python3 scripts/gen_inventory.py --print    # dry run, print to stdout
+    python3 scripts/gen_inventory.py            # refresh both files
+    python3 scripts/gen_inventory.py --print    # dry run, print the inventory to stdout
     python3 scripts/gen_inventory.py --offline  # use only what is already cached
 
-Reads the listing API and nothing else — no weights, no per-file fetches.
+Reads the Hugging Face listing API and nothing else — no weights, no per-file fetches.
+`models/index.json` is what an agent should read: one entry per model family, with the
+recipe name to run and the bundle it produces.
 """
 
 from __future__ import annotations
@@ -25,61 +28,72 @@ from datetime import date
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+MODELS = REPO / "models"
 sys.path.insert(0, str(REPO / "conversion"))
 from _hf_catalog import Catalog, bundles_of, repo_format  # noqa: E402
 
 AUTHORS = ["mlboydaisuke"]
-# Ports published under a contributor's own account (zoo PR #6 and successors) —
-# the zoo links them, so they belong in the inventory even though we do not own them.
+# Ports published under a contributor's own account (zoo PR #6 and successors) — the
+# zoo links them, so they belong in the inventory even though we do not own them.
 EXTRA_REPOS = ["ukint-vs/Nanbeige4.2-3B-CoreAI"]
 
 HF_LINK = re.compile(r"https://huggingface\.co/([\w.-]+/[\w.-]+)")
-CARD_LINK = re.compile(r"\(([\w./-]*zoo/[\w.-]+\.md)\)")
+CARD_LINK = re.compile(r"\([\w./-]*models/([\w.-]+)/README\.md\)")
 
 
-def readme_mapping() -> dict[str, set[str]]:
-    """HF repo id -> zoo cards, from the README model table (the published index)."""
+def families() -> list[str]:
+    return sorted(p.name for p in MODELS.iterdir() if (p / "README.md").exists())
+
+
+def recipes() -> dict[str, dict]:
+    """Every models/<family>/recipe.toml entry, tagged with its family."""
+    out: dict[str, dict] = {}
+    for path in sorted(MODELS.glob("*/recipe.toml")):
+        with open(path, "rb") as fh:
+            for name, recipe in tomllib.load(fh).items():
+                recipe["family"] = path.parent.name
+                out[name] = recipe
+    return out
+
+
+def repo_to_family(all_recipes: dict[str, dict]) -> dict[str, set[str]]:
+    """Which family documents a published repo: recipe first, then links in the cards."""
     out: dict[str, set[str]] = defaultdict(set)
+    for recipe in all_recipes.values():
+        if repo := recipe.get("hf_repo"):
+            out[repo].add(recipe["family"])
+    for family in families():
+        text = (MODELS / family / "README.md").read_text(errors="ignore")
+        for rid in set(HF_LINK.findall(text)):
+            if not rid.startswith("john-rocky/"):
+                out[rid].add(family)
     for line in (REPO / "README.md").read_text().splitlines():
         if not line.startswith("|"):
             continue
         repos = {r for r in HF_LINK.findall(line) if not r.startswith("john-rocky/")}
-        cards = {Path(c).name for c in CARD_LINK.findall(line)}
+        cards = set(CARD_LINK.findall(line))
         for r in repos:
             out[r] |= cards
     return out
 
 
-def card_mapping() -> dict[str, set[str]]:
-    """HF repo id -> zoo cards, from links inside the cards themselves."""
-    out: dict[str, set[str]] = defaultdict(set)
-    for card in sorted((REPO / "zoo").glob("*.md")):
-        if card.name == "README.md":  # the zoo index, not a model card
-            continue
-        for rid in set(HF_LINK.findall(card.read_text(errors="ignore"))):
-            if not rid.startswith("john-rocky/"):
-                out[rid].add(card.name)
-    return out
-
-
-def all_recipes() -> dict:
-    with open(REPO / "conversion" / "recipes.toml", "rb") as fh:
-        return tomllib.load(fh)
-
-
-def recipes_by_card() -> dict[str, list[str]]:
-    with open(REPO / "conversion" / "recipes.toml", "rb") as fh:
-        recipes = tomllib.load(fh)
-    out: dict[str, list[str]] = defaultdict(list)
-    for name, r in recipes.items():
-        if card := r.get("card"):
-            out[Path(card).name].append(name)
+def kit_slugs() -> dict[str, str]:
+    """family -> CoreAIKit catalog slug, from the gen-cards sidecar."""
+    path = REPO / "scripts" / "gen-cards" / "cards.json"
+    if not path.exists():
+        return {}
+    out = {}
+    for slug, m in json.loads(path.read_text()).get("models", {}).items():
+        if card := m.get("zooCard"):
+            parts = Path(card).parts
+            if len(parts) >= 2:
+                out[parts[-2]] = slug
     return out
 
 
 def verify_results() -> dict[str, list[dict]]:
     """HF repo id -> per-bundle tier-1 verdicts, from `conversion/zoo_verify.py --json`."""
-    path = REPO / "models" / "_VERIFY.json"
+    path = MODELS / "_VERIFY.json"
     if not path.exists():
         return {}
     out: dict[str, list[dict]] = defaultdict(list)
@@ -88,26 +102,22 @@ def verify_results() -> dict[str, list[dict]]:
     return out
 
 
-def kit_slugs_by_card() -> dict[str, str]:
-    path = REPO / "scripts" / "gen-cards" / "cards.json"
-    if not path.exists():
-        return {}
-    models = json.loads(path.read_text()).get("models", {})
-    return {Path(m["zooCard"]).name: slug for slug, m in models.items() if m.get("zooCard")}
-
-
 def collect(cat: Catalog) -> list[dict]:
-    repos = [m for a in AUTHORS for m in cat.repos_by_author(a)]
-    repos += [m for m in (cat.repo(r) for r in EXTRA_REPOS) if m]
+    published = [m for a in AUTHORS for m in cat.repos_by_author(a)]
+    published += [m for m in (cat.repo(r) for r in EXTRA_REPOS) if m]
 
-    from_readme, from_cards = readme_mapping(), card_mapping()
-    by_recipe, by_kit, verified = recipes_by_card(), kit_slugs_by_card(), verify_results()
+    all_recipes = recipes()
+    by_repo = repo_to_family(all_recipes)
+    by_family_recipes: dict[str, list[str]] = defaultdict(list)
+    for name, r in all_recipes.items():
+        by_family_recipes[r["family"]].append(name)
+    slugs, verified = kit_slugs(), verify_results()
 
     rows = []
-    for m in repos:
+    for m in published:
         rid = m["id"]
         files = [s["rfilename"] for s in m.get("siblings", [])]
-        cards = sorted(from_readme.get(rid, set()) | from_cards.get(rid, set()))
+        fams = sorted(by_repo.get(rid, set()))
         rows.append({
             "id": rid,
             "dl30": m.get("downloads", 0),
@@ -118,10 +128,9 @@ def collect(cat: Catalog) -> list[dict]:
             # not zoo ports — they answer to Apple's repo, not to a zoo card.
             "role": "official" if rid.endswith("-CoreAI-official") else "port",
             "bundles": bundles_of(files),
-            "listed": rid in from_readme,
-            "cards": cards,
-            "recipes": sorted({r for c in cards for r in by_recipe.get(c, [])}),
-            "kit": sorted({by_kit[c] for c in cards if c in by_kit}),
+            "families": fams,
+            "recipes": sorted({n for f in fams for n in by_family_recipes.get(f, [])}),
+            "kit": sorted({slugs[f] for f in fams if f in slugs}),
             "tier1": verified.get(rid, []),
         })
     rows.sort(key=lambda r: (-r["dl30"], r["id"].lower()))
@@ -140,17 +149,17 @@ def tier1_cell(row: dict) -> str:
     tally: dict[str, int] = defaultdict(int)
     for b in row["tier1"]:
         tally[b["verdict"]] += 1
-    parts = [f"**{tally[v]} {v}**" if v in ("FAIL", "DIFF") else f"{tally[v]} {v.lower()}"
-             for v in ("FAIL", "DIFF", "PASS", "SKIPPED") if tally.get(v)]
-    return " ".join(parts)
+    return " ".join(f"**{tally[v]} {v}**" if v in ("FAIL", "DIFF") else f"{tally[v]} {v.lower()}"
+                    for v in ("FAIL", "DIFF", "PASS", "SKIPPED") if tally.get(v))
 
 
 def render(rows: list[dict]) -> str:
+    all_recipes = recipes()
     coreai = [r for r in rows if r["format"] == "coreai"]
-    carded = [r for r in coreai if r["cards"]]
+    carded = [r for r in coreai if r["families"]]
     recipe_rows = [r for r in rows if r["recipes"]]
-    no_card = [r for r in coreai if not r["cards"] and r["role"] == "port"]
-    official_no_card = [r for r in coreai if not r["cards"] and r["role"] == "official"]
+    no_card = [r for r in coreai if not r["families"] and r["role"] == "port"]
+    official_no_card = [r for r in coreai if not r["families"] and r["role"] == "official"]
     ambiguous = [r for r in carded if len(r["bundles"]) > 1 and not r["recipes"]]
     single = [r for r in carded if len(r["bundles"]) == 1 and not r["recipes"]]
 
@@ -175,20 +184,20 @@ def render(rows: list[dict]) -> str:
         f"| published repos | {len(rows)} |",
         f"| Core AI repos | {len(coreai)} |",
         f"| Core AI bundles inside them | {sum(len(r['bundles']) for r in coreai)} |",
-        f"| Core AI repos with a card in `zoo/` | {len(carded)} |",
-        f"| repos with a recipe in `conversion/recipes.toml` | {len(recipe_rows)} |",
+        f"| Core AI repos with a `models/<family>/` card | {len(carded)} |",
+        f"| repos covered by a recipe | {len(recipe_rows)} |",
         f"| Core AI repos with 0 downloads in the last 30 days | {sum(1 for r in coreai if not r['dl30'])} |",
         "",
         "## All repos, by 30-day downloads",
         "",
-        "| repo | 30d DL | ♥ | fmt | role | bundles | tier-1 | card | recipe | kit |",
+        "| repo | 30d DL | ♥ | fmt | role | bundles | tier-1 | model | recipe | kit |",
         "| --- | ---: | ---: | --- | --- | ---: | --- | --- | --- | --- |",
     ]
     for r in rows:
-        card = ", ".join(f"[{c[:-3]}](../zoo/{c})" for c in r["cards"]) or "—"
+        model = ", ".join(f"[{f}]({f}/README.md)" for f in r["families"]) or "—"
         L.append(
             f"| [{r['id']}](https://huggingface.co/{r['id']}) | {r['dl30']} | {r['likes']} | "
-            f"{r['format']} | {r['role']} | {len(r['bundles'])} | {tier1_cell(r)} | {card} | "
+            f"{r['format']} | {r['role']} | {len(r['bundles'])} | {tier1_cell(r)} | {model} | "
             f"{', '.join(f'`{x}`' for x in r['recipes']) or '—'} | "
             f"{', '.join(f'`{x}`' for x in r['kit']) or '—'} |"
         )
@@ -205,7 +214,7 @@ def render(rows: list[dict]) -> str:
         "oracle, no device, no weights.",
         "",
         "**FAIL** = wrong on its own terms. **DIFF** = deviates from the source with no",
-        "recorded reason; record the expectation in `models/<name>/verify.toml` and it",
+        "recorded reason; record the expectation in `models/<family>/verify.toml` and it",
         "becomes the bar instead of the deviation.",
         "",
     ]
@@ -252,15 +261,15 @@ def render(rows: list[dict]) -> str:
     if not ambiguous:
         L.append("- (none)")
 
-    unverified = {n: r for n, r in all_recipes().items() if r.get("status") == "unverified"}
+    unverified = {n: r for n, r in all_recipes.items() if r.get("status") == "unverified"}
     L += [
         "",
         "### 3. Recipes recorded, shipped configuration unknown",
         "",
-        f"{len(unverified)} of the {len(all_recipes())} entries in `conversion/recipes.toml` carry",
-        '`status = "unverified"`: the script is known, the arguments that produced the published',
-        "bundle are not, and nothing in the repo records them. `zoo_convert.py` refuses to run",
-        "these without `--force`. Each needs one answer from the owner.",
+        f'{len(unverified)} of the {len(all_recipes)} recipes carry `status = "unverified"`:',
+        "the script is known, the arguments that produced the published bundle are not,",
+        "and nothing in the repo records them. `zoo_convert.py` refuses to run these",
+        "without `--force`. Each needs one answer from the owner.",
         "",
     ]
     for name, r in unverified.items():
@@ -282,9 +291,55 @@ def render(rows: list[dict]) -> str:
     return "\n".join(L)
 
 
+def render_index(rows: list[dict]) -> dict:
+    """models/index.json — what an agent reads to find and run a model."""
+    all_recipes = recipes()
+    by_family: dict[str, dict] = {
+        f: {"family": f, "card": f"models/{f}/README.md", "recipes": [], "repos": []}
+        for f in families()
+    }
+    for name, r in all_recipes.items():
+        entry = by_family.setdefault(
+            r["family"], {"family": r["family"], "card": f"models/{r['family']}/README.md",
+                          "recipes": [], "repos": []})
+        entry["recipes"].append({
+            "name": name,
+            "status": r.get("status", "unknown"),
+            "hf_repo": r.get("hf_repo"),
+            "bundle": r.get("bundle"),
+            "steps": len(r.get("steps", [])) or 1,
+            "run": f"python3 conversion/zoo_convert.py run {name}",
+            "open_questions": r.get("open_questions", []),
+        })
+    for row in rows:
+        for family in row["families"]:
+            entry = by_family.setdefault(
+                family, {"family": family, "card": f"models/{family}/README.md",
+                         "recipes": [], "repos": []})
+            entry["repos"].append({
+                "id": row["id"],
+                "downloads_30d": row["dl30"],
+                "bundles": row["bundles"],
+                "tier1": {v: sum(1 for b in row["tier1"] if b["verdict"] == v)
+                          for v in ("PASS", "DIFF", "FAIL", "SKIPPED")
+                          if any(b["verdict"] == v for b in row["tier1"])},
+            })
+    return {
+        "generated": date.today().isoformat(),
+        "how_to_use": {
+            "list": "python3 conversion/zoo_convert.py list",
+            "show": "python3 conversion/zoo_convert.py show <recipe>",
+            "reproduce": "python3 conversion/zoo_convert.py run <recipe>",
+            "verify": "python3 conversion/zoo_verify.py <hf_repo>",
+            "skill": "skills/skills/reproduce-a-zoo-model/SKILL.md",
+        },
+        "models": [by_family[f] for f in sorted(by_family)],
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--print", action="store_true", help="print instead of writing the file")
+    ap.add_argument("--print", action="store_true", help="print instead of writing the files")
     ap.add_argument("--offline", action="store_true", help="use only the local cache")
     ap.add_argument("--cache-dir", default=None)
     args = ap.parse_args()
@@ -294,15 +349,14 @@ def main() -> int:
     out = render(rows)
     if args.print:
         print(out)
-    else:
-        dest = REPO / "models" / "_INVENTORY.md"
-        dest.parent.mkdir(exist_ok=True)
-        dest.write_text(out)
-        coreai = [r for r in rows if r["format"] == "coreai"]
-        print(f"wrote {dest.relative_to(REPO)} — {len(rows)} repos "
-              f"({len(coreai)} Core AI, {sum(len(r['bundles']) for r in coreai)} bundles), "
-              f"{sum(1 for r in coreai if r['cards'])} carded, "
-              f"{sum(1 for r in rows if r['recipes'])} with a recipe")
+        return 0
+    (MODELS / "_INVENTORY.md").write_text(out)
+    (MODELS / "index.json").write_text(json.dumps(render_index(rows), indent=1) + "\n")
+    coreai = [r for r in rows if r["format"] == "coreai"]
+    print(f"wrote models/_INVENTORY.md and models/index.json — {len(rows)} repos "
+          f"({len(coreai)} Core AI, {sum(len(r['bundles']) for r in coreai)} bundles), "
+          f"{sum(1 for r in coreai if r['families'])} documented, "
+          f"{sum(1 for r in rows if r['recipes'])} with a recipe")
     return 0
 
 

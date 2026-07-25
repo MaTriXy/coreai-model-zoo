@@ -4,12 +4,12 @@
 (Apache-2.0, 1.2B). Whole-page document parsing: layout detection → per-region recognition →
 `json2md`, all in one **stock Qwen2-VL** (`Qwen2VLForConditionalGeneration`, no custom code). The zoo's
 third doc-OCR, and the first that folds whole-page auto-structuring into the model weights (per-region
-OCRs [Unlimited-OCR](../zoo/unlimited-ocr.md) / [GLM-OCR](../zoo/glm-ocr.md) leave layout to a separate
+OCRs [Unlimited-OCR](../models/unlimited-ocr/README.md) / [GLM-OCR](../models/glm-ocr/README.md) leave layout to a separate
 detector).
 
 ## What made it easy
 
-It is a plain Qwen2-VL, so it rides the shipped [GLM-OCR](../zoo/glm-ocr.md) / Qwen3-VL rider contract
+It is a plain Qwen2-VL, so it rides the shipped [GLM-OCR](../models/glm-ocr/README.md) / Qwen3-VL rider contract
 (`image_embeds` + `rope_shift_start`/`rope_shift_amount` static-input hook) with the Qwen2 specifics
 swapped in. Checkpoint keys map almost 1:1: the decoder is stock `model.*` Qwen2, the vision tower is
 `visual.*` with only `patch_embed.proj` (Conv3d) → `patch_proj` (Linear) reshaped.
@@ -43,7 +43,7 @@ Raw Python `rt.AIModel.load` of the dynamic-shape S=1 decode graph **wedges** on
 load routes to `ANECCompile` → *"MLIR MPS to ANEC conversion failed"* → repeated `MTL4CommandQueueError`
 (the 90 s-watchdog hazard; kill immediately). `cpu_only()` fails fast with `CoreAICompiler error 2`.
 
-Root cause (matches [`qwen3.6`](../zoo/qwen3.6.md)): the Swift engine loads dynamic graphs with
+Root cause (matches [`qwen3.6`](../models/qwen3.6/README.md)): the Swift engine loads dynamic graphs with
 `SpecializationOptions(preferredComputeUnitKind: .gpu)` **plus `expectFrequentReshapes = true`**, which
 steers the graph off the ANE path — but the **Python runtime binding doesn't expose that flag**, so raw
 Python load can't replicate it.

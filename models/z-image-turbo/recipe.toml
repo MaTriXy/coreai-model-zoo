@@ -1,0 +1,23 @@
+# Recipe for z-image-turbo — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["z-image-turbo"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Z-Image-Turbo-CoreAI"
+status = "unverified"
+steps = [
+  { script = "zimage/export_dit.py", args = [], bundle = "zimage_dit_512_cap32_full_native_bf16_dyncap_dynimg_iofp32.aimodel" },
+  { script = "zimage/export_encoder.py", args = [], bundle = "zimage_encoder_seq64_full_bf16_ids_iofp32.aimodel" },
+  { script = "zimage/export_vae.py", args = [], bundle = "zimage_vae_512_fp32.aimodel" },
+  { script = "zimage/export_glue.py", args = [], bundle = "glue/zimage_t_embedder_fp32/zimage_t_embedder_fp32.aimodel" },
+]
+open_questions = [
+  "The DiT bundle name encodes size/cap/mode/dynamic-axis flags (512, cap32, native bf16, dyncap,",
+  "dynimg, iofp32) and the VAE ships at three resolutions — the exact flag set per bundle is not",
+  "recorded anywhere. bf16 is load-bearing here: fp16 NaNs this model.",
+]
+
+# ===========================================================================
+# Audio — ASR, TTS, separation, diarization
+# ===========================================================================

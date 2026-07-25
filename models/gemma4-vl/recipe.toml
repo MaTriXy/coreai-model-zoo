@@ -1,0 +1,24 @@
+# Recipe for gemma4-vl — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["gemma-4-e2b-vl"]
+script = "export_gemma4_vl_pipelined.py"
+args = ["int4lin", "--lin-sym", "--tbl"]
+card = "README.md"
+hf_repo = "mlboydaisuke/gemma-4-E2B-CoreAI"
+bundle = "gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym_tbl"
+status = "verified"
+overlay = true
+needs = ["--raw-dir: the PLE gather-table dump (default ../../ondevice/artifacts/gemma4_qat_gather_raw)"]
+runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "Mac ship. The device ship drops the table input and the vision tower export:",
+  "`int4lin --lin-sym --skip-vision` -> gemma4_e2b_qat_vl_decode_int4linsym (+ _aotc_h18p).",
+  "One run also emits the fp16 vision tower bundle gemma4_e2b_qat_vl_vision.",
+]
+
+# ===========================================================================
+# Vision-language decoders
+# ===========================================================================

@@ -1,0 +1,17 @@
+# Recipe for colmodernvbert — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["colmodernvbert"]
+card = "README.md"
+hf_repo = "mlboydaisuke/ColModernVBERT-CoreAI"
+status = "verified"
+steps = [
+  { script = "export_colmodernvbert.py", args = ["--phase", "query", "--dtype", "float16", "--seq-len", "32"], bundle = "query/colmodernvbert-query_float16_s32_static.aimodel" },
+  { script = "export_colmodernvbert.py", args = ["--phase", "doc", "--dtype", "float16", "--seq-len", "89"], bundle = "doc/colmodernvbert-doc_float16_s89_static.aimodel" },
+]
+notes = [
+  "Late-interaction retrieval: separate query and document graphs, each with its own static",
+  "sequence length — both are in the bundle names. fp32 twins are published under fp32/ as the",
+  "parity reference.",
+]
