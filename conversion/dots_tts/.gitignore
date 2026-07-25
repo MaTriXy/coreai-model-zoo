@@ -1,0 +1,9 @@
+# derived reference fixtures + exported bundles + weights — never commit (large, regenerable)
+artifacts/
+*.npz
+*.wav
+*.aimodel
+*.aimodelc
+*.safetensors
+*.pt
+weights/
