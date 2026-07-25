@@ -186,14 +186,13 @@ published configuration. **Do not guess their `args`.**
 
 ### 3. Recipes recorded, shipped configuration unknown
 
-3 of the 65 recipes carry `status = "unverified"`:
+2 of the 65 recipes carry `status = "unverified"`:
 the script is known, the arguments that produced the published bundle are not,
 and nothing in the repo records them. `zoo_convert.py` refuses to run these
 without `--force`. Each needs one answer from the owner.
 
-- **`flux2-klein-4b-edit`** (mlboydaisuke/FLUX.2-klein-4B-CoreAI) — Transformer_edit / _edit_2ref / _edit_512 come from in-context-editing code added to the diffusion pipeline in the patched coreai-models checkout — commits d982f48 (Flux2Pipeline. editImages + transformer_edit export + runner --edit-image) and bc48d3d (multi-reference, transformer_edit_2ref). That code lives in coreai_models/diffusion/{components,flux2}.py and is NOT captured in conversion/overlay/ (the overlay patch touches no diffusion file), so nobody outside this machine can build these three bundles. Running overlay/regen.sh would capture it — an owner decision, because regen also picks up whatever else is in flight. The exact invocation and the _512 variant's flag are also unrecorded.
-- **`glm-4.7-flash`** (mlboydaisuke/GLM-4.7-Flash-CoreAI) — Same head-flag ambiguity as qwen3.6-35b-a3b: --head-sym / --head-quant change the artifact and do not appear in the name. For qwen3.6-35B the answer was found — knowledge/ records a bare `sym8` — but no such record exists for this port, and its twin's command is not evidence for it. Anything recorded from the GLM-4.7-Flash session would settle it.
-- **`embeddinggemma-300m`** (mlboydaisuke/embeddinggemma-300m-CoreAI) — float32 is in the bundle name, but the static sequence length is not — the exporter defaults to 256 and the published name cannot confirm it. Which --seq-len shipped?
+- **`flux2-klein-4b-edit`** (mlboydaisuke/FLUX.2-klein-4B-CoreAI) — Transformer_edit / _edit_2ref / _edit_512 come from in-context-editing code added to the diffusion pipeline in the patched coreai-models checkout — commits d982f48 (Flux2Pipeline. editImages + transformer_edit export + runner --edit-image) and bc48d3d (multi-reference, transformer_edit_2ref). That code lives in coreai_models/diffusion/{components,flux2}.py. It IS in the overlay as of 2026-07-25 (regen.sh), so the code is reproducible now — what is still unrecorded is the invocation: which flag selects the edit transformer, how the 2ref and 512 variants are requested, and whether they were exported in one run or three.
+- **`glm-4.7-flash`** (mlboydaisuke/GLM-4.7-Flash-CoreAI) — Was --head-sym / --head-quant passed? Asked and closed as unknowable on 2026-07-25: the owner does not recall, and nothing published records it — the bundle name omits the head flags, the metadata declares no compression, and unlike embeddinggemma this repo ships no reference.json. For the twin port (qwen3.6-35b-a3b) knowledge/ recorded a bare `sym8`, but that is not evidence for this one. Settling it needs a re-export of the lm_head under both settings and a byte comparison against the published 30 GB bundle — the only remaining route. `sym8` alone (the args above) is the defensible partial record until then.
 
 ### 4. Carded, exactly one bundle, no recipe
 

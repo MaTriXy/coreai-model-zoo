@@ -20,12 +20,13 @@ notes = [
 
 ["embeddinggemma-300m"]
 script = "export_embeddinggemma.py"
-args = ["--dtype", "float32"]
+args = ["--dtype", "float32", "--seq-len", "256"]
 card = "README.md"
 hf_repo = "mlboydaisuke/embeddinggemma-300m-CoreAI"
 bundle = "model/embeddinggemma-300m_float32_static.aimodel"
-status = "unverified"
-open_questions = [
-  "float32 is in the bundle name, but the static sequence length is not — the exporter defaults",
-  "to 256 and the published name cannot confirm it. Which --seq-len shipped?",
+status = "verified"
+notes = [
+  "The static sequence length is not in the bundle name, but the repo publishes it:",
+  "model/reference.json says {\"model\": \"google/embeddinggemma-300m\", \"seq_len\": 256,",
+  "\"dtype\": \"float32\"} — written by the exporter itself, so it is a record, not a default.",
 ]

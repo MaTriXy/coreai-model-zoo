@@ -161,41 +161,16 @@ Mac-GPU work in this phase takes the `_GPU_LOCK` at the work root
 Six of the seven questions this work turned up are now closed. What is left needs knowledge
 only the owner has.
 
-**Still open — one answer each:**
+**Still open — 2 recipes, both for a stated reason:**
 
-1. **3 unverified recipes** (was 18). Fifteen were resolved by reading what the repo already
-   recorded — upload scripts, port notes, per-port READMEs — and in two cases by measuring the
-   published artifact (a bundle's bytes-per-parameter fixes its precision; a suffix that
-   survives into the published name fixes a flag). Nothing was re-exported. What is left is
-   genuinely unwritten: GLM-4.7-Flash's head flags (its twin's recorded command is not evidence
-   for it), embeddinggemma's static sequence length (no artifact encodes it), and qwen3-asr,
-   where `conversion/qwen3_asr/STATE.md` names a *unified cl1024* ship artifact while the repo
-   publishes a separate `n390_s1` decode bundle. Exact questions: `models/_INVENTORY.md` §3.
-
-   **Method note, because it cost two false statements in this plan:** "the scripts are not in
-   this repository" was wrong for both TripoSplat and LTX-Video — they are named `_conv_*.py`,
-   not `export_*.py`. List the directory before concluding anything is missing.
-
-2. **Recipes for the eight newly carded ports.** Their cards are now the model pages
-   themselves, but none has a `recipe.toml` — five of them ship through CoreAIKit, so the
-   catalog can hand a user the model but not the command that built it. The material exists
-   (`conversion/voxcpm/`, `conversion/stable_audio/`, `knowledge/voxcpm-tts.md`); it is the
-   same read-the-record exercise that resolved nine other recipes.
-3. **`gen-cards` full run: done, and it passes.** 45 models, real `swift build` + `xcodebuild` +
-   snippet compiles, 79 surfaces byte-identical across the zoo card and the Hugging Face README —
-   the layout move broke nothing. One failure remains and it is not ours:
-   `ukint-vs/Nanbeige4.2-3B-CoreAI`, the contributor's repo, whose Hugging Face README has never
-   carried the gen-cards markers (enrollment adds them by hand once).
-
-   The run needs `DEVELOPMENT_TEAM` exported. Without it the lockfile guard regenerates every
-   Example project with a signing placeholder instead of the committed team id and reports 44
-   failures, all false. Recorded in `scripts/gen-cards/README.md`.
-
-4. **Refreshing the Gemma-4-12B/31B chat template.** They carry the revision they were gated
-   against; Google revised theirs on 2026-07-09 (tool-calling loops, turn closures, thinking
-   order). Declared in `models/gemma4-12b/verify.toml` rather than silently updated, because
-   changing it changes prompt formatting for an artifact whose numbers were measured with the
-   old one.
+1. **`glm-4.7-flash`** — was `--head-sym` passed? Asked and closed as *unknowable from the
+   record* on 2026-07-25: the owner does not recall, the bundle name omits the head flags, the
+   metadata declares no compression, and this repo ships no `reference.json`. Settling it means
+   re-exporting the head under both settings and comparing against the published 30 GB bundle.
+   `sym8` alone stands as the defensible partial record.
+2. **`flux2-klein-4b-edit`** — the code is now in the overlay, so the three edit transformers are
+   buildable; what is missing is the invocation (which flag selects the edit transformer, how
+   2ref and 512 are requested, one run or three).
 
 **Closed (2026-07-25):**
 
@@ -216,6 +191,11 @@ only the owner has.
   comparing the field while transformers reads the file. Precedence fixed in the checker.
 - **The MinerU metadata leak** — `hf_model_id` and `tokenizer` held an absolute path from this
   machine, published. Now names the upstream model.
+- **`embeddinggemma-300m`'s sequence length** — resolved from the artifact, not from memory: the
+  repo publishes `model/reference.json`, written by the exporter, recording `seq_len: 256`.
+- **The overlay was three weeks stale** — regenerated 2026-07-25. It was missing the diffusion
+  pipeline (FLUX.2 in-context editing), the VLM export path and a long tail of decoder work, so
+  applying it produced an environment that could not run the newer exports.
 - **Two cards pointing at the wrong exporter** — the qwen3.6-35B and GLM-4.7-Flash "How to
   reproduce" blocks named the pre-gather-kernel script, which produces a bundle that was never
   published. Both now show the shipped command first and label the other.
