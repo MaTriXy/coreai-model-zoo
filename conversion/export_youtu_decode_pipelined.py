@@ -117,6 +117,8 @@ def main() -> None:
     metal = not args.eager_graph
     short = args.hf_id.rsplit("/", 1)[-1].lower().replace(".", "_").replace("-", "_")
     name = f"{short}_decode_absorbed_{args.linear_dtype}" + ("_msdpa" if metal else "_graph")
+    if metal and not args.per_head and args.split_g != 8:
+        name += f"_g{args.split_g}"  # keep g8 unsuffixed (the ship bundle); tag other split factors
     if args.num_layers is not None:
         name += f"_l{args.num_layers}"
 

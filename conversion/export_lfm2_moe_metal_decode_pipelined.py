@@ -115,7 +115,7 @@ def save_tokenizer(hf_id: str, out_dir: Path) -> None:
         # snapshot_download returns the shared cache root (which also holds the model
         # weights) — copy ONLY the tokenizer-related files, never the *.safetensors.
         src = Path(snapshot_download(hf_id, allow_patterns=[
-            "tokenizer*", "*.txt", "chat_template*", "special_tokens_map.json", "vocab*", "merges*"]))
+            "tokenizer*", "*.txt", "chat_template*", "special_tokens*", "vocab*", "merges*"]))
         (out_dir / "tokenizer").mkdir(exist_ok=True)
         wanted = ("tokenizer.json", "tokenizer_config.json", "tokenizer.model",
                   "special_tokens_map.json", "vocab.json", "merges.txt", "chat_template.jinja")

@@ -66,6 +66,27 @@ def bundle_basename(hf_id: str) -> str:
     return f"gemma4_{size}" + ("_qat" if "qat" in hf_id.lower() else "")
 
 
+def q4_0_presnap_linears(model, block: int = 32) -> int:
+    """Snap every nn.Linear weight to the exact ggml q4_0 grid (block-32 along in-features,
+    d = signed_absmax/-8, q in [-8,7]) BEFORE the int4 store, so the QAT-q4_0-trained weights
+    sit on their designed operating point. This is the closest q4_0 reachable through
+    coreai-opt's positive-scale int4 (-8,7): the +absmax element of blocks whose signed absmax
+    is positive is within 1/8, every other element is exact. See notes in the bench repo."""
+    import torch as _t
+    n = 0
+    for m in model.modules():
+        if isinstance(m, _t.nn.Linear) and m.weight.shape[-1] % block == 0:
+            w = m.weight.data
+            x = w.reshape(-1, block).float()
+            vmax = _t.gather(x, 1, x.abs().argmax(1, keepdim=True))
+            d = vmax / -8.0
+            d = _t.where(d == 0, _t.ones_like(d), d)
+            q = _t.clamp(_t.round(x / d) + 8, 0, 15)
+            m.weight.data = ((q - 8) * d).reshape(w.shape).to(w.dtype)
+            n += 1
+    return n
+
+
 def linear_quant_config(dtype: str = "int4", qscheme: str = "symmetric_with_clipping") -> dict:
     """Weight-only linear per-block-32 (scale-multiply dequant, no LUT) incl. the head.
 
@@ -146,6 +167,10 @@ def main() -> None:
     ap.add_argument("--hf-id", default=DEFAULT_HF_ID)
     ap.add_argument("--lin-sym", action="store_true",
                     help="plain absmax symmetric (no clipping) — the q4_0-grid variant")
+    ap.add_argument("--q4-0", dest="q4_0", action="store_true",
+                    help="pre-snap linear weights to the exact ggml q4_0 grid before the int4 "
+                         "store (implies the symmetric -8,7 grid) so the QAT-q4_0 weights hit "
+                         "their designed operating point — the quality-preserving int4 path")
     ap.add_argument("--metal-sdpa", action="store_true",
                     help="replace the FULL layers' SDPA with a custom flash-decode Metal kernel "
                          "(the scratch-heap-crash bypass; see gemma4_dense_metal_sdpa)")
@@ -160,7 +185,7 @@ def main() -> None:
     args = ap.parse_args()
 
     split_g = args.split_g or None  # 0 -> simple 1-SIMD-group kernel
-    name = f"{bundle_basename(args.hf_id)}_decode_{args.mode}" + ("sym" if args.lin_sym else "")
+    name = f"{bundle_basename(args.hf_id)}_decode_{args.mode}" + ("sym" if args.lin_sym else "") + ("_q40" if args.q4_0 else "")
     if args.metal_sdpa:
         name += "_msdpa" + (f"_g{split_g}" if split_g else "")
     if args.num_layers is not None:
@@ -183,9 +208,13 @@ def main() -> None:
         from coreai_models.export.compression import quantize_pytorch_model
 
         dtype = "int4" if args.mode == "int4lin" else "int8"
-        qscheme = "symmetric" if args.lin_sym else "symmetric_with_clipping"
+        # q4_0 pre-snap wants the -8,7 grid so the snapped values round-trip; force symmetric.
+        qscheme = "symmetric" if (args.lin_sym or args.q4_0) else "symmetric_with_clipping"
         # Untie the head so the quantizer actually quantizes it (it skips shared params).
         model.lm_head.weight = torch.nn.Parameter(model.lm_head.weight.detach().clone())
+        if args.q4_0:
+            nq = q4_0_presnap_linears(model)
+            print(f"pre-snapped {nq} linear weights to the exact q4_0 grid", flush=True)
         print(f"quantizing (linear {dtype} per-block-32, {qscheme}, incl. untied head) ...",
               flush=True)
         model = quantize_pytorch_model(

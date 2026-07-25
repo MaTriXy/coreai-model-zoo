@@ -130,3 +130,16 @@ APP=build/Build/Products/Release/coreai-audio.app; \
   DYLD_FRAMEWORK_PATH=$PWD/$APP/Contents/Frameworks DIARIZE_SELFTEST=1 DIAR_RESULT=/tmp/d.txt $APP/Contents/MacOS/coreai-audio; cat /tmp/d.txt
 # then: iPhone AOT (h18p) + device gate, ship (both user-gated)
 ```
+
+### TODO (2026-07-07) — zoo card: add the kit door
+Kit enroll SHIPPED (coreai-kit `6a3738d`, pushed; live catalog has `sortformer-diar-v2`, kind
+`diarization`): `KitDiarizer` + `MeetingTranscriber` (diarize-then-transcribe-each-turn as a kit
+API) + `Examples/Meeting` CLI. Both golden gates 100% on Mac GPU; ModelStore seeded from
+`ship_macos/`. **Remaining here**: update `zoo/sortformer-diar.md` "Use it" (via `cards.json` +
+`scripts/gen-cards/gen_cards.py sortformer-diar --write`) to add the kit snippet —
+```swift
+let meeting = try await MeetingTranscriber(asr: "whisper-large-v3-turbo")
+print(try await meeting.transcribe(samples: AudioFile.pcm16kMono(url)).text)
+```
+— and regenerate the HF README (byte-identical; HF push = user-gated). Also pending: run
+`Examples/Meeting` once on the iPhone (graph already device-gated via the app self-test).

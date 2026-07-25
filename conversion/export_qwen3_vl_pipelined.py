@@ -90,7 +90,8 @@ def head_quant_spec() -> dict:
     }
 
 
-def write_bundle_metadata(out_dir: Path, name: str, hf_id: str, vocab: int, max_ctx: int) -> None:
+def write_bundle_metadata(out_dir: Path, name: str, hf_id: str, vocab: int, max_ctx: int,
+                          functions: tuple[str, ...] = ("main",)) -> None:
     meta = {
         "metadata_version": "0.2",
         "kind": "llm",
@@ -101,7 +102,7 @@ def write_bundle_metadata(out_dir: Path, name: str, hf_id: str, vocab: int, max_
             "vocab_size": vocab,
             "max_context_length": max_ctx,
             "embedded_tokenizer": True,
-            "function_map": {"main": ["main"]},
+            "function_map": {"main": list(functions)},
         },
         "source": {"model_definition": "torch", "hf_model_id": hf_id},
         "compression": None,
@@ -156,6 +157,11 @@ def main() -> None:
                     help="skip the dynamic-query engine bundle")
     ap.add_argument("--skip-s1", action="store_true",
                     help="skip the static S=1 gate bundle")
+    ap.add_argument("--prefill-chunk", type=int, default=0,
+                    help="also export a MULTIFUNCTION bundle (suffix _pfN): "
+                         "'main' = static S=1 decode + 'prefill' = static S=N "
+                         "chunk, weights shared. Works around the MPSGraph "
+                         "GPURegionRuntime crash on dynamic-ids graphs.")
     args = ap.parse_args()
 
     short = args.hf_id.rsplit("/", 1)[-1].lower().replace(".", "_").replace("-", "_")
@@ -224,6 +230,92 @@ def main() -> None:
         print(f"saving {aimodel} ...")
         prog.save_asset(aimodel, rt.AIModelAssetMetadata())
         write_bundle_metadata(out_dir, vname, args.hf_id, cfg.vocab_size, args.max_ctx)
+        AutoTokenizer.from_pretrained(args.hf_id).save_pretrained(out_dir / "tokenizer")
+        print(f"bundle ready: {out_dir}")
+
+    if args.prefill_chunk:
+        from coreai_models.export.macos import export_to_coreai_multifunction
+
+        # coreai-torch bug workaround: the externalize pipeline exports each
+        # composite submodule with fallback Dim(min=1) for dims whose parent
+        # expression has no var_to_range entry (constants / derived exprs).
+        # A static S=64 causal SDPA generates a `key_seq >= 64` guard inside
+        # the submodule, which min=1 violates. The submodule body must stay
+        # DYNAMIC (its MLIR call sites are parametric — pinning it static
+        # fails optimize() with "input types did not match callee
+        # signature"), so the fix is to keep the Dims and retry the export
+        # with the min/max bounds torch itself suggests in the
+        # ConstraintViolation message.
+        import re as _re
+
+        import coreai_torch.converter as _ct_conv
+        from torch.export import Dim as _Dim
+
+        _orig_export_module = _ct_conv._torch_export_module
+
+        def _export_module_with_retry(prep):
+            for _attempt in range(3):
+                try:
+                    return _orig_export_module(prep)
+                except Exception as e:  # noqa: BLE001 — retry only on suggested fixes
+                    fixes = {
+                        name: (int(mn), int(mx) if mx else None)
+                        for name, mn, mx in _re.findall(
+                            r"(\w+) = Dim\('\w+', min=(\d+)(?:, max=(\d+))?\)", str(e))
+                    }
+                    if not fixes:
+                        raise
+                    print(f"[externalize-retry] {prep.name}: {fixes}")
+                    rebuilt: dict[str, object] = {}
+
+                    def _remap(dims):
+                        if dims is None:
+                            return None
+                        out = {}
+                        for j, d in dims.items():
+                            name = getattr(d, "__name__", None)
+                            if name not in fixes:
+                                out[j] = d
+                                continue
+                            if name not in rebuilt:
+                                mn, mx = fixes[name]
+                                kwargs = {"min": mn}
+                                if mx is not None:
+                                    kwargs["max"] = mx
+                                rebuilt[name] = _Dim(name, **kwargs)
+                            out[j] = rebuilt[name]
+                        return out
+
+                    prep.dynamic_shapes = tuple(
+                        _remap(dims) for dims in prep.dynamic_shapes)
+            return _orig_export_module(prep)
+
+        _ct_conv._torch_export_module = _export_module_with_retry
+
+        pf = args.prefill_chunk
+        vname = f"{name}_pf{pf}"
+        print(f"exporting multifunction decoder (main S=1 + prefill S={pf}) ...")
+        entries = [
+            ("main", model.build_export_spec(
+                DTYPE, args.max_ctx, trace_kv_len=TRACE_KV_CACHE_SEQ_LEN,
+                trace_query=1)),
+            ("prefill", model.build_export_spec(
+                DTYPE, args.max_ctx, trace_kv_len=TRACE_KV_CACHE_SEQ_LEN,
+                trace_query=pf, static_ids=True)),
+        ]
+        prog = export_to_coreai_multifunction(model, entries, externalize_modules=specs)
+        print("optimizing ...")
+        prog.optimize()
+
+        out_dir = Path(args.out_dir) / vname
+        if out_dir.exists():
+            shutil.rmtree(out_dir)
+        out_dir.mkdir(parents=True)
+        aimodel = out_dir / f"{vname}.aimodel"
+        print(f"saving {aimodel} ...")
+        prog.save_asset(aimodel, rt.AIModelAssetMetadata())
+        write_bundle_metadata(out_dir, vname, args.hf_id, cfg.vocab_size, args.max_ctx,
+                              functions=("main", "prefill"))
         AutoTokenizer.from_pretrained(args.hf_id).save_pretrained(out_dir / "tokenizer")
         print(f"bundle ready: {out_dir}")
 
