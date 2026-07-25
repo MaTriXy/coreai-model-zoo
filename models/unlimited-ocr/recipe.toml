@@ -5,13 +5,17 @@
 ["unlimited-ocr"]
 card = "README.md"
 hf_repo = "mlboydaisuke/Unlimited-OCR-CoreAI"
-status = "unverified"
+status = "verified"
 overlay = true
 steps = [
   { script = "unlimited_ocr/export_vision.py", args = [], bundle = "vision/unlimited_ocr_vision.aimodel" },
-  { script = "unlimited_ocr/export_decoder.py", args = [], bundle = "decoder/unlimited_ocr_decoder.aimodel" },
+  { script = "unlimited_ocr/export_decoder.py", args = ["--unified"], bundle = "decoder/unlimited_ocr_decoder.aimodel" },
 ]
-open_questions = ["Do either of these exporters take flags that changed the published bundles? Not recorded."]
+notes = [
+  "Recorded commands: conversion/unlimited_ocr/README.md runs `export_vision.py` bare and",
+  "`export_decoder.py --unified` — one bundle carrying both prefill and decode, which is the",
+  "single decoder .aimodel that was published. --no-metal / --max-step / --layers are debug flags.",
+]
 
 # ===========================================================================
 # Ternary / bitnet

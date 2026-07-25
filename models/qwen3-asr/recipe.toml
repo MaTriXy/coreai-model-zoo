@@ -13,7 +13,8 @@ steps = [
 ]
 runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
 open_questions = [
-  "The decoder is int8hu with a 390-token audio prefix (n390) and a static S=1 graph; the encoder",
-  "pins k30. Which flags set n390/k30, and was --head-sym used? conversion/qwen3_asr/STATE.md is",
-  "the port's own record and should be able to answer this.",
+  "conversion/qwen3_asr/STATE.md names the ship artifacts as the K=30 encoder plus",
+  "`qwen3_asr_1.7b_int8hu_unified_cl1024/` — a UNIFIED prefill+decode bundle. What is published",
+  "is `qwen3_asr_1.7b_decode_int8hu_n390_s1`, a separate decode bundle with a 390-token audio",
+  "prefix. The two records disagree: which artifact is the shipped one, and which flags built it?",
 ]

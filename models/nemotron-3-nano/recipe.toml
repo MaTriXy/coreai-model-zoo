@@ -4,19 +4,19 @@
 
 ["nemotron-3-nano-4b"]
 script = "export_nemotron_h_decode_pipelined.py"
-args = ["int8hu"]
+args = ["int8hu", "--head-sym"]
 card = "README.md"
 hf_repo = "mlboydaisuke/Nemotron-3-Nano-4B-CoreAI"
 bundle = "gpu-pipelined/nemotron_3_nano_4b_decode_int8hu"
-status = "unverified"
+status = "verified"
 overlay = true
 runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
-open_questions = [
-  "Was --head-sym (and --head-quant) passed? This exporter feeds them into the lm_head spec but",
-  "does not encode them in the bundle name, and the card documents no command — so the published",
-  "name is consistent with both. Every other model in this family ships --head-sym.",
+aot = "xcrun coreai-build compile exports/<name>/<name>.aimodel --platform iOS --preferred-compute gpu --architecture h18p --output exports/<name>"
+notes = [
+  "Recorded command: conversion/_nemotron_h_hf_upload.py — the script that published this repo —",
+  "documents `export_nemotron_h_decode_pipelined.py int8hu --head-sym` plus the AOT step above.",
+  "The card states int8 at 16.0 tok/s is the ship shape. An iOS AOT twin is published too.",
 ]
-notes = ["The card states int8 at 16.0 tok/s is the ship shape. An iOS AOT twin is published too."]
 
 # ===========================================================================
 # MoE text LLMs — the gather-kernel family

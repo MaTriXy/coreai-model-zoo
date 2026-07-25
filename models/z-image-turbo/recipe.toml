@@ -5,19 +5,18 @@
 ["z-image-turbo"]
 card = "README.md"
 hf_repo = "mlboydaisuke/Z-Image-Turbo-CoreAI"
-status = "unverified"
+status = "verified"
 steps = [
-  { script = "zimage/export_dit.py", args = [], bundle = "zimage_dit_512_cap32_full_native_bf16_dyncap_dynimg_iofp32.aimodel" },
-  { script = "zimage/export_encoder.py", args = [], bundle = "zimage_encoder_seq64_full_bf16_ids_iofp32.aimodel" },
-  { script = "zimage/export_vae.py", args = [], bundle = "zimage_vae_512_fp32.aimodel" },
+  { script = "zimage/export_dit.py", args = ["bf16", "--size", "512", "--cap", "32", "--dyn-cap", "--dyn-img", "--io-fp32"], bundle = "zimage_dit_512_cap32_full_native_bf16_dyncap_dynimg_iofp32.aimodel" },
+  { script = "zimage/export_encoder.py", args = ["bf16", "--L", "64", "--ids", "--io-fp32"], bundle = "zimage_encoder_seq64_full_bf16_ids_iofp32.aimodel" },
+  { script = "zimage/export_vae.py", args = ["--size", "512"], bundle = "zimage_vae_512_fp32.aimodel" },
   { script = "zimage/export_glue.py", args = [], bundle = "glue/zimage_t_embedder_fp32/zimage_t_embedder_fp32.aimodel" },
 ]
-open_questions = [
-  "The DiT bundle name encodes size/cap/mode/dynamic-axis flags (512, cap32, native bf16, dyncap,",
-  "dynimg, iofp32) and the VAE ships at three resolutions — the exact flag set per bundle is not",
-  "recorded anywhere. bf16 is load-bearing here: fp16 NaNs this model.",
+notes = [
+  "Every argument is recoverable: these exporters build the bundle name from their flags, so",
+  "`zimage_dit_512_cap32_full_native_bf16_dyncap_dynimg_iofp32` inverts to exactly the arguments",
+  "above (`full` = no --layers, no `_Xact` = --base auto, no `_actq`, no `_rsNuN`). Likewise",
+  "`..._encoder_seq64_full_bf16_ids_iofp32` -> --L 64 --ids --io-fp32.",
+  "The VAE ships at three sizes from the same command with --size swapped (256 / 512 / 1024).",
+  "bf16 is load-bearing: fp16 NaNs this model, which is why it is Mac-only.",
 ]
-
-# ===========================================================================
-# Audio — ASR, TTS, separation, diarization
-# ===========================================================================

@@ -5,13 +5,15 @@
 ["mineru-2.5-pro"]
 card = "README.md"
 hf_repo = "mlboydaisuke/MinerU2.5-Pro-CoreAI"
-status = "unverified"
+script = "export_mineru_pipelined.py"
+args = ["int8lin"]
+bundle = "decoder"
+status = "verified"
 overlay = true
 runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
-open_questions = [
-  "Same shape as glm-ocr: published as `decoder/` + `vision/mineru_vision.aimodel` (plus a",
-  "`layout/` pair), and the exporter's mode is not in the published directory names.",
-  "Which mode produced each? Note the layout decoder's metadata records a local absolute path",
-  "as its hf_model_id — that is published on Hugging Face and should be corrected.",
+notes = [
+  "Recorded mode: conversion/_mineru_hf_upload.py publishes \"vision (fp16) + decoder (int8lin S=1)\".",
+  "The layout/ pair is the same graph run over the layout model; its metadata pointed at a local",
+  "path until 2026-07-25.",
+  "Downloaded checkpoint dir: ZOO_WORK_ROOT/_mineru_dl (see conversion/_paths.py).",
 ]
-notes = ["Downloaded checkpoint dir: ZOO_WORK_ROOT/_mineru_dl (see conversion/_paths.py)."]

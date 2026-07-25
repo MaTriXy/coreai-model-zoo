@@ -4,13 +4,14 @@
 
 ["llada-8b-dllm"]
 script = "dllm/export_llada.py"
-args = []
+args = ["--mode", "int4hu", "--seq", "256"]
 card = "README.md"
 hf_repo = "mlboydaisuke/LLaDA-8B-dLLM-CoreAI"
 bundle = "macos"
-status = "unverified"
-open_questions = [
-  "The published bundle sits in a bare `macos/` directory with a 256-token context; the exporter's",
-  "flags are not recorded in the name. Which produced it?",
+status = "verified"
+notes = [
+  "The card records the shipped shape — int4 per-block-32 body + int8 head, 4.9 GB, S=256 canvas",
+  "— and the exporter's own usage documents that shape as `--mode int4hu`; the published bundle's",
+  "metadata confirms the 256-token canvas. int4lin (fp16 head) and fp16 are the other modes.",
+  "Diffusion LLM: no KV cache, whole-sequence denoising. Mac-only.",
 ]
-notes = ["Diffusion LLM: no KV cache, whole-sequence denoising. Mac-only."]

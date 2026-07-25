@@ -57,16 +57,26 @@ def recipes() -> dict[str, dict]:
 
 
 def repo_to_family(all_recipes: dict[str, dict]) -> dict[str, set[str]]:
-    """Which family documents a published repo: recipe first, then links in the cards."""
+    """Which `models/<family>/` documents a published repo.
+
+    In precedence order, because the last one is a guess: the recipe's own `hf_repo`, the
+    kit catalog joined through the gen-cards sidecar, a README table row that carries both
+    a repo link and a card link, and only then a bare link inside some card's body — which
+    is why a card that mentions a sibling model used to claim it.
+    """
     out: dict[str, set[str]] = defaultdict(set)
     for recipe in all_recipes.values():
         if repo := recipe.get("hf_repo"):
             out[repo].add(recipe["family"])
-    for family in families():
-        text = (MODELS / family / "README.md").read_text(errors="ignore")
-        for rid in set(HF_LINK.findall(text)):
-            if not rid.startswith("john-rocky/"):
-                out[rid].add(family)
+
+    sidecar = REPO / "scripts" / "gen-cards" / "cards.json"
+    if sidecar.exists():
+        by_slug = json.loads(sidecar.read_text()).get("models", {})
+        for repo, slug in kit_slugs().items():
+            card = (by_slug.get(slug) or {}).get("zooCard")
+            if repo and card:
+                out[repo].add(Path(card).parts[-2])
+
     for line in (REPO / "README.md").read_text().splitlines():
         if not line.startswith("|"):
             continue
@@ -74,21 +84,33 @@ def repo_to_family(all_recipes: dict[str, dict]) -> dict[str, set[str]]:
         cards = set(CARD_LINK.findall(line))
         for r in repos:
             out[r] |= cards
+
+    for family in families():
+        text = (MODELS / family / "README.md").read_text(errors="ignore")
+        for rid in set(HF_LINK.findall(text)):
+            if not rid.startswith("john-rocky/") and not out.get(rid):
+                out[rid].add(family)
     return out
 
 
 def kit_slugs() -> dict[str, str]:
-    """family -> CoreAIKit catalog slug, from the gen-cards sidecar."""
-    path = REPO / "scripts" / "gen-cards" / "cards.json"
-    if not path.exists():
-        return {}
-    out = {}
-    for slug, m in json.loads(path.read_text()).get("models", {}).items():
-        if card := m.get("zooCard"):
-            parts = Path(card).parts
-            if len(parts) >= 2:
-                out[parts[-2]] = slug
-    return out
+    """HF repo id -> CoreAIKit catalog slug.
+
+    Read from the kit's own catalog when it is checked out beside this repo, because that
+    is the list of models the kit actually ships; the gen-cards sidecar only knows the
+    ones whose card it manages, which is how "shipped through the kit but undocumented
+    here" stayed invisible.
+    """
+    for base in (REPO.parent / "coreai-kit", REPO.parent.parent / "coreai-kit"):
+        path = base / "catalog.json"
+        if path.exists():
+            data = json.loads(path.read_text())
+            models = data.get("models", data)
+            items = models.items() if isinstance(models, dict) else (
+                (m.get("id"), m) for m in models)
+            return {m.get("repo") or m.get("hf"): slug for slug, m in items
+                    if (m.get("repo") or m.get("hf"))}
+    return {}
 
 
 def verify_results() -> dict[str, list[dict]]:
@@ -130,7 +152,7 @@ def collect(cat: Catalog) -> list[dict]:
             "bundles": bundles_of(files),
             "families": fams,
             "recipes": sorted({n for f in fams for n in by_family_recipes.get(f, [])}),
-            "kit": sorted({slugs[f] for f in fams if f in slugs}),
+            "kit": [slugs[rid]] if rid in slugs else [],
             "tier1": verified.get(rid, []),
         })
     rows.sort(key=lambda r: (-r["dl30"], r["id"].lower()))

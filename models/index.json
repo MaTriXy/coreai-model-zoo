@@ -435,7 +435,9 @@
      "run": "python3 conversion/zoo_convert.py run glm-4.7-flash",
      "open_questions": [
       "Same head-flag ambiguity as qwen3.6-35b-a3b: --head-sym / --head-quant change the artifact and",
-      "do not appear in the name."
+      "do not appear in the name. For qwen3.6-35B the answer was found \u2014 knowledge/ records a bare",
+      "`sym8` \u2014 but no such record exists for this port, and its twin's command is not evidence for",
+      "it. Anything recorded from the GLM-4.7-Flash session would settle it."
      ]
     }
    ],
@@ -493,18 +495,12 @@
    "recipes": [
     {
      "name": "glm-ocr",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/GLM-OCR-CoreAI",
-     "bundle": null,
+     "bundle": "decoder",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run glm-ocr",
-     "open_questions": [
-      "The repo publishes `decoder/` and `vision/glm_ocr_vision.aimodel`, but the decoder bundle's",
-      "own metadata names its source as the zoo repo rather than the upstream model, and the card",
-      "lists fp16 / int8lin / int8hu side by side without saying which produced the published",
-      "decoder. export_glm_ocr_pipelined.py names bundles glm_ocr_decode_<mode>, so the published",
-      "`decoder/` directory name carries no mode either. Which mode shipped?"
-     ]
+     "open_questions": []
     }
    ],
    "repos": [
@@ -596,16 +592,12 @@
    "recipes": [
     {
      "name": "kokoro-82m",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/Kokoro-82M-CoreAI",
      "bundle": "kokoro_predictor.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run kokoro-82m",
-     "open_questions": [
-      "One run emits all three published graphs (predictor / prosody / vocoder), but the card's",
-      "command shows optional --token-bucket 128 --frame-bucket 512 and the bundle names do not",
-      "record the bucket sizes. Were the defaults used?"
-     ]
+     "open_questions": []
     }
    ],
    "repos": [
@@ -685,15 +677,12 @@
    "recipes": [
     {
      "name": "llada-8b-dllm",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/LLaDA-8B-dLLM-CoreAI",
      "bundle": "macos",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run llada-8b-dllm",
-     "open_questions": [
-      "The published bundle sits in a bare `macos/` directory with a 256-token context; the exporter's",
-      "flags are not recorded in the name. Which produced it?"
-     ]
+     "open_questions": []
     }
    ],
    "repos": [
@@ -775,17 +764,12 @@
    "recipes": [
     {
      "name": "mineru-2.5-pro",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/MinerU2.5-Pro-CoreAI",
-     "bundle": null,
+     "bundle": "decoder",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run mineru-2.5-pro",
-     "open_questions": [
-      "Same shape as glm-ocr: published as `decoder/` + `vision/mineru_vision.aimodel` (plus a",
-      "`layout/` pair), and the exporter's mode is not in the published directory names.",
-      "Which mode produced each? Note the layout decoder's metadata records a local absolute path",
-      "as its hf_model_id \u2014 that is published on Hugging Face and should be corrected."
-     ]
+     "open_questions": []
     }
    ],
    "repos": [
@@ -928,16 +912,12 @@
    "recipes": [
     {
      "name": "nemotron-3-nano-4b",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/Nemotron-3-Nano-4B-CoreAI",
      "bundle": "gpu-pipelined/nemotron_3_nano_4b_decode_int8hu",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run nemotron-3-nano-4b",
-     "open_questions": [
-      "Was --head-sym (and --head-quant) passed? This exporter feeds them into the lm_head spec but",
-      "does not encode them in the bundle name, and the card documents no command \u2014 so the published",
-      "name is consistent with both. Every other model in this family ships --head-sym."
-     ]
+     "open_questions": []
     }
    ],
    "repos": [
@@ -1029,15 +1009,12 @@
    "recipes": [
     {
      "name": "parakeet-tdt-0.6b",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/Parakeet-TDT-0.6B-CoreAI",
      "bundle": null,
      "steps": 2,
      "run": "python3 conversion/zoo_convert.py run parakeet-tdt-0.6b",
-     "open_questions": [
-      "The encoder name pins a 2885-frame input (L2885) and the decoder splits into predict + joint;",
-      "which flags set the frame count and produced each of the three published graphs?"
-     ]
+     "open_questions": []
     }
    ],
    "repos": [
@@ -1086,9 +1063,10 @@
      "steps": 2,
      "run": "python3 conversion/zoo_convert.py run qwen3-asr-1.7b",
      "open_questions": [
-      "The decoder is int8hu with a 390-token audio prefix (n390) and a static S=1 graph; the encoder",
-      "pins k30. Which flags set n390/k30, and was --head-sym used? conversion/qwen3_asr/STATE.md is",
-      "the port's own record and should be able to answer this."
+      "conversion/qwen3_asr/STATE.md names the ship artifacts as the K=30 encoder plus",
+      "`qwen3_asr_1.7b_int8hu_unified_cl1024/` \u2014 a UNIFIED prefill+decode bundle. What is published",
+      "is `qwen3_asr_1.7b_decode_int8hu_n390_s1`, a separate decode bundle with a 390-token audio",
+      "prefix. The two records disagree: which artifact is the shipped one, and which flags built it?"
      ]
     }
    ],
@@ -1337,16 +1315,12 @@
    "recipes": [
     {
      "name": "qwen3.6-35b-a3b",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/Qwen3.6-35B-A3B-CoreAI",
      "bundle": "gpu-pipelined/qwen3_6_35b_a3b_decode_sym8_gather",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run qwen3.6-35b-a3b",
-     "open_questions": [
-      "Was --head-sym / --head-quant passed? The exporter feeds both into the lm_head spec but leaves",
-      "them out of the bundle name, and the card names the script without its flags. `sym8` is certain",
-      "(it is the only choice); the head configuration is not recoverable from anything published."
-     ]
+     "open_questions": []
     }
    ],
    "repos": [
@@ -1562,14 +1536,12 @@
    "recipes": [
     {
      "name": "unlimited-ocr",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/Unlimited-OCR-CoreAI",
      "bundle": null,
      "steps": 2,
      "run": "python3 conversion/zoo_convert.py run unlimited-ocr",
-     "open_questions": [
-      "Do either of these exporters take flags that changed the published bundles? Not recorded."
-     ]
+     "open_questions": []
     }
    ],
    "repos": [
@@ -1727,27 +1699,6 @@
    ],
    "repos": [
     {
-     "id": "mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI",
-     "downloads_30d": 0,
-     "bundles": [
-      "ios/nemotron_asr_joint_float32.aimodel",
-      "ios/nemotron_asr_predict_float32.aimodel",
-      "ios/nemotron_asr_stream_conformer_a_float16.h18p.aimodelc",
-      "ios/nemotron_asr_stream_conformer_b_float16.h18p.aimodelc",
-      "ios/nemotron_asr_stream_pre_first_float16.aimodel",
-      "ios/nemotron_asr_stream_pre_float16.aimodel",
-      "macos/nemotron_asr_joint_float32.aimodel",
-      "macos/nemotron_asr_predict_float32.aimodel",
-      "macos/nemotron_asr_stream_conformer_a_float16.aimodel",
-      "macos/nemotron_asr_stream_conformer_b_float16.aimodel",
-      "macos/nemotron_asr_stream_pre_first_float16.aimodel",
-      "macos/nemotron_asr_stream_pre_float16.aimodel"
-     ],
-     "tier1": {
-      "PASS": 12
-     }
-    },
-    {
      "id": "mlboydaisuke/whisper-large-v3-turbo-CoreAI-official",
      "downloads_30d": 0,
      "bundles": [
@@ -1821,16 +1772,12 @@
    "recipes": [
     {
      "name": "z-image-turbo",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/Z-Image-Turbo-CoreAI",
      "bundle": null,
      "steps": 4,
      "run": "python3 conversion/zoo_convert.py run z-image-turbo",
-     "open_questions": [
-      "The DiT bundle name encodes size/cap/mode/dynamic-axis flags (512, cap32, native bf16, dyncap,",
-      "dynimg, iofp32) and the VAE ships at three resolutions \u2014 the exact flag set per bundle is not",
-      "recorded anywhere. bf16 is load-bearing here: fp16 NaNs this model."
-     ]
+     "open_questions": []
     }
    ],
    "repos": [

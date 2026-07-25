@@ -792,7 +792,8 @@
         "freeVars": {
           "image": "CGImage"
         }
-      }
+      },
+      "zooCard": "models/adcsr/README.md"
     },
     "voxcpm-0.5b": {
       "mediaCaption": "VoxCPM 0.5B on iPhone 17 Pro — the zoo's coreai-audio app, real speed.",
@@ -822,7 +823,8 @@
         "freeVars": {
           "text": "String"
         }
-      }
+      },
+      "zooCard": "models/voxcpm/README.md"
     },
     "qwen3-asr-1.7b": {
       "zooCard": "models/qwen3-asr/README.md",
@@ -911,7 +913,8 @@
         "freeVars": {
           "prompt": "String"
         }
-      }
+      },
+      "zooCard": "models/stable-audio-open-small/README.md"
     },
     "yolox-s": {
       "zooCard": "models/yolox/README.md",
@@ -971,7 +974,8 @@
         "freeVars": {
           "text": "String"
         }
-      }
+      },
+      "zooCard": "models/voxcpm2/README.md"
     },
     "qwen2.5-omni-3b-audio": {
       "runner": {
@@ -1004,7 +1008,8 @@
         "freeVars": {
           "audioURL": "URL"
         }
-      }
+      },
+      "zooCard": "models/qwen2.5-omni-audio/README.md"
     },
     "holo2-4b": {
       "zooCard": "models/holo2/README.md",

@@ -5,12 +5,13 @@
 ["parakeet-tdt-0.6b"]
 card = "README.md"
 hf_repo = "mlboydaisuke/Parakeet-TDT-0.6B-CoreAI"
-status = "unverified"
+status = "verified"
 steps = [
   { script = "parakeet/export_encoder.py", args = [], bundle = "parakeet_encoder_float16_L2885.aimodel" },
-  { script = "parakeet/export_decoder.py", args = [], bundle = "parakeet_predict_float32.aimodel" },
+  { script = "parakeet/export_decoder.py", args = ["--dtype", "float32"], bundle = "parakeet_predict_float32.aimodel" },
 ]
-open_questions = [
-  "The encoder name pins a 2885-frame input (L2885) and the decoder splits into predict + joint;",
-  "which flags set the frame count and produced each of the three published graphs?",
+notes = [
+  "The encoder takes no length flag — L2885 (30 s of frames) is baked into the graph — and its",
+  "only knob, --dtype, is float16 in the published name. One decoder run emits both published",
+  "float32 graphs (predict + joint), which is that exporter's documented default.",
 ]
