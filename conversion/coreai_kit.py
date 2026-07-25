@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import shutil
+import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -99,8 +100,6 @@ if __name__ == "__main__":
             return self.l2(torch.relu(self.l1(x)))
 
     torch.manual_seed(0)
-    ok, maxdiff, _ = verify(
-        Toy(), (torch.randn(1, 16),), ["x"], ["y"],
-        "/Users/majimadaisuke/Code/coreai/_smoke/toy.aimodel",
-    )
+    out = Path(tempfile.gettempdir()) / "coreai_kit_selftest" / "toy.aimodel"
+    ok, maxdiff, _ = verify(Toy(), (torch.randn(1, 16),), ["x"], ["y"], str(out))
     print(f"self-test: ok={ok} maxdiff={maxdiff:.2e}")
