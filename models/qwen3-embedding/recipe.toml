@@ -9,7 +9,14 @@ card = "README.md"
 hf_repo = "mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI"
 bundle = "qwen3-embedding-0.6b_float16_s512_static.aimodel"
 status = "verified"
-notes = ["Static sequence length is part of the graph contract; it is in the bundle name."]
+notes = [
+  "Static sequence length is part of the graph contract; it is in the bundle name.",
+  "Reproduced end to end on 2026-07-25 with `uv run` alone — no venv, no overlay: same bundle",
+  "name, same file set, torch-ladder gates all passing (worst per-text cosine 1.000000).",
+  "It is NOT byte-identical to the published bundle, and cannot be: two runs of this same",
+  "command minutes apart differ from each other too (main.mlirb by 7 bytes, main.hash entirely).",
+  "Conversion is not byte-deterministic, so reproduction is judged behaviourally, not by hash.",
+]
 
 ["embeddinggemma-300m"]
 script = "export_embeddinggemma.py"

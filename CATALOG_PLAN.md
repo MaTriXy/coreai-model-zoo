@@ -113,6 +113,13 @@ for all 38 verified recipes; the unverified ones refuse to run without `--force`
 
 ### C3 — oracles and tiers 2–3 (not started)
 
+**Byte-identity is not available as a criterion.** Measured 2026-07-25: the same recipe run
+twice on the same machine, minutes apart, produces `.aimodel` bundles that differ from each
+other (`main.mlirb` by 7 bytes, `main.hash` entirely) — and the published bundle differs from
+both by 492 bytes out of 1.19 GB. Conversion is not byte-deterministic, so "did this recipe
+reproduce the published bundle?" can only be answered behaviourally. That is what the oracle
+tiers are for, and it is why a stored hash would be worthless here.
+
 Order strictly by 30-day downloads from `_INVENTORY.md`. The 55 zero-download Core AI repos are
 last, and some of them are candidates for unpublishing rather than verifying.
 

@@ -79,6 +79,13 @@ Paths never hardcode a home directory. `python3 conversion/_paths.py` prints whe
 exports and the Hugging Face cache resolve; `ZOO_WORK_ROOT`, `ZOO_EXPORTS`, `ZOO_CODE_ROOT` and
 `HF_HUB_CACHE` move them.
 
+### Do not expect byte-identity
+
+A rebuilt bundle will not hash-match the published one, and that is not a failure: running the
+same recipe twice on the same machine produces different bytes too (measured: `main.mlirb`
+differing by 7 bytes, `main.hash` entirely). Judge a reproduction by the gates the script runs
+and by `zoo_verify.py`, never by a checksum.
+
 ### When a recipe is `unverified`
 
 `zoo_convert.py run` refuses, and prints the exact question it cannot answer — usually "was
