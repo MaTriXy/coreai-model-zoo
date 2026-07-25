@@ -156,13 +156,19 @@ only the owner has.
 
 **Still open — one answer each:**
 
-1. **9 unverified recipes** (was 18). Nine were resolved by reading what the repo already
-   recorded — upload scripts, port notes, per-port READMEs — not by re-exporting anything.
-   What is left is genuinely unwritten: GLM-4.7-Flash's head flags (its twin's recorded
-   command is not evidence for it), qwen3-asr (STATE.md and the published repo name different
-   ship artifacts), embeddinggemma's sequence length, MiniCPM5-1B's stock-CLI line, BitVLA,
-   GLM-Image, the Nemotron ASR graph split, and TripoSplat / LTX-Video, whose export scripts
-   are not in this repository at all. Exact questions: `models/_INVENTORY.md` §3.
+1. **3 unverified recipes** (was 18). Fifteen were resolved by reading what the repo already
+   recorded — upload scripts, port notes, per-port READMEs — and in two cases by measuring the
+   published artifact (a bundle's bytes-per-parameter fixes its precision; a suffix that
+   survives into the published name fixes a flag). Nothing was re-exported. What is left is
+   genuinely unwritten: GLM-4.7-Flash's head flags (its twin's recorded command is not evidence
+   for it), embeddinggemma's static sequence length (no artifact encodes it), and qwen3-asr,
+   where `conversion/qwen3_asr/STATE.md` names a *unified cl1024* ship artifact while the repo
+   publishes a separate `n390_s1` decode bundle. Exact questions: `models/_INVENTORY.md` §3.
+
+   **Method note, because it cost two false statements in this plan:** "the scripts are not in
+   this repository" was wrong for both TripoSplat and LTX-Video — they are named `_conv_*.py`,
+   not `export_*.py`. List the directory before concluding anything is missing.
+
 2. **Recipes for the eight newly carded ports.** Their cards are now the model pages
    themselves, but none has a `recipe.toml` — five of them ship through CoreAIKit, so the
    catalog can hand a user the model but not the command that built it. The material exists
