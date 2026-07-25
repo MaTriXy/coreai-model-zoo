@@ -8,6 +8,17 @@ and run through [`zoo_convert.py`](zoo_convert.py) —
 `python3 zoo_convert.py run qwen3.5-0.8b`. The model authoring code the scripts import is
 packaged in [`overlay/`](overlay/) (pinned apple/coreai-models base + patch + files).
 
+**Was it published correctly?** [`zoo_verify.py`](zoo_verify.py) compares a published bundle's
+tokenizer, chat template, context length and declared precision against the source repository it
+names in its own `metadata.json` — no oracle, no device, no weights, so it runs over the whole
+catalog in minutes: `python3 zoo_verify.py --all --json ../models/_VERIFY.json`. Results land in
+[`../models/_INVENTORY.md`](../models/_INVENTORY.md) via `scripts/gen_inventory.py`.
+
+**Paths**: no script hardcodes a home directory. Checkpoint downloads, exports, sibling checkouts
+and the Hugging Face cache all resolve through [`_paths.py`](_paths.py) — run it
+(`python3 _paths.py`) to print where they land, and set `ZOO_WORK_ROOT` / `ZOO_EXPORTS` /
+`ZOO_CODE_ROOT` / `HF_HUB_CACHE` to move them.
+
 ## How it relates to Apple's `coreai_models`
 
 The re-authored decoders use `coreai_models` primitives (KVCache, RMSNorm, RoPE, SDPA, SSMState,

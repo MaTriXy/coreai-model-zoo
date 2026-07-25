@@ -72,6 +72,17 @@ def recipes_by_card() -> dict[str, list[str]]:
     return out
 
 
+def verify_results() -> dict[str, list[dict]]:
+    """HF repo id -> per-bundle tier-1 verdicts, from `conversion/zoo_verify.py --json`."""
+    path = REPO / "models" / "_VERIFY.json"
+    if not path.exists():
+        return {}
+    out: dict[str, list[dict]] = defaultdict(list)
+    for b in json.loads(path.read_text())["bundles"]:
+        out[b["repo"]].append(b)
+    return out
+
+
 def kit_slugs_by_card() -> dict[str, str]:
     path = REPO / "scripts" / "gen-cards" / "cards.json"
     if not path.exists():
@@ -85,7 +96,7 @@ def collect(cat: Catalog) -> list[dict]:
     repos += [m for m in (cat.repo(r) for r in EXTRA_REPOS) if m]
 
     from_readme, from_cards = readme_mapping(), card_mapping()
-    by_recipe, by_kit = recipes_by_card(), kit_slugs_by_card()
+    by_recipe, by_kit, verified = recipes_by_card(), kit_slugs_by_card(), verify_results()
 
     rows = []
     for m in repos:
@@ -106,9 +117,27 @@ def collect(cat: Catalog) -> list[dict]:
             "cards": cards,
             "recipes": sorted({r for c in cards for r in by_recipe.get(c, [])}),
             "kit": sorted({by_kit[c] for c in cards if c in by_kit}),
+            "tier1": verified.get(rid, []),
         })
     rows.sort(key=lambda r: (-r["dl30"], r["id"].lower()))
     return rows
+
+
+def cell(text: str) -> str:
+    """Special tokens such as `<|im_end|>` contain the column separator."""
+    return text.replace("|", "\\|")
+
+
+def tier1_cell(row: dict) -> str:
+    """Compact per-repo tier-1 result: failures first, because that is the point."""
+    if not row["tier1"]:
+        return "—"
+    tally: dict[str, int] = defaultdict(int)
+    for b in row["tier1"]:
+        tally[b["verdict"]] += 1
+    parts = [f"**{tally[v]} {v}**" if v in ("FAIL", "DIFF") else f"{tally[v]} {v.lower()}"
+             for v in ("FAIL", "DIFF", "PASS", "SKIPPED") if tally.get(v)]
+    return " ".join(parts)
 
 
 def render(rows: list[dict]) -> str:
@@ -147,17 +176,43 @@ def render(rows: list[dict]) -> str:
         "",
         "## All repos, by 30-day downloads",
         "",
-        "| repo | 30d DL | ♥ | fmt | role | bundles | card | recipe | kit |",
-        "| --- | ---: | ---: | --- | --- | ---: | --- | --- | --- |",
+        "| repo | 30d DL | ♥ | fmt | role | bundles | tier-1 | card | recipe | kit |",
+        "| --- | ---: | ---: | --- | --- | ---: | --- | --- | --- | --- |",
     ]
     for r in rows:
         card = ", ".join(f"[{c[:-3]}](../zoo/{c})" for c in r["cards"]) or "—"
         L.append(
             f"| [{r['id']}](https://huggingface.co/{r['id']}) | {r['dl30']} | {r['likes']} | "
-            f"{r['format']} | {r['role']} | {len(r['bundles'])} | {card} | "
+            f"{r['format']} | {r['role']} | {len(r['bundles'])} | {tier1_cell(r)} | {card} | "
             f"{', '.join(f'`{x}`' for x in r['recipes']) or '—'} | "
             f"{', '.join(f'`{x}`' for x in r['kit']) or '—'} |"
         )
+
+    defects = [(r, b) for r in rows for b in r["tier1"] if b["verdict"] in ("FAIL", "DIFF")]
+    checked = sum(len(r["tier1"]) for r in rows)
+    L += [
+        "",
+        "## Tier-1 defects",
+        "",
+        f"From `conversion/zoo_verify.py --all` over {checked} published bundles: the",
+        "bundle's own tokenizer, chat template, context length and declared precision",
+        "compared against the source repository it names in its `metadata.json`. No",
+        "oracle, no device, no weights.",
+        "",
+        "**FAIL** = wrong on its own terms. **DIFF** = deviates from the source with no",
+        "recorded reason; record the expectation in `models/<name>/verify.toml` and it",
+        "becomes the bar instead of the deviation.",
+        "",
+    ]
+    if defects:
+        L += ["| repo | bundle | verdict | what |", "| --- | --- | --- | --- |"]
+        for r, b in sorted(defects, key=lambda x: (x[1]["verdict"], -x[0]["dl30"])):
+            for c in b["checks"]:
+                if c["status"] in ("FAIL", "DIFF"):
+                    L.append(f"| {r['id'].split('/')[-1]} | `{cell(b['bundle'])}` | "
+                             f"{b['verdict']} | {c['check']}: {cell(c['detail'])} |")
+    else:
+        L.append("- (none — run `conversion/zoo_verify.py --all --json models/_VERIFY.json` first)")
 
     L += [
         "",

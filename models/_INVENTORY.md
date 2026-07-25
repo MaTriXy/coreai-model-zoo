@@ -24,131 +24,166 @@ configuration; a single bundle answers that question by itself.
 
 ## All repos, by 30-day downloads
 
-| repo | 30d DL | ♥ | fmt | role | bundles | card | recipe | kit |
-| --- | ---: | ---: | --- | --- | ---: | --- | --- | --- |
-| [mlboydaisuke/LFM2.5-1.2B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-1.2B-CoreAI) | 771 | 0 | coreai | port | 3 | [lfm2.5](../zoo/lfm2.5.md) | `lfm2.5-1.2b` | `lfm2.5-1.2b` |
-| [mlboydaisuke/LFM2.5-8B-A1B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-8B-A1B-CoreAI) | 699 | 1 | coreai | port | 1 | [lfm2.5-8b-a1b-moe](../zoo/lfm2.5-8b-a1b-moe.md) | — | `lfm2.5-8b-a1b` |
-| [mlboydaisuke/qwen3.5-0.8B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreAI) | 559 | 0 | coreai | port | 9 | [qwen3.5](../zoo/qwen3.5.md) | `qwen3.5-0.8b`, `qwen3.5-2b` | `qwen3.5-2b` |
-| [mlboydaisuke/Ministral-3-3B-Instruct-2512-LiteRT](https://huggingface.co/mlboydaisuke/Ministral-3-3B-Instruct-2512-LiteRT) | 511 | 1 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/Ornith-1.0-9B-CoreAI](https://huggingface.co/mlboydaisuke/Ornith-1.0-9B-CoreAI) | 490 | 1 | coreai | port | 2 | [ornith-1.0-9b](../zoo/ornith-1.0-9b.md) | — | — |
-| [mlboydaisuke/gemma-4-E2B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI) | 395 | 1 | coreai | port | 22 | [gemma4-e2b](../zoo/gemma4-e2b.md), [gemma4-vl](../zoo/gemma4-vl.md) | — | `gemma-4-e2b` |
-| [mlboydaisuke/Qwen3.6-27B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-27B-CoreAI) | 393 | 1 | coreai | port | 1 | [qwen3.6-27b](../zoo/qwen3.6-27b.md) | — | `qwen3.6-27b` |
-| [mlboydaisuke/Qwen3.6-35B-A3B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-35B-A3B-CoreAI) | 385 | 5 | coreai | port | 1 | [qwen3.6](../zoo/qwen3.6.md) | — | `qwen3.6-35b-a3b` |
-| [mlboydaisuke/qwen3.5-2B-CoreML](https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreML) | 343 | 0 | coreml | port | 0 | — | — | — |
-| [mlboydaisuke/qwen3.5-0.8B-CoreML](https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreML) | 315 | 0 | coreml | port | 0 | — | — | — |
-| [mlboydaisuke/gemma-4-E2B-coreml](https://huggingface.co/mlboydaisuke/gemma-4-E2B-coreml) | 249 | 9 | coreml | port | 0 | — | — | — |
-| [mlboydaisuke/RF-DETR-CoreAI](https://huggingface.co/mlboydaisuke/RF-DETR-CoreAI) | 179 | 1 | coreai | port | 14 | [rf-detr](../zoo/rf-detr.md) | — | `rf-detr` |
-| [mlboydaisuke/gemma-4-E4B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E4B-CoreAI) | 163 | 0 | coreai | port | 3 | [gemma4-e4b](../zoo/gemma4-e4b.md) | — | `gemma-4-e4b` |
-| [mlboydaisuke/qwen3.5-2B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreAI) | 114 | 1 | coreai | port | 4 | [qwen3.5](../zoo/qwen3.5.md) | `qwen3.5-0.8b`, `qwen3.5-2b` | `qwen3.5-2b` |
-| [mlboydaisuke/granite-4.0-h-CoreAI](https://huggingface.co/mlboydaisuke/granite-4.0-h-CoreAI) | 104 | 0 | coreai | port | 4 | [granite-4.0-h](../zoo/granite-4.0-h.md) | — | `granite-4.0-h-1b` |
-| [mlboydaisuke/Llama-3.2-3B-Instruct-LiteRT](https://huggingface.co/mlboydaisuke/Llama-3.2-3B-Instruct-LiteRT) | 100 | 1 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/Qwen3-VL-4B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-VL-4B-CoreAI) | 96 | 0 | coreai | port | 3 | [qwen3-vl](../zoo/qwen3-vl.md) | — | `qwen3-vl-2b` |
-| [mlboydaisuke/Qwen3-VL-2B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-VL-2B-CoreAI) | 92 | 0 | coreai | port | 3 | [qwen3-vl](../zoo/qwen3-vl.md) | — | `qwen3-vl-2b` |
-| [mlboydaisuke/Qwen3-VL-8B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-VL-8B-CoreAI) | 89 | 0 | coreai | port | 3 | [qwen3-vl](../zoo/qwen3-vl.md) | — | `qwen3-vl-2b` |
-| [mlboydaisuke/qwen3-vl-2b-stateful-coreml](https://huggingface.co/mlboydaisuke/qwen3-vl-2b-stateful-coreml) | 88 | 0 | coreml | port | 0 | — | — | — |
-| [mlboydaisuke/qwen3-vl-2b-coreml](https://huggingface.co/mlboydaisuke/qwen3-vl-2b-coreml) | 78 | 0 | coreml | port | 0 | — | — | — |
-| [mlboydaisuke/qwen3-vl-4b-stateful-coreml](https://huggingface.co/mlboydaisuke/qwen3-vl-4b-stateful-coreml) | 74 | 0 | coreml | port | 0 | — | — | — |
-| [mlboydaisuke/Mimi-LiteRT](https://huggingface.co/mlboydaisuke/Mimi-LiteRT) | 70 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/Dia2-1B-LiteRT](https://huggingface.co/mlboydaisuke/Dia2-1B-LiteRT) | 68 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/Matcha-TTS-LiteRT](https://huggingface.co/mlboydaisuke/Matcha-TTS-LiteRT) | 68 | 1 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/DeepSeek-R1-Distill-Qwen-1.5B-LiteRT](https://huggingface.co/mlboydaisuke/DeepSeek-R1-Distill-Qwen-1.5B-LiteRT) | 64 | 1 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/Youtu-LLM-2B-CoreAI](https://huggingface.co/mlboydaisuke/Youtu-LLM-2B-CoreAI) | 64 | 1 | coreai | port | 3 | [youtu](../zoo/youtu.md) | — | — |
-| [mlboydaisuke/VibeVoice-Realtime-0.5B-LiteRT](https://huggingface.co/mlboydaisuke/VibeVoice-Realtime-0.5B-LiteRT) | 56 | 1 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/Kokoro-82M-LiteRT](https://huggingface.co/mlboydaisuke/Kokoro-82M-LiteRT) | 51 | 1 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/DeepSeek-R1-Distill-Qwen-7B-LiteRT](https://huggingface.co/mlboydaisuke/DeepSeek-R1-Distill-Qwen-7B-LiteRT) | 35 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/PE-Core-base-patch16-224-LiteRT](https://huggingface.co/mlboydaisuke/PE-Core-base-patch16-224-LiteRT) | 35 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/vdsr-litert](https://huggingface.co/mlboydaisuke/vdsr-litert) | 35 | 1 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/Qwen2.5-3B-Instruct-LiteRT](https://huggingface.co/mlboydaisuke/Qwen2.5-3B-Instruct-LiteRT) | 34 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/Falcon3-3B-Instruct-LiteRT](https://huggingface.co/mlboydaisuke/Falcon3-3B-Instruct-LiteRT) | 33 | 2 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/real-esrgan-x4v3-litert](https://huggingface.co/mlboydaisuke/real-esrgan-x4v3-litert) | 31 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/SAM2-hiera-tiny-LiteRT](https://huggingface.co/mlboydaisuke/SAM2-hiera-tiny-LiteRT) | 30 | 1 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/qwen2.5-0.5b-coreml](https://huggingface.co/mlboydaisuke/qwen2.5-0.5b-coreml) | 28 | 0 | coreml | port | 0 | — | — | — |
-| [mlboydaisuke/zero-dce-litert](https://huggingface.co/mlboydaisuke/zero-dce-litert) | 28 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/Kokoro-G2P-en-US-LiteRT](https://huggingface.co/mlboydaisuke/Kokoro-G2P-en-US-LiteRT) | 24 | 1 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/U-2-Net-LiteRT](https://huggingface.co/mlboydaisuke/U-2-Net-LiteRT) | 24 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/qwen3-vl-8b-stateful-coreml](https://huggingface.co/mlboydaisuke/qwen3-vl-8b-stateful-coreml) | 23 | 0 | coreml | port | 0 | — | — | — |
-| [mlboydaisuke/yolox-nano-litert](https://huggingface.co/mlboydaisuke/yolox-nano-litert) | 23 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/Depth-Anything-3-Small-LiteRT](https://huggingface.co/mlboydaisuke/Depth-Anything-3-Small-LiteRT) | 19 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/Metric3D-v2-LiteRT](https://huggingface.co/mlboydaisuke/Metric3D-v2-LiteRT) | 19 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/ssdlite320-mobilenetv3-litert](https://huggingface.co/mlboydaisuke/ssdlite320-mobilenetv3-litert) | 19 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/SigLIP2-base-patch16-224-LiteRT](https://huggingface.co/mlboydaisuke/SigLIP2-base-patch16-224-LiteRT) | 18 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/yolox-tiny-litert](https://huggingface.co/mlboydaisuke/yolox-tiny-litert) | 15 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/Depth-Anything-3-LiteRT](https://huggingface.co/mlboydaisuke/Depth-Anything-3-LiteRT) | 14 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/SAM2.1-Hiera-Tiny-Image-Encoder-LiteRT](https://huggingface.co/mlboydaisuke/SAM2.1-Hiera-Tiny-Image-Encoder-LiteRT) | 14 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/yolox-s-litert](https://huggingface.co/mlboydaisuke/yolox-s-litert) | 14 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/xfeat-litert](https://huggingface.co/mlboydaisuke/xfeat-litert) | 13 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/yolox-m-litert](https://huggingface.co/mlboydaisuke/yolox-m-litert) | 13 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/lightweight-openpose-litert](https://huggingface.co/mlboydaisuke/lightweight-openpose-litert) | 10 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/SmolLM3-3B-LiteRT](https://huggingface.co/mlboydaisuke/SmolLM3-3B-LiteRT) | 10 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/midas-small-litert](https://huggingface.co/mlboydaisuke/midas-small-litert) | 9 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/MoGe-2-LiteRT](https://huggingface.co/mlboydaisuke/MoGe-2-LiteRT) | 9 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/OLMo-2-1B-Instruct-LiteRT](https://huggingface.co/mlboydaisuke/OLMo-2-1B-Instruct-LiteRT) | 9 | 1 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/LaMa-Dilated-LiteRT](https://huggingface.co/mlboydaisuke/LaMa-Dilated-LiteRT) | 7 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/DAC-16kHz-LiteRT](https://huggingface.co/mlboydaisuke/DAC-16kHz-LiteRT) | 6 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/clip-vit-b32-litert](https://huggingface.co/mlboydaisuke/clip-vit-b32-litert) | 5 | 0 | litert | port | 0 | — | — | — |
-| [mlboydaisuke/AdcSR-CoreAI](https://huggingface.co/mlboydaisuke/AdcSR-CoreAI) | 0 | 3 | coreai | port | 1 | — | — | — |
-| [mlboydaisuke/BitCPM-8B-CoreAI](https://huggingface.co/mlboydaisuke/BitCPM-8B-CoreAI) | 0 | 0 | coreai | port | 1 | [bitcpm-8b](../zoo/bitcpm-8b.md) | — | — |
-| [mlboydaisuke/BitVLA-CoreAI](https://huggingface.co/mlboydaisuke/BitVLA-CoreAI) | 0 | 0 | coreai | port | 4 | [bitvla](../zoo/bitvla.md) | — | — |
-| [mlboydaisuke/clip-vit-base-patch32-CoreAI-official](https://huggingface.co/mlboydaisuke/clip-vit-base-patch32-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — |
-| [mlboydaisuke/ColModernVBERT-CoreAI](https://huggingface.co/mlboydaisuke/ColModernVBERT-CoreAI) | 0 | 0 | coreai | port | 4 | [colmodernvbert](../zoo/colmodernvbert.md) | — | `colmodernvbert` |
-| [mlboydaisuke/coreml-zoo](https://huggingface.co/mlboydaisuke/coreml-zoo) | 0 | 1 | other | port | 0 | — | — | — |
-| [mlboydaisuke/Depth-Anything-3-CoreAI](https://huggingface.co/mlboydaisuke/Depth-Anything-3-CoreAI) | 0 | 1 | coreai | port | 4 | [depth-anything-3](../zoo/depth-anything-3.md) | — | `depth-anything-3-small` |
-| [mlboydaisuke/embeddinggemma-300m-CoreAI](https://huggingface.co/mlboydaisuke/embeddinggemma-300m-CoreAI) | 0 | 0 | coreai | port | 1 | [qwen3-embedding](../zoo/qwen3-embedding.md) | — | — |
-| [mlboydaisuke/embeddinggemma-300m-coreml](https://huggingface.co/mlboydaisuke/embeddinggemma-300m-coreml) | 0 | 0 | coreml | port | 0 | — | — | — |
-| [mlboydaisuke/FastContext-1.0-4B-CoreAI](https://huggingface.co/mlboydaisuke/FastContext-1.0-4B-CoreAI) | 0 | 0 | coreai | port | 1 | [fastcontext](../zoo/fastcontext.md) | `fastcontext-4b` | — |
-| [mlboydaisuke/FLUX.2-klein-4B-CoreAI](https://huggingface.co/mlboydaisuke/FLUX.2-klein-4B-CoreAI) | 0 | 3 | coreai | port | 7 | — | — | — |
-| [mlboydaisuke/functiongemma-270m-coreml](https://huggingface.co/mlboydaisuke/functiongemma-270m-coreml) | 0 | 0 | coreml | port | 0 | — | — | — |
-| [mlboydaisuke/gemma-3-12b-it-CoreAI-official](https://huggingface.co/mlboydaisuke/gemma-3-12b-it-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — |
-| [mlboydaisuke/gemma-3-4b-it-CoreAI-official](https://huggingface.co/mlboydaisuke/gemma-3-4b-it-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — |
-| [mlboydaisuke/Gemma-4-12B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-12B-CoreAI) | 0 | 1 | coreai | port | 2 | [gemma4-12b](../zoo/gemma4-12b.md) | — | `gemma-4-12b` |
-| [mlboydaisuke/Gemma-4-31B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-31B-CoreAI) | 0 | 1 | coreai | port | 1 | [gemma4-31b](../zoo/gemma4-31b.md) | — | `gemma-4-31b` |
-| [mlboydaisuke/gemma-4-E2B-stateful-coreml](https://huggingface.co/mlboydaisuke/gemma-4-E2B-stateful-coreml) | 0 | 0 | coreml | port | 0 | — | — | — |
-| [mlboydaisuke/gemma-4-E4B-coreml](https://huggingface.co/mlboydaisuke/gemma-4-E4B-coreml) | 0 | 2 | coreml | port | 0 | — | — | — |
-| [mlboydaisuke/gemma-4-E4B-multimodal-coreml](https://huggingface.co/mlboydaisuke/gemma-4-E4B-multimodal-coreml) | 0 | 0 | coreml | port | 0 | — | — | — |
-| [mlboydaisuke/GLiNER2-PII-CoreAI](https://huggingface.co/mlboydaisuke/GLiNER2-PII-CoreAI) | 0 | 0 | coreai | port | 2 | [gliner2-pii](../zoo/gliner2-pii.md) | — | — |
-| [mlboydaisuke/GLM-4.7-Flash-CoreAI](https://huggingface.co/mlboydaisuke/GLM-4.7-Flash-CoreAI) | 0 | 0 | coreai | port | 1 | [glm-4.7-flash](../zoo/glm-4.7-flash.md) | — | `glm-4.7-flash` |
-| [mlboydaisuke/GLM-Image-CoreAI](https://huggingface.co/mlboydaisuke/GLM-Image-CoreAI) | 0 | 1 | coreai | port | 5 | [glm-image](../zoo/glm-image.md) | — | — |
-| [mlboydaisuke/GLM-OCR-CoreAI](https://huggingface.co/mlboydaisuke/GLM-OCR-CoreAI) | 0 | 5 | coreai | port | 2 | [glm-ocr](../zoo/glm-ocr.md) | — | — |
-| [mlboydaisuke/gpt-oss-20b-CoreAI-official](https://huggingface.co/mlboydaisuke/gpt-oss-20b-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — |
-| [mlboydaisuke/Holo2-4B-CoreAI](https://huggingface.co/mlboydaisuke/Holo2-4B-CoreAI) | 0 | 2 | coreai | port | 2 | [holo2](../zoo/holo2.md) | `holo2-4b` | `holo2-4b` |
-| [mlboydaisuke/Kokoro-82M-CoreAI](https://huggingface.co/mlboydaisuke/Kokoro-82M-CoreAI) | 0 | 1 | coreai | port | 3 | [kokoro-82m](../zoo/kokoro-82m.md) | — | `kokoro-82m` |
-| [mlboydaisuke/lfm2.5-350m-coreml](https://huggingface.co/mlboydaisuke/lfm2.5-350m-coreml) | 0 | 0 | coreml | port | 0 | — | — | — |
-| [mlboydaisuke/LLaDA-8B-dLLM-CoreAI](https://huggingface.co/mlboydaisuke/LLaDA-8B-dLLM-CoreAI) | 0 | 2 | coreai | port | 1 | [llada-8b](../zoo/llada-8b.md) | — | `llada-8b` |
-| [mlboydaisuke/LTX-Video-2B-CoreAI](https://huggingface.co/mlboydaisuke/LTX-Video-2B-CoreAI) | 0 | 2 | coreai | port | 3 | [ltxvideo](../zoo/ltxvideo.md) | — | `ltx-video-2b` |
-| [mlboydaisuke/magenta-arbitrary-style-transfer-litert](https://huggingface.co/mlboydaisuke/magenta-arbitrary-style-transfer-litert) | 0 | 0 | other | port | 0 | — | — | — |
-| [mlboydaisuke/MelBandRoformer-Vocal-CoreAI](https://huggingface.co/mlboydaisuke/MelBandRoformer-Vocal-CoreAI) | 0 | 0 | coreai | port | 2 | [melband-roformer](../zoo/melband-roformer.md) | — | — |
-| [mlboydaisuke/MinerU2.5-Pro-CoreAI](https://huggingface.co/mlboydaisuke/MinerU2.5-Pro-CoreAI) | 0 | 0 | coreai | port | 4 | [mineru](../zoo/mineru.md) | — | — |
-| [mlboydaisuke/MiniCPM-V-4.6-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM-V-4.6-CoreAI) | 0 | 2 | coreai | port | 4 | [minicpm-v-4.6](../zoo/minicpm-v-4.6.md) | — | `minicpm-v-4.6` |
-| [mlboydaisuke/MiniCPM5-1B-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM5-1B-CoreAI) | 0 | 0 | coreai | port | 1 | [minicpm5-1b](../zoo/minicpm5-1b.md) | — | `minicpm5-1b` |
-| [mlboydaisuke/mistral-7b-v0.3-CoreAI-official](https://huggingface.co/mlboydaisuke/mistral-7b-v0.3-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — |
-| [mlboydaisuke/Nanbeige4.1-3B-CoreAI](https://huggingface.co/mlboydaisuke/Nanbeige4.1-3B-CoreAI) | 0 | 0 | coreai | port | 2 | [nanbeige4.1-3b](../zoo/nanbeige4.1-3b.md) | — | `nanbeige4.1-3b` |
-| [mlboydaisuke/Nemotron-3-Nano-4B-CoreAI](https://huggingface.co/mlboydaisuke/Nemotron-3-Nano-4B-CoreAI) | 0 | 0 | coreai | port | 2 | [nemotron-3-nano](../zoo/nemotron-3-nano.md) | — | `nemotron-3-nano-4b` |
-| [mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI](https://huggingface.co/mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI) | 0 | 0 | coreai | port | 12 | [nemotron-asr-streaming](../zoo/nemotron-asr-streaming.md), [whisper-large-v3-turbo](../zoo/whisper-large-v3-turbo.md) | — | `whisper-large-v3-turbo` |
-| [mlboydaisuke/Parakeet-TDT-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Parakeet-TDT-0.6B-CoreAI) | 0 | 0 | coreai | port | 3 | [parakeet](../zoo/parakeet.md) | — | `parakeet-tdt-0.6b-v3` |
-| [mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI](https://huggingface.co/mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI) | 0 | 1 | coreai | port | 3 | — | — | — |
-| [mlboydaisuke/qwen3-0.6b-CoreAI-official](https://huggingface.co/mlboydaisuke/qwen3-0.6b-CoreAI-official) | 0 | 0 | coreai | official | 3 | — | — | — |
-| [mlboydaisuke/qwen3-1.7b-CoreAI-official](https://huggingface.co/mlboydaisuke/qwen3-1.7b-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — |
-| [mlboydaisuke/qwen3-4b-CoreAI-official](https://huggingface.co/mlboydaisuke/qwen3-4b-CoreAI-official) | 0 | 0 | coreai | official | 2 | — | — | — |
-| [mlboydaisuke/qwen3-8b-CoreAI-official](https://huggingface.co/mlboydaisuke/qwen3-8b-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — |
-| [mlboydaisuke/Qwen3-ASR-1.7B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-ASR-1.7B-CoreAI) | 0 | 2 | coreai | port | 2 | [qwen3-asr](../zoo/qwen3-asr.md) | — | `qwen3-asr-1.7b` |
-| [mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI) | 0 | 0 | coreai | port | 1 | [qwen3-embedding](../zoo/qwen3-embedding.md) | — | — |
-| [mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI) | 0 | 0 | coreai | port | 1 | [qwen3-reranker](../zoo/qwen3-reranker.md) | — | — |
-| [mlboydaisuke/qwen3.5-4B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-4B-CoreAI) | 0 | 0 | coreai | port | 1 | — | — | — |
-| [mlboydaisuke/RWKV7-Goose-1.5B-CoreAI](https://huggingface.co/mlboydaisuke/RWKV7-Goose-1.5B-CoreAI) | 0 | 0 | coreai | port | 2 | — | — | — |
-| [mlboydaisuke/sam3-CoreAI-official](https://huggingface.co/mlboydaisuke/sam3-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — |
-| [mlboydaisuke/Stable-Audio-Open-Small-CoreAI](https://huggingface.co/mlboydaisuke/Stable-Audio-Open-Small-CoreAI) | 0 | 1 | coreai | port | 1 | — | — | — |
-| [mlboydaisuke/Streaming-Sortformer-Diar-CoreAI](https://huggingface.co/mlboydaisuke/Streaming-Sortformer-Diar-CoreAI) | 0 | 2 | coreai | port | 2 | [sortformer-diar](../zoo/sortformer-diar.md) | — | — |
-| [mlboydaisuke/TimesFM-2.5-200M-CoreAI](https://huggingface.co/mlboydaisuke/TimesFM-2.5-200M-CoreAI) | 0 | 1 | coreai | port | 2 | [timesfm](../zoo/timesfm.md) | — | — |
-| [mlboydaisuke/TripoSplat-CoreAI](https://huggingface.co/mlboydaisuke/TripoSplat-CoreAI) | 0 | 7 | coreai | port | 6 | [triposplat](../zoo/triposplat.md) | — | `triposplat` |
-| [mlboydaisuke/Unlimited-OCR-CoreAI](https://huggingface.co/mlboydaisuke/Unlimited-OCR-CoreAI) | 0 | 6 | coreai | port | 2 | [unlimited-ocr](../zoo/unlimited-ocr.md) | — | `unlimited-ocr` |
-| [mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI](https://huggingface.co/mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI) | 0 | 0 | coreai | port | 10 | [vibevoice](../zoo/vibevoice.md) | — | — |
-| [mlboydaisuke/VJEPA2-ViTL-SSv2-CoreAI](https://huggingface.co/mlboydaisuke/VJEPA2-ViTL-SSv2-CoreAI) | 0 | 0 | coreai | port | 2 | [vjepa2](../zoo/vjepa2.md) | — | `vjepa2-vitl-ssv2` |
-| [mlboydaisuke/VoxCPM-0.5B-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM-0.5B-CoreAI) | 0 | 0 | coreai | port | 14 | — | — | — |
-| [mlboydaisuke/VoxCPM2-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM2-CoreAI) | 0 | 3 | coreai | port | 14 | — | — | — |
-| [mlboydaisuke/whisper-large-v3-turbo-CoreAI-official](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official) | 0 | 0 | coreai | official | 3 | [whisper-large-v3-turbo](../zoo/whisper-large-v3-turbo.md) | — | `whisper-large-v3-turbo` |
-| [mlboydaisuke/YOLOX-CoreAI](https://huggingface.co/mlboydaisuke/YOLOX-CoreAI) | 0 | 0 | coreai | port | 1 | [yolox](../zoo/yolox.md) | — | `yolox-s` |
-| [mlboydaisuke/Z-Image-Turbo-CoreAI](https://huggingface.co/mlboydaisuke/Z-Image-Turbo-CoreAI) | 0 | 0 | coreai | port | 6 | [z-image-turbo](../zoo/z-image-turbo.md) | — | — |
-| [ukint-vs/Nanbeige4.2-3B-CoreAI](https://huggingface.co/ukint-vs/Nanbeige4.2-3B-CoreAI) | 0 | 1 | coreai | port | 1 | [nanbeige4.2-3b](../zoo/nanbeige4.2-3b.md) | `nanbeige4.2-3b` | `nanbeige4.2-3b` |
+| repo | 30d DL | ♥ | fmt | role | bundles | tier-1 | card | recipe | kit |
+| --- | ---: | ---: | --- | --- | ---: | --- | --- | --- | --- |
+| [mlboydaisuke/LFM2.5-1.2B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-1.2B-CoreAI) | 771 | 0 | coreai | port | 3 | 3 pass | [lfm2.5](../zoo/lfm2.5.md) | `lfm2.5-1.2b` | `lfm2.5-1.2b` |
+| [mlboydaisuke/LFM2.5-8B-A1B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-8B-A1B-CoreAI) | 699 | 1 | coreai | port | 1 | 1 pass | [lfm2.5-8b-a1b-moe](../zoo/lfm2.5-8b-a1b-moe.md) | — | `lfm2.5-8b-a1b` |
+| [mlboydaisuke/qwen3.5-0.8B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreAI) | 559 | 0 | coreai | port | 9 | 7 pass 2 skipped | [qwen3.5](../zoo/qwen3.5.md) | `qwen3.5-0.8b`, `qwen3.5-2b` | `qwen3.5-2b` |
+| [mlboydaisuke/Ministral-3-3B-Instruct-2512-LiteRT](https://huggingface.co/mlboydaisuke/Ministral-3-3B-Instruct-2512-LiteRT) | 511 | 1 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/Ornith-1.0-9B-CoreAI](https://huggingface.co/mlboydaisuke/Ornith-1.0-9B-CoreAI) | 490 | 1 | coreai | port | 2 | 2 pass | [ornith-1.0-9b](../zoo/ornith-1.0-9b.md) | — | — |
+| [mlboydaisuke/gemma-4-E2B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI) | 395 | 1 | coreai | port | 22 | **7 FAIL** **2 DIFF** 10 pass 3 skipped | [gemma4-e2b](../zoo/gemma4-e2b.md), [gemma4-vl](../zoo/gemma4-vl.md) | — | `gemma-4-e2b` |
+| [mlboydaisuke/Qwen3.6-27B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-27B-CoreAI) | 393 | 1 | coreai | port | 1 | 1 pass | [qwen3.6-27b](../zoo/qwen3.6-27b.md) | — | `qwen3.6-27b` |
+| [mlboydaisuke/Qwen3.6-35B-A3B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-35B-A3B-CoreAI) | 385 | 5 | coreai | port | 1 | 1 pass | [qwen3.6](../zoo/qwen3.6.md) | — | `qwen3.6-35b-a3b` |
+| [mlboydaisuke/qwen3.5-2B-CoreML](https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreML) | 343 | 0 | coreml | port | 0 | — | — | — | — |
+| [mlboydaisuke/qwen3.5-0.8B-CoreML](https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreML) | 315 | 0 | coreml | port | 0 | — | — | — | — |
+| [mlboydaisuke/gemma-4-E2B-coreml](https://huggingface.co/mlboydaisuke/gemma-4-E2B-coreml) | 249 | 9 | coreml | port | 0 | — | — | — | — |
+| [mlboydaisuke/RF-DETR-CoreAI](https://huggingface.co/mlboydaisuke/RF-DETR-CoreAI) | 179 | 1 | coreai | port | 14 | 10 pass 4 skipped | [rf-detr](../zoo/rf-detr.md) | — | `rf-detr` |
+| [mlboydaisuke/gemma-4-E4B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E4B-CoreAI) | 163 | 0 | coreai | port | 3 | **3 FAIL** | [gemma4-e4b](../zoo/gemma4-e4b.md) | — | `gemma-4-e4b` |
+| [mlboydaisuke/qwen3.5-2B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreAI) | 114 | 1 | coreai | port | 4 | 4 pass | [qwen3.5](../zoo/qwen3.5.md) | `qwen3.5-0.8b`, `qwen3.5-2b` | `qwen3.5-2b` |
+| [mlboydaisuke/granite-4.0-h-CoreAI](https://huggingface.co/mlboydaisuke/granite-4.0-h-CoreAI) | 104 | 0 | coreai | port | 4 | 4 pass | [granite-4.0-h](../zoo/granite-4.0-h.md) | — | `granite-4.0-h-1b` |
+| [mlboydaisuke/Llama-3.2-3B-Instruct-LiteRT](https://huggingface.co/mlboydaisuke/Llama-3.2-3B-Instruct-LiteRT) | 100 | 1 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/Qwen3-VL-4B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-VL-4B-CoreAI) | 96 | 0 | coreai | port | 3 | 2 pass 1 skipped | [qwen3-vl](../zoo/qwen3-vl.md) | — | `qwen3-vl-2b` |
+| [mlboydaisuke/Qwen3-VL-2B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-VL-2B-CoreAI) | 92 | 0 | coreai | port | 3 | 2 pass 1 skipped | [qwen3-vl](../zoo/qwen3-vl.md) | — | `qwen3-vl-2b` |
+| [mlboydaisuke/Qwen3-VL-8B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-VL-8B-CoreAI) | 89 | 0 | coreai | port | 3 | 2 pass 1 skipped | [qwen3-vl](../zoo/qwen3-vl.md) | — | `qwen3-vl-2b` |
+| [mlboydaisuke/qwen3-vl-2b-stateful-coreml](https://huggingface.co/mlboydaisuke/qwen3-vl-2b-stateful-coreml) | 88 | 0 | coreml | port | 0 | — | — | — | — |
+| [mlboydaisuke/qwen3-vl-2b-coreml](https://huggingface.co/mlboydaisuke/qwen3-vl-2b-coreml) | 78 | 0 | coreml | port | 0 | — | — | — | — |
+| [mlboydaisuke/qwen3-vl-4b-stateful-coreml](https://huggingface.co/mlboydaisuke/qwen3-vl-4b-stateful-coreml) | 74 | 0 | coreml | port | 0 | — | — | — | — |
+| [mlboydaisuke/Mimi-LiteRT](https://huggingface.co/mlboydaisuke/Mimi-LiteRT) | 70 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/Dia2-1B-LiteRT](https://huggingface.co/mlboydaisuke/Dia2-1B-LiteRT) | 68 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/Matcha-TTS-LiteRT](https://huggingface.co/mlboydaisuke/Matcha-TTS-LiteRT) | 68 | 1 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/DeepSeek-R1-Distill-Qwen-1.5B-LiteRT](https://huggingface.co/mlboydaisuke/DeepSeek-R1-Distill-Qwen-1.5B-LiteRT) | 64 | 1 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/Youtu-LLM-2B-CoreAI](https://huggingface.co/mlboydaisuke/Youtu-LLM-2B-CoreAI) | 64 | 1 | coreai | port | 3 | 3 pass | [youtu](../zoo/youtu.md) | — | — |
+| [mlboydaisuke/VibeVoice-Realtime-0.5B-LiteRT](https://huggingface.co/mlboydaisuke/VibeVoice-Realtime-0.5B-LiteRT) | 56 | 1 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/Kokoro-82M-LiteRT](https://huggingface.co/mlboydaisuke/Kokoro-82M-LiteRT) | 51 | 1 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/DeepSeek-R1-Distill-Qwen-7B-LiteRT](https://huggingface.co/mlboydaisuke/DeepSeek-R1-Distill-Qwen-7B-LiteRT) | 35 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/PE-Core-base-patch16-224-LiteRT](https://huggingface.co/mlboydaisuke/PE-Core-base-patch16-224-LiteRT) | 35 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/vdsr-litert](https://huggingface.co/mlboydaisuke/vdsr-litert) | 35 | 1 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/Qwen2.5-3B-Instruct-LiteRT](https://huggingface.co/mlboydaisuke/Qwen2.5-3B-Instruct-LiteRT) | 34 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/Falcon3-3B-Instruct-LiteRT](https://huggingface.co/mlboydaisuke/Falcon3-3B-Instruct-LiteRT) | 33 | 2 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/real-esrgan-x4v3-litert](https://huggingface.co/mlboydaisuke/real-esrgan-x4v3-litert) | 31 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/SAM2-hiera-tiny-LiteRT](https://huggingface.co/mlboydaisuke/SAM2-hiera-tiny-LiteRT) | 30 | 1 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/qwen2.5-0.5b-coreml](https://huggingface.co/mlboydaisuke/qwen2.5-0.5b-coreml) | 28 | 0 | coreml | port | 0 | — | — | — | — |
+| [mlboydaisuke/zero-dce-litert](https://huggingface.co/mlboydaisuke/zero-dce-litert) | 28 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/Kokoro-G2P-en-US-LiteRT](https://huggingface.co/mlboydaisuke/Kokoro-G2P-en-US-LiteRT) | 24 | 1 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/U-2-Net-LiteRT](https://huggingface.co/mlboydaisuke/U-2-Net-LiteRT) | 24 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/qwen3-vl-8b-stateful-coreml](https://huggingface.co/mlboydaisuke/qwen3-vl-8b-stateful-coreml) | 23 | 0 | coreml | port | 0 | — | — | — | — |
+| [mlboydaisuke/yolox-nano-litert](https://huggingface.co/mlboydaisuke/yolox-nano-litert) | 23 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/Depth-Anything-3-Small-LiteRT](https://huggingface.co/mlboydaisuke/Depth-Anything-3-Small-LiteRT) | 19 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/Metric3D-v2-LiteRT](https://huggingface.co/mlboydaisuke/Metric3D-v2-LiteRT) | 19 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/ssdlite320-mobilenetv3-litert](https://huggingface.co/mlboydaisuke/ssdlite320-mobilenetv3-litert) | 19 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/SigLIP2-base-patch16-224-LiteRT](https://huggingface.co/mlboydaisuke/SigLIP2-base-patch16-224-LiteRT) | 18 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/yolox-tiny-litert](https://huggingface.co/mlboydaisuke/yolox-tiny-litert) | 15 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/Depth-Anything-3-LiteRT](https://huggingface.co/mlboydaisuke/Depth-Anything-3-LiteRT) | 14 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/SAM2.1-Hiera-Tiny-Image-Encoder-LiteRT](https://huggingface.co/mlboydaisuke/SAM2.1-Hiera-Tiny-Image-Encoder-LiteRT) | 14 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/yolox-s-litert](https://huggingface.co/mlboydaisuke/yolox-s-litert) | 14 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/xfeat-litert](https://huggingface.co/mlboydaisuke/xfeat-litert) | 13 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/yolox-m-litert](https://huggingface.co/mlboydaisuke/yolox-m-litert) | 13 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/lightweight-openpose-litert](https://huggingface.co/mlboydaisuke/lightweight-openpose-litert) | 10 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/SmolLM3-3B-LiteRT](https://huggingface.co/mlboydaisuke/SmolLM3-3B-LiteRT) | 10 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/midas-small-litert](https://huggingface.co/mlboydaisuke/midas-small-litert) | 9 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/MoGe-2-LiteRT](https://huggingface.co/mlboydaisuke/MoGe-2-LiteRT) | 9 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/OLMo-2-1B-Instruct-LiteRT](https://huggingface.co/mlboydaisuke/OLMo-2-1B-Instruct-LiteRT) | 9 | 1 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/LaMa-Dilated-LiteRT](https://huggingface.co/mlboydaisuke/LaMa-Dilated-LiteRT) | 7 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/DAC-16kHz-LiteRT](https://huggingface.co/mlboydaisuke/DAC-16kHz-LiteRT) | 6 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/clip-vit-b32-litert](https://huggingface.co/mlboydaisuke/clip-vit-b32-litert) | 5 | 0 | litert | port | 0 | — | — | — | — |
+| [mlboydaisuke/AdcSR-CoreAI](https://huggingface.co/mlboydaisuke/AdcSR-CoreAI) | 0 | 3 | coreai | port | 1 | 1 pass | — | — | — |
+| [mlboydaisuke/BitCPM-8B-CoreAI](https://huggingface.co/mlboydaisuke/BitCPM-8B-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [bitcpm-8b](../zoo/bitcpm-8b.md) | — | — |
+| [mlboydaisuke/BitVLA-CoreAI](https://huggingface.co/mlboydaisuke/BitVLA-CoreAI) | 0 | 0 | coreai | port | 4 | 4 skipped | [bitvla](../zoo/bitvla.md) | — | — |
+| [mlboydaisuke/clip-vit-base-patch32-CoreAI-official](https://huggingface.co/mlboydaisuke/clip-vit-base-patch32-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
+| [mlboydaisuke/ColModernVBERT-CoreAI](https://huggingface.co/mlboydaisuke/ColModernVBERT-CoreAI) | 0 | 0 | coreai | port | 4 | 4 pass | [colmodernvbert](../zoo/colmodernvbert.md) | — | `colmodernvbert` |
+| [mlboydaisuke/coreml-zoo](https://huggingface.co/mlboydaisuke/coreml-zoo) | 0 | 1 | other | port | 0 | — | — | — | — |
+| [mlboydaisuke/Depth-Anything-3-CoreAI](https://huggingface.co/mlboydaisuke/Depth-Anything-3-CoreAI) | 0 | 1 | coreai | port | 4 | 4 pass | [depth-anything-3](../zoo/depth-anything-3.md) | — | `depth-anything-3-small` |
+| [mlboydaisuke/embeddinggemma-300m-CoreAI](https://huggingface.co/mlboydaisuke/embeddinggemma-300m-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [qwen3-embedding](../zoo/qwen3-embedding.md) | — | — |
+| [mlboydaisuke/embeddinggemma-300m-coreml](https://huggingface.co/mlboydaisuke/embeddinggemma-300m-coreml) | 0 | 0 | coreml | port | 0 | — | — | — | — |
+| [mlboydaisuke/FastContext-1.0-4B-CoreAI](https://huggingface.co/mlboydaisuke/FastContext-1.0-4B-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [fastcontext](../zoo/fastcontext.md) | `fastcontext-4b` | — |
+| [mlboydaisuke/FLUX.2-klein-4B-CoreAI](https://huggingface.co/mlboydaisuke/FLUX.2-klein-4B-CoreAI) | 0 | 3 | coreai | port | 7 | 7 skipped | — | — | — |
+| [mlboydaisuke/functiongemma-270m-coreml](https://huggingface.co/mlboydaisuke/functiongemma-270m-coreml) | 0 | 0 | coreml | port | 0 | — | — | — | — |
+| [mlboydaisuke/gemma-3-12b-it-CoreAI-official](https://huggingface.co/mlboydaisuke/gemma-3-12b-it-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
+| [mlboydaisuke/gemma-3-4b-it-CoreAI-official](https://huggingface.co/mlboydaisuke/gemma-3-4b-it-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
+| [mlboydaisuke/Gemma-4-12B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-12B-CoreAI) | 0 | 1 | coreai | port | 2 | **2 DIFF** | [gemma4-12b](../zoo/gemma4-12b.md) | — | `gemma-4-12b` |
+| [mlboydaisuke/Gemma-4-31B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-31B-CoreAI) | 0 | 1 | coreai | port | 1 | **1 DIFF** | [gemma4-31b](../zoo/gemma4-31b.md) | — | `gemma-4-31b` |
+| [mlboydaisuke/gemma-4-E2B-stateful-coreml](https://huggingface.co/mlboydaisuke/gemma-4-E2B-stateful-coreml) | 0 | 0 | coreml | port | 0 | — | — | — | — |
+| [mlboydaisuke/gemma-4-E4B-coreml](https://huggingface.co/mlboydaisuke/gemma-4-E4B-coreml) | 0 | 2 | coreml | port | 0 | — | — | — | — |
+| [mlboydaisuke/gemma-4-E4B-multimodal-coreml](https://huggingface.co/mlboydaisuke/gemma-4-E4B-multimodal-coreml) | 0 | 0 | coreml | port | 0 | — | — | — | — |
+| [mlboydaisuke/GLiNER2-PII-CoreAI](https://huggingface.co/mlboydaisuke/GLiNER2-PII-CoreAI) | 0 | 0 | coreai | port | 2 | 2 pass | [gliner2-pii](../zoo/gliner2-pii.md) | — | — |
+| [mlboydaisuke/GLM-4.7-Flash-CoreAI](https://huggingface.co/mlboydaisuke/GLM-4.7-Flash-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [glm-4.7-flash](../zoo/glm-4.7-flash.md) | — | `glm-4.7-flash` |
+| [mlboydaisuke/GLM-Image-CoreAI](https://huggingface.co/mlboydaisuke/GLM-Image-CoreAI) | 0 | 1 | coreai | port | 5 | 5 skipped | [glm-image](../zoo/glm-image.md) | — | — |
+| [mlboydaisuke/GLM-OCR-CoreAI](https://huggingface.co/mlboydaisuke/GLM-OCR-CoreAI) | 0 | 5 | coreai | port | 2 | 1 pass 1 skipped | [glm-ocr](../zoo/glm-ocr.md) | — | — |
+| [mlboydaisuke/gpt-oss-20b-CoreAI-official](https://huggingface.co/mlboydaisuke/gpt-oss-20b-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
+| [mlboydaisuke/Holo2-4B-CoreAI](https://huggingface.co/mlboydaisuke/Holo2-4B-CoreAI) | 0 | 2 | coreai | port | 2 | 1 pass 1 skipped | [holo2](../zoo/holo2.md) | `holo2-4b` | `holo2-4b` |
+| [mlboydaisuke/Kokoro-82M-CoreAI](https://huggingface.co/mlboydaisuke/Kokoro-82M-CoreAI) | 0 | 1 | coreai | port | 3 | 3 skipped | [kokoro-82m](../zoo/kokoro-82m.md) | — | `kokoro-82m` |
+| [mlboydaisuke/lfm2.5-350m-coreml](https://huggingface.co/mlboydaisuke/lfm2.5-350m-coreml) | 0 | 0 | coreml | port | 0 | — | — | — | — |
+| [mlboydaisuke/LLaDA-8B-dLLM-CoreAI](https://huggingface.co/mlboydaisuke/LLaDA-8B-dLLM-CoreAI) | 0 | 2 | coreai | port | 1 | 1 pass | [llada-8b](../zoo/llada-8b.md) | — | `llada-8b` |
+| [mlboydaisuke/LTX-Video-2B-CoreAI](https://huggingface.co/mlboydaisuke/LTX-Video-2B-CoreAI) | 0 | 2 | coreai | port | 3 | 3 pass | [ltxvideo](../zoo/ltxvideo.md) | — | `ltx-video-2b` |
+| [mlboydaisuke/magenta-arbitrary-style-transfer-litert](https://huggingface.co/mlboydaisuke/magenta-arbitrary-style-transfer-litert) | 0 | 0 | other | port | 0 | — | — | — | — |
+| [mlboydaisuke/MelBandRoformer-Vocal-CoreAI](https://huggingface.co/mlboydaisuke/MelBandRoformer-Vocal-CoreAI) | 0 | 0 | coreai | port | 2 | 2 pass | [melband-roformer](../zoo/melband-roformer.md) | — | — |
+| [mlboydaisuke/MinerU2.5-Pro-CoreAI](https://huggingface.co/mlboydaisuke/MinerU2.5-Pro-CoreAI) | 0 | 0 | coreai | port | 4 | 2 pass 2 skipped | [mineru](../zoo/mineru.md) | — | — |
+| [mlboydaisuke/MiniCPM-V-4.6-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM-V-4.6-CoreAI) | 0 | 2 | coreai | port | 4 | 3 pass 1 skipped | [minicpm-v-4.6](../zoo/minicpm-v-4.6.md) | — | `minicpm-v-4.6` |
+| [mlboydaisuke/MiniCPM5-1B-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM5-1B-CoreAI) | 0 | 0 | coreai | port | 1 | **1 DIFF** | [minicpm5-1b](../zoo/minicpm5-1b.md) | — | `minicpm5-1b` |
+| [mlboydaisuke/mistral-7b-v0.3-CoreAI-official](https://huggingface.co/mlboydaisuke/mistral-7b-v0.3-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
+| [mlboydaisuke/Nanbeige4.1-3B-CoreAI](https://huggingface.co/mlboydaisuke/Nanbeige4.1-3B-CoreAI) | 0 | 0 | coreai | port | 2 | 2 pass | [nanbeige4.1-3b](../zoo/nanbeige4.1-3b.md) | — | `nanbeige4.1-3b` |
+| [mlboydaisuke/Nemotron-3-Nano-4B-CoreAI](https://huggingface.co/mlboydaisuke/Nemotron-3-Nano-4B-CoreAI) | 0 | 0 | coreai | port | 2 | **2 DIFF** | [nemotron-3-nano](../zoo/nemotron-3-nano.md) | — | `nemotron-3-nano-4b` |
+| [mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI](https://huggingface.co/mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI) | 0 | 0 | coreai | port | 12 | 12 pass | [nemotron-asr-streaming](../zoo/nemotron-asr-streaming.md), [whisper-large-v3-turbo](../zoo/whisper-large-v3-turbo.md) | — | `whisper-large-v3-turbo` |
+| [mlboydaisuke/Parakeet-TDT-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Parakeet-TDT-0.6B-CoreAI) | 0 | 0 | coreai | port | 3 | 3 pass | [parakeet](../zoo/parakeet.md) | — | `parakeet-tdt-0.6b-v3` |
+| [mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI](https://huggingface.co/mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI) | 0 | 1 | coreai | port | 3 | 3 pass | — | — | — |
+| [mlboydaisuke/qwen3-0.6b-CoreAI-official](https://huggingface.co/mlboydaisuke/qwen3-0.6b-CoreAI-official) | 0 | 0 | coreai | official | 3 | — | — | — | — |
+| [mlboydaisuke/qwen3-1.7b-CoreAI-official](https://huggingface.co/mlboydaisuke/qwen3-1.7b-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
+| [mlboydaisuke/qwen3-4b-CoreAI-official](https://huggingface.co/mlboydaisuke/qwen3-4b-CoreAI-official) | 0 | 0 | coreai | official | 2 | — | — | — | — |
+| [mlboydaisuke/qwen3-8b-CoreAI-official](https://huggingface.co/mlboydaisuke/qwen3-8b-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
+| [mlboydaisuke/Qwen3-ASR-1.7B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-ASR-1.7B-CoreAI) | 0 | 2 | coreai | port | 2 | 2 pass | [qwen3-asr](../zoo/qwen3-asr.md) | — | `qwen3-asr-1.7b` |
+| [mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [qwen3-embedding](../zoo/qwen3-embedding.md) | — | — |
+| [mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [qwen3-reranker](../zoo/qwen3-reranker.md) | — | — |
+| [mlboydaisuke/qwen3.5-4B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-4B-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | — | — | — |
+| [mlboydaisuke/RWKV7-Goose-1.5B-CoreAI](https://huggingface.co/mlboydaisuke/RWKV7-Goose-1.5B-CoreAI) | 0 | 0 | coreai | port | 2 | 2 skipped | — | — | — |
+| [mlboydaisuke/sam3-CoreAI-official](https://huggingface.co/mlboydaisuke/sam3-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | — |
+| [mlboydaisuke/Stable-Audio-Open-Small-CoreAI](https://huggingface.co/mlboydaisuke/Stable-Audio-Open-Small-CoreAI) | 0 | 1 | coreai | port | 1 | 1 skipped | — | — | — |
+| [mlboydaisuke/Streaming-Sortformer-Diar-CoreAI](https://huggingface.co/mlboydaisuke/Streaming-Sortformer-Diar-CoreAI) | 0 | 2 | coreai | port | 2 | 2 pass | [sortformer-diar](../zoo/sortformer-diar.md) | — | — |
+| [mlboydaisuke/TimesFM-2.5-200M-CoreAI](https://huggingface.co/mlboydaisuke/TimesFM-2.5-200M-CoreAI) | 0 | 1 | coreai | port | 2 | 2 pass | [timesfm](../zoo/timesfm.md) | — | — |
+| [mlboydaisuke/TripoSplat-CoreAI](https://huggingface.co/mlboydaisuke/TripoSplat-CoreAI) | 0 | 7 | coreai | port | 6 | 6 pass | [triposplat](../zoo/triposplat.md) | — | `triposplat` |
+| [mlboydaisuke/Unlimited-OCR-CoreAI](https://huggingface.co/mlboydaisuke/Unlimited-OCR-CoreAI) | 0 | 6 | coreai | port | 2 | 2 skipped | [unlimited-ocr](../zoo/unlimited-ocr.md) | — | `unlimited-ocr` |
+| [mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI](https://huggingface.co/mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI) | 0 | 0 | coreai | port | 10 | 10 pass | [vibevoice](../zoo/vibevoice.md) | — | — |
+| [mlboydaisuke/VJEPA2-ViTL-SSv2-CoreAI](https://huggingface.co/mlboydaisuke/VJEPA2-ViTL-SSv2-CoreAI) | 0 | 0 | coreai | port | 2 | 1 pass 1 skipped | [vjepa2](../zoo/vjepa2.md) | — | `vjepa2-vitl-ssv2` |
+| [mlboydaisuke/VoxCPM-0.5B-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM-0.5B-CoreAI) | 0 | 0 | coreai | port | 14 | 14 pass | — | — | — |
+| [mlboydaisuke/VoxCPM2-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM2-CoreAI) | 0 | 3 | coreai | port | 14 | 14 pass | — | — | — |
+| [mlboydaisuke/whisper-large-v3-turbo-CoreAI-official](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official) | 0 | 0 | coreai | official | 3 | — | [whisper-large-v3-turbo](../zoo/whisper-large-v3-turbo.md) | — | `whisper-large-v3-turbo` |
+| [mlboydaisuke/YOLOX-CoreAI](https://huggingface.co/mlboydaisuke/YOLOX-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [yolox](../zoo/yolox.md) | — | `yolox-s` |
+| [mlboydaisuke/Z-Image-Turbo-CoreAI](https://huggingface.co/mlboydaisuke/Z-Image-Turbo-CoreAI) | 0 | 0 | coreai | port | 6 | 6 pass | [z-image-turbo](../zoo/z-image-turbo.md) | — | — |
+| [ukint-vs/Nanbeige4.2-3B-CoreAI](https://huggingface.co/ukint-vs/Nanbeige4.2-3B-CoreAI) | 0 | 1 | coreai | port | 1 | 1 pass | [nanbeige4.2-3b](../zoo/nanbeige4.2-3b.md) | `nanbeige4.2-3b` | `nanbeige4.2-3b` |
+
+## Tier-1 defects
+
+From `conversion/zoo_verify.py --all` over 222 published bundles: the
+bundle's own tokenizer, chat template, context length and declared precision
+compared against the source repository it names in its `metadata.json`. No
+oracle, no device, no weights.
+
+**FAIL** = wrong on its own terms. **DIFF** = deviates from the source with no
+recorded reason; record the expectation in `models/<name>/verify.toml` and it
+becomes the bar instead of the deviation.
+
+| repo | bundle | verdict | what |
+| --- | --- | --- | --- |
+| gemma-4-E2B-CoreAI | `gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl` | DIFF | chat template: differs from source (236 B vs 18567 B) |
+| gemma-4-E2B-CoreAI | `gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl_aotc_h18p` | DIFF | chat template: differs from source (236 B vs 18567 B) |
+| Gemma-4-12B-CoreAI | `gpu-pipelined/gemma4_12b_qat_decode_int4linsym_msdpa_g8` | DIFF | eos: '<turn\|>', source says '<eos>' |
+| Gemma-4-12B-CoreAI | `gpu-pipelined/gemma4_12b_qat_decode_int4linsym_msdpa_g8` | DIFF | chat template: differs from source (17466 B vs 18681 B) |
+| Gemma-4-12B-CoreAI | `gpu-pipelined/gemma4_12b_qat_decode_int8lin_msdpa_g8` | DIFF | eos: '<turn\|>', source says '<eos>' |
+| Gemma-4-12B-CoreAI | `gpu-pipelined/gemma4_12b_qat_decode_int8lin_msdpa_g8` | DIFF | chat template: differs from source (17466 B vs 18681 B) |
+| Gemma-4-31B-CoreAI | `gpu-pipelined/gemma4_31b_qat_decode_int4linsym_msdpa_g8` | DIFF | eos: '<turn\|>', source says '<eos>' |
+| Gemma-4-31B-CoreAI | `gpu-pipelined/gemma4_31b_qat_decode_int4linsym_msdpa_g8` | DIFF | chat template: differs from source (16934 B vs 18681 B) |
+| MiniCPM5-1B-CoreAI | `int8` | DIFF | eos: '<\|im_end\|>', source says '</s>' |
+| Nemotron-3-Nano-4B-CoreAI | `gpu-pipelined/nemotron_3_nano_4b_decode_int8hu` | DIFF | chat template: differs from source (10504 B vs 10497 B) |
+| Nemotron-3-Nano-4B-CoreAI | `ios-h18p/nemotron_3_nano_4b_decode_int8hu` | DIFF | chat template: differs from source (10504 B vs 10497 B) |
+| gemma-4-E2B-CoreAI | `gpu-pipelined/gemma4_e2b_decode_int4lin_tbl` | FAIL | chat template: source ships a chat template, the bundle ships none — the host cannot format prompts |
+| gemma-4-E2B-CoreAI | `gpu-pipelined/gemma4_e2b_decode_int4lin_tbl_aotc_h18p` | FAIL | chat template: source ships a chat template, the bundle ships none — the host cannot format prompts |
+| gemma-4-E2B-CoreAI | `gpu-pipelined/gemma4_e2b_qat_decode_int4lin_tbl` | FAIL | chat template: source ships a chat template, the bundle ships none — the host cannot format prompts |
+| gemma-4-E2B-CoreAI | `gpu-pipelined/gemma4_e2b_qat_decode_int4lin_tbl_aotc_h18p` | FAIL | chat template: source ships a chat template, the bundle ships none — the host cannot format prompts |
+| gemma-4-E2B-CoreAI | `gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym` | FAIL | chat template: source ships a chat template, the bundle ships none — the host cannot format prompts |
+| gemma-4-E2B-CoreAI | `gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym_aotc_h18p` | FAIL | chat template: source ships a chat template, the bundle ships none — the host cannot format prompts |
+| gemma-4-E2B-CoreAI | `gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym_tbl` | FAIL | chat template: source ships a chat template, the bundle ships none — the host cannot format prompts |
+| gemma-4-E4B-CoreAI | `gpu-pipelined/gemma4_e4b_qat_decode_int4lin` | FAIL | chat template: source ships a chat template, the bundle ships none — the host cannot format prompts |
+| gemma-4-E4B-CoreAI | `gpu-pipelined/gemma4_e4b_qat_decode_int4lin_aotc_h18p` | FAIL | chat template: source ships a chat template, the bundle ships none — the host cannot format prompts |
+| gemma-4-E4B-CoreAI | `gpu-pipelined/gemma4_e4b_qat_decode_int4lin_tbl` | FAIL | chat template: source ships a chat template, the bundle ships none — the host cannot format prompts |
 
 ## Needs owner input
 
