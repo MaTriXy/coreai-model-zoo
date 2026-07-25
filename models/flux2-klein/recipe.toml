@@ -5,14 +5,33 @@
 ["flux2-klein-4b"]
 card = "README.md"
 hf_repo = "mlboydaisuke/FLUX.2-klein-4B-CoreAI"
+status = "verified"
+command = ["coreai.diffusion.export", "flux2-klein-4b", "--platform", "macOS"]
+bundle = "Transformer.aimodel"
+notes = [
+  "This port rides Apple's STOCK diffusion exporter — that is why there is no conversion/flux2*",
+  "here and why the bundle names are CamelCase: they come from coreai_models.diffusion, not from",
+  "a zoo script. models/flux2/README.md in apple/coreai-models documents the CLI.",
+  "The export log (~/code/coreai/_flux_klein_macos_export.log, 2026-06-15) records the run:",
+  "black-forest-labs/FLUX.2-klein-4B loaded as type=flux2 dtype=float16, then INT4 weight",
+  "quantization at per_block granularity (block_size=32) over the text encoder and the",
+  "transformer. It emitted TextEncoder / Transformer / VAEDecoder / VAEEncoder.",
+  "`--platform iOS` produces the device set (see _flux_klein_ios_export.log).",
+]
+
+# The three edit transformers are the zoo's own contribution, not Apple's.
+["flux2-klein-4b-edit"]
+card = "README.md"
+hf_repo = "mlboydaisuke/FLUX.2-klein-4B-CoreAI"
+bundle = "Transformer_edit.aimodel"
 status = "unverified"
 open_questions = [
-  "Seven bundles are published (TextEncoder, Transformer, three edit variants, VAEDecoder,",
-  "VAEEncoder) and their CamelCase names match no exporter in this repository — there is no",
-  "conversion/flux2* directory at all. Where does this port's conversion code live, and what",
-  "produced each bundle? The card and apps/CoreAIImageGen document how to *run* it, not how it",
-  "was built.",
-]
-notes = [
-  "Text -> image plus native in-context editing; int4, Mac. Not enrolled in CoreAIKit.",
+  "Transformer_edit / _edit_2ref / _edit_512 come from in-context-editing code added to the",
+  "diffusion pipeline in the patched coreai-models checkout — commits d982f48 (Flux2Pipeline.",
+  "editImages + transformer_edit export + runner --edit-image) and bc48d3d (multi-reference,",
+  "transformer_edit_2ref). That code lives in coreai_models/diffusion/{components,flux2}.py and",
+  "is NOT captured in conversion/overlay/ (the overlay patch touches no diffusion file), so",
+  "nobody outside this machine can build these three bundles. Running overlay/regen.sh would",
+  "capture it — an owner decision, because regen also picks up whatever else is in flight.",
+  "The exact invocation and the _512 variant's flag are also unrecorded.",
 ]

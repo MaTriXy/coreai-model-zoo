@@ -181,12 +181,16 @@ only the owner has.
    catalog can hand a user the model but not the command that built it. The material exists
    (`conversion/voxcpm/`, `conversion/stable_audio/`, `knowledge/voxcpm-tts.md`); it is the
    same read-the-record exercise that resolved nine other recipes.
-3. **One `gen-cards` gate is red, and it is not ours.** The check-only run
-   (`--skip-builds`) after the layout move reports all 35 managed cards clean and
-   byte-identical on both surfaces, so the new paths are wired correctly. The one failure is
-   `ukint-vs/Nanbeige4.2-3B-CoreAI`: the contributor's Hugging Face README has no gen-cards
-   markers, which enrollment adds by hand once — and it is their repo, not ours. A full run
-   (Swift + xcodebuild) is still worth doing once to verify the runner doors.
+3. **`gen-cards` full run: done, and it passes.** 45 models, real `swift build` + `xcodebuild` +
+   snippet compiles, 79 surfaces byte-identical across the zoo card and the Hugging Face README —
+   the layout move broke nothing. One failure remains and it is not ours:
+   `ukint-vs/Nanbeige4.2-3B-CoreAI`, the contributor's repo, whose Hugging Face README has never
+   carried the gen-cards markers (enrollment adds them by hand once).
+
+   The run needs `DEVELOPMENT_TEAM` exported. Without it the lockfile guard regenerates every
+   Example project with a signing placeholder instead of the committed team id and reports 44
+   failures, all false. Recorded in `scripts/gen-cards/README.md`.
+
 4. **Refreshing the Gemma-4-12B/31B chat template.** They carry the revision they were gated
    against; Google revised theirs on 2026-07-09 (tool-calling loops, turn closures, thinking
    order). Declared in `models/gemma4-12b/verify.toml` rather than silently updated, because

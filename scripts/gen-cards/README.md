@@ -20,8 +20,15 @@ cannot silently strip doors across the cards.
 
 ## Usage
 
+**Export `DEVELOPMENT_TEAM` first.** The lockfile guard regenerates each Example's project with
+`xcodegen` and diffs it against the committed one. The committed projects were generated with a
+team id in the environment, so a run without it regenerates `DEVELOPMENT_TEAM = "${DEVELOPMENT_TEAM}"`
+instead of the literal id and every project "differs" — 44 gate failures, all false, all six lines
+of signing. Measured 2026-07-25: same run with `DEVELOPMENT_TEAM=<team id>` exported = 1 failure
+(an external repo's missing markers) and 79 clean surfaces.
+
 ```bash
-python3 scripts/gen-cards/gen_cards.py --kit ~/code/coreai-kit               # verify (dry-run)
+DEVELOPMENT_TEAM=<team id> python3 scripts/gen-cards/gen_cards.py --kit ~/code/coreai-kit  # verify (dry-run)
 python3 scripts/gen-cards/gen_cards.py --kit ~/code/coreai-kit --write        # apply zoo cards
 python3 scripts/gen-cards/gen_cards.py --kit ~/code/coreai-kit --write --push # + HF upload
 ```
