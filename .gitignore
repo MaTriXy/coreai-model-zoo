@@ -40,3 +40,6 @@ apps/coreai-audio/Sources/VoxCPMAssets
 
 # Working logs from device builds / smoke gates (local R&D artifacts)
 *.log
+
+# Hugging Face listing/metadata cache (scripts/gen_inventory.py, conversion/zoo_verify.py)
+.cache/
