@@ -62,6 +62,11 @@ def card_mapping() -> dict[str, set[str]]:
     return out
 
 
+def all_recipes() -> dict:
+    with open(REPO / "conversion" / "recipes.toml", "rb") as fh:
+        return tomllib.load(fh)
+
+
 def recipes_by_card() -> dict[str, list[str]]:
     with open(REPO / "conversion" / "recipes.toml", "rb") as fh:
         recipes = tomllib.load(fh)
@@ -247,9 +252,25 @@ def render(rows: list[dict]) -> str:
     if not ambiguous:
         L.append("- (none)")
 
+    unverified = {n: r for n, r in all_recipes().items() if r.get("status") == "unverified"}
     L += [
         "",
-        "### 3. Carded, exactly one bundle, no recipe",
+        "### 3. Recipes recorded, shipped configuration unknown",
+        "",
+        f"{len(unverified)} of the {len(all_recipes())} entries in `conversion/recipes.toml` carry",
+        '`status = "unverified"`: the script is known, the arguments that produced the published',
+        "bundle are not, and nothing in the repo records them. `zoo_convert.py` refuses to run",
+        "these without `--force`. Each needs one answer from the owner.",
+        "",
+    ]
+    for name, r in unverified.items():
+        # open_questions is stored line-wrapped in the TOML; one question per entry.
+        question = " ".join(r.get("open_questions", [])) or "not stated"
+        L.append(f"- **`{name}`** ({r.get('hf_repo', '?')}) — {question}")
+
+    L += [
+        "",
+        "### 4. Carded, exactly one bundle, no recipe",
         "",
         "Unambiguous by construction — the single published bundle *is* the shipped",
         "configuration. These can get a recipe without asking anyone, provided the",

@@ -1,41 +1,159 @@
-# Zoo conversion recipes — verified ship configs, one command each via zoo_convert.py.
+# Zoo conversion recipes — the configuration that produced each published bundle.
 #
 #   python3 zoo_convert.py list
 #   python3 zoo_convert.py show qwen3.5-0.8b
 #   python3 zoo_convert.py run qwen3.5-0.8b --dry-run
 #
-# Every entry mirrors a config already documented in README.md / the model's zoo card —
-# this file is an index, not a new source of truth. Add entries only for gated,
-# shipped configs (regen conversion/overlay/ first if the port added model code).
+# An index, not a new source of truth: every entry mirrors a bundle already published on
+# Hugging Face and documented in the model's zoo card.
+#
+# ## What an entry records
+#
+#   script / args     THE configuration that produced `bundle` — not the option list. Where a
+#   command           card compares fp16 / int8 / int4, only the shipped one belongs here.
+#   steps             multi-graph ports: the whole set, in order.
+#   hf_repo / bundle  the published artifact this reproduces. `bundle` is the directory inside
+#                     the repo, so zoo_verify.py and the inventory line up against it.
+#   status            "verified" — the card documents the command AND the published bundle name
+#                       is what that command produces (two independent records agreeing), or the
+#                       exporter's naming rule determines the arguments outright.
+#                     "unverified" — the repo does not record which configuration shipped. The
+#                       known part is written down and `open_questions` states exactly what is
+#                       missing. Arguments are never guessed; a wrong recipe is worse than none.
+#
+# ## Prerequisites — split by who needs them
+#
+#   overlay           export-time: the script imports re-authored model code, so the interpreter
+#                     needs coreai_models WITH conversion/overlay/ applied (`zoo_convert doctor`).
+#   needs             export-time: anything else the export cannot run without (a checkpoint
+#                     download, a gather-table dump, a package patch).
+#   runtime_patches   run-time: engine patches the *app* needs to run the bundle correctly.
+#   runtime_env       run-time: environment the engine needs (e.g. COREAI_CHUNK_THRESHOLD=1).
+#   aot               the device bundle is AOT-compiled after export; the command is recorded.
+#
+# Runtime prerequisites do not affect the export. They are here because a bundle reproduced
+# without them looks fine and then misbehaves in the app, which is the failure this file exists
+# to prevent.
+
+# ===========================================================================
+# Dense text LLMs — the pipelined decode family
+# ===========================================================================
 
 ["qwen3.5-0.8b"]
 script = "export_qwen3_5_decode_pipelined.py"
 args = ["int8hu", "--head-sym"]
 card = "../zoo/qwen3.5.md"
+hf_repo = "mlboydaisuke/qwen3.5-0.8B-CoreAI"
+bundle = "gpu-pipelined/qwen3_5_0_8b_decode_int8hu_block32_sym"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
 notes = [
   "Ship config: per-block-32 absmax int8 head (int8lin fp16-head is the slower fallback).",
-  "Runtime needs apps/coreai-pipelined-extra-states.patch + COREAI_CHUNK_THRESHOLD=1.",
   "M4 Max 210 tok/s / iPhone 17 Pro 69.7-74.0 tok/s.",
+  "The repo also publishes int8lin and an int8hu perchan_sym build; perchan is documented BROKEN",
+  "on the beta GPU delegate and is kept only as evidence.",
 ]
 
 ["qwen3.5-2b"]
 script = "export_qwen3_5_decode_pipelined.py"
 args = ["int8hu", "--head-sym", "--hf-id", "Qwen/Qwen3.5-2B"]
 card = "../zoo/qwen3.5.md"
+hf_repo = "mlboydaisuke/qwen3.5-2B-CoreAI"
+bundle = "gpu-pipelined/qwen3_5_2b_decode_int8hu_block32_sym"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
 notes = [
   "Same ship config as 0.8B, HF-id swap only.",
   "M4 Max 161 tok/s / iPhone 17 Pro 28-30 tok/s.",
 ]
 
+["ornith-1.0-9b"]
+script = "export_qwen3_5_decode_pipelined.py"
+args = ["int8hu", "--head-sym", "--hf-id", "deepreinforce-ai/Ornith-1.0-9B", "--max-ctx", "8192"]
+card = "../zoo/ornith-1.0-9b.md"
+hf_repo = "mlboydaisuke/Ornith-1.0-9B-CoreAI"
+bundle = "gpu-pipelined/ornith_1_0_9b_decode_int8hu_block32_sym"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "Qwen3.5 architecture, so it rides the 0.8B/2B exporter unchanged.",
+  "Card states int8hu is the ship shape and int4lin is published as the verified alternative",
+  "(58.9 vs 48.3 tok/s decode on M4 Max, 7.5 vs 9.8 GB) — int8hu carries the quality claim.",
+  "Mac-only: 9.8 GB exceeds the iPhone jetsam ceiling.",
+]
+
+["qwen3.6-27b"]
+script = "export_qwen3_5_decode_pipelined.py"
+args = ["int8hu", "--head-sym", "--hf-id", "Qwen/Qwen3.6-27B"]
+card = "../zoo/qwen3.6-27b.md"
+hf_repo = "mlboydaisuke/Qwen3.6-27B-CoreAI"
+bundle = "gpu-pipelined/qwen3_6_27b_decode_int8hu_block32_sym"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = ["Dense 27B on the Qwen3.5 graph; Mac-only. Single published bundle."]
+
 ["lfm2.5-1.2b"]
 script = "export_lfm2_decode_pipelined.py"
 args = ["int8hu", "--head-sym"]
 card = "../zoo/lfm2.5.md"
+hf_repo = "mlboydaisuke/LFM2.5-1.2B-CoreAI"
+bundle = "gpu-pipelined/lfm2_5_1_2b_instruct_decode_int8hu_block32_sym"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch", "apps/coreai-shared-product.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
 notes = [
   "conv+attention hybrid, loop-free by construction. Oracle gate 16/16.",
   "M4 Max 276.5 tok/s with int8 head (253 int8lin / 162 fp16).",
   "Model overlay bakes in two macOS-27-beta GPU-delegate workarounds (see script header).",
 ]
+
+["granite-4.0-h-1b"]
+script = "export_granite4h_decode_pipelined.py"
+args = ["int8lin"]
+card = "../zoo/granite-4.0-h.md"
+hf_repo = "mlboydaisuke/granite-4.0-h-CoreAI"
+bundle = "gpu-pipelined/granite_4_0_h_1b_decode_int8lin"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch", "apps/coreai-shared-product.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "The card names int8lin as the ship config (Mac + iPhone); the int8hu block32-sym build is",
+  "published beside it as the faster-head variant.",
+]
+
+["granite-4.0-h-350m"]
+script = "export_granite4h_decode_pipelined.py"
+args = ["fp16", "--hf-id", "ibm-granite/granite-4.0-h-350m"]
+card = "../zoo/granite-4.0-h.md"
+hf_repo = "mlboydaisuke/granite-4.0-h-CoreAI"
+bundle = "gpu-pipelined/granite_4_0_h_350m_decode_fp16"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch", "apps/coreai-shared-product.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = ["fp16 at this size: quantization risk buys nothing under ~1.5 GB."]
+
+["nanbeige4.1-3b"]
+script = "export_nanbeige41_decode_pipelined.py"
+args = ["int8hu", "--head-sym", "--static-ids"]
+card = "../zoo/nanbeige4.1-3b.md"
+hf_repo = "mlboydaisuke/Nanbeige4.1-3B-CoreAI"
+bundle = "gpu-pipelined/nanbeige4_1_3b_decode_int8hu_block32_sym_s1"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = ["--static-ids emits the static S=1 decode graph (the _s1 suffix in the bundle name)."]
 
 # Staged exception: conversion, Mac gates, and the immutable HF artifact are
 # verified; iPhone and CoreAIKit enrollment remain pending in the card.
@@ -51,6 +169,12 @@ args = [
   "5ff54fb7ed86ce8e216d78bff5417ab9981de3d4",
 ]
 card = "../zoo/nanbeige4.2-3b.md"
+hf_repo = "ukint-vs/Nanbeige4.2-3B-CoreAI"
+bundle = "gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
 notes = [
   "Pinned int8 baseline: 22 shared physical layers, two passes, 44 logical KV cache layers.",
   "Published as ukint-vs/Nanbeige4.2-3B-CoreAI at revision 5864ec7a5581940958e58354a6b6c46c8f06891e.",
@@ -61,23 +185,695 @@ notes = [
   "Mixed int4/int8 is also a no-go: the 4.41 GiB three-layer candidate fails the decisive Core AI reasoning gate.",
 ]
 
+["youtu-llm-2b"]
+script = "export_youtu_decode_pipelined.py"
+args = ["--hf-id", "tencent/Youtu-LLM-2B", "--split-g", "8"]
+card = "../zoo/youtu.md"
+hf_repo = "mlboydaisuke/Youtu-LLM-2B-CoreAI"
+bundle = "gpu-pipelined/youtu_llm_2b_decode_absorbed_int8_msdpa"
+status = "verified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "The zoo's first dense-MLA port: absorbed decode + a custom flash-decode Metal SDPA.",
+  "--split-g 8 is the ship split factor and stays unsuffixed in the bundle name; other values",
+  "now get a _gN tag so they cannot overwrite it.",
+]
+
+["nemotron-3-nano-4b"]
+script = "export_nemotron_h_decode_pipelined.py"
+args = ["int8hu"]
+card = "../zoo/nemotron-3-nano.md"
+hf_repo = "mlboydaisuke/Nemotron-3-Nano-4B-CoreAI"
+bundle = "gpu-pipelined/nemotron_3_nano_4b_decode_int8hu"
+status = "unverified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+open_questions = [
+  "Was --head-sym (and --head-quant) passed? This exporter feeds them into the lm_head spec but",
+  "does not encode them in the bundle name, and the card documents no command — so the published",
+  "name is consistent with both. Every other model in this family ships --head-sym.",
+]
+notes = ["The card states int8 at 16.0 tok/s is the ship shape. An iOS AOT twin is published too."]
+
+# ===========================================================================
+# MoE text LLMs — the gather-kernel family
+# ===========================================================================
+
+["lfm2.5-8b-a1b"]
+script = "export_lfm2_moe_metal_decode_pipelined.py"
+args = ["sym8"]
+card = "../zoo/lfm2.5-8b-a1b-moe.md"
+hf_repo = "mlboydaisuke/LFM2.5-8B-A1B-CoreAI"
+bundle = "gpu-pipelined/lfm2_5_8b_a1b_decode_sym8_gather"
+status = "verified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "sym8 = symmetric-linear int8, per-K-block-32 scale, read through the gather_qmm Metal kernel.",
+  "Card: 8.8 GB, 140.4 tok/s on M4 Max, clean (+1 flip/41 = the fp16 ceiling) — the shipped one.",
+  "int8km is superseded (k-means is lossier); int4km runs on iPhone but is not clean, so neither",
+  "is published.",
+  "This exporter has no head-quantization flags, so the bundle name determines the command.",
+]
+
+["qwen3.6-35b-a3b"]
+script = "export_qwen3_6_moe_metal_decode_pipelined.py"
+args = ["sym8"]
+card = "../zoo/qwen3.6.md"
+hf_repo = "mlboydaisuke/Qwen3.6-35B-A3B-CoreAI"
+bundle = "gpu-pipelined/qwen3_6_35b_a3b_decode_sym8_gather"
+status = "unverified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+open_questions = [
+  "Was --head-sym / --head-quant passed? The exporter feeds both into the lm_head spec but leaves",
+  "them out of the bundle name, and the card names the script without its flags. `sym8` is certain",
+  "(it is the only choice); the head configuration is not recoverable from anything published.",
+]
+notes = [
+  "Card: the sym8 gather build IS the ship (35 GB, 65.3 tok/s decode, 0 introduced flips/18).",
+  "The card's own 'convert with' line points at export_qwen3_6_decode_pipelined.py int8hu",
+  "--head-sym, which produces a differently-named bundle that was not published.",
+]
+
+["glm-4.7-flash"]
+script = "export_glm47_moe_metal_decode_pipelined.py"
+args = ["sym8"]
+card = "../zoo/glm-4.7-flash.md"
+hf_repo = "mlboydaisuke/GLM-4.7-Flash-CoreAI"
+bundle = "gpu-pipelined/glm_4_7_flash_decode_sym8_gather"
+status = "unverified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+open_questions = [
+  "Same head-flag ambiguity as qwen3.6-35b-a3b: --head-sym / --head-quant change the artifact and",
+  "do not appear in the name.",
+]
+notes = [
+  "The zoo's first MLA + MoE port. Card: sym8 gather = SHIP (30 GB, 53.6 tok/s, clean).",
+  "The card's 'convert with' line names export_glm47_decode_pipelined.py int8hu --head-sym, which",
+  "is the pre-gather-kernel build and was not the artifact published.",
+]
+
+# ===========================================================================
+# Gemma 4 — QAT int4, PLE table, Metal SDPA
+# ===========================================================================
+
+["gemma-4-e2b"]
+script = "export_gemma4_decode_pipelined.py"
+args = ["int4lin", "--tbl", "--hf-id", "google/gemma-4-E2B-it-qat-q4_0-unquantized"]
+card = "../zoo/gemma4-e2b.md"
+hf_repo = "mlboydaisuke/gemma-4-E2B-CoreAI"
+bundle = "gpu-pipelined/gemma4_e2b_qat_decode_int4lin_tbl"
+status = "verified"
+overlay = true
+needs = [
+  "--raw-dir: the Per-Layer-Embedding gather-table dump (embed_per_layer.i8 + .scale.f32 +",
+  "meta.json) produced by ondevice/export_gemma4_gather_raw.py --hf-id <same id>. --tbl rides the",
+  "table as a STATIC graph input, which is what makes decode fully pipelined.",
+]
+runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+aot = "xcrun coreai-build compile <bundle>.aimodel --output <out>/ --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = [
+  "int4lin --tbl: 77.0/87.1 tok/s on M4 Max, 30.3/38.9 on iPhone 17 Pro (AOT h18p).",
+  "The _aotc_h18p bundle beside it is this bundle after the AOT step, not a second export.",
+  "The repo also publishes the non-QAT checkpoint build (--hf-id google/gemma-4-E2B-it) and the",
+  "raw-Metal kernel sets under ios-gpu/, ios-ane/, macos/ — those come from the hand-written",
+  "kernel track in conversion/gemma4_raw_metal/, not from this exporter.",
+]
+
+["gemma-4-e4b"]
+script = "export_gemma4_decode_pipelined.py"
+args = ["int4lin", "--hf-id", "google/gemma-4-E4B-it-qat-q4_0-unquantized"]
+card = "../zoo/gemma4-e4b.md"
+hf_repo = "mlboydaisuke/gemma-4-E4B-CoreAI"
+bundle = "gpu-pipelined/gemma4_e4b_qat_decode_int4lin"
+status = "verified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+aot = "xcrun coreai-build compile <bundle>.aimodel --output <out>/ --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = [
+  "The card documents this command verbatim; the _tbl variant beside it adds --tbl --raw-dir",
+  "(gather-table dump from ondevice/export_gemma4_gather_raw.py).",
+]
+
+["gemma-4-12b"]
+script = "export_gemma4_12b_decode_pipelined.py"
+args = ["int4lin", "--lin-sym", "--metal-sdpa", "--max-ctx", "4096"]
+card = "../zoo/gemma4-12b.md"
+hf_repo = "mlboydaisuke/Gemma-4-12B-CoreAI"
+bundle = "gpu-pipelined/gemma4_12b_qat_decode_int4linsym_msdpa_g8"
+status = "verified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "--lin-sym is the QAT-grid-aligned absmax variant (q4_0 = per-block-32 absmax), hence the",
+  "`int4linsym` in the name; --metal-sdpa adds the custom flash-decode kernel (_msdpa_g8 = the",
+  "default split factor 8). Mac-only.",
+  "int8lin --metal-sdpa is published beside it — see gemma-4-12b-int8.",
+]
+
+["gemma-4-12b-int8"]
+script = "export_gemma4_12b_decode_pipelined.py"
+args = ["int8lin", "--metal-sdpa", "--max-ctx", "4096"]
+card = "../zoo/gemma4-12b.md"
+hf_repo = "mlboydaisuke/Gemma-4-12B-CoreAI"
+bundle = "gpu-pipelined/gemma4_12b_qat_decode_int8lin_msdpa_g8"
+status = "verified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = ["The int8 twin of gemma-4-12b, same graph and kernel, both published."]
+
+["gemma-4-31b"]
+script = "export_gemma4_12b_decode_pipelined.py"
+args = ["int4lin", "--lin-sym", "--metal-sdpa", "--hf-id", "google/gemma-4-31B-it-qat-q4_0-unquantized"]
+card = "../zoo/gemma4-31b.md"
+hf_repo = "mlboydaisuke/Gemma-4-31B-CoreAI"
+bundle = "gpu-pipelined/gemma4_31b_qat_decode_int4linsym_msdpa_g8"
+status = "verified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = ["Same exporter as the 12B — the size comes from the checkpoint id. Mac-only."]
+
+["gemma-4-e2b-vl"]
+script = "export_gemma4_vl_pipelined.py"
+args = ["int4lin", "--lin-sym", "--tbl"]
+card = "../zoo/gemma4-vl.md"
+hf_repo = "mlboydaisuke/gemma-4-E2B-CoreAI"
+bundle = "gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym_tbl"
+status = "verified"
+overlay = true
+needs = ["--raw-dir: the PLE gather-table dump (default ../../ondevice/artifacts/gemma4_qat_gather_raw)"]
+runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "Mac ship. The device ship drops the table input and the vision tower export:",
+  "`int4lin --lin-sym --skip-vision` -> gemma4_e2b_qat_vl_decode_int4linsym (+ _aotc_h18p).",
+  "One run also emits the fp16 vision tower bundle gemma4_e2b_qat_vl_vision.",
+]
+
+# ===========================================================================
+# Vision-language decoders
+# ===========================================================================
+
+["qwen3-vl-2b"]
+script = "export_qwen3_vl_pipelined.py"
+args = ["int8hu"]
+card = "../zoo/qwen3-vl.md"
+hf_repo = "mlboydaisuke/Qwen3-VL-2B-CoreAI"
+bundle = "gpu-pipelined/qwen3_vl_2b_instruct_decode_int8hu_s1"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "One run emits the decoder, its static S=1 gate twin (_s1 — the published one) and the fp16",
+  "vision tower. int8lin_s1 is published beside it as the fallback.",
+  "--prefill-chunk N additionally emits the multifunction _pfN bundle (chunked prefill).",
+]
+
+["qwen3-vl-4b"]
+script = "export_qwen3_vl_pipelined.py"
+args = ["int8hu", "--hf-id", "Qwen/Qwen3-VL-4B-Instruct"]
+card = "../zoo/qwen3-vl.md"
+hf_repo = "mlboydaisuke/Qwen3-VL-4B-CoreAI"
+bundle = "gpu-pipelined/qwen3_vl_4b_instruct_decode_int8hu_s1"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = ["HF-id swap only."]
+
+["qwen3-vl-8b"]
+script = "export_qwen3_vl_pipelined.py"
+args = ["int8hu", "--hf-id", "Qwen/Qwen3-VL-8B-Instruct"]
+card = "../zoo/qwen3-vl.md"
+hf_repo = "mlboydaisuke/Qwen3-VL-8B-CoreAI"
+bundle = "gpu-pipelined/qwen3_vl_8b_instruct_decode_int8hu_s1"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = ["HF-id swap only. Mac-class; the 2B is the phone one."]
+
 ["holo2-4b"]
 script = "export_qwen3_vl_pipelined.py"
 args = ["int8lin", "--hf-id", "Hcompany/Holo2-4B"]
 card = "../zoo/holo2.md"
+hf_repo = "mlboydaisuke/Holo2-4B-CoreAI"
+bundle = "gpu-pipelined/holo2_4b_decode_int8lin_s1"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
 notes = [
   "Stock Qwen3-VL-4B drop-in: HF-id swap only, no model code.",
   "Emits decoder + _s1 gate twin + fp16 vision tower; _s1 is static so no AOT needed.",
   "Parity vs fp32 HF: vision cos 0.9999, decoder 4/4 + 16/16 decode steps token-exact.",
 ]
 
+["minicpm-v-4.6"]
+card = "../zoo/minicpm-v-4.6.md"
+hf_repo = "mlboydaisuke/MiniCPM-V-4.6-CoreAI"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+steps = [
+  { script = "export_minicpmv46_vision.py", args = [], bundle = "gpu-pipelined/minicpmv46_vision" },
+  { script = "export_minicpmv46_vlm_pipelined.py", args = ["int8lin"], bundle = "gpu-pipelined/minicpmv46_vlm_decode_int8lin" },
+]
+notes = [
+  "The card documents four commands; these two produce the published pair. The other two",
+  "(export_minicpmv46_decode_pipelined.py, export_minicpmv46_core_decode_pipelined.py) build the",
+  "text-only decoder variants used during bring-up and are not published.",
+  "An int8hu VLM decode bundle and an int8lin vision tower are published beside them.",
+  "export_minicpmv46_chunked_prefill.py adds the _pfN chunked-prefill variant.",
+]
+
+["glm-ocr"]
+card = "../zoo/glm-ocr.md"
+hf_repo = "mlboydaisuke/GLM-OCR-CoreAI"
+status = "unverified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+open_questions = [
+  "The repo publishes `decoder/` and `vision/glm_ocr_vision.aimodel`, but the decoder bundle's",
+  "own metadata names its source as the zoo repo rather than the upstream model, and the card",
+  "lists fp16 / int8lin / int8hu side by side without saying which produced the published",
+  "decoder. export_glm_ocr_pipelined.py names bundles glm_ocr_decode_<mode>, so the published",
+  "`decoder/` directory name carries no mode either. Which mode shipped?",
+]
+notes = ["Downloaded checkpoint dir: ZOO_WORK_ROOT/_glmocr_dl (see conversion/_paths.py)."]
+
+["mineru-2.5-pro"]
+card = "../zoo/mineru.md"
+hf_repo = "mlboydaisuke/MinerU2.5-Pro-CoreAI"
+status = "unverified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+open_questions = [
+  "Same shape as glm-ocr: published as `decoder/` + `vision/mineru_vision.aimodel` (plus a",
+  "`layout/` pair), and the exporter's mode is not in the published directory names.",
+  "Which mode produced each? Note the layout decoder's metadata records a local absolute path",
+  "as its hf_model_id — that is published on Hugging Face and should be corrected.",
+]
+notes = ["Downloaded checkpoint dir: ZOO_WORK_ROOT/_mineru_dl (see conversion/_paths.py)."]
+
+["unlimited-ocr"]
+card = "../zoo/unlimited-ocr.md"
+hf_repo = "mlboydaisuke/Unlimited-OCR-CoreAI"
+status = "unverified"
+overlay = true
+steps = [
+  { script = "unlimited_ocr/export_vision.py", args = [], bundle = "vision/unlimited_ocr_vision.aimodel" },
+  { script = "unlimited_ocr/export_decoder.py", args = [], bundle = "decoder/unlimited_ocr_decoder.aimodel" },
+]
+open_questions = ["Do either of these exporters take flags that changed the published bundles? Not recorded."]
+
+# ===========================================================================
+# Ternary / bitnet
+# ===========================================================================
+
+["bitcpm-8b"]
+script = "export_bitcpm8b_decode_pipelined.py"
+args = ["--static-ids"]
+card = "../zoo/bitcpm-8b.md"
+hf_repo = "mlboydaisuke/BitCPM-8B-CoreAI"
+bundle = "gpu-pipelined/bitcpm_8b_decode_ternary_s1"
+status = "verified"
+overlay = true
+needs = [
+  "ZOO_WORK_ROOT/_bitcpm_ckpt/bitcpm4-8b-tq2_0.gguf (ternary weights) and",
+  "ZOO_WORK_ROOT/_bitcpm_ckpt/hf (tokenizer + config) — see conversion/_paths.py.",
+]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = ["Ternary is the only mode; --static-ids adds the _s1 static decode graph."]
+
+["bitvla"]
+card = "../zoo/bitvla.md"
+hf_repo = "mlboydaisuke/BitVLA-CoreAI"
+status = "unverified"
+overlay = true
+steps = [
+  { script = "export_bitvla_vision.py", args = [], bundle = "aimodel/bitvla_vision/bitvla_vision.aimodel" },
+  { script = "export_bitvla_llm_decode_pipelined.py", args = [], bundle = "aimodel/bitvla_llm_act/bitvla_llm_act.aimodel" },
+]
+needs = ["ZOO_WORK_ROOT/_bitvla_ckpt/bitvla_bf16 (checkpoint) + oracle.npz — see conversion/_paths.py."]
+open_questions = ["Which flags produced the published pair? Neither the card nor the bundle names record them."]
+notes = ["h18p/ holds the AOT-compiled twins of the same two graphs."]
+
+# ===========================================================================
+# Stock-exporter ports (no re-authored model code)
+# ===========================================================================
+
 ["fastcontext-4b"]
 command = ["coreai.llm.export", "fastcontext-4b"]
 card = "../zoo/fastcontext.md"
+hf_repo = "mlboydaisuke/FastContext-1.0-4B-CoreAI"
+bundle = "gpu"
+status = "verified"
+overlay = true
+aot = "coreai-build compile exports/fastcontext_4b_dynamic/*.aimodel --platform iOS --preferred-compute gpu --architecture h18p"
 notes = [
   "STOCK architecture (byte-identical to Qwen/Qwen3-4B) — no re-authoring, rides the stock qwen3 graph.",
   "Needs the overlay only for the model_registry short-name preset + metadata entry.",
-  "iOS: dense 4B dynamic graph can't specialize on device -> ship the AOT bundle:",
-  "  coreai-build compile exports/fastcontext_4b_dynamic/*.aimodel --platform iOS --preferred-compute gpu --architecture h18p",
+  "iOS: dense 4B dynamic graph can't specialize on device -> ship the AOT bundle.",
   "Parity 23/24 argmax (ppl 1.41) vs HF fp16.",
 ]
+
+["minicpm5-1b"]
+command = ["coreai.llm.export", "openbmb/MiniCPM5-1B", "--compression-config", "minicpm5_int8sym.yaml"]
+card = "../zoo/minicpm5-1b.md"
+hf_repo = "mlboydaisuke/MiniCPM5-1B-CoreAI"
+bundle = "int8"
+status = "unverified"
+overlay = true
+needs = [
+  "Two one-time coreai_models edits documented in export_minicpm5.py: registry MODEL_TYPE_REMAPPING",
+  "llama -> mistral, and an AIModelMetadataFields entry for openbmb/MiniCPM5-1B. Both belong in",
+  "conversion/overlay/ but are not there yet.",
+]
+open_questions = [
+  "The exact stock-CLI invocation is not recorded — the card describes the compression config",
+  "(symmetric per-channel int8 absmax, conversion/minicpm5_int8sym.yaml) but not the command line",
+  "or the context length that produced the published `int8/` bundle (its metadata says 131072).",
+]
+notes = ["Plain LlamaForCausalLM, so it rides the stock exporter rather than a pipelined script."]
+
+# ===========================================================================
+# Encoders — embeddings, retrieval, extraction
+# ===========================================================================
+
+["qwen3-embedding-0.6b"]
+script = "export_qwen3_embedding.py"
+args = ["--dtype", "float16", "--seq-len", "512"]
+card = "../zoo/qwen3-embedding.md"
+hf_repo = "mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI"
+bundle = "qwen3-embedding-0.6b_float16_s512_static.aimodel"
+status = "verified"
+notes = ["Static sequence length is part of the graph contract; it is in the bundle name."]
+
+["qwen3-reranker-0.6b"]
+script = "export_qwen3_reranker.py"
+args = ["--dtype", "float16", "--seq-len", "512"]
+card = "../zoo/qwen3-reranker.md"
+hf_repo = "mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI"
+bundle = "qwen3-reranker-0.6b_float16_s512_static.aimodel"
+status = "verified"
+
+["embeddinggemma-300m"]
+script = "export_embeddinggemma.py"
+args = ["--dtype", "float32"]
+card = "../zoo/qwen3-embedding.md"
+hf_repo = "mlboydaisuke/embeddinggemma-300m-CoreAI"
+bundle = "model/embeddinggemma-300m_float32_static.aimodel"
+status = "unverified"
+open_questions = [
+  "float32 is in the bundle name, but the static sequence length is not — the exporter defaults",
+  "to 256 and the published name cannot confirm it. Which --seq-len shipped?",
+]
+
+["colmodernvbert"]
+card = "../zoo/colmodernvbert.md"
+hf_repo = "mlboydaisuke/ColModernVBERT-CoreAI"
+status = "verified"
+steps = [
+  { script = "export_colmodernvbert.py", args = ["--phase", "query", "--dtype", "float16", "--seq-len", "32"], bundle = "query/colmodernvbert-query_float16_s32_static.aimodel" },
+  { script = "export_colmodernvbert.py", args = ["--phase", "doc", "--dtype", "float16", "--seq-len", "89"], bundle = "doc/colmodernvbert-doc_float16_s89_static.aimodel" },
+]
+notes = [
+  "Late-interaction retrieval: separate query and document graphs, each with its own static",
+  "sequence length — both are in the bundle names. fp32 twins are published under fp32/ as the",
+  "parity reference.",
+]
+
+["gliner2-pii"]
+script = "export_gliner2_pii.py"
+args = ["--dtype", "float16"]
+card = "../zoo/gliner2-pii.md"
+hf_repo = "mlboydaisuke/GLiNER2-PII-CoreAI"
+bundle = "macos/gliner2-pii_float16_s256_t96_m16.aimodel"
+status = "verified"
+notes = [
+  "The card documents this command; the s256_t96_m16 in the name are the exporter defaults",
+  "(-S 256 -T 96 --mmax 16), so the name confirms them.",
+  "Schema-agnostic: runtime label sets never seen at export time still decode correctly",
+  "(conversion/verify_schema_agnostic.py). ios/ holds the same graph for the phone.",
+  "Kit note: GraphModel cannot be driven concurrently — the kit serialises calls.",
+]
+
+# ===========================================================================
+# Vision — detection, depth, segmentation, world models
+# ===========================================================================
+
+["depth-anything-3-small"]
+script = "export_da3.py"
+args = ["--variant", "small", "--dtype", "float16", "--res", "504"]
+card = "../zoo/depth-anything-3.md"
+hf_repo = "mlboydaisuke/Depth-Anything-3-CoreAI"
+bundle = "small/da3-small_float16.aimodel"
+status = "verified"
+needs = ["--ckpt <DA3-SMALL checkout> and --da3-src <depth_anything_3 source tree> (the card's command)."]
+notes = [
+  "One square R x R graph (R=504); the host resizes in and out. Aspect distortion cancels for",
+  "relative depth — measured, not assumed. float32 twins are published as the parity reference.",
+]
+
+["depth-anything-3-base"]
+script = "export_da3.py"
+args = ["--variant", "base", "--dtype", "float16", "--res", "504"]
+card = "../zoo/depth-anything-3.md"
+hf_repo = "mlboydaisuke/Depth-Anything-3-CoreAI"
+bundle = "base/da3-base_float16.aimodel"
+status = "verified"
+needs = ["--ckpt <DA3-BASE checkout> and --da3-src <depth_anything_3 source tree>."]
+
+["rf-detr"]
+script = "export_rf_detr.py"
+args = ["--variant", "medium", "--dtype", "float32"]
+card = "../zoo/rf-detr.md"
+hf_repo = "mlboydaisuke/RF-DETR-CoreAI"
+bundle = "rfdetr-medium_float32.aimodel"
+status = "verified"
+notes = [
+  "Ten variants ship (nano/small/medium/large + seg-*), each `rfdetr-<variant>_float32.aimodel`",
+  "from the same command with --variant swapped — the name determines the argument.",
+  "--split additionally emits the backbone/head pair published under split/.",
+]
+
+["yolox-s"]
+script = "export_yolox.py"
+args = ["--dtype", "float32"]
+card = "../zoo/yolox.md"
+hf_repo = "mlboydaisuke/YOLOX-CoreAI"
+bundle = "yolox-s_float32.aimodel"
+status = "verified"
+
+["vjepa2-vitl-ssv2"]
+script = "vjepa2/export_fp16.py"
+args = []
+card = "../zoo/vjepa2.md"
+hf_repo = "mlboydaisuke/VJEPA2-ViTL-SSv2-CoreAI"
+bundle = "macos"
+status = "verified"
+aot = "xcrun coreai-build compile vjepa2_ssv2_fp16.aimodel --output ios/ --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = ["Fixed output name (vjepa2_ssv2_fp16.aimodel); the script takes no configuration flags."]
+
+["triposplat"]
+card = "../zoo/triposplat.md"
+hf_repo = "mlboydaisuke/TripoSplat-CoreAI"
+status = "unverified"
+open_questions = [
+  "Six graphs are published (dinov3, dit, vae, gs, octree, decode) but conversion/triposplat/",
+  "holds no export_*.py — the scripts that produced them are not in this repository.",
+]
+
+["ltx-video-2b"]
+card = "../zoo/ltxvideo.md"
+hf_repo = "mlboydaisuke/LTX-Video-2B-CoreAI"
+status = "unverified"
+open_questions = [
+  "Three graphs are published (dit_fp16, t5_bf16, vae_fp16); conversion/ltxvideo/ holds shared",
+  "helpers (_common.py) but no export entrypoint. Which scripts produced them?",
+]
+
+["glm-image"]
+card = "../zoo/glm-image.md"
+hf_repo = "mlboydaisuke/GLM-Image-CoreAI"
+status = "unverified"
+overlay = true
+steps = [
+  { script = "export_glm_image_ar.py", args = [], bundle = "glm_image_ar.aimodelc" },
+  { script = "export_glm_image_dit.py", args = [], bundle = "glm_image_dit_1024.aimodelc" },
+  { script = "export_glm_image_vae.py", args = [], bundle = "glm_image_vae_1024.aimodel" },
+]
+open_questions = [
+  "Resolution-specific bundles (512 and 1024) ship for the DiT and the VAE — which flag selects",
+  "the resolution, and was the fp32 VAE exporter (export_glm_image_vae_fp32.py) used for either?",
+  "This port is still in flight; the card is not final.",
+]
+
+["z-image-turbo"]
+card = "../zoo/z-image-turbo.md"
+hf_repo = "mlboydaisuke/Z-Image-Turbo-CoreAI"
+status = "unverified"
+steps = [
+  { script = "zimage/export_dit.py", args = [], bundle = "zimage_dit_512_cap32_full_native_bf16_dyncap_dynimg_iofp32.aimodel" },
+  { script = "zimage/export_encoder.py", args = [], bundle = "zimage_encoder_seq64_full_bf16_ids_iofp32.aimodel" },
+  { script = "zimage/export_vae.py", args = [], bundle = "zimage_vae_512_fp32.aimodel" },
+  { script = "zimage/export_glue.py", args = [], bundle = "glue/zimage_t_embedder_fp32/zimage_t_embedder_fp32.aimodel" },
+]
+open_questions = [
+  "The DiT bundle name encodes size/cap/mode/dynamic-axis flags (512, cap32, native bf16, dyncap,",
+  "dynimg, iofp32) and the VAE ships at three resolutions — the exact flag set per bundle is not",
+  "recorded anywhere. bf16 is load-bearing here: fp16 NaNs this model.",
+]
+
+# ===========================================================================
+# Audio — ASR, TTS, separation, diarization
+# ===========================================================================
+
+["whisper-large-v3-turbo"]
+script = "export_whisper_fixed.py"
+args = ["--dtype", "float16"]
+card = "../zoo/whisper-large-v3-turbo.md"
+hf_repo = "mlboydaisuke/whisper-large-v3-turbo-CoreAI-official"
+bundle = "whisper-large-v3-turbo_float16_fixed128.aimodel"
+status = "verified"
+notes = [
+  "Fixed 128-frame decode window (the _fixed128 in the name is not configurable).",
+  "Published under the -official suffix because it re-exports Apple's own model choice.",
+]
+
+["parakeet-tdt-0.6b"]
+card = "../zoo/parakeet.md"
+hf_repo = "mlboydaisuke/Parakeet-TDT-0.6B-CoreAI"
+status = "unverified"
+steps = [
+  { script = "parakeet/export_encoder.py", args = [], bundle = "parakeet_encoder_float16_L2885.aimodel" },
+  { script = "parakeet/export_decoder.py", args = [], bundle = "parakeet_predict_float32.aimodel" },
+]
+open_questions = [
+  "The encoder name pins a 2885-frame input (L2885) and the decoder splits into predict + joint;",
+  "which flags set the frame count and produced each of the three published graphs?",
+]
+
+["nemotron-3.5-asr-streaming"]
+card = "../zoo/nemotron-asr-streaming.md"
+hf_repo = "mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI"
+status = "unverified"
+steps = [
+  { script = "nemotron_asr/export_encoder_streaming.py", args = [], bundle = "macos/nemotron_asr_stream_conformer_a_float16.aimodel" },
+  { script = "nemotron_asr/export_decoder.py", args = [], bundle = "macos/nemotron_asr_predict_float32.aimodel" },
+]
+open_questions = [
+  "Six graphs ship per platform (pre / pre_first / conformer_a / conformer_b / predict / joint).",
+  "Which invocation emits which, and does the non-streaming export_encoder.py contribute any?",
+]
+notes = ["conversion/nemotron_asr/sideload_ios.sh records the device-side install."]
+
+["qwen3-asr-1.7b"]
+card = "../zoo/qwen3-asr.md"
+hf_repo = "mlboydaisuke/Qwen3-ASR-1.7B-CoreAI"
+status = "unverified"
+overlay = true
+steps = [
+  { script = "qwen3_asr/export_encoder.py", args = [], bundle = "gpu-pipelined/qwen3_asr_1.7b_audio_encoder_fp16_k30/qwen3_asr_1.7b_audio_encoder_fp16_k30.aimodel" },
+  { script = "qwen3_asr/export_decoder.py", args = [], bundle = "gpu-pipelined/qwen3_asr_1.7b_decode_int8hu_n390_s1" },
+]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+open_questions = [
+  "The decoder is int8hu with a 390-token audio prefix (n390) and a static S=1 graph; the encoder",
+  "pins k30. Which flags set n390/k30, and was --head-sym used? conversion/qwen3_asr/STATE.md is",
+  "the port's own record and should be able to answer this.",
+]
+
+["sortformer-diar"]
+script = "sortformer_diar/export_sortformer.py"
+args = ["--dtype", "float16"]
+card = "../zoo/sortformer-diar.md"
+hf_repo = "mlboydaisuke/Streaming-Sortformer-Diar-CoreAI"
+bundle = "sortformer_float16.aimodel"
+status = "verified"
+aot = "xcrun coreai-build compile sortformer_float16.aimodel --output ship_ios/ --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = [
+  "Bundle name is sortformer_<dtype>.aimodel, so the name determines the argument.",
+  "The kit composes this with an ASR model as MeetingTranscriber (diarize, then transcribe turns).",
+]
+
+["melband-roformer-vocal"]
+script = "melband_roformer/export_full2_ship.py"
+args = []
+card = "../zoo/melband-roformer.md"
+hf_repo = "mlboydaisuke/MelBandRoformer-Vocal-CoreAI"
+bundle = "mbr_full_fp16.aimodel"
+status = "verified"
+aot = "xcrun coreai-build compile conversion/melband_roformer/ship_macos/mbr_full_fp16.aimodel --output conversion/melband_roformer/artifacts/ios_full_h18p --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = [
+  "The card documents this exact script as the ship path: fp16 export + Mac GPU gate -> ship_macos/.",
+  "The other export_core*.py scripts in that directory are bring-up stages, not the ship.",
+  "Device-verified cos 1.000000, 6.5x realtime.",
+]
+
+["vibevoice-realtime-0.5b"]
+card = "../zoo/vibevoice.md"
+hf_repo = "mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI"
+status = "verified"
+steps = [
+  { script = "vibevoice/export_backbone.py", args = ["--mode", "fp16", "--which", "both"], bundle = "macos/vibevoice_mainlm_fp16_decode_cl512.aimodel" },
+  { script = "vibevoice/export_diffusion_head.py", args = ["--dtype", "fp16"], bundle = "macos/vibevoice_diffusion_head_fp16.aimodel" },
+  { script = "vibevoice/export_decoder.py", args = ["--tframes", "64", "--dtype", "fp16"], bundle = "macos/vibevoice_decoder_fp16_t64.aimodel" },
+]
+needs = [
+  "The upstream snapshot is pinned to revision 6bce5f06044837fe6d2c5d7a71a84f0416bd57e4 inside the",
+  "export scripts (hf_snapshot(..., revision=REVISION)).",
+]
+aot = "xcrun coreai-build compile <each>.aimodel --output artifacts_ios/ --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = [
+  "All five published macOS graphs come from these three commands: --which both emits the context",
+  "LM and the speech trunk, and the diffusion-head export also emits the connector.",
+  "ios/ holds the AOT twins. Voice presets are packed separately (pack_voice_presets.py).",
+]
+
+["kokoro-82m"]
+script = "export_kokoro.py"
+args = []
+card = "../zoo/kokoro-82m.md"
+hf_repo = "mlboydaisuke/Kokoro-82M-CoreAI"
+bundle = "kokoro_predictor.aimodel"
+status = "unverified"
+open_questions = [
+  "One run emits all three published graphs (predictor / prosody / vocoder), but the card's",
+  "command shows optional --token-bucket 128 --frame-bucket 512 and the bundle names do not",
+  "record the bucket sizes. Were the defaults used?",
+]
+
+# ===========================================================================
+# Other modalities
+# ===========================================================================
+
+["timesfm-2.5-200m"]
+script = "timesfm/export_timesfm.py"
+args = ["--ctx", "2048", "--dtype", "fp16"]
+card = "../zoo/timesfm.md"
+hf_repo = "mlboydaisuke/TimesFM-2.5-200M-CoreAI"
+bundle = "timesfm_2p5_200m_ctx2048_fp16.aimodel"
+status = "verified"
+aot = "xcrun coreai-build compile timesfm_2p5_200m_ctx2048_fp16.aimodel --output ios/ --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = ["Context length and dtype are both in the bundle name, so it determines the command."]
+
+["llada-8b-dllm"]
+script = "dllm/export_llada.py"
+args = []
+card = "../zoo/llada-8b.md"
+hf_repo = "mlboydaisuke/LLaDA-8B-dLLM-CoreAI"
+bundle = "macos"
+status = "unverified"
+open_questions = [
+  "The published bundle sits in a bare `macos/` directory with a 256-token context; the exporter's",
+  "flags are not recorded in the name. Which produced it?",
+]
+notes = ["Diffusion LLM: no KV cache, whole-sequence denoising. Mac-only."]
