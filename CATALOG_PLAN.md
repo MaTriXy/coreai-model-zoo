@@ -156,15 +156,24 @@ only the owner has.
 
 **Still open — one answer each:**
 
-1. **18 unverified recipes.** A flag changed the artifact but not its name, so the published
-   bundle cannot say which was used. Mostly "was `--head-sym` passed?" on the MoE gather
-   exports. Listed with their exact questions in `models/_INVENTORY.md` §3.
-2. **The stub cards.** Eight ports (FLUX.2 klein, both VoxCPMs, Stable Audio, RWKV7-Goose,
-   Qwen2.5-Omni audio, qwen3.5-4B, AdcSR) now have a card that records what is published and
-   points at the Hugging Face page as the authority. They still need a real card — or a
-   decision to unpublish, since all eight had no downloads last month.
-3. **`scripts/gen-cards` has not been re-run** since the layout moved. It builds Swift and
-   needs the kit checkout; one run confirms the card ↔ Hugging Face README round-trip.
+1. **9 unverified recipes** (was 18). Nine were resolved by reading what the repo already
+   recorded — upload scripts, port notes, per-port READMEs — not by re-exporting anything.
+   What is left is genuinely unwritten: GLM-4.7-Flash's head flags (its twin's recorded
+   command is not evidence for it), qwen3-asr (STATE.md and the published repo name different
+   ship artifacts), embeddinggemma's sequence length, MiniCPM5-1B's stock-CLI line, BitVLA,
+   GLM-Image, the Nemotron ASR graph split, and TripoSplat / LTX-Video, whose export scripts
+   are not in this repository at all. Exact questions: `models/_INVENTORY.md` §3.
+2. **Recipes for the eight newly carded ports.** Their cards are now the model pages
+   themselves, but none has a `recipe.toml` — five of them ship through CoreAIKit, so the
+   catalog can hand a user the model but not the command that built it. The material exists
+   (`conversion/voxcpm/`, `conversion/stable_audio/`, `knowledge/voxcpm-tts.md`); it is the
+   same read-the-record exercise that resolved nine other recipes.
+3. **One `gen-cards` gate is red, and it is not ours.** The check-only run
+   (`--skip-builds`) after the layout move reports all 35 managed cards clean and
+   byte-identical on both surfaces, so the new paths are wired correctly. The one failure is
+   `ukint-vs/Nanbeige4.2-3B-CoreAI`: the contributor's Hugging Face README has no gen-cards
+   markers, which enrollment adds by hand once — and it is their repo, not ours. A full run
+   (Swift + xcodebuild) is still worth doing once to verify the runner doors.
 4. **Refreshing the Gemma-4-12B/31B chat template.** They carry the revision they were gated
    against; Google revised theirs on 2026-07-09 (tool-calling loops, turn closures, thinking
    order). Declared in `models/gemma4-12b/verify.toml` rather than silently updated, because
