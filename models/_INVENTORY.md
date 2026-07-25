@@ -96,7 +96,7 @@ configuration; a single bundle answers that question by itself.
 | [mlboydaisuke/embeddinggemma-300m-CoreAI](https://huggingface.co/mlboydaisuke/embeddinggemma-300m-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [qwen3-embedding](qwen3-embedding/README.md) | `embeddinggemma-300m`, `qwen3-embedding-0.6b` | `embeddinggemma-300m` |
 | [mlboydaisuke/embeddinggemma-300m-coreml](https://huggingface.co/mlboydaisuke/embeddinggemma-300m-coreml) | 0 | 0 | coreml | port | 0 | — | — | — | — |
 | [mlboydaisuke/FastContext-1.0-4B-CoreAI](https://huggingface.co/mlboydaisuke/FastContext-1.0-4B-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [fastcontext](fastcontext/README.md) | `fastcontext-4b` | — |
-| [mlboydaisuke/FLUX.2-klein-4B-CoreAI](https://huggingface.co/mlboydaisuke/FLUX.2-klein-4B-CoreAI) | 0 | 3 | coreai | port | 7 | 7 skipped | [flux2-klein](flux2-klein/README.md) | `flux2-klein-4b` | — |
+| [mlboydaisuke/FLUX.2-klein-4B-CoreAI](https://huggingface.co/mlboydaisuke/FLUX.2-klein-4B-CoreAI) | 0 | 3 | coreai | port | 7 | 7 skipped | [flux2-klein](flux2-klein/README.md) | `flux2-klein-4b`, `flux2-klein-4b-edit` | — |
 | [mlboydaisuke/functiongemma-270m-coreml](https://huggingface.co/mlboydaisuke/functiongemma-270m-coreml) | 0 | 0 | coreml | port | 0 | — | — | — | — |
 | [mlboydaisuke/gemma-3-12b-it-CoreAI-official](https://huggingface.co/mlboydaisuke/gemma-3-12b-it-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | `gemma-3-12b-it` |
 | [mlboydaisuke/gemma-3-4b-it-CoreAI-official](https://huggingface.co/mlboydaisuke/gemma-3-4b-it-CoreAI-official) | 0 | 0 | coreai | official | 1 | — | — | — | `gemma-3-4b-it` |
@@ -186,12 +186,12 @@ published configuration. **Do not guess their `args`.**
 
 ### 3. Recipes recorded, shipped configuration unknown
 
-3 of the 64 recipes carry `status = "unverified"`:
+3 of the 65 recipes carry `status = "unverified"`:
 the script is known, the arguments that produced the published bundle are not,
 and nothing in the repo records them. `zoo_convert.py` refuses to run these
 without `--force`. Each needs one answer from the owner.
 
-- **`flux2-klein-4b`** (mlboydaisuke/FLUX.2-klein-4B-CoreAI) — Seven bundles are published (TextEncoder, Transformer, three edit variants, VAEDecoder, VAEEncoder) and their CamelCase names match no exporter in this repository — there is no conversion/flux2* directory at all. Where does this port's conversion code live, and what produced each bundle? The card and apps/CoreAIImageGen document how to *run* it, not how it was built.
+- **`flux2-klein-4b-edit`** (mlboydaisuke/FLUX.2-klein-4B-CoreAI) — Transformer_edit / _edit_2ref / _edit_512 come from in-context-editing code added to the diffusion pipeline in the patched coreai-models checkout — commits d982f48 (Flux2Pipeline. editImages + transformer_edit export + runner --edit-image) and bc48d3d (multi-reference, transformer_edit_2ref). That code lives in coreai_models/diffusion/{components,flux2}.py and is NOT captured in conversion/overlay/ (the overlay patch touches no diffusion file), so nobody outside this machine can build these three bundles. Running overlay/regen.sh would capture it — an owner decision, because regen also picks up whatever else is in flight. The exact invocation and the _512 variant's flag are also unrecorded.
 - **`glm-4.7-flash`** (mlboydaisuke/GLM-4.7-Flash-CoreAI) — Same head-flag ambiguity as qwen3.6-35b-a3b: --head-sym / --head-quant change the artifact and do not appear in the name. For qwen3.6-35B the answer was found — knowledge/ records a bare `sym8` — but no such record exists for this port, and its twin's command is not evidence for it. Anything recorded from the GLM-4.7-Flash session would settle it.
 - **`embeddinggemma-300m`** (mlboydaisuke/embeddinggemma-300m-CoreAI) — float32 is in the bundle name, but the static sequence length is not — the exporter defaults to 256 and the published name cannot confirm it. Which --seq-len shipped?
 

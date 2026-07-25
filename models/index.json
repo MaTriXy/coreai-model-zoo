@@ -194,17 +194,29 @@
    "recipes": [
     {
      "name": "flux2-klein-4b",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/FLUX.2-klein-4B-CoreAI",
-     "bundle": null,
+     "bundle": "Transformer.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run flux2-klein-4b",
+     "open_questions": []
+    },
+    {
+     "name": "flux2-klein-4b-edit",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/FLUX.2-klein-4B-CoreAI",
+     "bundle": "Transformer_edit.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run flux2-klein-4b-edit",
      "open_questions": [
-      "Seven bundles are published (TextEncoder, Transformer, three edit variants, VAEDecoder,",
-      "VAEEncoder) and their CamelCase names match no exporter in this repository \u2014 there is no",
-      "conversion/flux2* directory at all. Where does this port's conversion code live, and what",
-      "produced each bundle? The card and apps/CoreAIImageGen document how to *run* it, not how it",
-      "was built."
+      "Transformer_edit / _edit_2ref / _edit_512 come from in-context-editing code added to the",
+      "diffusion pipeline in the patched coreai-models checkout \u2014 commits d982f48 (Flux2Pipeline.",
+      "editImages + transformer_edit export + runner --edit-image) and bc48d3d (multi-reference,",
+      "transformer_edit_2ref). That code lives in coreai_models/diffusion/{components,flux2}.py and",
+      "is NOT captured in conversion/overlay/ (the overlay patch touches no diffusion file), so",
+      "nobody outside this machine can build these three bundles. Running overlay/regen.sh would",
+      "capture it \u2014 an owner decision, because regen also picks up whatever else is in flight.",
+      "The exact invocation and the _512 variant's flag are also unrecorded."
      ]
     }
    ],
