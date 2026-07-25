@@ -9,7 +9,7 @@ background removal (BiRefNet) so it accepts raw photos, not just the preprocesse
 """
 import sys, os, time, asyncio, argparse
 from pathlib import Path
-sys.path.insert(0, os.path.expanduser("~/Code/coreai"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/ — coreai_kit
 import numpy as np
 import torch
 import coreai.runtime as rt

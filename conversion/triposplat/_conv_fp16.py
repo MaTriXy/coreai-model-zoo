@@ -1,7 +1,9 @@
 """Convert a net to fp16 weights (io kept fp32 so the app needs no change) + gate cos vs fp32 eager.
 Usage: python _conv_fp16.py {dit|dinov3|gs|vae}"""
-import sys, os
-sys.path.insert(0, os.path.expanduser("~/Code/coreai"))
+import sys
+from pathlib import Path
+import os
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/ — coreai_kit
 import torch, torch.nn as nn
 import coreai_kit
 from triposplat import load_flow_model, load_decoder, load_dinov3, load_vae_encoder

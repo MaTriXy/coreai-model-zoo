@@ -1,8 +1,8 @@
 # /// script
 # requires-python = ">=3.11"
 # dependencies = [
-#     "coreai-core==1.0.0b1",
-#     "coreai-torch==0.4.0",
+#     "coreai-core==1.0.0b2",
+#     "coreai-torch>=0.4.1",
 #     "colpali-engine>=0.3.13",
 #     "transformers>=5.5",
 #     "peft>=0.13",

@@ -58,7 +58,15 @@ without the run-time ones and the bundle then misbehaves inside the app:
 | `runtime` | what the **app** needs to run the resulting bundle: an engine patch, an environment variable |
 | `device` | the AOT compile step for the iPhone bundle |
 
-**Set up the interpreter once** (this is what `doctor` is checking):
+Some ports need none of that. `show` prints a `uv` line when the script declares its own
+dependencies inline (PEP 723) — depth, detection, embeddings, TTS, time series and similar:
+
+```bash
+uv run conversion/export_da3.py --variant small --dtype float16 --res 504
+```
+
+**Set up the interpreter once** — needed only for the exporters that import re-authored model
+code, which is what `doctor` is checking:
 
 ```bash
 git clone https://github.com/apple/coreai-models.git

@@ -1,6 +1,8 @@
 """Net #1: convert TripoSplat DINOv3 ViT-H encoder to Core AI + gate vs torch eager."""
-import sys, os
-sys.path.insert(0, os.path.expanduser("~/Code/coreai"))  # coreai_kit
+import sys
+from pathlib import Path
+import os
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/ — coreai_kit
 import torch, torch.nn.functional as F
 from torchvision import transforms
 import coreai_kit

@@ -9,8 +9,10 @@ The octree sampler that *produces* the points (decoder.octree + sample_probs) st
 L=8192 -> 8192*32 = 262144 gaussians (the pipeline default / max-quality output).
 Conversion uses optimize=False (same rationale as the DiT).
 """
-import sys, os, time
-sys.path.insert(0, os.path.expanduser("~/Code/coreai"))
+import sys
+from pathlib import Path
+import os, time
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/ — coreai_kit
 import torch, torch.nn as nn
 import coreai_kit
 from triposplat import load_decoder

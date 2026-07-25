@@ -6,6 +6,8 @@ enough (no T5 / no sampler needed). Apply the TripoSplat converter gotchas.
 Usage: python _conv_dit.py [H W num_frames text_seq]
 """
 import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/ — coreai_kit
 import numpy as np
 import torch
 import torch.nn as nn

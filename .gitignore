@@ -43,3 +43,6 @@ apps/coreai-audio/Sources/VoxCPMAssets
 
 # Hugging Face listing/metadata cache (scripts/gen_inventory.py, conversion/zoo_verify.py)
 .cache/
+
+# uv writes these next to a PEP-723 script when resolving (uv lock --script)
+*.py.lock

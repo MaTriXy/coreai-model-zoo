@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["gliner2[local]", "coreai-core==1.0.0b1", "numpy"]
+# dependencies = ["gliner2[local]", "coreai-core==1.0.0b2", "numpy"]
 # [tool.uv]
 # index-url = "https://pypi.org/simple"
 # prerelease = "allow"

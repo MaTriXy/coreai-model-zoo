@@ -1,3 +1,17 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "coreai-core==1.0.0b2",
+#     "coreai-torch>=0.4.1",
+#     "torch==2.9.0",
+#     "numpy",
+# ]
+#
+# [tool.uv]
+# index-url       = "https://pypi.org/simple"
+# prerelease      = "allow"
+# index-strategy  = "unsafe-best-match"
+# ///
 """Ladder 3: export TimesFmCore -> Core AI .aimodel, gate engine vs HF oracle projections.
 
 Graph = pure feed-forward transformer over patch tokens (fixed N=16 == ctx 512).

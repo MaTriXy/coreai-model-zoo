@@ -4,8 +4,10 @@ Input: points(1,N,3) + cond/latent(1,8192,16). Output: ply_attrs (N*32, 14) =
 fixed y-up DEFAULT_TRANSFORM is SKIPPED — the on-device viewer's up=(0,-1,0) handles orientation, and
 skipping it avoids un-convertible quat->matrix->quat branching).
 Gated against the real Python _build_gaussians + Gaussian._get_ply_data(transform=None)."""
-import sys, os, math
-sys.path.insert(0, os.path.expanduser("~/Code/coreai"))
+import sys
+from pathlib import Path
+import os, math
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/ — coreai_kit
 import torch, torch.nn as nn, torch.nn.functional as F
 import coreai_kit
 from triposplat import load_decoder, _build_gaussians

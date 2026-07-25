@@ -1,3 +1,20 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "coreai-core==1.0.0b2",
+#     "coreai-torch>=0.4.1",
+#     "torch==2.9.0",
+#     "numpy",
+#     "safetensors",
+#     "pillow",
+#     "omegaconf",
+# ]
+#
+# [tool.uv]
+# index-url       = "https://pypi.org/simple"
+# prerelease      = "allow"
+# index-strategy  = "unsafe-best-match"
+# ///
 """Export Depth Anything 3 (ByteDance) monocular depth to Core AI.
 
 The zoo's first depth model. One artifact:

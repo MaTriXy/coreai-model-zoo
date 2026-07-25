@@ -2,8 +2,8 @@
 # requires-python = ">=3.11"
 # dependencies = [
 #     "gliner2[local]",
-#     "coreai-core==1.0.0b1",
-#     "coreai-torch==0.4.0",
+#     "coreai-core==1.0.0b2",
+#     "coreai-torch>=0.4.1",
 #     "numpy",
 # ]
 # [tool.uv]

@@ -1,3 +1,22 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "coreai-core==1.0.0b2",
+#     "coreai-torch>=0.4.1",
+#     "torch==2.9.0",
+#     "numpy",
+#     "safetensors",
+#     "transformers==4.57.6",
+# ]
+#
+# [tool.uv]
+# index-url       = "https://pypi.org/simple"
+# prerelease      = "allow"
+# index-strategy  = "unsafe-best-match"
+# ///
+# LTX-Video itself is NOT a pip dependency: clone Lightricks/LTX-Video and put it on
+# PYTHONPATH (see README.md). The PyPI package pins transformers <4.52, which this
+# port outruns.
 """fp16 bundles: fp16 weights, fp32 IO (FP16IO casts float inputs->fp16, output->fp32;
 int inputs pass through). Halves bundle size. Gate on GPU/visual, NOT CPU cos
 (forcing fp16 compute on CPU overflows attention/norm; see TripoSplat).
@@ -5,6 +24,8 @@ int inputs pass through). Halves bundle size. Gate on GPU/visual, NOT CPU cos
 Usage: python _conv_fp16.py {dit|vae|t5} [H W F seq]
 """
 import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/ — coreai_kit
 import numpy as np
 import torch
 import torch.nn as nn

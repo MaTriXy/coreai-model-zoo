@@ -10,7 +10,7 @@ import sys, os, io, time, asyncio, argparse, threading, socket
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
-sys.path.insert(0, os.path.expanduser("~/Code/coreai"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/ — coreai_kit
 import numpy as np
 import torch
 import coreai.runtime as rt

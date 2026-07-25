@@ -1,6 +1,8 @@
 """Net #2: convert Flux2 VAE encoder (conditioning) to Core AI + gate."""
-import sys, os
-sys.path.insert(0, os.path.expanduser("~/Code/coreai"))
+import sys
+from pathlib import Path
+import os
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/ — coreai_kit
 import torch, torch.nn as nn
 from torchvision import transforms
 import coreai_kit

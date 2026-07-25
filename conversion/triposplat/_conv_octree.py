@@ -2,8 +2,10 @@
 It's cross-ONLY attention (queries don't interact), so a fixed query length L works — at runtime
 pad the level's L_lv voxels up to L and take the first L_lv logits (no mask needed).
 Inputs: x=parent_coords_norm(1,L,3), l=res(1,) int, cond=latent(1,8192,16). Output: logits(1,L,8)."""
-import sys, os
-sys.path.insert(0, os.path.expanduser("~/Code/coreai"))
+import sys
+from pathlib import Path
+import os
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/ — coreai_kit
 import torch, torch.nn as nn
 import coreai_kit
 from triposplat import load_decoder

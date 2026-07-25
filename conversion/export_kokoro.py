@@ -1,3 +1,21 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "coreai-core==1.0.0b2",
+#     "coreai-torch>=0.4.1",
+#     "torch==2.9.0",
+#     "numpy",
+#     "soundfile",
+#     "huggingface-hub",
+#     "kokoro",
+#     "misaki",
+# ]
+#
+# [tool.uv]
+# index-url       = "https://pypi.org/simple"
+# prerelease      = "allow"
+# index-strategy  = "unsafe-best-match"
+# ///
 """Export Kokoro-82M (StyleTTS2 + iSTFTNet) text-to-speech to Core AI.
 
 Kokoro is the zoo's first TTS. It is NOT autoregressive: phonemes + a voice/style

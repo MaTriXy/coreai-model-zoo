@@ -9,7 +9,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/
 from _paths import work_root  # noqa: E402
 
-sys.path.insert(0, str(work_root()))  # coreai_kit
 
 CKPT = "ckpts/ltxv-2b-0.9.6-distilled-04-25.safetensors"
 

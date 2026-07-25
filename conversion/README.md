@@ -15,6 +15,11 @@ names in its own `metadata.json` — no oracle, no device, no weights, so it run
 catalog in minutes: `python3 zoo_verify.py --all --json ../models/_VERIFY.json`. Results land in
 [`../models/_INVENTORY.md`](../models/_INVENTORY.md) via `scripts/gen_inventory.py`.
 
+**No setup, where possible**: 14 scripts carry a PEP 723 inline dependency block, so
+`uv run conversion/<script>.py ...` builds a throwaway environment and runs them — no venv, no
+overlay. Every one of them is checked with `uv lock --script`. Scripts that import re-authored
+model code (`coreai_models.models.*`) cannot work this way; they need the overlay environment.
+
 **Paths**: no script hardcodes a home directory. Checkpoint downloads, exports, sibling checkouts
 and the Hugging Face cache all resolve through [`_paths.py`](_paths.py) — run it
 (`python3 _paths.py`) to print where they land, and set `ZOO_WORK_ROOT` / `ZOO_EXPORTS` /

@@ -6,6 +6,8 @@ graph; int64 graph inputs can error on the runtime). Gate on a real tokenized pr
 Usage: python _conv_t5.py [seq_len]
 """
 import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/ — coreai_kit
 import numpy as np
 import torch
 import torch.nn as nn

@@ -1,3 +1,19 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "coreai-core==1.0.0b2",
+#     "coreai-torch>=0.4.1",
+#     "torch==2.9.0",
+#     "numpy",
+#     "pillow",
+#     "rfdetr",
+# ]
+#
+# [tool.uv]
+# index-url       = "https://pypi.org/simple"
+# prerelease      = "allow"
+# index-strategy  = "unsafe-best-match"
+# ///
 """Export RF-DETR (Roboflow) object detection to Core AI — answers apple/coreai-models #14.
 
 One artifact per variant:

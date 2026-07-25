@@ -7,6 +7,8 @@ just feeds the post-sampler latent + the decode timestep.
 Usage: python _conv_vae.py [H W num_frames]
 """
 import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/ — coreai_kit
 import numpy as np
 import torch
 import torch.nn as nn

@@ -14,8 +14,10 @@ Two model.py fixes were required for this net (see git diff):
   2. pos_embedder(pos_pe) is precomputed into a buffer: computing it in-graph makes coreai
      constant-fold sin/cos of huge args (Sobol * 2^16 * 2pi) at low precision (cos -> ~0.5).
 """
-import sys, os, time
-sys.path.insert(0, os.path.expanduser("~/Code/coreai"))
+import sys
+from pathlib import Path
+import os, time
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/ — coreai_kit
 import torch, torch.nn as nn
 import coreai_kit
 from triposplat import load_flow_model

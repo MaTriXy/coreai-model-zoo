@@ -3,7 +3,10 @@ feed those exact tensors to the Core AI bundle and compare noise_pred. Definitiv
 integration gate (removes sampler/RNG/precision-rollout from the comparison)."""
 import os
 os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
+import sys
 import types
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/ — coreai_kit
 import numpy as np, torch
 import _common as C, coreai_kit as K
 from ltx_video.utils.skip_layer_strategy import SkipLayerStrategy

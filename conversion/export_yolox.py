@@ -1,3 +1,19 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "coreai-core==1.0.0b2",
+#     "coreai-torch>=0.4.1",
+#     "torch==2.9.0",
+#     "torchvision",
+#     "numpy",
+#     "pillow",
+# ]
+#
+# [tool.uv]
+# index-url       = "https://pypi.org/simple"
+# prerelease      = "allow"
+# index-strategy  = "unsafe-best-match"
+# ///
 """Export YOLOX (Megvii) object detection to Core AI — the zoo's first anchor-free
 single-stage detector (companion to the DETR-family RF-DETR).
 

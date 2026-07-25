@@ -26,6 +26,12 @@ python3 conversion/zoo_convert.py doctor                # is this venv wired up?
 python3 conversion/zoo_convert.py run  qwen3.5-0.8b     # do it
 ```
 
+Scripts that can run without any setup say so: `show` prints a `uv` line for the ones that
+declare their own dependencies inline (PEP 723, the same mechanism Apple's `models/*/export.py`
+use), so `uv run conversion/export_da3.py --variant small --dtype float16 --res 504` is the
+whole story for those ports. The rest import re-authored model code and need the overlay
+environment — `zoo_convert.py doctor` checks it.
+
 Unlike Apple's repo, several families share one exporter (Qwen3.5's drives Ornith and
 Qwen3.6-27B too), so the export scripts stay in [`../conversion/`](../conversion/) and
 `recipe.toml` names the one to run. A recipe marked `status = "unverified"` will not run

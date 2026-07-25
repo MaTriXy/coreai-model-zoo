@@ -77,6 +77,21 @@ def build_command(step: dict, python: str, extra: list[str]) -> list[str]:
     return [python, str(HERE / step["script"]), *step.get("args", []), *extra]
 
 
+def standalone(step: dict) -> str | None:
+    """`uv run` line for a script that declares its own dependencies (PEP 723).
+
+    Those scripts need no venv and no overlay: uv reads the inline block, builds a
+    throwaway environment and runs them. Worth printing, because the alternative is a
+    four-step checkout-patch-install dance.
+    """
+    if "script" not in step:
+        return None
+    path = HERE / step["script"]
+    if not path.exists() or "# /// script" not in path.read_text(errors="ignore"):
+        return None
+    return " ".join(["uv", "run", f"conversion/{step['script']}", *step.get("args", [])])
+
+
 def missing_prerequisites(recipe: dict) -> list[str]:
     """The prerequisites this tool can check itself: scripts and patch files exist."""
     problems = []
@@ -93,6 +108,9 @@ def print_prerequisites(recipe: dict, stream=sys.stdout) -> None:
     def line(label: str, value: str) -> None:
         print(f"{label:<9} {value}", file=stream)
 
+    for step in steps_of(recipe):
+        if cmd := standalone(step):
+            line("uv", f"{cmd}   (no setup — the script declares its own dependencies)")
     if recipe.get("overlay"):
         line("overlay", "required — coreai_models with conversion/overlay/ applied "
                         "(python3 zoo_convert.py doctor)")
