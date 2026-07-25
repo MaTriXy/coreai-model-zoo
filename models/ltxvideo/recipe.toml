@@ -5,8 +5,22 @@
 ["ltx-video-2b"]
 card = "README.md"
 hf_repo = "mlboydaisuke/LTX-Video-2B-CoreAI"
-status = "unverified"
-open_questions = [
-  "Three graphs are published (dit_fp16, t5_bf16, vae_fp16); conversion/ltxvideo/ holds shared",
-  "helpers (_common.py) but no export entrypoint. Which scripts produced them?",
+status = "verified"
+steps = [
+  { script = "ltxvideo/_conv_fp16.py", args = ["dit", "512", "768", "49"], bundle = "dit_fp16.aimodel" },
+  { script = "ltxvideo/_conv_fp16.py", args = ["vae", "512", "768", "49"], bundle = "vae_fp16.aimodel" },
+  { script = "ltxvideo/_conv_fp16.py", args = ["t5", "--bf16"], bundle = "t5_bf16.aimodel" },
+]
+needs = [
+  "The LTX-Video checkpoint and its diffusers layout, plus the one model patch documented in",
+  "conversion/ltxvideo/README.md (coreai-torch treats squeeze(dim) as a hard shrink).",
+]
+notes = [
+  "The scripts are named _conv_*.py, not export_*.py. _conv_{dit,vae,t5}.py are the fp32 gate",
+  "stage; _conv_fp16.py builds the half-size bundles that shipped, which is what",
+  "conversion/ltxvideo/_ltxvideo_hf_upload.py stages (dit_fp16 + vae_fp16 + t5_bf16).",
+  "DiT and the VAE are fixed-shape: the published pair is the demo resolution 512x768x49, per",
+  "the upload script's own comment. T5 is resolution-independent at the default seq 256, which",
+  "the card records; --bf16 selects the bf16 suffix in the bundle name.",
+  "Mac-only, three graphs; the sampler loop stays on the host.",
 ]

@@ -5,15 +5,21 @@
 ["glm-image"]
 card = "README.md"
 hf_repo = "mlboydaisuke/GLM-Image-CoreAI"
-status = "unverified"
-overlay = true
+status = "verified"
 steps = [
-  { script = "export_glm_image_ar.py", args = [], bundle = "glm_image_ar.aimodelc" },
-  { script = "export_glm_image_dit.py", args = [], bundle = "glm_image_dit_1024.aimodelc" },
-  { script = "export_glm_image_vae.py", args = [], bundle = "glm_image_vae_1024.aimodel" },
+  { script = "export_glm_image_ar.py", args = ["int8lin"], bundle = "glm_image_ar.aimodelc" },
+  { script = "export_glm_image_dit.py", args = ["int8lin", "--size", "512"], bundle = "glm_image_dit_512.aimodelc" },
+  { script = "export_glm_image_dit.py", args = ["int8lin", "--size", "1024"], bundle = "glm_image_dit_1024.aimodelc" },
+  { script = "export_glm_image_vae_fp32.py", args = ["--size", "512"], bundle = "glm_image_vae_512.aimodel" },
+  { script = "export_glm_image_vae_fp32.py", args = ["--size", "1024"], bundle = "glm_image_vae_1024.aimodel" },
 ]
-open_questions = [
-  "Resolution-specific bundles (512 and 1024) ship for the DiT and the VAE — which flag selects",
-  "the resolution, and was the fp32 VAE exporter (export_glm_image_vae_fp32.py) used for either?",
-  "This port is still in flight; the card is not final.",
+notes = [
+  "knowledge/glm-image-port.md records the precision per net: AR int8lin per-block-32, DiT",
+  "int8lin, VAE **fp32** — fp16 overflows its activations into NaN black frames, which is why",
+  "the fp32 exporter is the one that ships. int8lin is also both exporters' default.",
+  "The upload flattened the names (glm_image_dit_512_int8lin -> glm_image_dit_512), so the",
+  "published names cannot confirm the mode on their own; the port notes are the record.",
+  "The .aimodelc pair is AOT-compiled after export. The glyph text encoder is deliberately not",
+  "exported — glyph-free prompts embed a constant, shipped as ehs.f32.",
+  "This port is still in flight; treat the published set as its current state, not a final ship.",
 ]

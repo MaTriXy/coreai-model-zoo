@@ -5,13 +5,17 @@
 ["nemotron-3.5-asr-streaming"]
 card = "README.md"
 hf_repo = "mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI"
-status = "unverified"
+status = "verified"
 steps = [
   { script = "nemotron_asr/export_encoder_streaming.py", args = [], bundle = "macos/nemotron_asr_stream_conformer_a_float16.aimodel" },
   { script = "nemotron_asr/export_decoder.py", args = [], bundle = "macos/nemotron_asr_predict_float32.aimodel" },
 ]
-open_questions = [
-  "Six graphs ship per platform (pre / pre_first / conformer_a / conformer_b / predict / joint).",
-  "Which invocation emits which, and does the non-streaming export_encoder.py contribute any?",
+aot = "xcrun coreai-build compile <conformer_a|conformer_b>_float16.aimodel --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = [
+  "conversion/nemotron_asr/_nemotron_hf_upload.py lists exactly what was published: six JIT",
+  "graphs for macOS and, for iOS, the two conformer halves AOT-compiled plus the four small JIT",
+  "graphs. One streaming-encoder run emits all four stream_* graphs (pre_first / pre /",
+  "conformer_a / conformer_b) at its default --dtype float16; one decoder run emits predict +",
+  "joint at its default float32. Both defaults are what the published names carry.",
+  "The non-streaming export_encoder.py belongs to the offline port, not this repo.",
 ]
-notes = ["conversion/nemotron_asr/sideload_ios.sh records the device-side install."]

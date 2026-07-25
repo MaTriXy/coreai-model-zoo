@@ -5,16 +5,17 @@
 ["bitvla"]
 card = "README.md"
 hf_repo = "mlboydaisuke/BitVLA-CoreAI"
-status = "unverified"
-overlay = true
+status = "verified"
 steps = [
   { script = "export_bitvla_vision.py", args = [], bundle = "aimodel/bitvla_vision/bitvla_vision.aimodel" },
-  { script = "export_bitvla_llm_decode_pipelined.py", args = [], bundle = "aimodel/bitvla_llm_act/bitvla_llm_act.aimodel" },
+  { script = "export_bitvla_llm_decode_pipelined.py", args = ["--action-head"], bundle = "aimodel/bitvla_llm_act/bitvla_llm_act.aimodel" },
 ]
 needs = ["ZOO_WORK_ROOT/_bitvla_ckpt/bitvla_bf16 (checkpoint) + oracle.npz — see conversion/_paths.py."]
-open_questions = ["Which flags produced the published pair? Neither the card nor the bundle names record them."]
-notes = ["h18p/ holds the AOT-compiled twins of the same two graphs."]
-
-# ===========================================================================
-# Stock-exporter ports (no re-authored model code)
-# ===========================================================================
+aot = "xcrun coreai-build compile <bundle>.aimodel --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = [
+  "Both arguments are recoverable from the published artifacts. The LLM exporter appends _act",
+  "for --action-head and the published bundle is bitvla_llm_act. The vision exporter's mode",
+  "defaults to fp16 (int8lin is the alternative): the published tower is 813.5 MB over a ~400M",
+  "parameter BitSigLIP-SO400M = 2 bytes per parameter, so fp16 is what shipped.",
+  "h18p/ holds the AOT-compiled twins of the same two graphs.",
+]

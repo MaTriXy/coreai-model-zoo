@@ -58,14 +58,12 @@
    "recipes": [
     {
      "name": "bitvla",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/BitVLA-CoreAI",
      "bundle": null,
      "steps": 2,
      "run": "python3 conversion/zoo_convert.py run bitvla",
-     "open_questions": [
-      "Which flags produced the published pair? Neither the card nor the bundle names record them."
-     ]
+     "open_questions": []
     }
    ],
    "repos": [
@@ -460,16 +458,12 @@
    "recipes": [
     {
      "name": "glm-image",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/GLM-Image-CoreAI",
      "bundle": null,
-     "steps": 3,
+     "steps": 5,
      "run": "python3 conversion/zoo_convert.py run glm-image",
-     "open_questions": [
-      "Resolution-specific bundles (512 and 1024) ship for the DiT and the VAE \u2014 which flag selects",
-      "the resolution, and was the fp32 VAE exporter (export_glm_image_vae_fp32.py) used for either?",
-      "This port is still in flight; the card is not final."
-     ]
+     "open_questions": []
     }
    ],
    "repos": [
@@ -704,15 +698,12 @@
    "recipes": [
     {
      "name": "ltx-video-2b",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/LTX-Video-2B-CoreAI",
      "bundle": null,
-     "steps": 1,
+     "steps": 3,
      "run": "python3 conversion/zoo_convert.py run ltx-video-2b",
-     "open_questions": [
-      "Three graphs are published (dit_fp16, t5_bf16, vae_fp16); conversion/ltxvideo/ holds shared",
-      "helpers (_common.py) but no export entrypoint. Which scripts produced them?"
-     ]
+     "open_questions": []
     }
    ],
    "repos": [
@@ -826,16 +817,12 @@
    "recipes": [
     {
      "name": "minicpm5-1b",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/MiniCPM5-1B-CoreAI",
      "bundle": "int8",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run minicpm5-1b",
-     "open_questions": [
-      "The exact stock-CLI invocation is not recorded \u2014 the card describes the compression config",
-      "(symmetric per-channel int8 absmax, conversion/minicpm5_int8sym.yaml) but not the command line",
-      "or the context length that produced the published `int8/` bundle (its metadata says 131072)."
-     ]
+     "open_questions": []
     }
    ],
    "repos": [
@@ -940,15 +927,12 @@
    "recipes": [
     {
      "name": "nemotron-3.5-asr-streaming",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI",
      "bundle": null,
      "steps": 2,
      "run": "python3 conversion/zoo_convert.py run nemotron-3.5-asr-streaming",
-     "open_questions": [
-      "Six graphs ship per platform (pre / pre_first / conformer_a / conformer_b / predict / joint).",
-      "Which invocation emits which, and does the non-streaming export_encoder.py contribute any?"
-     ]
+     "open_questions": []
     }
    ],
    "repos": [
@@ -1501,15 +1485,12 @@
    "recipes": [
     {
      "name": "triposplat",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/TripoSplat-CoreAI",
      "bundle": null,
-     "steps": 1,
+     "steps": 6,
      "run": "python3 conversion/zoo_convert.py run triposplat",
-     "open_questions": [
-      "Six graphs are published (dinov3, dit, vae, gs, octree, decode) but conversion/triposplat/",
-      "holds no export_*.py \u2014 the scripts that produced them are not in this repository."
-     ]
+     "open_questions": []
     }
    ],
    "repos": [

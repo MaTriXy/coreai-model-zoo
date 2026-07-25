@@ -5,8 +5,25 @@
 ["triposplat"]
 card = "README.md"
 hf_repo = "mlboydaisuke/TripoSplat-CoreAI"
-status = "unverified"
-open_questions = [
-  "Six graphs are published (dinov3, dit, vae, gs, octree, decode) but conversion/triposplat/",
-  "holds no export_*.py — the scripts that produced them are not in this repository.",
+status = "verified"
+steps = [
+  { script = "triposplat/_conv_fp16.py", args = ["dinov3"], bundle = "dinov3_fp16.aimodel" },
+  { script = "triposplat/_conv_fp16.py", args = ["vae"], bundle = "vae_fp16.aimodel" },
+  { script = "triposplat/_conv_fp16.py", args = ["dit"], bundle = "dit_fp16.aimodel" },
+  { script = "triposplat/_conv_fp16.py", args = ["gs"], bundle = "gs_fp16.aimodel" },
+  { script = "triposplat/_conv_octree.py", args = [], bundle = "octree_fp32.aimodel" },
+  { script = "triposplat/_conv_decode.py", args = [], bundle = "decode_fp32.aimodel" },
+]
+needs = [
+  "The TripoSplat checkpoint under ckpts/, plus the six model.py patches documented in",
+  "conversion/triposplat/README.md.",
+]
+notes = [
+  "The scripts are named _conv_*.py, not export_*.py. _conv_{dinov3,dit,vae_enc,decoder}.py are",
+  "the fp32 gate stage; _conv_fp16.py {dit|dinov3|gs|vae} writes <net>_fp16.aimodel, which is",
+  "what conversion/triposplat/_triposplat_hf_upload.py stages together with the two fp32 nets.",
+  "int8 desaturates this model (per-net cos 0.9998 but colors collapse) — fp16 is the ship",
+  "precision, and it is GPU-identical to fp32; gate it on GPU, not CPU.",
+  "_conv_decode.py bakes the gs decoder + build_gaussians + the .ply activation math into one",
+  "net. Mac-only: on-device was verified infeasible (DINOv3 ViT-H AOT is too big).",
 ]
