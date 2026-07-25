@@ -9,15 +9,17 @@ working tree.
 ## Contents
 
 - `BASE` — pinned upstream repo + commit the overlay applies to.
-- `patches/python-overlay.patch` — edits to **tracked** upstream files: export pipeline
-  (`export/{bundle,macos,metadata,pipeline,presets}.py`), registries
-  (`model_registry.py`, `models/registry.py`), primitives
-  (`primitives/{macos,ios}/{cache,rope}.py`), and small model fixes (`mistral`, `base`).
-- `files/` — **new** files, mostly `models/{macos,ios}/*.py`: the re-authored decoders
-  (qwen3.5 / qwen3.6-MoE / gemma4 / GLM-4.7 / LFM2.5 / LLaDA / BitCPM / RWKV-7 / Zaya /
-  MiniCPM / omni / VL towers, …) plus Metal-kernel variants. Includes research variants that
-  are assets but not ship configs (e.g. `gemma4_metal_mlp_fp4.py`, `*_int2.py`,
-  `gemma4_mtp_drafter.py`) — the zoo cards say which export is the shipping one.
+- `patches/python-overlay.patch` — the whole diff from the pinned base: the export pipeline
+  (`export/{bundle,macos,metadata,pipeline,presets}.py`), registries (`model_registry.py`,
+  `models/registry.py`), primitives (`primitives/{macos,ios}/{cache,rope}.py`), the diffusion
+  pipeline (`diffusion/{components,flux2,pipeline}.py` — FLUX.2 in-context editing), the VLM
+  export path, and the re-authored decoders themselves (qwen3.5 / qwen3.6-MoE / gemma4 /
+  GLM-4.7 / LFM2.5 / LLaDA / BitCPM / RWKV-7 / Zaya / MiniCPM / omni / VL towers, …) plus the
+  Metal-kernel variants. Research variants ride along (`gemma4_metal_mlp_fp4.py`, `*_int2.py`,
+  `gemma4_mtp_drafter.py`) — the cards say which export is the shipping one.
+- `files/` — package files that are still untracked in the source checkout. Most of what used
+  to live here is now committed there, so it comes through the patch instead; regen.sh sorts
+  that out automatically.
 - `apply.py` — applies patch + files onto a pinned checkout (verifies the base commit).
 - `regen.sh` — regenerates patch + files from a live checkout (run after new porting work).
 

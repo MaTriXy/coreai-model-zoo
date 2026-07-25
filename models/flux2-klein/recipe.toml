@@ -29,9 +29,8 @@ open_questions = [
   "Transformer_edit / _edit_2ref / _edit_512 come from in-context-editing code added to the",
   "diffusion pipeline in the patched coreai-models checkout — commits d982f48 (Flux2Pipeline.",
   "editImages + transformer_edit export + runner --edit-image) and bc48d3d (multi-reference,",
-  "transformer_edit_2ref). That code lives in coreai_models/diffusion/{components,flux2}.py and",
-  "is NOT captured in conversion/overlay/ (the overlay patch touches no diffusion file), so",
-  "nobody outside this machine can build these three bundles. Running overlay/regen.sh would",
-  "capture it — an owner decision, because regen also picks up whatever else is in flight.",
-  "The exact invocation and the _512 variant's flag are also unrecorded.",
+  "transformer_edit_2ref). That code lives in coreai_models/diffusion/{components,flux2}.py.",
+  "It IS in the overlay as of 2026-07-25 (regen.sh), so the code is reproducible now — what is",
+  "still unrecorded is the invocation: which flag selects the edit transformer, how the 2ref and",
+  "512 variants are requested, and whether they were exported in one run or three.",
 ]
