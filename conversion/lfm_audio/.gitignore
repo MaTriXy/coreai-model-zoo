@@ -1,0 +1,2 @@
+# Reference dumps from the oracle scripts (never commit — large, regenerable)
+*.npz

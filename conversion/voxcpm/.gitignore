@@ -1,0 +1,3 @@
+# Official VoxCPM2 source, reassembled into its expected package layout so the
+# oracle can instantiate (fetch it from upstream — see knowledge/voxcpm-tts.md).
+_ref_v2/

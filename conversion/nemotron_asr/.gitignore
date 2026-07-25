@@ -1,0 +1,2 @@
+# Oracle blobs — regenerable via gen_oracle.py / gen_oracle_streaming.py (never commit)
+*.npz

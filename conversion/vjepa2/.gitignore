@@ -3,3 +3,6 @@ ship_macos/
 *.npy
 *.log
 __pycache__/
+
+# Upstream config copy (fetched, not authored here)
+config.json

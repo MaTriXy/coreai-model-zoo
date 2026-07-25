@@ -1,0 +1,3 @@
+# Oracle blobs — regenerable via make_oracle.py / make_oracle_tokens.py (never commit)
+oracle_*.json
+*.npz

@@ -1,0 +1,5 @@
+# Oracle blobs + HF upload staging — regenerable via gen_oracle.py (never commit).
+# `artifacts` is a symlink to artifacts_hf, so it needs the no-slash form.
+artifacts
+artifacts_hf/
+*.npz

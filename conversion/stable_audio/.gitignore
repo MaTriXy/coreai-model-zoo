@@ -10,3 +10,5 @@ model.safetensors
 *.wav
 *.f32
 *.log
+ship_ios/
+base_model_config.json
