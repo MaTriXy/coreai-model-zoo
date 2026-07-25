@@ -1,0 +1,7 @@
+# Declared deviations from the source repository, for conversion/zoo_verify.py.
+
+[config]
+# See ../gemma4-e2b/verify.toml — same reasoning: <turn|> ends the turn, <eos> ends the
+# sequence, and a host stopping on eos_token ran past the reply. Corrected 2026-07-25.
+eos_token = "<turn|>"
+bos_token = "<bos>"

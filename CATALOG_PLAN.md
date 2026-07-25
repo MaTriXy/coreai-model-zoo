@@ -4,8 +4,8 @@
 > the zoo ships and why*; this plan only makes what is already shipped reproducible and
 > verifiable. Where the two disagree, the blueprint wins.
 >
-> Status: **C0, C1, C2 and the layout half of C4 are done** (2026-07-25). C3 (oracles)
-> and C4.1 (device tier) are not started.
+> Status: **C0, C1, C2 and C4.2/C4.3 are done, and every tier-1 defect is fixed or
+> declared** (2026-07-25). C3 (oracles) and C4.1 (device tier) are not started.
 > No step here publishes anything — see [Guardrails](#guardrails).
 
 ## Why this is not a new pillar
@@ -80,7 +80,8 @@ rather than transcribed into 50 hand-written `verify.toml` files. A transcriptio
 and goes stale; the source repo cannot. `models/<model>/verify.toml` is now only for recording a
 *deliberate* deviation — and once recorded, the recorded value becomes the bar.
 
-First full run over 222 bundles: **162 PASS, 8 DIFF, 10 FAIL, 42 SKIPPED**.
+First full run over 222 bundles: **162 PASS, 8 DIFF, 10 FAIL, 42 SKIPPED**. After the
+fixes those became **180 PASS, 0 DIFF, 0 FAIL, 42 SKIPPED** — see Open questions.
 
 *Accepted*: the defect list exists and Gemma-4-12B and 31B are on it with eos mismatches.
 
@@ -150,20 +151,55 @@ Mac-GPU work in this phase takes the `_GPU_LOCK` at the work root
 
 ## Open questions for the owner
 
-Ordered by cost of being wrong. The full lists live in `models/_INVENTORY.md`.
+Six of the seven questions this work turned up are now closed. What is left needs knowledge
+only the owner has.
 
-1. **10 FAIL bundles** — Gemma 4 E2B/E4B ship no chat template. Republish with one, or is the
-   host expected to supply it?
-2. **`eos` on E2B/E4B** — should they carry `<turn|>` like 12B/31B, or is `<eos>` deliberate?
-3. **18 unverified recipes** — one flag answer each (mostly "was `--head-sym` passed?").
-4. **8 zoo ports with no card** — write the card, or unpublish the repo?
-5. **A published metadata leak** — the MinerU layout decoder's `hf_model_id` on Hugging Face is
-   a local absolute path from this machine.
-6. **Two cards point at the wrong exporter** — the qwen3.6-35B and GLM-4.7-Flash cards name the
-   pre-gather-kernel script, which produces a bundle that was not the one published.
-7. **`README.md` claims** every model "ships with the recipe that produced it". True for 52 of
-   70 Core AI repos now, with 18 of those recipes marked unverified. The sentence should either
-   be qualified or the gap closed.
+**Still open — one answer each:**
+
+1. **18 unverified recipes.** A flag changed the artifact but not its name, so the published
+   bundle cannot say which was used. Mostly "was `--head-sym` passed?" on the MoE gather
+   exports. Listed with their exact questions in `models/_INVENTORY.md` §3.
+2. **The stub cards.** Eight ports (FLUX.2 klein, both VoxCPMs, Stable Audio, RWKV7-Goose,
+   Qwen2.5-Omni audio, qwen3.5-4B, AdcSR) now have a card that records what is published and
+   points at the Hugging Face page as the authority. They still need a real card — or a
+   decision to unpublish, since all eight had no downloads last month.
+3. **`scripts/gen-cards` has not been re-run** since the layout moved. It builds Swift and
+   needs the kit checkout; one run confirms the card ↔ Hugging Face README round-trip.
+4. **Refreshing the Gemma-4-12B/31B chat template.** They carry the revision they were gated
+   against; Google revised theirs on 2026-07-09 (tool-calling loops, turn closures, thinking
+   order). Declared in `models/gemma4-12b/verify.toml` rather than silently updated, because
+   changing it changes prompt formatting for an artifact whose numbers were measured with the
+   old one.
+
+**Closed (2026-07-25):**
+
+- **10 FAIL bundles** — Gemma 4 E2B/E4B shipped no chat template. Root cause was the exporter:
+  `export_gemma4_decode_pipelined.py` (and the VL / mixed-bit / pf variants) copied
+  `tokenizer.json`, `tokenizer_config.json` and `special_tokens_map.json` but not
+  `chat_template.jinja`, while the 12B exporter did — which is exactly why 12B/31B had one.
+  Exporters fixed, and the template added to the 10 published bundles.
+- **`eos` on E2B/E4B** — they stopped at `<eos>` (end of sequence) rather than `<turn|>` (end of
+  turn); `apps/CoreAIChat` hardcodes `EOT = 106` to work around it, and the source's own
+  `eot_token` says `<turn|>`. Corrected on the 12 published bundles and declared in
+  `verify.toml` so it reads as intentional, not as drift.
+- **MiniCPM5-1B `eos`** — same class, resolved from evidence rather than changed: the source's
+  chat template emits only `<|im_start|>`/`<|im_end|>` and its `generation_config` lists both
+  `</s>` and `<|im_end|>` as stop ids, so the bundle's `<|im_end|>` is correct. Declared.
+- **Nemotron-3-Nano chat template** — was not drift at all. The bundle ships the template both
+  as a file and inside `tokenizer_config.json`, and the two differ by 7 bytes; the verifier was
+  comparing the field while transformers reads the file. Precedence fixed in the checker.
+- **The MinerU metadata leak** — `hf_model_id` and `tokenizer` held an absolute path from this
+  machine, published. Now names the upstream model.
+- **Two cards pointing at the wrong exporter** — the qwen3.6-35B and GLM-4.7-Flash "How to
+  reproduce" blocks named the pre-gather-kernel script, which produces a bundle that was never
+  published. Both now show the shipped command first and label the other.
+
+After the fixes: **222 bundles, 180 PASS, 0 FAIL, 0 undeclared DIFF, 42 skipped.**
+
+Every published change was backed up first to
+`$ZOO_WORK_ROOT/_hf_backup/2026-07-25-chat-template-eos/` (the 27 affected files plus the
+pre-change repo revisions), and Hugging Face keeps the full history, so each commit is
+revertible. The script that made them is `conversion/_publish_tier1_fixes.py`.
 
 ## Instructions for the agent
 

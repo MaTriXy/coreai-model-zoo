@@ -189,7 +189,8 @@ def main() -> None:
         "compilation": {"date": datetime.now(timezone.utc).isoformat()}}, indent=2))
     tdir = out_dir / "tokenizer"
     tdir.mkdir()
-    for fn in ("tokenizer.json", "tokenizer_config.json"):
+    for fn in ("tokenizer.json", "tokenizer_config.json", "chat_template.jinja",
+               "generation_config.json"):
         src = Path(SNAP) / fn
         if src.exists():
             shutil.copy(src, tdir / fn)

@@ -95,11 +95,16 @@ def positions_of(config: dict) -> int | None:
 
 
 def template_of(cat: Catalog, repo: str, tok_cfg: dict | None, jinja_path: str | None) -> str | None:
-    """A chat template lives either inside tokenizer_config.json or beside it."""
+    """A chat template lives either beside tokenizer_config.json or inside it.
+
+    The standalone `chat_template.jinja` wins, because that is the precedence
+    transformers uses — comparing the field when the consumer reads the file
+    reports drift that nobody will ever experience.
+    """
+    if jinja_path and (text := cat.file(repo, jinja_path)) is not None:
+        return text
     if tok_cfg and isinstance(tok_cfg.get("chat_template"), str):
         return tok_cfg["chat_template"]
-    if jinja_path:
-        return cat.file(repo, jinja_path)
     return None
 
 
@@ -173,7 +178,10 @@ def verify_bundle(cat: Catalog, repo: str, bundle: str, files: list[str],
         up_files = [s["rfilename"] for s in (cat.repo(src) or {}).get("siblings", [])] if src else []
         up_t = template_of(cat, src, up_tok if tok_path else None,
                            "chat_template.jinja" if "chat_template.jinja" in up_files else None) if src else None
-        if up_t is None and got_t is None:
+        if reason := expected.get("chat_template"):
+            add("chat template", OK if got_t else FAIL,
+                reason if got_t else f"declared ({reason}) but the bundle ships none")
+        elif up_t is None and got_t is None:
             add("chat template", SKIP, "neither the bundle nor its source ships one")
         elif up_t is None:
             add("chat template", INFO, f"bundle ships one ({len(got_t)} B); source has none")

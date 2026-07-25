@@ -215,7 +215,8 @@ def main() -> None:
 
     tdir = out_dir / "tokenizer"
     tdir.mkdir()
-    for fn in ("tokenizer.json", "tokenizer_config.json"):
+    for fn in ("tokenizer.json", "tokenizer_config.json", "chat_template.jinja",
+               "generation_config.json"):
         src = Path(snapshot_dir()) / fn
         if src.exists():
             shutil.copy(src, tdir / fn)

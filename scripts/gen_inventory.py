@@ -225,8 +225,11 @@ def render(rows: list[dict]) -> str:
                 if c["status"] in ("FAIL", "DIFF"):
                     L.append(f"| {r['id'].split('/')[-1]} | `{cell(b['bundle'])}` | "
                              f"{b['verdict']} | {c['check']}: {cell(c['detail'])} |")
+    elif checked:
+        L.append(f"**None.** All {checked} bundles either agree with their source or carry a")
+        L.append("declared expectation in `models/<family>/verify.toml`.")
     else:
-        L.append("- (none — run `conversion/zoo_verify.py --all --json models/_VERIFY.json` first)")
+        L.append("- (not run — `conversion/zoo_verify.py --all --json models/_VERIFY.json`)")
 
     L += [
         "",

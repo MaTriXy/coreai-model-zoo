@@ -1,0 +1,14 @@
+# Declared deviations from the source repository, for conversion/zoo_verify.py.
+
+[config]
+# <turn|> is Gemma 4's turn terminator (upstream's `eot_token`); <eos> ends the whole
+# sequence. These bundles have shipped the correct one since export.
+eos_token = "<turn|>"
+bos_token = "<bos>"
+
+# The bundle carries the chat template as it stood when the bundle was exported and
+# device-gated. Google revised theirs on 2026-07-09 ("fixed tool-calling loops, turn
+# closures, and thinking content-ordering"); refreshing it would change prompt
+# formatting for an artifact whose numbers were measured with this one, so it is a
+# deliberate, separate decision rather than drift.
+chat_template = "the revision this bundle was gated against; upstream revised theirs 2026-07-09"

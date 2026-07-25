@@ -1,0 +1,17 @@
+# Declared deviations from the source repository, for conversion/zoo_verify.py.
+# This file covers every bundle in mlboydaisuke/gemma-4-E2B-CoreAI, including the
+# vision-language ones documented in ../gemma4-vl/.
+
+[config]
+# Gemma 4 ends a turn with <turn|> (upstream's `eot_token`); its `eos_token`, <eos>,
+# ends the whole sequence. A host that stops on eos_token therefore runs past the reply
+# — apps/CoreAIChat hardcodes 106 (<turn|>) to work around exactly that. The published
+# bundles were corrected to <turn|> on 2026-07-25, matching Gemma-4-12B/31B.
+eos_token = "<turn|>"
+bos_token = "<bos>"
+
+# The gpu-pipelined-b2 bundles carry a 236-byte hand-written template inside
+# tokenizer_config.json instead of the source's 18.5 kB one: same turn structure
+# (<|turn>role ... <turn|>), without tool-calling, thinking or multimodal blocks. The
+# rest of the bundles carry the source template verbatim.
+chat_template = "b2 bundles ship a minimal hand-written Gemma 4 turn template; the others match the source"

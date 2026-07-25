@@ -22,7 +22,7 @@ heads** (GVA: each k/q head is shared across two value heads) and every FFN is a
 **⬇️ Converted `.aimodel` bundle:** `qwen3_6_35b_a3b_decode_sym8_gather/` (35 GB, **the
 `gather_qmm` kernel build — 2.1× faster, same clean int8 quality**; full LanguageBundle incl.
 tokenizer; decode-only loop-free for the [pipelined engine](../../knowledge/pipelined-engine.md)).
-Convert with [`conversion/export_qwen3_6_moe_metal_decode_pipelined.py`](../../conversion/export_qwen3_6_moe_metal_decode_pipelined.py).
+Convert with [`conversion/export_qwen3_6_moe_metal_decode_pipelined.py`](../../conversion/export_qwen3_6_moe_metal_decode_pipelined.py) — recipe: [`recipe.toml`](recipe.toml).
 
 <!-- gen-cards:use-it begin id=qwen3.6-35b-a3b (managed by scripts/gen-cards — edit cards.json / QuickStart.swift, not this block) -->
 ## Use it
@@ -187,9 +187,17 @@ raw-loaded GPU-preferred GatherMM graph).
 
 ## How to reproduce
 
+The published bundle is the `sym8` **gather-kernel** build. Its recipe is
+[`recipe.toml`](recipe.toml) (`zoo_convert.py show qwen3.6-35b-a3b`) — note the one open
+question recorded there: `--head-sym` changes the lm_head spec but does not appear in the
+bundle name, so which head configuration shipped is not recoverable from the artifact.
+
 ```bash
 cd coreai-models   # with the qwen3_5 + qwen3_5_moe model overlay (see ../conversion)
-# convert (CPU-side; ~70 GB fp16 load, mmap quantize keeps RAM in budget; ~35 GB bundle)
+# convert the SHIPPED bundle (gather kernel; ~70 GB fp16 load, mmap quantize; ~35 GB bundle)
+.venv/bin/python ../coreai-models-community/conversion/export_qwen3_6_moe_metal_decode_pipelined.py \
+    sym8
+# the pre-gather-kernel build, kept for the comparison table above (NOT what is published):
 .venv/bin/python ../coreai-models-community/conversion/export_qwen3_6_decode_pipelined.py \
     int8hu --head-sym
 # bench (needs the coreai-pipelined-extra-states engine patch + COREAI_CHUNK_THRESHOLD=1)

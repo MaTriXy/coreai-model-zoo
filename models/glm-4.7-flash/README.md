@@ -161,9 +161,17 @@ quality.
 
 ## How to reproduce
 
+The published bundle is the `sym8` **gather-kernel** build. Its recipe is
+[`recipe.toml`](recipe.toml) (`zoo_convert.py show glm-4.7-flash`) — with the same open
+question as qwen3.6-35B: `--head-sym` changes the lm_head spec without changing the bundle
+name, so the shipped head configuration is not recoverable from the artifact.
+
 ```bash
 cd coreai-models   # with the glm4_moe_lite model overlay (see ../conversion)
-# convert (CPU-side; ~60 GB fp16 load, mmap quantize keeps RAM in budget; ~30 GB bundle)
+# convert the SHIPPED bundle (gather kernel; ~60 GB fp16 load, mmap quantize; ~30 GB bundle)
+.venv/bin/python ../coreai-models-community/conversion/export_glm47_moe_metal_decode_pipelined.py \
+    sym8
+# the pre-gather-kernel build, kept for the comparison table above (NOT what is published):
 .venv/bin/python ../coreai-models-community/conversion/export_glm47_decode_pipelined.py \
     int8hu --head-sym
 # bench (pipelined engine + COREAI_CHUNK_THRESHOLD=1)

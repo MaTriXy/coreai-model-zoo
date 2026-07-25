@@ -349,7 +349,8 @@ def main() -> None:
         args.hf_id, allow_patterns=["tokenizer*", "special_tokens_map.json"]))
     tok_dir = out_dir / "tokenizer"
     tok_dir.mkdir()
-    for f in ("tokenizer.json", "tokenizer_config.json", "special_tokens_map.json"):
+    for f in ("tokenizer.json", "tokenizer_config.json", "special_tokens_map.json",
+              "chat_template.jinja", "generation_config.json"):
         if (tok_src / f).exists():
             shutil.copy(tok_src / f, tok_dir / f)
 

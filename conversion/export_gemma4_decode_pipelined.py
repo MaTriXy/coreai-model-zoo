@@ -257,7 +257,8 @@ def main() -> None:
     # round-trip it through AutoTokenizer.
     tok_dir = out_dir / "tokenizer"
     tok_dir.mkdir()
-    for f in ("tokenizer.json", "tokenizer_config.json", "special_tokens_map.json"):
+    for f in ("tokenizer.json", "tokenizer_config.json", "special_tokens_map.json",
+              "chat_template.jinja", "generation_config.json"):
         src = Path(model_dir) / f
         if src.exists():
             shutil.copy(src, tok_dir / f)

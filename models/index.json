@@ -9,6 +9,23 @@
  },
  "models": [
   {
+   "family": "adcsr",
+   "card": "models/adcsr/README.md",
+   "recipes": [],
+   "repos": [
+    {
+     "id": "mlboydaisuke/AdcSR-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "adcsr_x4_float32.aimodel"
+     ],
+     "tier1": {
+      "PASS": 1
+     }
+    }
+   ]
+  },
+  {
    "family": "bitcpm-8b",
    "card": "models/bitcpm-8b/README.md",
    "recipes": [
@@ -164,6 +181,29 @@
    ]
   },
   {
+   "family": "flux2-klein",
+   "card": "models/flux2-klein/README.md",
+   "recipes": [],
+   "repos": [
+    {
+     "id": "mlboydaisuke/FLUX.2-klein-4B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "TextEncoder.aimodel",
+      "Transformer.aimodel",
+      "Transformer_edit.aimodel",
+      "Transformer_edit_2ref.aimodel",
+      "Transformer_edit_512.aimodel",
+      "VAEDecoder.aimodel",
+      "VAEEncoder.aimodel"
+     ],
+     "tier1": {
+      "SKIPPED": 7
+     }
+    }
+   ]
+  },
+  {
    "family": "gemma4-12b",
    "card": "models/gemma4-12b/README.md",
    "recipes": [
@@ -195,7 +235,7 @@
       "gpu-pipelined/gemma4_12b_qat_decode_int8lin_msdpa_g8"
      ],
      "tier1": {
-      "DIFF": 2
+      "PASS": 2
      }
     }
    ]
@@ -222,7 +262,7 @@
       "gpu-pipelined/gemma4_31b_qat_decode_int4linsym_msdpa_g8"
      ],
      "tier1": {
-      "DIFF": 1
+      "PASS": 1
      }
     }
    ]
@@ -270,9 +310,7 @@
       "macos/gemma4_e2b_metal_int8v3_L35.aimodel"
      ],
      "tier1": {
-      "PASS": 10,
-      "DIFF": 2,
-      "FAIL": 7,
+      "PASS": 19,
       "SKIPPED": 3
      }
     }
@@ -302,7 +340,7 @@
       "gpu-pipelined/gemma4_e4b_qat_decode_int4lin_tbl"
      ],
      "tier1": {
-      "FAIL": 3
+      "PASS": 3
      }
     }
    ]
@@ -350,9 +388,7 @@
       "macos/gemma4_e2b_metal_int8v3_L35.aimodel"
      ],
      "tier1": {
-      "PASS": 10,
-      "DIFF": 2,
-      "FAIL": 7,
+      "PASS": 19,
       "SKIPPED": 3
      }
     }
@@ -826,7 +862,7 @@
       "int8"
      ],
      "tier1": {
-      "DIFF": 1
+      "PASS": 1
      }
     }
    ]
@@ -913,7 +949,7 @@
       "ios-h18p/nemotron_3_nano_4b_decode_int8hu"
      ],
      "tier1": {
-      "DIFF": 2
+      "PASS": 2
      }
     }
    ]
@@ -1012,6 +1048,25 @@
       "parakeet_encoder_float16_L2885.aimodel",
       "parakeet_joint_float32.aimodel",
       "parakeet_predict_float32.aimodel"
+     ],
+     "tier1": {
+      "PASS": 3
+     }
+    }
+   ]
+  },
+  {
+   "family": "qwen2.5-omni-audio",
+   "card": "models/qwen2.5-omni-audio/README.md",
+   "recipes": [],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu-pipelined/qwen2_5_omni_3b_audio_encoder_fp16_k15/qwen2_5_omni_3b_audio_encoder_fp16_k15.aimodel",
+      "gpu-pipelined/qwen2_5_omni_3b_thinker_int8lin_n750_s1",
+      "ios/qwen2_5_omni_3b_thinker_n750_ios"
      ],
      "tier1": {
       "PASS": 3
@@ -1260,6 +1315,23 @@
    ]
   },
   {
+   "family": "qwen3.5-4b",
+   "card": "models/qwen3.5-4b/README.md",
+   "recipes": [],
+   "repos": [
+    {
+     "id": "mlboydaisuke/qwen3.5-4B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu-pipelined-b2/qwen3_5_4b_decode_int8hu_block32_sym"
+     ],
+     "tier1": {
+      "PASS": 1
+     }
+    }
+   ]
+  },
+  {
    "family": "qwen3.6",
    "card": "models/qwen3.6/README.md",
    "recipes": [
@@ -1359,6 +1431,24 @@
    ]
   },
   {
+   "family": "rwkv7-goose",
+   "card": "models/rwkv7-goose/README.md",
+   "recipes": [],
+   "repos": [
+    {
+     "id": "mlboydaisuke/RWKV7-Goose-1.5B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "aimodel/rwkv7_goose_1_5b/rwkv7_goose_1_5b.aimodel",
+      "h18p/rwkv7_goose_1_5b/rwkv7_goose_1_5b.h18p.aimodelc"
+     ],
+     "tier1": {
+      "SKIPPED": 2
+     }
+    }
+   ]
+  },
+  {
    "family": "sortformer-diar",
    "card": "models/sortformer-diar/README.md",
    "recipes": [
@@ -1382,6 +1472,23 @@
      ],
      "tier1": {
       "PASS": 2
+     }
+    }
+   ]
+  },
+  {
+   "family": "stable-audio-open-small",
+   "card": "models/stable-audio-open-small/README.md",
+   "recipes": [],
+   "repos": [
+    {
+     "id": "mlboydaisuke/Stable-Audio-Open-Small-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "macos"
+     ],
+     "tier1": {
+      "SKIPPED": 1
      }
     }
    ]
@@ -1540,6 +1647,66 @@
      "tier1": {
       "PASS": 1,
       "SKIPPED": 1
+     }
+    }
+   ]
+  },
+  {
+   "family": "voxcpm",
+   "card": "models/voxcpm/README.md",
+   "recipes": [],
+   "repos": [
+    {
+     "id": "mlboydaisuke/VoxCPM-0.5B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "ios/voxcpm_base_int8_decode_cl512.h18p.aimodelc",
+      "ios/voxcpm_base_int8_prefill_t32.h18p.aimodelc",
+      "ios/voxcpm_feat_decoder_fp16.h18p.aimodelc",
+      "ios/voxcpm_feat_encoder_fp16.h18p.aimodelc",
+      "ios/voxcpm_res_int8_decode_cl512.h18p.aimodelc",
+      "ios/voxcpm_res_int8_prefill_t32.h18p.aimodelc",
+      "ios/voxcpm_vocoder_fp16_t12.h18p.aimodelc",
+      "macos/voxcpm_base_int8_decode_cl512/voxcpm_base_int8_decode_cl512.aimodel",
+      "macos/voxcpm_base_int8_prefill_t32/voxcpm_base_int8_prefill_t32.aimodel",
+      "macos/voxcpm_feat_decoder_fp16/voxcpm_feat_decoder_fp16.aimodel",
+      "macos/voxcpm_feat_encoder_fp16/voxcpm_feat_encoder_fp16.aimodel",
+      "macos/voxcpm_res_int8_decode_cl512/voxcpm_res_int8_decode_cl512.aimodel",
+      "macos/voxcpm_res_int8_prefill_t32/voxcpm_res_int8_prefill_t32.aimodel",
+      "macos/voxcpm_vocoder_fp16_t12/voxcpm_vocoder_fp16_t12.aimodel"
+     ],
+     "tier1": {
+      "PASS": 14
+     }
+    }
+   ]
+  },
+  {
+   "family": "voxcpm2",
+   "card": "models/voxcpm2/README.md",
+   "recipes": [],
+   "repos": [
+    {
+     "id": "mlboydaisuke/VoxCPM2-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "ios/voxcpm2_base_int8_decode_cl512.h18p.aimodelc",
+      "ios/voxcpm2_base_int8_prefill_t32.h18p.aimodelc",
+      "ios/voxcpm2_feat_decoder_fp16.h18p.aimodelc",
+      "ios/voxcpm2_feat_encoder_fp16.h18p.aimodelc",
+      "ios/voxcpm2_res_int8_decode_cl512.h18p.aimodelc",
+      "ios/voxcpm2_res_int8_prefill_t32.h18p.aimodelc",
+      "ios/voxcpm2_vocoder_fp16_t8.h18p.aimodelc",
+      "macos/voxcpm2_base_int8_decode_cl512/voxcpm2_base_int8_decode_cl512.aimodel",
+      "macos/voxcpm2_base_int8_prefill_t32/voxcpm2_base_int8_prefill_t32.aimodel",
+      "macos/voxcpm2_feat_decoder_fp16/voxcpm2_feat_decoder_fp16.aimodel",
+      "macos/voxcpm2_feat_encoder_fp16/voxcpm2_feat_encoder_fp16.aimodel",
+      "macos/voxcpm2_res_int8_decode_cl512/voxcpm2_res_int8_decode_cl512.aimodel",
+      "macos/voxcpm2_res_int8_prefill_t32/voxcpm2_res_int8_prefill_t32.aimodel",
+      "macos/voxcpm2_vocoder_fp16_t8/voxcpm2_vocoder_fp16_t8.aimodel"
+     ],
+     "tier1": {
+      "PASS": 14
      }
     }
    ]
