@@ -28,16 +28,17 @@ from pathlib import Path
 import numpy as np
 import torch
 from torch import nn
+from _paths import exports_dir, work_path
 
-sys.path.insert(0, "/Users/majimadaisuke/code/coreai/coreai-models-community/conversion/bitvla")
+sys.path.insert(0, str(Path(__file__).resolve().parent / "bitvla"))
 import bitvla_ref as B  # noqa: E402
 
 import coreai.runtime as rt  # noqa: E402
 from coreai_models.export.macos import export_to_coreai  # noqa: E402
 
 DTYPE = torch.float16
-ORACLE = "/Users/majimadaisuke/code/coreai/_bitvla_ckpt/oracle.npz"
-EXPORTS = Path("/Users/majimadaisuke/code/coreai/coreai-models/exports")
+ORACLE = str(work_path("_bitvla_ckpt", "oracle.npz"))
+EXPORTS = exports_dir()
 
 
 def vision_quant_config() -> dict:

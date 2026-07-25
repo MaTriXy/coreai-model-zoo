@@ -6,9 +6,10 @@ Staging dir holds the 4 *.aimodel bundles, tokenizer/, reference_*.json, test_do
 import os
 
 from huggingface_hub import HfApi
+from _paths import code_path
 
 REPO = "mlboydaisuke/ColModernVBERT-CoreAI"
-STAGE = "/Users/majimadaisuke/code/ColModernVBERT-CoreAI/hf"
+STAGE = str(code_path("ColModernVBERT-CoreAI", "hf"))
 
 api = HfApi()
 api.create_repo(REPO, repo_type="model", exist_ok=True)

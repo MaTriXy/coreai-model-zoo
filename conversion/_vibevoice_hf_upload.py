@@ -6,25 +6,25 @@ mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI.
 
     coreai-models/.venv/bin/python conversion/_vibevoice_hf_upload.py
 """
-import glob, os, shutil
+import os, shutil
 os.environ["HF_HUB_DISABLE_XET"] = "1"          # xet stalls/panics on these bundles
 from pathlib import Path
 import numpy as np
 from safetensors.torch import load_file
 from huggingface_hub import HfApi
+from _paths import hf_snapshot
 
 REPO = "mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI"
 HERE = Path(__file__).resolve().parent
 CONV = HERE / "vibevoice"
 ART, IOS = CONV / "artifacts", CONV / "artifacts_ios"
 VOICES = CONV / "_code" / "demo" / "voices" / "streaming_model"
-SNAP = glob.glob("/Users/majimadaisuke/.cache/huggingface/hub/"
-                 "models--microsoft--VibeVoice-Realtime-0.5B/snapshots/*/model.safetensors")[0]
+SNAP = hf_snapshot("microsoft/VibeVoice-Realtime-0.5B", "model.safetensors")
 STAGE = Path("/tmp/vibevoice_hf")
 GRAPHS = ["vibevoice_mainlm_fp16_decode_cl512", "vibevoice_ttslm_fp16_decode_cl512",
           "vibevoice_diffusion_head_fp16", "vibevoice_connector_fp16", "vibevoice_decoder_fp16_t64"]
 
-CARD = """---
+CARD = '''---
 license: mit
 library_name: coreai
 pipeline_tag: text-to-speech
@@ -110,7 +110,7 @@ raw Core AI stateful-KV loop + a Swift DPMSolver++ sampler. Python host + conver
 
 Base model: [microsoft/VibeVoice-Realtime-0.5B](https://huggingface.co/microsoft/VibeVoice-Realtime-0.5B) (MIT).
 EN/ZH. *Community port — not an Apple model.*
-"""
+'''
 
 
 def main():

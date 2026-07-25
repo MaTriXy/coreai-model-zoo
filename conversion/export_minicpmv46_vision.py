@@ -30,8 +30,9 @@ import numpy as np
 import torch
 from safetensors import safe_open
 from torch import nn
+from _paths import exports_dir, hf_snapshot, smoke_dir
 
-sys.path.insert(0, "/Users/majimadaisuke/code/coreai/_smoke")
+sys.path.insert(0, str(smoke_dir()))
 from minicpmv46_vision import MiniCPMV46Vision  # noqa: E402
 
 import coreai.runtime as rt  # noqa: E402
@@ -39,10 +40,9 @@ from coreai_models.export.macos import export_to_coreai  # noqa: E402
 
 DTYPE = torch.float16
 GRID = 32
-SNAP = glob.glob("/Users/majimadaisuke/.cache/huggingface/hub/"
-                 "models--openbmb--MiniCPM-V-4.6/snapshots/*")[0]
-REF = "/Users/majimadaisuke/code/coreai/_smoke/minicpmv46_ref.npz"
-EXPORTS = Path("/Users/majimadaisuke/code/coreai/coreai-models/exports")
+SNAP = hf_snapshot("openbmb/MiniCPM-V-4.6")
+REF = str(smoke_dir() / "minicpmv46_ref.npz")
+EXPORTS = exports_dir()
 
 
 def vision_quant_config() -> dict:

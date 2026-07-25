@@ -225,7 +225,7 @@ Source of truth: `QwenLM/Qwen3-ASR` repo `qwen_asr/core/transformers_backend/mod
   **P6 prep ✅:** zoo card `zoo/qwen3-asr.md` written.
   **APP ✅ WIRED (device-test pending):** zoo `apps/coreai-audio` got a **Transcribe** tab
   (`TranscribeModel.swift` + `TranscribeView.swift`, added to the TabView). `project.yml` points
-  coreai-kit at the LOCAL checkout (`path: /Users/majimadaisuke/code/coreai-kit`, to pick up the
+  coreai-kit at the LOCAL checkout (`path:` = your `coreai-kit` clone, to pick up the
   uncommitted `ASR/` module — revert to URL+revision after committing the kit) and was regenerated
   with `xcodegen`. macOS loads the decoder/encoder straight from the local conversion artifacts
   (`TranscribeModel.macArtifacts`); iOS uses the sideload-to-skip-DL pattern. TEST: open

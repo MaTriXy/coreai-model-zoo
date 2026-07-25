@@ -18,9 +18,13 @@ import json
 import numpy as np
 import torch
 from safetensors.torch import load_file
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/
+from _paths import work_path  # noqa: E402
 
-CKDIR = "/Users/majimadaisuke/code/coreai/_bitvla_ckpt/bitvla_bf16"
-OUT = "/Users/majimadaisuke/code/coreai/_bitvla_ckpt/oracle.npz"
+CKDIR = str(work_path("_bitvla_ckpt", "bitvla_bf16"))
+OUT = str(work_path("_bitvla_ckpt", "oracle.npz"))
 
 
 def build_model():

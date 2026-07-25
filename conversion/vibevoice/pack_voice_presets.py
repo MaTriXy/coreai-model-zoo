@@ -19,7 +19,7 @@ an `embed_tokens` lookup (the fp16 table ships at the repo root), which is what 
 
     <coreai-venv>/bin/python pack_voice_presets.py --out voices_coreai
 """
-import argparse, glob, json, sys
+import argparse, json, sys
 from pathlib import Path
 import numpy as np
 import torch
@@ -28,8 +28,10 @@ from transformers.modeling_outputs import BaseModelOutputWithPast
 from transformers.cache_utils import DynamicCache
 
 HERE = Path(__file__).resolve().parent
-SNAP = glob.glob("/Users/majimadaisuke/.cache/huggingface/hub/"
-                 "models--microsoft--VibeVoice-Realtime-0.5B/snapshots/*/model.safetensors")[0]
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/
+from _paths import hf_snapshot  # noqa: E402
+SNAP = hf_snapshot("microsoft/VibeVoice-Realtime-0.5B", "model.safetensors")
 VOICES = HERE / "_code" / "demo" / "voices" / "streaming_model"
 
 

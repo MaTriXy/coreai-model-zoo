@@ -23,6 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import torch
+from _paths import work_path
 
 from coreai_models.export._constants import (
     KEY_CACHE_NAME,
@@ -35,8 +36,8 @@ from coreai_models.models.macos.bitcpm import load_bitcpm8b_from_gguf
 from coreai_models.models.macos.gemma4_metal_mlp import export_to_coreai_with_kernels
 from coreai_models.primitives.macos.cache import KVCache
 
-GGUF = "/Users/majimadaisuke/code/coreai/_bitcpm_ckpt/bitcpm4-8b-tq2_0.gguf"
-HF = "/Users/majimadaisuke/code/coreai/_bitcpm_ckpt/hf"
+GGUF = str(work_path("_bitcpm_ckpt", "bitcpm4-8b-tq2_0.gguf"))
+HF = str(work_path("_bitcpm_ckpt", "hf"))
 DTYPE = torch.float16
 
 

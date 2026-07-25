@@ -14,11 +14,14 @@ import numpy as np
 import torch
 import coreai.runtime as rt
 from transformers import AutoTokenizer
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/
+from _paths import work_path  # noqa: E402
 
 from coreai_models.models.macos.bitcpm import BitCPMConfig
 from coreai_models.primitives.macos.cache import KVCache
 
-HF = "/Users/majimadaisuke/code/coreai/_bitcpm_ckpt/hf"
+HF = str(work_path("_bitcpm_ckpt", "hf"))
 CAP = 128  # KV capacity (prompt + gen)
 
 

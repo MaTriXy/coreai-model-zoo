@@ -12,13 +12,16 @@ Writes device_bundle/:
 
   <coreai-venv>/bin/python pack_device_inputs.py --seed artifacts/e2e_seed.npz --out device_bundle
 """
-import argparse, glob, json
+import argparse, json
 from pathlib import Path
 import numpy as np
 from safetensors.torch import load_file
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/
+from _paths import hf_snapshot  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
-SNAP = glob.glob("/Users/majimadaisuke/.cache/huggingface/hub/models--microsoft--VibeVoice-Realtime-0.5B/snapshots/*/model.safetensors")[0]
+SNAP = hf_snapshot("microsoft/VibeVoice-Realtime-0.5B", "model.safetensors")
 
 
 def w16(path, arr):

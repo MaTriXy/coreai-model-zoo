@@ -18,9 +18,12 @@ import coreai.runtime as rt
 from coreai_models.models.macos.bitcpm import BitCPMConfig, load_bitcpm8b_from_gguf
 from coreai_models.primitives.macos.cache import KVCache
 from transformers import AutoTokenizer
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/
+from _paths import work_path  # noqa: E402
 
-GGUF = "/Users/majimadaisuke/code/coreai/_bitcpm_ckpt/bitcpm4-8b-tq2_0.gguf"
-HF = "/Users/majimadaisuke/code/coreai/_bitcpm_ckpt/hf"
+GGUF = str(work_path("_bitcpm_ckpt", "bitcpm4-8b-tq2_0.gguf"))
+HF = str(work_path("_bitcpm_ckpt", "hf"))
 DTYPE = torch.float16
 CAP = 128
 

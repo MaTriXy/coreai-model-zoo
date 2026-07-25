@@ -22,9 +22,12 @@ import torch.nn.functional as F
 import gguf
 from gguf.quants import dequantize
 from transformers import AutoTokenizer
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/
+from _paths import work_path  # noqa: E402
 
-GGUF = "/Users/majimadaisuke/code/coreai/_bitcpm_ckpt/bitcpm4-8b-tq2_0.gguf"
-HF = "/Users/majimadaisuke/code/coreai/_bitcpm_ckpt/hf"
+GGUF = str(work_path("_bitcpm_ckpt", "bitcpm4-8b-tq2_0.gguf"))
+HF = str(work_path("_bitcpm_ckpt", "hf"))
 
 # config (BitCPM-CANN-8B == MiniCPM4-8B); mup scalars verified against gguf metadata
 H, FF, NL = 4096, 16384, 32

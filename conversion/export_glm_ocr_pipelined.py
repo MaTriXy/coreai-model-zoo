@@ -28,6 +28,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import torch
+from _paths import work_path
 
 from coreai_models.export._constants import TRACE_KV_CACHE_SEQ_LEN
 from coreai_models.export.macos import _EXTERNALIZE_SPECS, export_to_coreai
@@ -38,7 +39,7 @@ from coreai_models.models.macos.glm_ocr import (
 )
 
 DTYPE = torch.float16
-DEFAULT_HF = "/Users/majimadaisuke/code/coreai/_glmocr_dl"
+DEFAULT_HF = str(work_path("_glmocr_dl"))
 
 
 def linear_quant_config(dtype: str = "int8") -> dict:

@@ -11,7 +11,8 @@
 #   xcrun coreai-build compile <aimodel> --output artifacts_ios/ --platform iOS \
 #       --architecture h18p --preferred-compute gpu --min-deployment-version 27.0
 set -euo pipefail
-export DEVELOPER_DIR="${DEVELOPER_DIR:-/Users/majimadaisuke/Downloads/Xcode-beta.app/Contents/Developer}"
+# Needs Xcode 27+; point DEVELOPER_DIR at a beta Xcode explicitly if the selected one is older.
+export DEVELOPER_DIR="${DEVELOPER_DIR:-$(xcode-select -p)}"
 DEV="${1:?usage: sideload_ios.sh <device-udid>}"
 BID="com.daisukemajima.coreaiaudio"
 HERE="$(cd "$(dirname "$0")" && pwd)"

@@ -17,13 +17,16 @@ from safetensors.torch import load_file
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/
+from _paths import hf_snapshot  # noqa: E402
 from dpm_solver import DPMSolverMultistepScheduler
 from torch_overlays import DiffusionHeadOverlay, ConnectorOverlay
 from decoder_ref import DecoderOverlay
 from backbone import load_backbone, build_kv_state, Qwen2Cfg
 
 ART = HERE / "artifacts"
-SNAP = glob.glob("/Users/majimadaisuke/.cache/huggingface/hub/models--microsoft--VibeVoice-Realtime-0.5B/snapshots/*/model.safetensors")[0]
+SNAP = hf_snapshot("microsoft/VibeVoice-Realtime-0.5B", "model.safetensors")
 TW, SW = 5, 6  # text / speech window sizes
 VAE_DIM = 64
 

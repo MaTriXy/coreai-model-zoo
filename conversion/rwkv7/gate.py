@@ -23,11 +23,14 @@ import numpy as np
 import torch
 
 import coreai.runtime as rt
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/
+from _paths import gpu_lock  # noqa: E402
 from coreai_models.models.macos.rwkv7 import build_decode_state, rwkv7_from_hf
 
-GPU_LOCK = os.path.expanduser("~/code/coreai/_GPU_LOCK")
+GPU_LOCK = str(gpu_lock())
 
-REF = "/Users/majimadaisuke/code/coreai/coreai-models-community/conversion/rwkv7/validate_ref.py"
+REF = str(Path(__file__).resolve().parent / "validate_ref.py")
 _spec = importlib.util.spec_from_file_location("validate_ref", REF)
 ref_mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(ref_mod)

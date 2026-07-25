@@ -17,8 +17,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from safetensors.torch import load_file
 from transformers import AutoTokenizer
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/
+from _paths import work_path  # noqa: E402
 
-CK = "/Users/majimadaisuke/code/coreai/_bitvla_ckpt/bitnet2b_bf16"
+CK = str(work_path("_bitvla_ckpt", "bitnet2b_bf16"))
 
 # bitnet-b1.58-2B-4T config
 NL, H, FF = 30, 2560, 6912

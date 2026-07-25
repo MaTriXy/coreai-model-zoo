@@ -15,15 +15,18 @@ import sys
 import numpy as np
 import torch
 import torch.nn.functional as F
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/
+from _paths import work_path  # noqa: E402
 
-sys.path.insert(0, "/Users/majimadaisuke/code/coreai/coreai-models-community/conversion/bitvla")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bitvla_ref as B  # noqa: E402
 
 from coreai_models.models.macos.bitvla_llm import BitVLALLMConfig, load_bitvla_llm  # noqa: E402
 from coreai_models.primitives.macos.cache import KVCache  # noqa: E402
 
-CK = "/Users/majimadaisuke/code/coreai/_bitvla_ckpt/bitvla_bf16/model.safetensors"
-ORACLE = "/Users/majimadaisuke/code/coreai/_bitvla_ckpt/oracle.npz"
+CK = str(work_path("_bitvla_ckpt", "bitvla_bf16", "model.safetensors"))
+ORACLE = str(work_path("_bitvla_ckpt", "oracle.npz"))
 
 
 def build_inputs_embeds(tok, embed_w, img_embeds, instruction, dtype):
@@ -74,7 +77,7 @@ def main():
     dtype = torch.float16 if args.dtype == "fp16" else torch.float32
 
     from transformers import AutoTokenizer
-    tok = AutoTokenizer.from_pretrained("/Users/majimadaisuke/code/coreai/_bitvla_ckpt/bitvla_bf16")
+    tok = AutoTokenizer.from_pretrained(str(work_path("_bitvla_ckpt", "bitvla_bf16")))
 
     z = np.load(ORACLE, allow_pickle=True)
     img_embeds = torch.from_numpy(z["img_embeds"]).float()      # use the validated projected embeds

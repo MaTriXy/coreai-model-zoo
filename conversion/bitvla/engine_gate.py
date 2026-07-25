@@ -27,16 +27,19 @@ import torch.nn.functional as F
 import coreai.runtime as rt
 from safetensors.torch import load_file
 from transformers import AutoTokenizer
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/
+from _paths import work_path  # noqa: E402
 
-sys.path.insert(0, "/Users/majimadaisuke/code/coreai/coreai-models-community/conversion/bitvla")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bitvla_ref as B  # noqa: E402
 
 from coreai_models.models.macos.bitvla_llm import BitVLALLMConfig, ACT_LO, N_ACTION_BINS  # noqa: E402
 from coreai_models.primitives.macos.cache import KVCache  # noqa: E402
 
-CKDIR = "/Users/majimadaisuke/code/coreai/_bitvla_ckpt/bitvla_bf16"
+CKDIR = str(work_path("_bitvla_ckpt", "bitvla_bf16"))
 CK = f"{CKDIR}/model.safetensors"
-ORACLE = "/Users/majimadaisuke/code/coreai/_bitvla_ckpt/oracle.npz"
+ORACLE = str(work_path("_bitvla_ckpt", "oracle.npz"))
 CAP = 320
 
 

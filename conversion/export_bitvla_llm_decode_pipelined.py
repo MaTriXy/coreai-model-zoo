@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import torch
+from _paths import work_path
 
 from coreai_models.export._constants import (
     KEY_CACHE_NAME,
@@ -31,7 +32,7 @@ from coreai_models.models.macos.bitvla_llm import load_bitvla_llm
 from coreai_models.models.macos.gemma4_metal_mlp import export_to_coreai_with_kernels
 from coreai_models.primitives.macos.cache import KVCache
 
-CK = "/Users/majimadaisuke/code/coreai/_bitvla_ckpt/bitvla_bf16/model.safetensors"
+CK = str(work_path("_bitvla_ckpt", "bitvla_bf16", "model.safetensors"))
 DTYPE = torch.float16
 HIDDEN = 2560
 

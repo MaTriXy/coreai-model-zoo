@@ -21,6 +21,7 @@ from pathlib import Path
 import torch
 from safetensors import safe_open
 from torch import nn
+from _paths import exports_dir, hf_snapshot
 
 from coreai_models.export._constants import TRACE_KV_CACHE_SEQ_LEN
 from coreai_models.export.macos import _EXTERNALIZE_SPECS, export_to_coreai
@@ -28,8 +29,7 @@ from coreai_models.models.macos.qwen3_5 import Qwen3_5Config, Qwen3_5DecodeCore
 
 DTYPE = torch.float16
 TEXT_PREFIX = "model.language_model."
-SNAP = glob.glob("/Users/majimadaisuke/.cache/huggingface/hub/"
-                 "models--openbmb--MiniCPM-V-4.6/snapshots/*")[0]
+SNAP = hf_snapshot("openbmb/MiniCPM-V-4.6")
 
 
 def build_config() -> Qwen3_5Config:
@@ -121,7 +121,7 @@ def main() -> None:
         state_names=spec["state_names"], externalize_modules=specs)
     prog.optimize()
 
-    out_dir = Path("/Users/majimadaisuke/code/coreai/coreai-models/exports") / name
+    out_dir = exports_dir() / name
     if out_dir.exists():
         shutil.rmtree(out_dir)
     out_dir.mkdir(parents=True)

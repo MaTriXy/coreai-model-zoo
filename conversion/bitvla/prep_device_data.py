@@ -22,10 +22,13 @@ import torch
 import torch.nn.functional as F
 from safetensors.torch import load_file
 from transformers import AutoTokenizer
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/
+from _paths import exports_dir, work_path  # noqa: E402
 
-CKDIR = "/Users/majimadaisuke/code/coreai/_bitvla_ckpt/bitvla_bf16"
+CKDIR = str(work_path("_bitvla_ckpt", "bitvla_bf16"))
 CK = f"{CKDIR}/model.safetensors"
-OUT = Path("/Users/majimadaisuke/code/coreai/coreai-models/exports/bitvla_device_data")
+OUT = exports_dir() / "bitvla_device_data"
 ACT_LO, N_BINS = 128012, 256
 SYS = ("System: A chat between a curious human and an artificial intelligence assistant. "
        "The assistant gives helpful, detailed, and polite answers to the human's questions.<|eot_id|>")
@@ -36,8 +39,8 @@ PRESETS = [
     "move the gripper to the left",
     "stack the blocks",
 ]
-SAMPLE_IMG = ("/Users/majimadaisuke/code/coreai/_bitvla_repo/transformers/"
-              "tests/fixtures/tests_samples/COCO/000000039769.png")
+SAMPLE_IMG = str(work_path("_bitvla_repo", "transformers",
+                           "tests/fixtures/tests_samples/COCO/000000039769.png"))
 
 
 def w16(path: Path, t: torch.Tensor):

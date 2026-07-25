@@ -20,8 +20,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from safetensors.torch import load_file
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/
+from _paths import work_path  # noqa: E402
 
-CK = "/Users/majimadaisuke/code/coreai/_bitvla_ckpt/bitvla_bf16/model.safetensors"
+CK = str(work_path("_bitvla_ckpt", "bitvla_bf16", "model.safetensors"))
 
 # --- BitNet quant (verbatim official; per-tensor absmean W + per-token int8 A) ----------------- #
 
@@ -400,7 +404,7 @@ def main():
 
     if args.caption:
         from transformers import AutoTokenizer
-        tok = AutoTokenizer.from_pretrained("/Users/majimadaisuke/code/coreai/_bitvla_ckpt/bitvla_bf16")
+        tok = AutoTokenizer.from_pretrained(str(work_path("_bitvla_ckpt", "bitvla_bf16")))
         llm = BitNetLLM().float().eval()
         m = load_llm(llm)
         print(f"loaded {m} llm tensors; generating ...", flush=True)

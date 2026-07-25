@@ -18,12 +18,16 @@ from safetensors.torch import load_file
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # conversion/
+from _paths import hf_snapshot  # noqa: E402
 import coreai_models.export.macos as _macos  # noqa: E402
 from coreai_models.export.macos import export_to_coreai  # noqa: E402
 from torch_overlays import DiffusionHeadOverlay, ConnectorOverlay  # noqa: E402
 
 ART = HERE / "artifacts"
-SNAP = "/Users/majimadaisuke/.cache/huggingface/hub/models--microsoft--VibeVoice-Realtime-0.5B/snapshots/6bce5f06044837fe6d2c5d7a71a84f0416bd57e4"
+REVISION = "6bce5f06044837fe6d2c5d7a71a84f0416bd57e4"  # the revision this port was gated against
+SNAP = hf_snapshot("microsoft/VibeVoice-Realtime-0.5B", revision=REVISION)
 
 
 def cos(a, b):
