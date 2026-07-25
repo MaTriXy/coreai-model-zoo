@@ -82,5 +82,5 @@ Apple or the RWKV authors.
 
 **⬇️ Download:** [🤗 mlboydaisuke/RWKV7-Goose-1.5B-CoreAI](https://huggingface.co/mlboydaisuke/RWKV7-Goose-1.5B-CoreAI) — this card and the
 model page are the same document; `scripts/gen-cards` keeps the *Use it* block in sync.
-Reproduction: `python3 conversion/zoo_convert.py show` has no recipe for this port yet
-(see [`../_INVENTORY.md`](../_INVENTORY.md), "Needs owner input").
+Reproduce it: `python3 conversion/zoo_convert.py show rwkv7-goose-1.5b` prints the command and its
+prerequisites; [`recipe.toml`](recipe.toml) is the record.

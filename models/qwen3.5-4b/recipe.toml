@@ -1,0 +1,18 @@
+# Recipe for qwen3.5-4b — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["qwen3.5-4b"]
+script = "export_qwen3_5_decode_pipelined.py"
+args = ["int8hu", "--head-sym", "--hf-id", "Qwen/Qwen3.5-4B"]
+card = "README.md"
+hf_repo = "mlboydaisuke/qwen3.5-4B-CoreAI"
+bundle = "gpu-pipelined-b2/qwen3_5_4b_decode_int8hu_block32_sym"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "The Qwen3.5 family ship shape at its Mac-class size — HF-id swap only, same int8hu",
+  "per-block-32 absmax head as the 0.8B and 2B. The bundle name inverts to exactly these args.",
+]

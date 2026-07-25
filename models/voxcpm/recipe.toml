@@ -1,0 +1,26 @@
+# Recipe for voxcpm — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["voxcpm-0.5b"]
+card = "README.md"
+hf_repo = "mlboydaisuke/VoxCPM-0.5B-CoreAI"
+status = "verified"
+overlay = true
+steps = [
+  { script = "voxcpm/export_backbone_int8.py", args = ["--which", "base"], bundle = "macos/voxcpm_base_int8_decode_cl512" },
+  { script = "voxcpm/export_backbone_int8.py", args = ["--which", "res"], bundle = "macos/voxcpm_res_int8_decode_cl512" },
+  { script = "voxcpm/export_prefill_int8.py", args = ["--which", "base"], bundle = "macos/voxcpm_base_int8_prefill_t32" },
+  { script = "voxcpm/export_prefill_int8.py", args = ["--which", "res"], bundle = "macos/voxcpm_res_int8_prefill_t32" },
+  { script = "voxcpm/export_feat_decoder.py", args = [], bundle = "macos/voxcpm_feat_decoder_fp16" },
+  { script = "voxcpm/export_feedforward.py", args = ["--which", "feat_encoder"], bundle = "macos/voxcpm_feat_encoder_fp16" },
+  { script = "voxcpm/export_feedforward.py", args = ["--which", "vocoder"], bundle = "macos/voxcpm_vocoder_fp16_t12" },
+]
+aot = "xcrun coreai-build compile <bundle>.aimodel --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+needs = ["The official VoxCPM source, reassembled under conversion/voxcpm/_ref_v2/ — see knowledge/voxcpm-tts.md."]
+notes = [
+  "Seven graphs, and every published name inverts to its arguments: the exporters write",
+  "voxcpm_{which}_int8_decode_cl{cache-len} / _prefill_t{prefill-len} / voxcpm_{feat_encoder,",
+  "vocoder}_{mode}[_t{vae-frames}], and cl512 / t32 / fp16 / t12 are all the defaults.",
+  "ios/ holds the AOT twins of the same seven. Enrolled in CoreAIKit as voxcpm-0.5b.",
+]

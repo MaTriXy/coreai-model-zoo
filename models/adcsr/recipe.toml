@@ -1,0 +1,16 @@
+# Recipe for adcsr — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["adcsr-x4"]
+script = "export_adcsr.py"
+args = []
+card = "README.md"
+hf_repo = "mlboydaisuke/AdcSR-CoreAI"
+bundle = "adcsr_x4_float32.aimodel"
+status = "verified"
+notes = [
+  "Single graph, no configuration: the exporter takes only --output-dir/--overwrite and writes",
+  "adcsr_x4_float32.aimodel. It declares its own dependencies, so `uv run` needs no venv.",
+  "Enrolled in CoreAIKit as adcsr-x4.",
+]

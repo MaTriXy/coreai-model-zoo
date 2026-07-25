@@ -114,5 +114,5 @@ The conversion scripts and the Swift host are in the zoo (`conversion/voxcpm/`) 
 
 **⬇️ Download:** [🤗 mlboydaisuke/VoxCPM-0.5B-CoreAI](https://huggingface.co/mlboydaisuke/VoxCPM-0.5B-CoreAI) — this card and the
 model page are the same document; `scripts/gen-cards` keeps the *Use it* block in sync.
-Reproduction: `python3 conversion/zoo_convert.py show` has no recipe for this port yet
-(see [`../_INVENTORY.md`](../_INVENTORY.md), "Needs owner input").
+Reproduce it: `python3 conversion/zoo_convert.py show voxcpm-0.5b` prints the command and its
+prerequisites; [`recipe.toml`](recipe.toml) is the record.

@@ -113,5 +113,5 @@ Black Forest Labs.
 
 **⬇️ Download:** [🤗 mlboydaisuke/FLUX.2-klein-4B-CoreAI](https://huggingface.co/mlboydaisuke/FLUX.2-klein-4B-CoreAI) — this card and the
 model page are the same document; `scripts/gen-cards` keeps the *Use it* block in sync.
-Reproduction: `python3 conversion/zoo_convert.py show` has no recipe for this port yet
-(see [`../_INVENTORY.md`](../_INVENTORY.md), "Needs owner input").
+Reproduction: [`recipe.toml`](recipe.toml) records what is known, but its `status` is
+`unverified` — see [`../_INVENTORY.md`](../_INVENTORY.md), "Needs owner input".

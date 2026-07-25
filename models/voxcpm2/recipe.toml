@@ -1,0 +1,25 @@
+# Recipe for voxcpm2 — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["voxcpm2-2b"]
+card = "README.md"
+hf_repo = "mlboydaisuke/VoxCPM2-CoreAI"
+status = "verified"
+overlay = true
+steps = [
+  { script = "voxcpm/export_v2.py", args = ["--which", "base", "--int8", "--prefill-len", "32"], bundle = "macos/voxcpm2_base_int8_decode_cl512" },
+  { script = "voxcpm/export_v2.py", args = ["--which", "res", "--int8", "--prefill-len", "32"], bundle = "macos/voxcpm2_res_int8_decode_cl512" },
+  { script = "voxcpm/export_v2.py", args = ["--which", "feat_decoder"], bundle = "macos/voxcpm2_feat_decoder_fp16" },
+  { script = "voxcpm/export_v2.py", args = ["--which", "feat_encoder"], bundle = "macos/voxcpm2_feat_encoder_fp16" },
+  { script = "voxcpm/export_v2.py", args = ["--which", "vocoder"], bundle = "macos/voxcpm2_vocoder_fp16_t8" },
+]
+aot = "xcrun coreai-build compile <bundle>.aimodel --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+needs = ["The official VoxCPM2 source under conversion/voxcpm/_ref_v2/ — see knowledge/voxcpm-tts.md."]
+notes = [
+  "The v2 exporter builds every graph: --which selects the net, --int8 the weight-only int8 the",
+  "base/res LMs ship with, and --prefill-len N additionally emits the q=N prefill bundle (hence",
+  "one command per LM producing both the decode cl512 and the prefill t32 bundle).",
+  "The vocoder's t8 is the --vae-frames default here (v1 used 12).",
+  "ios/ holds the AOT twins. Enrolled in CoreAIKit as voxcpm2-2b.",
+]

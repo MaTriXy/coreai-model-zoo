@@ -1,0 +1,18 @@
+# Recipe for flux2-klein — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["flux2-klein-4b"]
+card = "README.md"
+hf_repo = "mlboydaisuke/FLUX.2-klein-4B-CoreAI"
+status = "unverified"
+open_questions = [
+  "Seven bundles are published (TextEncoder, Transformer, three edit variants, VAEDecoder,",
+  "VAEEncoder) and their CamelCase names match no exporter in this repository — there is no",
+  "conversion/flux2* directory at all. Where does this port's conversion code live, and what",
+  "produced each bundle? The card and apps/CoreAIImageGen document how to *run* it, not how it",
+  "was built.",
+]
+notes = [
+  "Text -> image plus native in-context editing; int4, Mac. Not enrolled in CoreAIKit.",
+]

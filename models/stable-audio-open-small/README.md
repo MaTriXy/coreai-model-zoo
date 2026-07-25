@@ -110,5 +110,5 @@ Part of the [Core AI model zoo](https://github.com/john-rocky/coreai-model-zoo).
 
 **⬇️ Download:** [🤗 mlboydaisuke/Stable-Audio-Open-Small-CoreAI](https://huggingface.co/mlboydaisuke/Stable-Audio-Open-Small-CoreAI) — this card and the
 model page are the same document; `scripts/gen-cards` keeps the *Use it* block in sync.
-Reproduction: `python3 conversion/zoo_convert.py show` has no recipe for this port yet
-(see [`../_INVENTORY.md`](../_INVENTORY.md), "Needs owner input").
+Reproduce it: `python3 conversion/zoo_convert.py show stable-audio-open-small` prints the command and its
+prerequisites; [`recipe.toml`](recipe.toml) is the record.

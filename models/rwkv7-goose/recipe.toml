@@ -1,0 +1,20 @@
+# Recipe for rwkv7-goose — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["rwkv7-goose-1.5b"]
+script = "export_rwkv7_decode.py"
+args = ["int8keepproj"]
+card = "README.md"
+hf_repo = "mlboydaisuke/RWKV7-Goose-1.5B-CoreAI"
+bundle = "aimodel/rwkv7_goose_1_5b/rwkv7_goose_1_5b.aimodel"
+status = "verified"
+overlay = true
+aot = "xcrun coreai-build compile <bundle>.aimodel --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = [
+  "The card names the ship recipe explicitly: int8keepproj — FFN and LM head weight-only int8",
+  "per-block-32 (the --block 32 default), while the recurrence projections (r/k/v/o_proj) and",
+  "the LoRA factors stay fp16 because the WKV7 delta rule is precision-sensitive. ~2 GB, gated",
+  "127/127. The upload flattened the bundle name, so the mode is not in it; the card is the record.",
+  "h18p/ holds the AOT twin.",
+]

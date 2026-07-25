@@ -68,5 +68,5 @@ Conversion script (self-contained) + method page in the zoo:
 
 **⬇️ Download:** [🤗 mlboydaisuke/qwen3.5-4B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-4B-CoreAI) — this card and the
 model page are the same document; `scripts/gen-cards` keeps the *Use it* block in sync.
-Reproduction: `python3 conversion/zoo_convert.py show` has no recipe for this port yet
-(see [`../_INVENTORY.md`](../_INVENTORY.md), "Needs owner input").
+Reproduce it: `python3 conversion/zoo_convert.py show qwen3.5-4b` prints the command and its
+prerequisites; [`recipe.toml`](recipe.toml) is the record.

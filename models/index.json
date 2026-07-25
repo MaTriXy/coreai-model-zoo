@@ -11,7 +11,17 @@
   {
    "family": "adcsr",
    "card": "models/adcsr/README.md",
-   "recipes": [],
+   "recipes": [
+    {
+     "name": "adcsr-x4",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/AdcSR-CoreAI",
+     "bundle": "adcsr_x4_float32.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run adcsr-x4",
+     "open_questions": []
+    }
+   ],
    "repos": [
     {
      "id": "mlboydaisuke/AdcSR-CoreAI",
@@ -181,7 +191,23 @@
   {
    "family": "flux2-klein",
    "card": "models/flux2-klein/README.md",
-   "recipes": [],
+   "recipes": [
+    {
+     "name": "flux2-klein-4b",
+     "status": "unverified",
+     "hf_repo": "mlboydaisuke/FLUX.2-klein-4B-CoreAI",
+     "bundle": null,
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run flux2-klein-4b",
+     "open_questions": [
+      "Seven bundles are published (TextEncoder, Transformer, three edit variants, VAEDecoder,",
+      "VAEEncoder) and their CamelCase names match no exporter in this repository \u2014 there is no",
+      "conversion/flux2* directory at all. Where does this port's conversion code live, and what",
+      "produced each bundle? The card and apps/CoreAIImageGen document how to *run* it, not how it",
+      "was built."
+     ]
+    }
+   ],
    "repos": [
     {
      "id": "mlboydaisuke/FLUX.2-klein-4B-CoreAI",
@@ -1019,7 +1045,17 @@
   {
    "family": "qwen2.5-omni-audio",
    "card": "models/qwen2.5-omni-audio/README.md",
-   "recipes": [],
+   "recipes": [
+    {
+     "name": "qwen2.5-omni-3b-audio",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI",
+     "bundle": null,
+     "steps": 2,
+     "run": "python3 conversion/zoo_convert.py run qwen2.5-omni-3b-audio",
+     "open_questions": []
+    }
+   ],
    "repos": [
     {
      "id": "mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI",
@@ -1274,7 +1310,17 @@
   {
    "family": "qwen3.5-4b",
    "card": "models/qwen3.5-4b/README.md",
-   "recipes": [],
+   "recipes": [
+    {
+     "name": "qwen3.5-4b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/qwen3.5-4B-CoreAI",
+     "bundle": "gpu-pipelined-b2/qwen3_5_4b_decode_int8hu_block32_sym",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run qwen3.5-4b",
+     "open_questions": []
+    }
+   ],
    "repos": [
     {
      "id": "mlboydaisuke/qwen3.5-4B-CoreAI",
@@ -1386,7 +1432,17 @@
   {
    "family": "rwkv7-goose",
    "card": "models/rwkv7-goose/README.md",
-   "recipes": [],
+   "recipes": [
+    {
+     "name": "rwkv7-goose-1.5b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/RWKV7-Goose-1.5B-CoreAI",
+     "bundle": "aimodel/rwkv7_goose_1_5b/rwkv7_goose_1_5b.aimodel",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run rwkv7-goose-1.5b",
+     "open_questions": []
+    }
+   ],
    "repos": [
     {
      "id": "mlboydaisuke/RWKV7-Goose-1.5B-CoreAI",
@@ -1432,7 +1488,17 @@
   {
    "family": "stable-audio-open-small",
    "card": "models/stable-audio-open-small/README.md",
-   "recipes": [],
+   "recipes": [
+    {
+     "name": "stable-audio-open-small",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/Stable-Audio-Open-Small-CoreAI",
+     "bundle": "macos",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run stable-audio-open-small",
+     "open_questions": []
+    }
+   ],
    "repos": [
     {
      "id": "mlboydaisuke/Stable-Audio-Open-Small-CoreAI",
@@ -1602,7 +1668,17 @@
   {
    "family": "voxcpm",
    "card": "models/voxcpm/README.md",
-   "recipes": [],
+   "recipes": [
+    {
+     "name": "voxcpm-0.5b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/VoxCPM-0.5B-CoreAI",
+     "bundle": null,
+     "steps": 7,
+     "run": "python3 conversion/zoo_convert.py run voxcpm-0.5b",
+     "open_questions": []
+    }
+   ],
    "repos": [
     {
      "id": "mlboydaisuke/VoxCPM-0.5B-CoreAI",
@@ -1632,7 +1708,17 @@
   {
    "family": "voxcpm2",
    "card": "models/voxcpm2/README.md",
-   "recipes": [],
+   "recipes": [
+    {
+     "name": "voxcpm2-2b",
+     "status": "verified",
+     "hf_repo": "mlboydaisuke/VoxCPM2-CoreAI",
+     "bundle": null,
+     "steps": 5,
+     "run": "python3 conversion/zoo_convert.py run voxcpm2-2b",
+     "open_questions": []
+    }
+   ],
    "repos": [
     {
      "id": "mlboydaisuke/VoxCPM2-CoreAI",

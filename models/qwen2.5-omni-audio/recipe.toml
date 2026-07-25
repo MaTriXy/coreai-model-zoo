@@ -1,0 +1,21 @@
+# Recipe for qwen2.5-omni-audio — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["qwen2.5-omni-3b-audio"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI"
+status = "verified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+steps = [
+  { script = "export_qwen2_5_omni_audio.py", args = ["--chunks", "15"], bundle = "gpu-pipelined/qwen2_5_omni_3b_audio_encoder_fp16_k15/qwen2_5_omni_3b_audio_encoder_fp16_k15.aimodel" },
+  { script = "export_qwen2_5_omni_thinker.py", args = ["--n-audio", "750"], bundle = "gpu-pipelined/qwen2_5_omni_3b_thinker_int8lin_n750_s1" },
+]
+aot = "xcrun coreai-build compile <bundle>.aimodel --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"
+notes = [
+  "Both names invert exactly: the encoder is written as ..._audio_encoder_fp16_k{chunks} and the",
+  "thinker as ..._thinker_int8lin_n{n-audio}_s1, so K=15 (mel width 200*15) and a 750-slot audio",
+  "prefix are the arguments. ios/ holds the device build of the same thinker.",
+  "Enrolled in CoreAIKit as qwen2.5-omni-3b-audio.",
+]

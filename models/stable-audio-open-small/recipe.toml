@@ -1,0 +1,22 @@
+# Recipe for stable-audio-open-small — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["stable-audio-open-small"]
+script = "stable_audio/export_all_fp16.py"
+args = []
+card = "README.md"
+hf_repo = "mlboydaisuke/Stable-Audio-Open-Small-CoreAI"
+bundle = "macos"
+status = "verified"
+overlay = true
+needs = [
+  "conversion/stable_audio/_ref/stable-audio-tools (the upstream package, put on sys.path by the",
+  "script) and model_config.json beside it.",
+]
+notes = [
+  "One command emits all three published graphs — sa_cond_fp16b, sa_dit_fp16, sa_vae_fp16 — at",
+  "the ship precision; the script's own first line says so. It also drops SDPA and RoPE from the",
+  "externalize specs before exporting.",
+  "13x realtime on iPhone. Enrolled in CoreAIKit as stable-audio-open-small.",
+]

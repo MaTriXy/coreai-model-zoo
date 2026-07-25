@@ -112,5 +112,5 @@ conversion — not affiliated with Alibaba or Apple.
 
 **⬇️ Download:** [🤗 mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI](https://huggingface.co/mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI) — this card and the
 model page are the same document; `scripts/gen-cards` keeps the *Use it* block in sync.
-Reproduction: `python3 conversion/zoo_convert.py show` has no recipe for this port yet
-(see [`../_INVENTORY.md`](../_INVENTORY.md), "Needs owner input").
+Reproduce it: `python3 conversion/zoo_convert.py show qwen2.5-omni-3b-audio` prints the command and its
+prerequisites; [`recipe.toml`](recipe.toml) is the record.
