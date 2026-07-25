@@ -230,13 +230,12 @@ published configuration. **Do not guess their `args`.**
 
 ### 3. Recipes recorded, shipped configuration unknown
 
-3 of the 56 recipes carry `status = "unverified"`:
+2 of the 56 recipes carry `status = "unverified"`:
 the script is known, the arguments that produced the published bundle are not,
 and nothing in the repo records them. `zoo_convert.py` refuses to run these
 without `--force`. Each needs one answer from the owner.
 
 - **`glm-4.7-flash`** (mlboydaisuke/GLM-4.7-Flash-CoreAI) — Same head-flag ambiguity as qwen3.6-35b-a3b: --head-sym / --head-quant change the artifact and do not appear in the name. For qwen3.6-35B the answer was found — knowledge/ records a bare `sym8` — but no such record exists for this port, and its twin's command is not evidence for it. Anything recorded from the GLM-4.7-Flash session would settle it.
-- **`qwen3-asr-1.7b`** (mlboydaisuke/Qwen3-ASR-1.7B-CoreAI) — conversion/qwen3_asr/STATE.md names the ship artifacts as the K=30 encoder plus `qwen3_asr_1.7b_int8hu_unified_cl1024/` — a UNIFIED prefill+decode bundle. What is published is `qwen3_asr_1.7b_decode_int8hu_n390_s1`, a separate decode bundle with a 390-token audio prefix. The two records disagree: which artifact is the shipped one, and which flags built it?
 - **`embeddinggemma-300m`** (mlboydaisuke/embeddinggemma-300m-CoreAI) — float32 is in the bundle name, but the static sequence length is not — the exporter defaults to 256 and the published name cannot confirm it. Which --seq-len shipped?
 
 ### 4. Carded, exactly one bundle, no recipe

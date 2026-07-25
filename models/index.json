@@ -1041,17 +1041,12 @@
    "recipes": [
     {
      "name": "qwen3-asr-1.7b",
-     "status": "unverified",
+     "status": "verified",
      "hf_repo": "mlboydaisuke/Qwen3-ASR-1.7B-CoreAI",
      "bundle": null,
      "steps": 2,
      "run": "python3 conversion/zoo_convert.py run qwen3-asr-1.7b",
-     "open_questions": [
-      "conversion/qwen3_asr/STATE.md names the ship artifacts as the K=30 encoder plus",
-      "`qwen3_asr_1.7b_int8hu_unified_cl1024/` \u2014 a UNIFIED prefill+decode bundle. What is published",
-      "is `qwen3_asr_1.7b_decode_int8hu_n390_s1`, a separate decode bundle with a 390-token audio",
-      "prefix. The two records disagree: which artifact is the shipped one, and which flags built it?"
-     ]
+     "open_questions": []
     }
    ],
    "repos": [

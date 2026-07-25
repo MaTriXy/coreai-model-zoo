@@ -5,16 +5,20 @@
 ["qwen3-asr-1.7b"]
 card = "README.md"
 hf_repo = "mlboydaisuke/Qwen3-ASR-1.7B-CoreAI"
-status = "unverified"
+status = "verified"
 overlay = true
-steps = [
-  { script = "qwen3_asr/export_encoder.py", args = [], bundle = "gpu-pipelined/qwen3_asr_1.7b_audio_encoder_fp16_k30/qwen3_asr_1.7b_audio_encoder_fp16_k30.aimodel" },
-  { script = "qwen3_asr/export_decoder.py", args = [], bundle = "gpu-pipelined/qwen3_asr_1.7b_decode_int8hu_n390_s1" },
-]
 runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
-open_questions = [
-  "conversion/qwen3_asr/STATE.md names the ship artifacts as the K=30 encoder plus",
-  "`qwen3_asr_1.7b_int8hu_unified_cl1024/` — a UNIFIED prefill+decode bundle. What is published",
-  "is `qwen3_asr_1.7b_decode_int8hu_n390_s1`, a separate decode bundle with a 390-token audio",
-  "prefix. The two records disagree: which artifact is the shipped one, and which flags built it?",
+steps = [
+  { script = "qwen3_asr/export_encoder.py", args = ["--chunks", "30"], bundle = "gpu-pipelined/qwen3_asr_1.7b_audio_encoder_fp16_k30/qwen3_asr_1.7b_audio_encoder_fp16_k30.aimodel" },
+  { script = "qwen3_asr/export_decoder.py", args = ["--mode", "int8hu", "--n-audio", "390"], bundle = "gpu-pipelined/qwen3_asr_1.7b_decode_int8hu_n390_s1" },
+]
+notes = [
+  "The decoder name inverts exactly: qwen3_asr_1.7b_decode_<mode>_n<n-audio>, so int8hu with a",
+  "390-slot audio prefix; --max-ctx 4096 is the default and the bundle's metadata agrees.",
+  "**What is published is not what the port calls its ship.** conversion/qwen3_asr/STATE.md names",
+  "the ship artifacts as the K=30 encoder plus a UNIFIED prefill+decode bundle",
+  "(qwen3_asr_1.7b_int8hu_unified_cl1024, from export_unified.py). The published decode bundle",
+  "declares function_map {\"main\": [\"main\"]} — a single entrypoint — so it is the earlier",
+  "two-bundle build, at cache 4096 rather than 1024. Publishing the unified bundle is an owner",
+  "decision; this recipe records what is actually on Hugging Face today.",
 ]
