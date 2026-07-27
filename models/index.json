@@ -1,5 +1,5 @@
 {
- "generated": "2026-07-25",
+ "generated": "2026-07-28",
  "how_to_use": {
   "list": "python3 conversion/zoo_convert.py list",
   "show": "python3 conversion/zoo_convert.py show <recipe>",
@@ -19,6 +19,7 @@
      "bundle": "adcsr_x4_float32.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run adcsr-x4",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -46,6 +47,7 @@
      "bundle": "gpu-pipelined/bitcpm_8b_decode_ternary_s1",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run bitcpm-8b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -73,6 +75,7 @@
      "bundle": null,
      "steps": 2,
      "run": "python3 conversion/zoo_convert.py run bitvla",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -103,6 +106,7 @@
      "bundle": null,
      "steps": 2,
      "run": "python3 conversion/zoo_convert.py run colmodernvbert",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -133,6 +137,7 @@
      "bundle": "small/da3-small_float16.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run depth-anything-3-small",
+     "gate_transcript": null,
      "open_questions": []
     },
     {
@@ -142,6 +147,7 @@
      "bundle": "base/da3-base_float16.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run depth-anything-3-base",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -172,6 +178,7 @@
      "bundle": "gpu",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run fastcontext-4b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -199,6 +206,7 @@
      "bundle": "Transformer.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run flux2-klein-4b",
+     "gate_transcript": null,
      "open_questions": []
     },
     {
@@ -208,6 +216,7 @@
      "bundle": "Transformer_edit.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run flux2-klein-4b-edit",
+     "gate_transcript": null,
      "open_questions": [
       "Transformer_edit / _edit_2ref / _edit_512 come from in-context-editing code added to the",
       "diffusion pipeline in the patched coreai-models checkout \u2014 commits d982f48 (Flux2Pipeline.",
@@ -249,6 +258,7 @@
      "bundle": "gpu-pipelined/gemma4_12b_qat_decode_int4linsym_msdpa_g8",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run gemma-4-12b",
+     "gate_transcript": null,
      "open_questions": []
     },
     {
@@ -258,6 +268,7 @@
      "bundle": "gpu-pipelined/gemma4_12b_qat_decode_int8lin_msdpa_g8",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run gemma-4-12b-int8",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -286,6 +297,7 @@
      "bundle": "gpu-pipelined/gemma4_31b_qat_decode_int4linsym_msdpa_g8",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run gemma-4-31b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -313,6 +325,7 @@
      "bundle": "gpu-pipelined/gemma4_e2b_qat_decode_int4lin_tbl",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run gemma-4-e2b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -362,6 +375,7 @@
      "bundle": "gpu-pipelined/gemma4_e4b_qat_decode_int4lin",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run gemma-4-e4b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -391,6 +405,7 @@
      "bundle": "gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym_tbl",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run gemma-4-e2b-vl",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -440,6 +455,7 @@
      "bundle": "macos/gliner2-pii_float16_s256_t96_m16.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run gliner2-pii",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -468,6 +484,7 @@
      "bundle": "gpu-pipelined/glm_4_7_flash_decode_sym8_gather",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run glm-4.7-flash",
+     "gate_transcript": null,
      "open_questions": [
       "Was --head-sym / --head-quant passed? Asked and closed as unknowable on 2026-07-25: the owner",
       "does not recall, and nothing published records it \u2014 the bundle name omits the head flags, the",
@@ -503,6 +520,7 @@
      "bundle": null,
      "steps": 5,
      "run": "python3 conversion/zoo_convert.py run glm-image",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -534,6 +552,7 @@
      "bundle": "decoder",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run glm-ocr",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -563,6 +582,7 @@
      "bundle": "gpu-pipelined/granite_4_0_h_1b_decode_int8lin",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run granite-4.0-h-1b",
+     "gate_transcript": null,
      "open_questions": []
     },
     {
@@ -572,6 +592,7 @@
      "bundle": "gpu-pipelined/granite_4_0_h_350m_decode_fp16",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run granite-4.0-h-350m",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -602,6 +623,7 @@
      "bundle": "gpu-pipelined/holo2_4b_decode_int8lin_s1",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run holo2-4b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -631,6 +653,7 @@
      "bundle": "kokoro_predictor.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run kokoro-82m",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -660,6 +683,7 @@
      "bundle": "gpu-pipelined/lfm2_5_1_2b_instruct_decode_int8hu_block32_sym",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run lfm2.5-1.2b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -689,6 +713,7 @@
      "bundle": "gpu-pipelined/lfm2_5_8b_a1b_decode_sym8_gather",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run lfm2.5-8b-a1b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -716,6 +741,7 @@
      "bundle": "macos",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run llada-8b-dllm",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -743,6 +769,7 @@
      "bundle": null,
      "steps": 3,
      "run": "python3 conversion/zoo_convert.py run ltx-video-2b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -772,6 +799,7 @@
      "bundle": "mbr_full_fp16.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run melband-roformer-vocal",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -800,6 +828,7 @@
      "bundle": "decoder",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run mineru-2.5-pro",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -831,6 +860,7 @@
      "bundle": null,
      "steps": 2,
      "run": "python3 conversion/zoo_convert.py run minicpm-v-4.6",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -862,6 +892,7 @@
      "bundle": "int8",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run minicpm5-1b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -889,6 +920,7 @@
      "bundle": "gpu-pipelined/nanbeige4_1_3b_decode_int8hu_block32_sym_s1",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run nanbeige4.1-3b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -917,6 +949,7 @@
      "bundle": "gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run nanbeige4.2-3b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -944,6 +977,7 @@
      "bundle": "gpu-pipelined/nemotron_3_nano_4b_decode_int8hu",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run nemotron-3-nano-4b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -972,6 +1006,7 @@
      "bundle": null,
      "steps": 2,
      "run": "python3 conversion/zoo_convert.py run nemotron-3.5-asr-streaming",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1010,6 +1045,7 @@
      "bundle": "gpu-pipelined/ornith_1_0_9b_decode_int8hu_block32_sym",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run ornith-1.0-9b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1038,6 +1074,7 @@
      "bundle": null,
      "steps": 2,
      "run": "python3 conversion/zoo_convert.py run parakeet-tdt-0.6b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1067,6 +1104,7 @@
      "bundle": null,
      "steps": 2,
      "run": "python3 conversion/zoo_convert.py run qwen2.5-omni-3b-audio",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1096,6 +1134,7 @@
      "bundle": null,
      "steps": 2,
      "run": "python3 conversion/zoo_convert.py run qwen3-asr-1.7b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1124,6 +1163,7 @@
      "bundle": "qwen3-embedding-0.6b_float16_s512_static.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run qwen3-embedding-0.6b",
+     "gate_transcript": null,
      "open_questions": []
     },
     {
@@ -1133,6 +1173,7 @@
      "bundle": "model/embeddinggemma-300m_float32_static.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run embeddinggemma-300m",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1170,6 +1211,7 @@
      "bundle": "qwen3-reranker-0.6b_float16_s512_static.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run qwen3-reranker-0.6b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1197,6 +1239,7 @@
      "bundle": "gpu-pipelined/qwen3_vl_2b_instruct_decode_int8hu_s1",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run qwen3-vl-2b",
+     "gate_transcript": null,
      "open_questions": []
     },
     {
@@ -1206,6 +1249,7 @@
      "bundle": "gpu-pipelined/qwen3_vl_4b_instruct_decode_int8hu_s1",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run qwen3-vl-4b",
+     "gate_transcript": null,
      "open_questions": []
     },
     {
@@ -1215,6 +1259,7 @@
      "bundle": "gpu-pipelined/qwen3_vl_8b_instruct_decode_int8hu_s1",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run qwen3-vl-8b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1271,6 +1316,7 @@
      "bundle": "gpu-pipelined/qwen3_5_0_8b_decode_int8hu_block32_sym",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run qwen3.5-0.8b",
+     "gate_transcript": null,
      "open_questions": []
     },
     {
@@ -1280,6 +1326,7 @@
      "bundle": "gpu-pipelined/qwen3_5_2b_decode_int8hu_block32_sym",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run qwen3.5-2b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1329,6 +1376,7 @@
      "bundle": "gpu-pipelined-b2/qwen3_5_4b_decode_int8hu_block32_sym",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run qwen3.5-4b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1356,6 +1404,7 @@
      "bundle": "gpu-pipelined/qwen3_6_35b_a3b_decode_sym8_gather",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run qwen3.6-35b-a3b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1383,6 +1432,7 @@
      "bundle": "gpu-pipelined/qwen3_6_27b_decode_int8hu_block32_sym",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run qwen3.6-27b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1410,6 +1460,7 @@
      "bundle": "rfdetr-medium_float32.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run rf-detr",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1451,6 +1502,7 @@
      "bundle": "aimodel/rwkv7_goose_1_5b/rwkv7_goose_1_5b.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run rwkv7-goose-1.5b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1479,6 +1531,7 @@
      "bundle": "sortformer_float16.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run sortformer-diar",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1507,6 +1560,7 @@
      "bundle": "macos",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run stable-audio-open-small",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1534,6 +1588,7 @@
      "bundle": "timesfm_2p5_200m_ctx2048_fp16.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run timesfm-2.5-200m",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1562,6 +1617,7 @@
      "bundle": null,
      "steps": 6,
      "run": "python3 conversion/zoo_convert.py run triposplat",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1594,6 +1650,7 @@
      "bundle": null,
      "steps": 2,
      "run": "python3 conversion/zoo_convert.py run unlimited-ocr",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1622,6 +1679,7 @@
      "bundle": null,
      "steps": 3,
      "run": "python3 conversion/zoo_convert.py run vibevoice-realtime-0.5b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1658,6 +1716,7 @@
      "bundle": "macos",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run vjepa2-vitl-ssv2",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1687,6 +1746,7 @@
      "bundle": null,
      "steps": 7,
      "run": "python3 conversion/zoo_convert.py run voxcpm-0.5b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1727,6 +1787,7 @@
      "bundle": null,
      "steps": 5,
      "run": "python3 conversion/zoo_convert.py run voxcpm2-2b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1767,6 +1828,7 @@
      "bundle": "whisper-large-v3-turbo_float16_fixed128.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run whisper-large-v3-turbo",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1794,6 +1856,7 @@
      "bundle": "yolox-s_float32.aimodel",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run yolox-s",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1821,6 +1884,7 @@
      "bundle": "gpu-pipelined/youtu_llm_2b_decode_absorbed_int8_msdpa",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run youtu-llm-2b",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],
@@ -1850,6 +1914,7 @@
      "bundle": null,
      "steps": 4,
      "run": "python3 conversion/zoo_convert.py run z-image-turbo",
+     "gate_transcript": null,
      "open_questions": []
     }
    ],

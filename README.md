@@ -137,7 +137,10 @@ reconstructs a transcript from a card's prose after the fact: a model that canno
 keeps a card that says what was gated, without a file claiming to prove it.
 
 Results land in [`models/_INVENTORY.md`](models/_INVENTORY.md); [`models/index.json`](models/index.json)
-is the same catalog machine-readable, which is where an agent should start.
+is the same catalog machine-readable, which is where an agent should start. Each recipe entry
+there carries `status` (does the repository record what produced this bundle) and
+`gate_transcript` (is the numerical check against the original published, and where) — two
+different questions, kept as two fields so neither has to be inferred from prose.
 
 ## Models
 

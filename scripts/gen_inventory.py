@@ -327,6 +327,11 @@ def render_index(rows: list[dict]) -> dict:
         entry = by_family.setdefault(
             r["family"], {"family": r["family"], "card": f"models/{r['family']}/README.md",
                           "recipes": [], "repos": []})
+        # Whether a gate transcript is published for this bundle, and where. `status` says
+        # the recipe reproduces the artifact; this says the artifact was checked against the
+        # original *and the evidence is readable* — a distinction a reader deciding whether
+        # to depend on a model has to be able to make without reading prose.
+        transcript = Path(f"models/{r['family']}/gate-{name}.json")
         entry["recipes"].append({
             "name": name,
             "status": r.get("status", "unknown"),
@@ -334,6 +339,7 @@ def render_index(rows: list[dict]) -> dict:
             "bundle": r.get("bundle"),
             "steps": len(r.get("steps", [])) or 1,
             "run": f"python3 conversion/zoo_convert.py run {name}",
+            "gate_transcript": str(transcript) if (REPO / transcript).is_file() else None,
             "open_questions": r.get("open_questions", []),
         })
     for row in rows:
