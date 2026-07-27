@@ -1,0 +1,47 @@
+name: Catalog
+
+# GitHub-hosted Linux, deliberately: everything here reads the repository and nothing else,
+# so it must not queue behind — or perturb — the Apple silicon machine that runs conversions
+# and measurements. No Mac, no GPU, no weights, no network.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  consistency:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Catalog is self-consistent
+        # Recipes resolve to scripts and cards that exist, statuses are meaningful, an
+        # `unverified` entry says what it cannot answer, and index.json matches the
+        # directories on disk. A contributor's PR gets this before a human reads it.
+        run: python3 scripts/validate_catalog.py
+
+      - name: Python sources compile
+        run: |
+          python3 -m compileall -q conversion scripts \
+            -x '(^|/)(\.venv|__pycache__|_smoke)/' > /dev/null
+
+      - name: Issue templates parse
+        run: |
+          python3 - <<'PY'
+          import sys, pathlib, yaml
+          bad = []
+          for p in sorted(pathlib.Path(".github/ISSUE_TEMPLATE").glob("*.yml")):
+              try:
+                  form = yaml.safe_load(p.read_text())
+                  assert form.get("body"), f"{p.name}: no body"
+              except Exception as e:
+                  bad.append(f"{p.name}: {e}")
+          if bad:
+              sys.exit("\n".join(bad))
+          print("issue forms OK")
+          PY
