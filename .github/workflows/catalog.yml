@@ -18,6 +18,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Dependencies
+        # Only PyYAML, and only to parse the issue forms — everything else here runs on the
+        # standard library so the check cannot rot from a dependency it does not need.
+        run: pip install --quiet pyyaml
 
       - name: Catalog is self-consistent
         # Recipes resolve to scripts and cards that exist, statuses are meaningful, an
