@@ -6,9 +6,13 @@
 [![Nightly device gate](https://github.com/john-rocky/coreai-kit/actions/workflows/nightly-gate.yml/badge.svg)](https://github.com/john-rocky/coreai-kit/actions/workflows/nightly-gate.yml)
 
 **Converted models + conversion recipes** for Apple **Core AI** (`.aimodel`, iOS 27 / macOS 27):
-every model here is downloadable, device-verified, and carries the recipe that produced it in
-[`models/<model>/recipe.toml`](models/) — rerun it (`zoo_convert.py run <name>`), check the
-published bundle against its source model (`zoo_verify.py`), or adapt it for your own port.
+every model here is downloadable, gated against the original model before it ships, and carries
+the recipe that produced it in [`models/<model>/recipe.toml`](models/) — rerun it
+(`zoo_convert.py run <name>`), check the published bundle against its source model
+(`zoo_verify.py`), or adapt it for your own port. **Don't take the gates on faith — they are run
+here, and everything needed to re-run them is published.** Each card states what was measured on
+which hardware (iPhone tier is device-measured; the large models are Mac-only and say so) and how
+strong that model's parity proof is, because it differs per model.
 Where the shipped configuration could not be recovered from the repository, the recipe says so
 rather than guessing. Model ports are open to everyone — the catalog serves
 community ports from the contributor's own Hugging Face namespace (first:
@@ -228,6 +232,9 @@ kernel — the stock MPSGraph SDPA crashes on the ≥16-head × 512 Q (a GPU scr
 - **You're a coding agent** (or you're pointing one here) → [**`AGENTS.md`**](AGENTS.md) — the
   porting contract in one file: why conversion isn't conversion, the two gates, the traps agents
   hit, and what isn't an agent's call. No install needed.
+- **Surveying the whole Core AI ecosystem**, not just this catalog →
+  [**awesome-core-ai**](https://github.com/john-rocky/awesome-core-ai) — Apple's own tooling,
+  other people's converters and runtimes, sample apps, benchmarks, and learning material.
 - **Try the app** (iOS 27 / macOS 27 beta; the model downloads in-app):
   - **Demo app, no build** → Mac: [**.dmg**](https://github.com/john-rocky/coreai-model-zoo/releases/download/mac-v1.0/CoreAI-Zoo-for-Mac.dmg) (notarized, runs the Mac-only bundles) · iPhone: [**CoreAIChat on TestFlight**](https://testflight.apple.com/join/bK4P7xby)
   - **Build it** → [`apps/`](apps/) — Xcode 27 beta + xcodegen, the `coreai-models` patch stack + `tokenizer.json`
