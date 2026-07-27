@@ -106,8 +106,32 @@ python3 conversion/zoo_verify.py --all --json models/_VERIFY.json    # the whole
 ```
 
 That compares a bundle's tokenizer, chat template, context length and declared precision against
-the source model it names in its own `metadata.json` — no oracle, no device, no weights. Results
-land in [`models/_INVENTORY.md`](models/_INVENTORY.md); [`models/index.json`](models/index.json)
+the source model it names in its own `metadata.json` — no oracle, no device, no weights.
+
+**The numerical check is a different command.** `zoo_verify.py` checks that a bundle is described
+correctly; it does not check that the bundle still computes the right thing. That is
+`conversion/coreai_gate.py`, which rebuilds the reference model in fp32 and compares a greedy
+decode token for token:
+
+```bash
+python3 conversion/coreai_gate.py <bundle-dir> Qwen/Qwen3.5-2B --revision <sha> \
+    --transcript models/qwen3.5-2b/gate.json
+```
+
+It runs outside this working tree — point `--runner` / `ZOO_LLM_RUNNER` at your `llm-runner` and
+`--python` / `ZOO_CONVERT_PYTHON` at an interpreter that has the export overlay, and it tells you
+which one is missing rather than failing obscurely. It currently covers the decode
+architectures in `--arch` (the oracle is a per-architecture transcription of that model's export,
+so it grows one port at a time, not all at once).
+
+`--transcript` is the part worth publishing: the pinned revision, the exact `input_ids`, both
+sides' generated tokens, the tie margins, and the verdict. **Rebuilding the oracle is expensive;
+re-running the engine side against a published transcript is not** — it needs the bundle,
+`llm-runner`, and the recorded `input_ids`, and the output must match `engine.gen_text`. New ports
+publish one. Existing cards state what was gated without shipping the transcript, and are being
+backfilled where the run was retained rather than reconstructed after the fact.
+
+Results land in [`models/_INVENTORY.md`](models/_INVENTORY.md); [`models/index.json`](models/index.json)
 is the same catalog machine-readable, which is where an agent should start.
 
 ## Models

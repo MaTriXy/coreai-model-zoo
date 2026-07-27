@@ -15,10 +15,22 @@ tie, fp16 class) — otherwise FAIL. EOS ends both sides.
 
 Usage:
     python3 coreai_gate.py <bundle-dir> <hf-id> [--arch KEY] [--prompt "..."] [-n 16]
+                           [--transcript out.json]
 
 `--arch` is auto-detected from the bundle/repo name for the known families; pass it
-explicitly for a new model that reuses an existing family's overlay. Run from a checkout
-whose sibling coreai-models has the zoo overlay applied (see zoo_convert.py doctor).
+explicitly for a new model that reuses an existing family's overlay.
+
+Runnable from outside the maintainer's tree: `--python` / `ZOO_CONVERT_PYTHON` selects an
+interpreter carrying the export overlay and `--runner` / `ZOO_LLM_RUNNER` selects the Core AI
+CLI; a preflight says which one is missing instead of failing deep inside a subprocess
+(`zoo_convert.py doctor` reports whether the overlay is set up).
+
+`--transcript` writes the evidence — pinned revision, the exact input_ids, both sides'
+generated tokens, the tie margins, the verdict, the environment. Publish it next to the card.
+The asymmetry is deliberate: rebuilding the oracle costs an overlay interpreter and an fp32
+checkpoint download, but re-running the *engine* side against a published transcript costs only
+the bundle and llm-runner — so the expensive half is published once and the cheap half stays
+reproducible by anyone.
 
 Findings baked in here because they are documented nowhere else (2026-07-18 recovery):
   - The engine needs COREAI_CHUNK_THRESHOLD=1 + variant coreai-pipelined. This gate disables
@@ -35,11 +47,14 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import platform
 import shutil
 import subprocess
 import sys
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import NoReturn
 
 HERE = Path(__file__).resolve().parent
 
@@ -73,13 +88,41 @@ def resolve_python(flag: str | None) -> str:
     return shutil.which("python3") or "python3"
 
 
-def resolve_runner() -> str:
+def resolve_runner(flag: str | None = None) -> str:
+    if flag:
+        return flag
+    if env := os.environ.get("ZOO_LLM_RUNNER"):
+        return env
     base = HERE.parent.parent / "coreai-models"
     for c in (base / ".build" / "release" / "llm-runner",
               base / ".build" / "out" / "Products" / "Release" / "llm-runner"):
         if c.exists():
             return str(c)
-    return "llm-runner"
+    return shutil.which("llm-runner") or "llm-runner"
+
+
+def preflight(python: str, runner: str) -> None:
+    """Fail with an actionable message instead of a confusing subprocess error.
+
+    This gate is meant to be runnable from outside the maintainer's working tree — a
+    reader checking a published bundle should not have to reverse-engineer why it broke.
+    """
+    if not (Path(runner).exists() or shutil.which(runner)):
+        sys.exit(
+            f"llm-runner not found: {runner}\n"
+            "  It is the Core AI CLI that drives the bundle. Either build it from\n"
+            "  apple/coreai-models, or point at yours:\n"
+            "    --runner /path/to/llm-runner        (or ZOO_LLM_RUNNER=/path/to/llm-runner)"
+        )
+    probe = subprocess.run([python, "-c", "import coreai_models"], capture_output=True, text=True)
+    if probe.returncode != 0:
+        sys.exit(
+            f"the oracle interpreter cannot import coreai_models: {python}\n"
+            "  The oracle rebuilds the reference model with the zoo's export overlay applied.\n"
+            "  Point at an interpreter that has it:\n"
+            "    --python /path/to/venv/bin/python   (or ZOO_CONVERT_PYTHON=/path/to/venv/bin/python)\n"
+            "  `python3 conversion/zoo_convert.py doctor` reports whether yours is set up."
+        )
 
 
 def detect_arch(bundle: str, hf_id: str) -> str | None:
@@ -244,6 +287,48 @@ def run_engine(runner: str, bundle: str, input_ids: list[int], n: int) -> str | 
     return body
 
 
+def finish(args, record: dict, result: str, line: str) -> NoReturn:
+    """Print the verdict, optionally write the transcript, exit with the right status.
+
+    The transcript exists so a reader does not have to take the gate on faith. Rebuilding the
+    oracle is expensive (an overlay interpreter plus an fp32 checkpoint download); re-running
+    the *engine* side against a published transcript is not — it needs the bundle, llm-runner,
+    and the input_ids recorded here. That asymmetry is the point: the expensive half is
+    published, the cheap half is reproducible by anyone.
+    """
+    record["schema"] = "coreai-gate-transcript/1"
+    record["result"] = result
+    record["generated_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    record["environment"] = {
+        "platform": platform.platform(),
+        "python": sys.version.split()[0],
+        "runner": resolve_runner(args.runner),
+    }
+    record["recheck"] = {
+        "engine_side_only": (
+            "Download the bundle at the pinned revision, then feed the recorded input_ids to "
+            "llm-runner with the protocol above (greedy, warmup off, coreai-pipelined, "
+            "COREAI_CHUNK_THRESHOLD=1). The output must equal engine.gen_text. No oracle, no "
+            "fp32 weights, no GPU beyond the one running the bundle."
+        ),
+        "full_gate": (
+            "python3 conversion/coreai_gate.py <bundle> "
+            f"{record['source_model']['hf_id']}"
+            + (f" --revision {record['source_model']['revision']}"
+               if record["source_model"]["revision"] else "")
+            + f" --arch {record['arch']} --prompt {record['protocol']['prompt']!r}"
+              f" -n {record['protocol']['max_new_tokens']}"
+        ),
+    }
+    print(line)
+    if args.transcript:
+        path = Path(args.transcript)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n")
+        print(f"  transcript: {path}")
+    sys.exit(0 if result.startswith("PASS") else 1)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Gate an exported decode bundle against its fp32 oracle.")
     ap.add_argument("bundle")
@@ -255,15 +340,23 @@ def main() -> None:
     ap.add_argument("-n", type=int, default=16)
     ap.add_argument("--oracle-dtype", choices=["fp32", "fp16"], default="fp32",
                     help="fp32 = strict ceiling; fp16 for models too big for fp32 (e.g. 35B needs ~140 GB)")
-    ap.add_argument("--python", help="overlay interpreter (default: sibling coreai-models/.venv)")
-    ap.add_argument("--runner", help="llm-runner executable (default: sibling coreai-models build)")
+    ap.add_argument("--python", help="overlay interpreter (default: $ZOO_CONVERT_PYTHON, "
+                                     "else sibling coreai-models/.venv)")
+    ap.add_argument("--runner", help="llm-runner executable (default: $ZOO_LLM_RUNNER, "
+                                     "else sibling coreai-models build, else PATH)")
+    ap.add_argument("--transcript", metavar="PATH",
+                    help="write the gate transcript as JSON: the pinned revision, the exact "
+                         "input_ids, both sides' output, and the verdict. Publish it next to "
+                         "the card — re-checking a published transcript needs only the bundle "
+                         "and llm-runner, not the oracle.")
     args = ap.parse_args()
 
     arch = args.arch or detect_arch(args.bundle, args.hf_id)
     if not arch:
         sys.exit(f"no arch mapping for {args.bundle} — pass --arch")
     python = resolve_python(args.python)
-    runner = args.runner or resolve_runner()
+    runner = resolve_runner(args.runner)
+    preflight(python, runner)
 
     oracle = run_oracle(
         python, arch, args.hf_id, args.prompt, args.n, args.oracle_dtype, args.revision
@@ -274,11 +367,35 @@ def main() -> None:
     print("  prompt :", repr(args.prompt), "->", oracle["input_ids"])
     print("  oracle :", repr(oracle["gen_text"]))
     print("  engine :", repr(engine))
+
+    ref, margins = oracle["gen_ids"], oracle.get("margins", [])
+    record = {
+        "result": None,
+        "arch": arch,
+        "bundle": Path(args.bundle).name,
+        "source_model": {"hf_id": args.hf_id, "revision": args.revision},
+        "protocol": {
+            "prompt": args.prompt,
+            "max_new_tokens": args.n,
+            "greedy": True,
+            "oracle_dtype": args.oracle_dtype,
+            "engine_variant": "coreai-pipelined",
+            "warmup": "off",
+            "env": {"COREAI_CHUNK_THRESHOLD": "1"},
+            "tie_rule": "a first divergence passes only where the oracle's top-2 margin < 0.1",
+        },
+        "input_ids": oracle["input_ids"],
+        "oracle": {"gen_ids": ref, "gen_text": oracle["gen_text"], "top2_margins": margins},
+        "engine": {"gen_text": engine},
+        "match": {},
+    }
+
     if engine is None:
-        sys.exit("  RESULT: ERROR (engine produced no output)")
+        finish(args, record, "ERROR", "  RESULT: ERROR (engine produced no output)")
     if engine == oracle["gen_text"]:
-        print(f"  RESULT: PASS — token-for-token == {args.oracle_dtype} oracle")
-        return
+        record["match"] = {"exact_prefix": len(ref), "of": len(ref), "first_divergence": None}
+        finish(args, record, "PASS",
+               f"  RESULT: PASS — token-for-token == {args.oracle_dtype} oracle")
     from transformers import AutoTokenizer
     try:
         tk = AutoTokenizer.from_pretrained(args.hf_id, revision=args.revision)
@@ -291,16 +408,20 @@ def main() -> None:
             )
         )
     eng_ids = tk(engine, add_special_tokens=False).input_ids
-    ref, margins = oracle["gen_ids"], oracle.get("margins", [])
     d = next((i for i in range(min(len(eng_ids), len(ref))) if eng_ids[i] != ref[i]),
              min(len(eng_ids), len(ref)))
     tie = d < len(margins) and margins[d] < 0.1
+    record["engine"]["gen_ids"] = eng_ids
+    record["match"] = {"exact_prefix": d, "of": len(ref), "first_divergence": d,
+                       "margin_at_divergence": margins[d] if d < len(margins) else None,
+                       "tie": tie}
     print(f"  match  : {d}/{len(ref)} exact; first divergence at #{d}"
           + (f", margin {margins[d]:.4f}" if d < len(margins) else ""))
     if tie:
-        print(f"  RESULT: PASS — diverges only at a top-2 tie (margin {margins[d]:.3f} < 0.1), fp16 class")
-        return
-    sys.exit("  RESULT: FAIL — bundle diverges from the fp32 oracle at a decisive position")
+        finish(args, record, "PASS_TIE",
+               f"  RESULT: PASS — diverges only at a top-2 tie (margin {margins[d]:.3f} < 0.1), fp16 class")
+    finish(args, record, "FAIL",
+           "  RESULT: FAIL — bundle diverges from the fp32 oracle at a decisive position")
 
 
 if __name__ == "__main__":
