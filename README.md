@@ -127,9 +127,14 @@ so it grows one port at a time, not all at once).
 `--transcript` is the part worth publishing: the pinned revision, the exact `input_ids`, both
 sides' generated tokens, the tie margins, and the verdict. **Rebuilding the oracle is expensive;
 re-running the engine side against a published transcript is not** — it needs the bundle,
-`llm-runner`, and the recorded `input_ids`, and the output must match `engine.gen_text`. New ports
-publish one. Existing cards state what was gated without shipping the transcript, and are being
-backfilled where the run was retained rather than reconstructed after the fact.
+`llm-runner`, and the recorded `input_ids`, and the output must match `engine.gen_text`.
+
+New ports publish one. For models ported before the flag existed,
+`conversion/backfill_gate_transcripts.py` prints what can still be gated and, with `--run`, gates
+it — preferring the **published** bundle out of the CoreAIKit cache over a local export, so the
+transcript describes the bytes apps download at the revision the catalog pins. Nothing
+reconstructs a transcript from a card's prose after the fact: a model that cannot be re-gated
+keeps a card that says what was gated, without a file claiming to prove it.
 
 Results land in [`models/_INVENTORY.md`](models/_INVENTORY.md); [`models/index.json`](models/index.json)
 is the same catalog machine-readable, which is where an agent should start.
