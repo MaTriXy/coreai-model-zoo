@@ -15,6 +15,8 @@
     {
      "name": "adcsr-x4",
      "status": "verified",
+     "source_model": "Guaishou74851/AdcSR",
+     "source_model_from": "exporter",
      "hf_repo": "mlboydaisuke/AdcSR-CoreAI",
      "bundle": "adcsr_x4_float32.aimodel",
      "steps": 1,
@@ -43,6 +45,8 @@
     {
      "name": "bitcpm-8b",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/BitCPM-8B-CoreAI",
      "bundle": "gpu-pipelined/bitcpm_8b_decode_ternary_s1",
      "steps": 1,
@@ -71,6 +75,8 @@
     {
      "name": "bitvla",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/BitVLA-CoreAI",
      "bundle": null,
      "steps": 2,
@@ -102,6 +108,8 @@
     {
      "name": "colmodernvbert",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/ColModernVBERT-CoreAI",
      "bundle": null,
      "steps": 2,
@@ -133,6 +141,8 @@
     {
      "name": "depth-anything-3-small",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/Depth-Anything-3-CoreAI",
      "bundle": "small/da3-small_float16.aimodel",
      "steps": 1,
@@ -143,6 +153,8 @@
     {
      "name": "depth-anything-3-base",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/Depth-Anything-3-CoreAI",
      "bundle": "base/da3-base_float16.aimodel",
      "steps": 1,
@@ -174,6 +186,8 @@
     {
      "name": "fastcontext-4b",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/FastContext-1.0-4B-CoreAI",
      "bundle": "gpu",
      "steps": 1,
@@ -202,6 +216,8 @@
     {
      "name": "flux2-klein-4b",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/FLUX.2-klein-4B-CoreAI",
      "bundle": "Transformer.aimodel",
      "steps": 1,
@@ -212,6 +228,8 @@
     {
      "name": "flux2-klein-4b-edit",
      "status": "unverified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/FLUX.2-klein-4B-CoreAI",
      "bundle": "Transformer_edit.aimodel",
      "steps": 1,
@@ -254,6 +272,8 @@
     {
      "name": "gemma-4-12b",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/Gemma-4-12B-CoreAI",
      "bundle": "gpu-pipelined/gemma4_12b_qat_decode_int4linsym_msdpa_g8",
      "steps": 1,
@@ -264,6 +284,8 @@
     {
      "name": "gemma-4-12b-int8",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/Gemma-4-12B-CoreAI",
      "bundle": "gpu-pipelined/gemma4_12b_qat_decode_int8lin_msdpa_g8",
      "steps": 1,
@@ -293,6 +315,8 @@
     {
      "name": "gemma-4-31b",
      "status": "verified",
+     "source_model": "google/gemma-4-31B-it-qat-q4_0-unquantized",
+     "source_model_from": "recipe",
      "hf_repo": "mlboydaisuke/Gemma-4-31B-CoreAI",
      "bundle": "gpu-pipelined/gemma4_31b_qat_decode_int4linsym_msdpa_g8",
      "steps": 1,
@@ -321,6 +345,8 @@
     {
      "name": "gemma-4-e2b",
      "status": "verified",
+     "source_model": "google/gemma-4-E2B-it-qat-q4_0-unquantized",
+     "source_model_from": "recipe",
      "hf_repo": "mlboydaisuke/gemma-4-E2B-CoreAI",
      "bundle": "gpu-pipelined/gemma4_e2b_qat_decode_int4lin_tbl",
      "steps": 1,
@@ -371,6 +397,8 @@
     {
      "name": "gemma-4-e4b",
      "status": "verified",
+     "source_model": "google/gemma-4-E4B-it-qat-q4_0-unquantized",
+     "source_model_from": "recipe",
      "hf_repo": "mlboydaisuke/gemma-4-E4B-CoreAI",
      "bundle": "gpu-pipelined/gemma4_e4b_qat_decode_int4lin",
      "steps": 1,
@@ -401,6 +429,8 @@
     {
      "name": "gemma-4-e2b-vl",
      "status": "verified",
+     "source_model": "google/gemma-4-E2B-it-qat-q4_0-unquantized",
+     "source_model_from": "exporter",
      "hf_repo": "mlboydaisuke/gemma-4-E2B-CoreAI",
      "bundle": "gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym_tbl",
      "steps": 1,
@@ -451,6 +481,8 @@
     {
      "name": "gliner2-pii",
      "status": "verified",
+     "source_model": "fastino/gliner2-privacy-filter-PII-multi",
+     "source_model_from": "exporter",
      "hf_repo": "mlboydaisuke/GLiNER2-PII-CoreAI",
      "bundle": "macos/gliner2-pii_float16_s256_t96_m16.aimodel",
      "steps": 1,
@@ -480,6 +512,8 @@
     {
      "name": "glm-4.7-flash",
      "status": "unverified",
+     "source_model": "zai-org/GLM-4.7-Flash",
+     "source_model_from": "exporter",
      "hf_repo": "mlboydaisuke/GLM-4.7-Flash-CoreAI",
      "bundle": "gpu-pipelined/glm_4_7_flash_decode_sym8_gather",
      "steps": 1,
@@ -516,6 +550,8 @@
     {
      "name": "glm-image",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/GLM-Image-CoreAI",
      "bundle": null,
      "steps": 5,
@@ -548,6 +584,8 @@
     {
      "name": "glm-ocr",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/GLM-OCR-CoreAI",
      "bundle": "decoder",
      "steps": 1,
@@ -578,6 +616,8 @@
     {
      "name": "granite-4.0-h-1b",
      "status": "verified",
+     "source_model": "ibm-granite/granite-4.0-h-1b",
+     "source_model_from": "exporter",
      "hf_repo": "mlboydaisuke/granite-4.0-h-CoreAI",
      "bundle": "gpu-pipelined/granite_4_0_h_1b_decode_int8lin",
      "steps": 1,
@@ -588,6 +628,8 @@
     {
      "name": "granite-4.0-h-350m",
      "status": "verified",
+     "source_model": "ibm-granite/granite-4.0-h-350m",
+     "source_model_from": "recipe",
      "hf_repo": "mlboydaisuke/granite-4.0-h-CoreAI",
      "bundle": "gpu-pipelined/granite_4_0_h_350m_decode_fp16",
      "steps": 1,
@@ -619,6 +661,8 @@
     {
      "name": "holo2-4b",
      "status": "verified",
+     "source_model": "Hcompany/Holo2-4B",
+     "source_model_from": "recipe",
      "hf_repo": "mlboydaisuke/Holo2-4B-CoreAI",
      "bundle": "gpu-pipelined/holo2_4b_decode_int8lin_s1",
      "steps": 1,
@@ -649,6 +693,8 @@
     {
      "name": "kokoro-82m",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/Kokoro-82M-CoreAI",
      "bundle": "kokoro_predictor.aimodel",
      "steps": 1,
@@ -679,6 +725,8 @@
     {
      "name": "lfm2.5-1.2b",
      "status": "verified",
+     "source_model": "LiquidAI/LFM2.5-1.2B-Instruct",
+     "source_model_from": "exporter",
      "hf_repo": "mlboydaisuke/LFM2.5-1.2B-CoreAI",
      "bundle": "gpu-pipelined/lfm2_5_1_2b_instruct_decode_int8hu_block32_sym",
      "steps": 1,
@@ -709,6 +757,8 @@
     {
      "name": "lfm2.5-8b-a1b",
      "status": "verified",
+     "source_model": "LiquidAI/LFM2.5-8B-A1B",
+     "source_model_from": "exporter",
      "hf_repo": "mlboydaisuke/LFM2.5-8B-A1B-CoreAI",
      "bundle": "gpu-pipelined/lfm2_5_8b_a1b_decode_sym8_gather",
      "steps": 1,
@@ -737,6 +787,8 @@
     {
      "name": "llada-8b-dllm",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/LLaDA-8B-dLLM-CoreAI",
      "bundle": "macos",
      "steps": 1,
@@ -765,6 +817,8 @@
     {
      "name": "ltx-video-2b",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/LTX-Video-2B-CoreAI",
      "bundle": null,
      "steps": 3,
@@ -795,6 +849,8 @@
     {
      "name": "melband-roformer-vocal",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/MelBandRoformer-Vocal-CoreAI",
      "bundle": "mbr_full_fp16.aimodel",
      "steps": 1,
@@ -824,6 +880,8 @@
     {
      "name": "mineru-2.5-pro",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/MinerU2.5-Pro-CoreAI",
      "bundle": "decoder",
      "steps": 1,
@@ -856,6 +914,8 @@
     {
      "name": "minicpm-v-4.6",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/MiniCPM-V-4.6-CoreAI",
      "bundle": null,
      "steps": 2,
@@ -888,6 +948,8 @@
     {
      "name": "minicpm5-1b",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/MiniCPM5-1B-CoreAI",
      "bundle": "int8",
      "steps": 1,
@@ -916,6 +978,8 @@
     {
      "name": "nanbeige4.1-3b",
      "status": "verified",
+     "source_model": "Nanbeige/Nanbeige4.1-3B",
+     "source_model_from": "exporter",
      "hf_repo": "mlboydaisuke/Nanbeige4.1-3B-CoreAI",
      "bundle": "gpu-pipelined/nanbeige4_1_3b_decode_int8hu_block32_sym_s1",
      "steps": 1,
@@ -945,6 +1009,8 @@
     {
      "name": "nanbeige4.2-3b",
      "status": "verified",
+     "source_model": "Nanbeige/Nanbeige4.2-3B",
+     "source_model_from": "recipe",
      "hf_repo": "ukint-vs/Nanbeige4.2-3B-CoreAI",
      "bundle": "gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1",
      "steps": 1,
@@ -973,6 +1039,8 @@
     {
      "name": "nemotron-3-nano-4b",
      "status": "verified",
+     "source_model": "nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16",
+     "source_model_from": "exporter",
      "hf_repo": "mlboydaisuke/Nemotron-3-Nano-4B-CoreAI",
      "bundle": "gpu-pipelined/nemotron_3_nano_4b_decode_int8hu",
      "steps": 1,
@@ -1002,6 +1070,8 @@
     {
      "name": "nemotron-3.5-asr-streaming",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI",
      "bundle": null,
      "steps": 2,
@@ -1041,6 +1111,8 @@
     {
      "name": "ornith-1.0-9b",
      "status": "verified",
+     "source_model": "deepreinforce-ai/Ornith-1.0-9B",
+     "source_model_from": "recipe",
      "hf_repo": "mlboydaisuke/Ornith-1.0-9B-CoreAI",
      "bundle": "gpu-pipelined/ornith_1_0_9b_decode_int8hu_block32_sym",
      "steps": 1,
@@ -1070,6 +1142,8 @@
     {
      "name": "parakeet-tdt-0.6b",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/Parakeet-TDT-0.6B-CoreAI",
      "bundle": null,
      "steps": 2,
@@ -1100,6 +1174,8 @@
     {
      "name": "qwen2.5-omni-3b-audio",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI",
      "bundle": null,
      "steps": 2,
@@ -1130,6 +1206,8 @@
     {
      "name": "qwen3-asr-1.7b",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/Qwen3-ASR-1.7B-CoreAI",
      "bundle": null,
      "steps": 2,
@@ -1159,6 +1237,8 @@
     {
      "name": "qwen3-embedding-0.6b",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/Qwen3-Embedding-0.6B-CoreAI",
      "bundle": "qwen3-embedding-0.6b_float16_s512_static.aimodel",
      "steps": 1,
@@ -1169,6 +1249,8 @@
     {
      "name": "embeddinggemma-300m",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/embeddinggemma-300m-CoreAI",
      "bundle": "model/embeddinggemma-300m_float32_static.aimodel",
      "steps": 1,
@@ -1207,6 +1289,8 @@
     {
      "name": "qwen3-reranker-0.6b",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI",
      "bundle": "qwen3-reranker-0.6b_float16_s512_static.aimodel",
      "steps": 1,
@@ -1235,6 +1319,8 @@
     {
      "name": "qwen3-vl-2b",
      "status": "verified",
+     "source_model": "Qwen/Qwen3-VL-2B-Instruct",
+     "source_model_from": "exporter",
      "hf_repo": "mlboydaisuke/Qwen3-VL-2B-CoreAI",
      "bundle": "gpu-pipelined/qwen3_vl_2b_instruct_decode_int8hu_s1",
      "steps": 1,
@@ -1245,6 +1331,8 @@
     {
      "name": "qwen3-vl-4b",
      "status": "verified",
+     "source_model": "Qwen/Qwen3-VL-4B-Instruct",
+     "source_model_from": "recipe",
      "hf_repo": "mlboydaisuke/Qwen3-VL-4B-CoreAI",
      "bundle": "gpu-pipelined/qwen3_vl_4b_instruct_decode_int8hu_s1",
      "steps": 1,
@@ -1255,6 +1343,8 @@
     {
      "name": "qwen3-vl-8b",
      "status": "verified",
+     "source_model": "Qwen/Qwen3-VL-8B-Instruct",
+     "source_model_from": "recipe",
      "hf_repo": "mlboydaisuke/Qwen3-VL-8B-CoreAI",
      "bundle": "gpu-pipelined/qwen3_vl_8b_instruct_decode_int8hu_s1",
      "steps": 1,
@@ -1312,6 +1402,8 @@
     {
      "name": "qwen3.5-0.8b",
      "status": "verified",
+     "source_model": "Qwen/Qwen3.5-0.8B",
+     "source_model_from": "exporter",
      "hf_repo": "mlboydaisuke/qwen3.5-0.8B-CoreAI",
      "bundle": "gpu-pipelined/qwen3_5_0_8b_decode_int8hu_block32_sym",
      "steps": 1,
@@ -1322,6 +1414,8 @@
     {
      "name": "qwen3.5-2b",
      "status": "verified",
+     "source_model": "Qwen/Qwen3.5-2B",
+     "source_model_from": "recipe",
      "hf_repo": "mlboydaisuke/qwen3.5-2B-CoreAI",
      "bundle": "gpu-pipelined/qwen3_5_2b_decode_int8hu_block32_sym",
      "steps": 1,
@@ -1372,6 +1466,8 @@
     {
      "name": "qwen3.5-4b",
      "status": "verified",
+     "source_model": "Qwen/Qwen3.5-4B",
+     "source_model_from": "recipe",
      "hf_repo": "mlboydaisuke/qwen3.5-4B-CoreAI",
      "bundle": "gpu-pipelined-b2/qwen3_5_4b_decode_int8hu_block32_sym",
      "steps": 1,
@@ -1400,6 +1496,8 @@
     {
      "name": "qwen3.6-35b-a3b",
      "status": "verified",
+     "source_model": "Qwen/Qwen3.6-35B-A3B",
+     "source_model_from": "exporter",
      "hf_repo": "mlboydaisuke/Qwen3.6-35B-A3B-CoreAI",
      "bundle": "gpu-pipelined/qwen3_6_35b_a3b_decode_sym8_gather",
      "steps": 1,
@@ -1428,6 +1526,8 @@
     {
      "name": "qwen3.6-27b",
      "status": "verified",
+     "source_model": "Qwen/Qwen3.6-27B",
+     "source_model_from": "recipe",
      "hf_repo": "mlboydaisuke/Qwen3.6-27B-CoreAI",
      "bundle": "gpu-pipelined/qwen3_6_27b_decode_int8hu_block32_sym",
      "steps": 1,
@@ -1456,6 +1556,8 @@
     {
      "name": "rf-detr",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/RF-DETR-CoreAI",
      "bundle": "rfdetr-medium_float32.aimodel",
      "steps": 1,
@@ -1498,6 +1600,8 @@
     {
      "name": "rwkv7-goose-1.5b",
      "status": "verified",
+     "source_model": "RWKV/RWKV7-Goose-World3-1.5B-HF",
+     "source_model_from": "exporter",
      "hf_repo": "mlboydaisuke/RWKV7-Goose-1.5B-CoreAI",
      "bundle": "aimodel/rwkv7_goose_1_5b/rwkv7_goose_1_5b.aimodel",
      "steps": 1,
@@ -1527,6 +1631,8 @@
     {
      "name": "sortformer-diar",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/Streaming-Sortformer-Diar-CoreAI",
      "bundle": "sortformer_float16.aimodel",
      "steps": 1,
@@ -1556,6 +1662,8 @@
     {
      "name": "stable-audio-open-small",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/Stable-Audio-Open-Small-CoreAI",
      "bundle": "macos",
      "steps": 1,
@@ -1584,6 +1692,8 @@
     {
      "name": "timesfm-2.5-200m",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/TimesFM-2.5-200M-CoreAI",
      "bundle": "timesfm_2p5_200m_ctx2048_fp16.aimodel",
      "steps": 1,
@@ -1613,6 +1723,8 @@
     {
      "name": "triposplat",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/TripoSplat-CoreAI",
      "bundle": null,
      "steps": 6,
@@ -1646,6 +1758,8 @@
     {
      "name": "unlimited-ocr",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/Unlimited-OCR-CoreAI",
      "bundle": null,
      "steps": 2,
@@ -1675,6 +1789,8 @@
     {
      "name": "vibevoice-realtime-0.5b",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/VibeVoice-Realtime-0.5B-CoreAI",
      "bundle": null,
      "steps": 3,
@@ -1712,6 +1828,8 @@
     {
      "name": "vjepa2-vitl-ssv2",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/VJEPA2-ViTL-SSv2-CoreAI",
      "bundle": "macos",
      "steps": 1,
@@ -1742,6 +1860,8 @@
     {
      "name": "voxcpm-0.5b",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/VoxCPM-0.5B-CoreAI",
      "bundle": null,
      "steps": 7,
@@ -1783,6 +1903,8 @@
     {
      "name": "voxcpm2-2b",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/VoxCPM2-CoreAI",
      "bundle": null,
      "steps": 5,
@@ -1824,6 +1946,8 @@
     {
      "name": "whisper-large-v3-turbo",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/whisper-large-v3-turbo-CoreAI-official",
      "bundle": "whisper-large-v3-turbo_float16_fixed128.aimodel",
      "steps": 1,
@@ -1852,6 +1976,8 @@
     {
      "name": "yolox-s",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/YOLOX-CoreAI",
      "bundle": "yolox-s_float32.aimodel",
      "steps": 1,
@@ -1880,6 +2006,8 @@
     {
      "name": "youtu-llm-2b",
      "status": "verified",
+     "source_model": "tencent/Youtu-LLM-2B",
+     "source_model_from": "recipe",
      "hf_repo": "mlboydaisuke/Youtu-LLM-2B-CoreAI",
      "bundle": "gpu-pipelined/youtu_llm_2b_decode_absorbed_int8_msdpa",
      "steps": 1,
@@ -1910,6 +2038,8 @@
     {
      "name": "z-image-turbo",
      "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
      "hf_repo": "mlboydaisuke/Z-Image-Turbo-CoreAI",
      "bundle": null,
      "steps": 4,

@@ -31,6 +31,7 @@ REPO = Path(__file__).resolve().parents[1]
 MODELS = REPO / "models"
 sys.path.insert(0, str(REPO / "conversion"))
 from _hf_catalog import Catalog, bundles_of, repo_format  # noqa: E402
+from _recipe import source_model  # noqa: E402
 
 AUTHORS = ["mlboydaisuke"]
 # Ports published under a contributor's own account (zoo PR #6 and successors) — the
@@ -332,9 +333,15 @@ def render_index(rows: list[dict]) -> dict:
         # original *and the evidence is readable* — a distinction a reader deciding whether
         # to depend on a model has to be able to make without reading prose.
         transcript = Path(f"models/{r['family']}/gate-{name}.json")
+        # What this was converted from. Resolved, never copied into recipe.toml: most
+        # recipes name no checkpoint because they use their exporter's default, and a
+        # duplicated default is a second source of truth that drifts.
+        checkpoint, checkpoint_from = source_model(r)
         entry["recipes"].append({
             "name": name,
             "status": r.get("status", "unknown"),
+            "source_model": checkpoint,
+            "source_model_from": checkpoint_from,
             "hf_repo": r.get("hf_repo"),
             "bundle": r.get("bundle"),
             "steps": len(r.get("steps", [])) or 1,

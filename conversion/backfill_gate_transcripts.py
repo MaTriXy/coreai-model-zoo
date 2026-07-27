@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import re
 import subprocess
 import sys
 import tomllib
@@ -31,16 +30,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _paths import exports_dir, gpu_lock, repo_root  # noqa: E402
+from _recipe import revision, source_model  # noqa: E402
 
 import coreai_gate  # noqa: E402
 
-
-def flag_value(args: list[str], name: str) -> str | None:
-    """Read `--name value` out of a recipe's argv."""
-    return args[args.index(name) + 1] if name in args and args.index(name) + 1 < len(args) else None
-
-
-_HF_DEFAULT = re.compile(r'add_argument\(\s*"--hf-id"\s*,\s*default\s*=\s*"([^"]+)"')
 
 # CoreAIKit's on-disk cache: <root>/<hf-owner>/<hf-repo>/<revision>/<bundle path>. Gating here
 # is strictly better than gating a local export — it is the artifact apps actually download, at
@@ -62,22 +55,6 @@ def locate_bundle(hf_repo: str | None, bundle: str) -> tuple[Path | None, str]:
     return (local, "local export") if local.is_dir() else (None, "")
 
 
-def script_default_hf_id(script: str) -> str | None:
-    """The source model an export script uses when the recipe doesn't override it.
-
-    Recipes only carry `--hf-id` when they deviate from the exporter's default, so most of
-    them name no source model at all — the default in the script is the real answer. Read it
-    out of the argparse declaration rather than importing the module, which would drag in
-    torch just to answer a question about a string.
-    """
-    # `script` may name a subdirectory (e.g. "dllm/export_llada.py").
-    path = Path(__file__).resolve().parent / script if script else None
-    if path is None or not path.is_file():
-        return None
-    m = _HF_DEFAULT.search(path.read_text())
-    return m.group(1) if m else None
-
-
 def plan_model(model_dir: Path) -> list[dict]:
     """One entry per published bundle in this model's recipe."""
     recipe_path = model_dir / "recipe.toml"
@@ -89,8 +66,7 @@ def plan_model(model_dir: Path) -> list[dict]:
     for name, step in recipe.items():
         if not isinstance(step, dict) or "bundle" not in step:
             continue
-        args = [str(a) for a in step.get("args", [])]
-        hf_id = flag_value(args, "--hf-id") or script_default_hf_id(step.get("script", ""))
+        hf_id, hf_id_from = source_model(step)
         if not hf_id:
             out.append({"model": name, "skip": "no source model in the recipe or its exporter"})
             continue
@@ -107,7 +83,8 @@ def plan_model(model_dir: Path) -> list[dict]:
             "dir": model_dir.name,
             "arch": arch,
             "hf_id": hf_id,
-            "revision": flag_value(args, "--revision"),
+            "hf_id_from": hf_id_from,
+            "revision": revision(step),
             "bundle": str(bundle),
             "provenance": provenance,
             "status": step.get("status"),
