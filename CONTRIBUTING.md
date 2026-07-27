@@ -18,7 +18,8 @@ Any model, any modality, if it clears three bars:
    [`knowledge/evaluations-framework.md`](knowledge/evaluations-framework.md).
 3. **Real hardware** — measured on an Apple silicon Mac at minimum (tok/s for LLMs, RTF for
    audio); iPhone numbers if you publish an iOS variant. Debug builds don't count — measure
-   Release.
+   Release. No iOS 27 device? That is the one step you can hand back — see
+   [Device gate](#device-gate-the-step-you-dont-have-to-own) below.
 
 ## Toolchain requirement
 
@@ -47,6 +48,20 @@ zoo's own pre-b2 artifacts are being migrated for the same reason.
    [coreai-kit](https://github.com/john-rocky/coreai-kit) catalog with its revision pin (plus
    engine/runtime glue if it's a new capability kind), and the card gets its generated
    "Use it" block.
+
+## Device gate — the step you don't have to own
+
+Everything in a port is reproducible on any Apple silicon Mac except one thing: what the model
+does on a phone. AOT load, thermals, sustained tok/s under DVFS, the memory ceiling — those need
+an iOS 27 device, and the first community port hit exactly that wall ("device acceptance remains
+pending on matching iOS 27 hardware", in the contributor's own recipe).
+
+So don't buy hardware to finish a port. Clear the Mac-side gates, then open a
+[device gate request](../../issues/new?template=device-gate-request.yml) with your HF repo,
+revision, and headless entrypoint. A maintainer runs it on an **iPhone 17 Pro (iOS 27 beta)**,
+and posts back load time, cold + settled runs, parity against your Mac reference, and any
+thermal behavior — for your card, under your name. Best-effort and queued; a gate can also come
+back no-go, which is still a result worth publishing.
 
 ## Also welcome without a full port
 

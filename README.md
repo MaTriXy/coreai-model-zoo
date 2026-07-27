@@ -225,6 +225,9 @@ kernel — the stock MPSGraph SDPA crashes on the ≥16-head × 512 Q (a GPU scr
 
 ## Start here
 
+- **You're a coding agent** (or you're pointing one here) → [**`AGENTS.md`**](AGENTS.md) — the
+  porting contract in one file: why conversion isn't conversion, the two gates, the traps agents
+  hit, and what isn't an agent's call. No install needed.
 - **Try the app** (iOS 27 / macOS 27 beta; the model downloads in-app):
   - **Demo app, no build** → Mac: [**.dmg**](https://github.com/john-rocky/coreai-model-zoo/releases/download/mac-v1.0/CoreAI-Zoo-for-Mac.dmg) (notarized, runs the Mac-only bundles) · iPhone: [**CoreAIChat on TestFlight**](https://testflight.apple.com/join/bK4P7xby)
   - **Build it** → [`apps/`](apps/) — Xcode 27 beta + xcodegen, the `coreai-models` patch stack + `tokenizer.json`
@@ -258,7 +261,8 @@ kernel — the stock MPSGraph SDPA crashes on the ≥16-head × 512 Q (a GPU scr
 
 This repo ships a plugin so a coding agent can use the zoo without being told how: pick a model
 from the catalog, reproduce its published bundle with the recorded recipe, and verify the
-result against the model it came from.
+result against the model it came from. With no plugin mechanism at all, point the agent at
+[`AGENTS.md`](AGENTS.md) — the same contract, zero install.
 
 | Skill | Description |
 | --- | --- |

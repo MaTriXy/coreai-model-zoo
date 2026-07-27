@@ -1,0 +1,113 @@
+name: Device gate request
+description: Ask a maintainer to run your Core AI bundle on real hardware and publish the numbers
+title: "[device-gate] "
+labels: ["device-gate"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Ported a model but have no iOS 27 device?** That is the one step of a zoo port you
+        cannot do alone, and it is the step the zoo exists to provide. Open this issue and a
+        maintainer runs your bundle on real hardware, then posts the gate report — parity count
+        and settled throughput — back into this thread for your card.
+
+        Available hardware: **iPhone 17 Pro (iOS 27 beta)** and an **M4 Max Mac (macOS 27 beta)**.
+        Runs are best-effort and queued behind the maintainer's own ports; expect days, not hours.
+        A gate can come back **no-go** — that is a result, and it belongs on the card too.
+
+        Everything up to this point is self-service: [`PORTING.md`](../blob/main/PORTING.md) is
+        the runbook, `python3 conversion/coreai_gate.py` runs the fp32-oracle parity gate on your
+        own Mac, and `python3 conversion/zoo_verify.py <hf-repo>` checks the published bundle.
+        Please clear those first — the device is for questions only the device can answer
+        (AOT load, thermals, sustained tok/s, memory ceiling).
+  - type: input
+    id: hf_repo
+    attributes:
+      label: Hugging Face repo + revision
+      description: Where the bundle lives, and the exact commit to gate. Your own namespace is fine and encouraged.
+      placeholder: "ukint-vs/Nanbeige4.2-3B-CoreAI @ 5864ec7a5581940958e58354a6b6c46c8f06891e"
+    validations:
+      required: true
+  - type: input
+    id: bundle
+    attributes:
+      label: Bundle path inside the repo
+      description: The directory to load — and the AOT variant name if you shipped one.
+      placeholder: "gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1"
+    validations:
+      required: true
+  - type: input
+    id: pr
+    attributes:
+      label: PR or recipe
+      description: Link the open PR, or the recipe.toml if the port is already merged. A port with no recipe cannot be re-run, so it cannot be gated.
+      placeholder: "#6"
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Capability kind
+      description: Determines which metric the report carries.
+      options:
+        - Chat / LLM — prefill + decode tok/s
+        - ASR — RTF
+        - TTS / audio generation — RTF
+        - Vision / VLM — TTFT + ms/frame
+        - Image or video generation — s/image
+        - Embedding / reranking / NER — ms/query
+        - Other (say so below)
+    validations:
+      required: true
+  - type: input
+    id: footprint
+    attributes:
+      label: Bundle size and peak RSS on Mac
+      description: An iPhone gate is pointless if the model cannot fit. Give the on-disk size and the peak resident memory you measured.
+      placeholder: "4.59 GiB bundle, 9.17 GiB peak RSS at 4096 ctx"
+    validations:
+      required: true
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: What you already cleared
+      description: Unchecked boxes are fine — say why below. A request with none of these checked will be sent back rather than run.
+      options:
+        - label: "fp32 / oracle parity gate passes (token-exact for LLMs, cos ≥ 0.999 otherwise)"
+        - label: "The bundle runs on a Mac under Core AI with the numbers I list in the card"
+        - label: "`zoo_verify.py <hf-repo>` reports no FAIL"
+        - label: "AOT compile succeeds for iPhone (`xcrun coreai-build compile … --architecture h18p`)"
+        - label: "Exported with coreai-core ≥ 1.0.0b2"
+        - label: "The upstream license permits redistributing converted weights"
+  - type: textarea
+    id: entrypoint
+    attributes:
+      label: How to run it headless
+      description: |
+        Numbers measured through a chat UI are not comparable to anything, so the gate runs a
+        self-test entrypoint. Give the exact invocation — env var, CLI flags, expected output
+        file — or say "use the standard pipelined runner" if it needs nothing special.
+      placeholder: |
+        Standard pipelined runner, plus COREAI_CHUNK_THRESHOLD=1.
+        Two passes over 22 shared physical layers; expect 44 logical KV cache layers.
+    validations:
+      required: true
+  - type: textarea
+    id: watch
+    attributes:
+      label: What to watch for
+      description: |
+        Anything you expect to be fragile on device — a long single GPU batch (iOS kills those
+        past a few minutes, so the run gets chunked), a custom Metal kernel, unusual context
+        lengths, a first-of-its-kind architecture. Also list the exact prompts or inputs the
+        gate should use if parity matters more than speed.
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        The maintainer posts back: OS and device build, load time, cold + settled runs, parity
+        count against your Mac reference, and any thermal behavior. Those numbers go on your card
+        with your name on it, and the model gets enrolled in the
+        [CoreAIKit](https://github.com/john-rocky/coreai-kit) catalog with its revision pin.
