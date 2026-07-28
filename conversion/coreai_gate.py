@@ -275,8 +275,13 @@ def run_oracle(
     env = {**os.environ,
            "HF_HUB_DISABLE_XET": os.environ.get("HF_HUB_DISABLE_XET", "1"),
            "HF_HUB_ENABLE_HF_TRANSFER": os.environ.get("HF_HUB_ENABLE_HF_TRANSFER", "0")}
-    r = subprocess.run([python, script, arch, hf_id, prompt, str(n), dtype, revision or ""],
-                       capture_output=True, text=True, cwd=tempfile.gettempdir(), env=env)
+    try:
+        r = subprocess.run([python, script, arch, hf_id, prompt, str(n), dtype, revision or ""],
+                           capture_output=True, text=True, cwd=tempfile.gettempdir(), env=env)
+    finally:
+        # `delete=False` is required so the child can read it; removing it here keeps a gate
+        # run from leaving a file behind every time.
+        Path(script).unlink(missing_ok=True)
     line = next((line for line in r.stdout.splitlines() if line.startswith("{")), None)
     if not line:
         sys.exit("ORACLE FAILED:\n" + r.stdout[-1000:] + r.stderr[-1000:])
