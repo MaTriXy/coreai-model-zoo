@@ -263,7 +263,14 @@ kernel — the stock MPSGraph SDPA crashes on the ≥16-head × 512 Q (a GPU scr
 
 - **You're a coding agent** (or you're pointing one here) → [**`AGENTS.md`**](AGENTS.md) — the
   porting contract in one file: why conversion isn't conversion, the two gates, the traps agents
-  hit, and what isn't an agent's call. No install needed.
+  hit, and what isn't an agent's call. No install needed. One fetch for everything here:
+  [**`llms.txt`**](https://john-rocky.github.io/coreai-model-zoo/llms.txt).
+- **Looking something up about the runtime itself** →
+  [**john-rocky.github.io/coreai-model-zoo**](https://john-rocky.github.io/coreai-model-zoo/) —
+  the knowledge base as a page per topic. Worth knowing why it exists: Apple's own Core AI
+  documentation is a JavaScript application, and fetching it returns a body whose entire text is
+  "This page requires JavaScript." These pages are plain HTML, so a reader without JS, a search
+  crawler, and a coding agent all get the same words.
 - **Surveying the whole Core AI ecosystem**, not just this catalog →
   [**awesome-core-ai**](https://github.com/john-rocky/awesome-core-ai) — Apple's own tooling,
   other people's converters and runtimes, sample apps, benchmarks, and learning material.

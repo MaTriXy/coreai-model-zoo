@@ -24,7 +24,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 KNOWLEDGE = REPO / "knowledge" / "README.md"
 OUT = REPO / "llms.txt"
-RAW = "https://raw.githubusercontent.com/john-rocky/coreai-model-zoo/main"
+SITE = "https://john-rocky.github.io/coreai-model-zoo"
+REPO_URL = "https://github.com/john-rocky/coreai-model-zoo"
 
 # `- [`file.md`](file.md) — description, possibly wrapped over the following indented lines.`
 ENTRY = re.compile(r"^- \[`([^`]+)`\]\(([^)]+)\)\s*[—-]\s*(.*)$")
@@ -41,26 +42,28 @@ PREAMBLE = f"""\
 
 ## Start here
 
-- [AGENTS.md]({RAW}/AGENTS.md): the porting contract in one file — why conversion is not format
+- [AGENTS.md]({SITE}/AGENTS.html): the porting contract in one file — why conversion is not format
   conversion, the two gates every port gets, the traps agents specifically hit, and which
   actions stay a human's call.
-- [README.md]({RAW}/README.md): the catalog itself — every model, its card, its Hugging Face
+- [README.md]({SITE}/): the catalog itself — every model, its card, its Hugging Face
   repo, and the one-line Swift call that runs it.
-- [models/index.json]({RAW}/models/index.json): the same catalog machine-readable. Per recipe:
+- [models/index.json]({SITE}/models/index.json): the same catalog machine-readable. Per recipe:
   `status` (is the configuration recorded), `source_model` (what it was converted from), and
   `gate_transcript` (is the numerical check against the original published, and where).
-- [PORTING.md]({RAW}/PORTING.md): the full walk from a Hugging Face checkpoint to a verified
+- [PORTING.md]({SITE}/PORTING.html): the full walk from a Hugging Face checkpoint to a verified
   bundle on an iPhone, with two worked examples.
-- [SECURITY.md]({RAW}/SECURITY.md): what the integrity story is, including the parts that are
+- [SECURITY.md]({SITE}/SECURITY.html): what the integrity story is, including the parts that are
   absent — pinned revisions rather than signatures, and no checksum manifest.
+- [Source repository]({REPO_URL}): the conversion scripts, the gates, and the recipes behind
+  every page here. The site renders the same files; nothing is written for it separately.
 """
 
 FOOTER = f"""
 ## Optional
 
-- [CONTRIBUTING.md]({RAW}/CONTRIBUTING.md): what an accepted port must clear, and the device
+- [CONTRIBUTING.md]({SITE}/CONTRIBUTING.html): what an accepted port must clear, and the device
   gate — the one step a contributor without an iOS 27 device can hand back.
-- [BENCHMARKS.md]({RAW}/BENCHMARKS.md): community-submitted device measurements, explicitly not
+- [BENCHMARKS.md]({SITE}/BENCHMARKS.html): community-submitted device measurements, explicitly not
   a controlled-environment benchmark.
 """
 
@@ -109,7 +112,8 @@ def render() -> str:
         for name, url, desc in entries:
             # Strip the emphasis markers that read as noise once flattened to one line.
             clean = re.sub(r"\*\*|`", "", desc)
-            out.append(f"- [{name}]({RAW}/knowledge/{url}): {clean}")
+            page = url.removesuffix(".md") + ".html"
+            out.append(f"- [{name}]({SITE}/knowledge/{page}): {clean}")
         out.append("")
     out.append(FOOTER)
     return "\n".join(out).replace("\n\n\n", "\n\n")
