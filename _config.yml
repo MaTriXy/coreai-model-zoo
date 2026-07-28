@@ -1,0 +1,62 @@
+# GitHub Pages configuration.
+#
+# The point of this site is narrow and worth stating: Apple's own Core AI documentation is a
+# JavaScript application. Fetching developer.apple.com/documentation/coreai returns a body
+# whose entire text is "This page requires JavaScript." So for anything — a person reading
+# without JS, a search crawler, a coding agent answering a question — there is no fetchable
+# authoritative reference for this runtime. The notes in knowledge/ are written to be one, and
+# a page per topic is what makes them citable.
+#
+# Served from the repository root rather than a docs/ copy, so a note has exactly one source of
+# truth and the site cannot drift from what contributors read on GitHub.
+
+title: Core AI model zoo
+description: >-
+  Converted models, conversion recipes, and verified notes on Apple's Core AI runtime
+  (.aimodel, iOS/macOS 27) — what the official documentation does not spell out.
+url: https://john-rocky.github.io
+baseurl: /coreai-model-zoo
+
+theme: jekyll-theme-primer
+
+plugins:
+  # Renders markdown that carries no YAML front matter. The notes are written to be read on
+  # GitHub first; requiring front matter would put a header on every file for the site's sake.
+  - jekyll-optional-front-matter
+  # Rewrites [x](y.md) to the published .html, so the notes' cross-links work on the site
+  # without changing how they resolve in the repository.
+  - jekyll-relative-links
+  # Page title from the first H1 — what a search result and a citation show.
+  - jekyll-titles-from-headings
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  # README.md becomes the site index.
+  - jekyll-readme-index
+
+relative_links:
+  enabled: true
+  collections: false
+
+optional_front_matter:
+  remove_originals: true
+
+# Everything that is code, tooling, or internal planning. What remains is the catalog cards,
+# the knowledge base, and the documents a reader or an agent is pointed at.
+exclude:
+  - apps/
+  - conversion/
+  - coreai-models/
+  - official/
+  - scripts/
+  - skills/
+  - swift/
+  - _smoke/
+  - .github/
+  # Redirect stubs left by the card move — 57 pages that say "this moved", which is thin
+  # duplicate content and nothing a reader should land on from a search.
+  - zoo/
+  - CATALOG_PLAN.md
+  - CLAUDE.md
+  - LICENSE
+  - Gemfile
+  - Gemfile.lock
