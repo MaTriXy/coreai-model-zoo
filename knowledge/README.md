@@ -12,6 +12,10 @@ For the long-form version of the same material, read
 [The Art of Core AI](https://john-rocky.github.io/the-art-of-core-ai/) — a free book.
 
 ## Orientation
+- [`undocumented-answers.md`](undocumented-answers.md) — **the questions Apple's docs leave open**,
+  with measured answers: the AOT threshold, the iOS-only dynamic-KV miscompile at seq ≥2048, whether
+  a 4B fits on the ANE, what the chunk threshold really dials, and why a hand-written kernel forces
+  a single-token export.
 - [`coreai-overview.md`](coreai-overview.md) — what Core AI is, the 3 Apple repos, the `.aimodel`
   format, the PyTorch → `.aimodel` → Swift-runtime pipeline.
 - [`conversion-guide.md`](conversion-guide.md) — converting a PyTorch model to `.aimodel`: the

@@ -28,6 +28,7 @@
 
 ## Orientation
 
+- [undocumented-answers.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/undocumented-answers.html): the questions Apple's docs leave open, with measured answers: the AOT threshold, the iOS-only dynamic-KV miscompile at seq ≥2048, whether a 4B fits on the ANE, what the chunk threshold really dials, and why a hand-written kernel forces a single-token export
 - [coreai-overview.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/coreai-overview.html): what Core AI is, the 3 Apple repos, the .aimodel format, the PyTorch → .aimodel → Swift-runtime pipeline
 - [conversion-guide.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/conversion-guide.html): converting a PyTorch model to .aimodel: the canonical TorchConverter API + the gotchas that cost real time
 - [ship-playbook.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/ship-playbook.html): the end-to-end runbook: converted .aimodel → CoreAIKit Swift engine → app → on-device (AOT + sideload + headless self-test for RTF) → publish (HF + zoo + post). The stage checklist + cross-cutting traps (gate-before-port, JIT→AOT, tokenizer retag), validated shipping Parakeet in one session
