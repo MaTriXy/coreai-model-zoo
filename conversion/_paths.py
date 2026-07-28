@@ -162,6 +162,26 @@ def hf_snapshot(repo_id: str, pattern: str | None = None, revision: str | None =
     return hits[0]
 
 
+def _prefer_plain_http_transfers() -> None:
+    """Make Hugging Face downloads take the plain-HTTP path, unless the caller says otherwise.
+
+    The Xet transfer backend stalls on large shards: the process sits at 0% CPU with a
+    `.incomplete` blob and never returns, which is indistinguishable from a slow download until
+    you check that the cache has not grown in ten minutes. `hf_transfer` has its own failure
+    mode — no reliable mid-file resume — so classic HTTP is what actually finishes.
+
+    Set here rather than at each call site because every export script in this directory
+    downloads a checkpoint, and remembering an environment variable per invocation is how this
+    keeps recurring. An explicit value in the environment always wins, so a caller who wants
+    Xet can still have it.
+    """
+    os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
+    os.environ.setdefault("HF_HUB_ENABLE_HF_TRANSFER", "0")
+
+
+_prefer_plain_http_transfers()
+
+
 if __name__ == "__main__":  # `python3 _paths.py` prints the resolved layout
     for fn in (repo_root, work_root, code_root, exports_dir, smoke_dir, gpu_lock, hf_cache):
         print(f"{fn.__name__:<12} {fn()}")

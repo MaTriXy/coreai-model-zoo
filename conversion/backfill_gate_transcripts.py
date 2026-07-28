@@ -99,6 +99,8 @@ def command_for(job: dict) -> list[str]:
     cmd = [sys.executable, str(Path(__file__).with_name("coreai_gate.py")),
            job["bundle"], job["hf_id"], "--arch", job["arch"],
            "--transcript", job["out"]]
+    if job.get("provenance", "").startswith("published "):
+        cmd += ["--artifact", job["provenance"].removeprefix("published ")]
     if job.get("revision"):
         cmd += ["--revision", job["revision"]]
     return cmd

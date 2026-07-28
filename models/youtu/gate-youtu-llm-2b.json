@@ -1,0 +1,87 @@
+{
+  "result": "PASS",
+  "arch": "youtu",
+  "bundle": "youtu_llm_2b_decode_absorbed_int8_msdpa",
+  "artifact": "mlboydaisuke/Youtu-LLM-2B-CoreAI@74351b0c55fa",
+  "source_model": {
+    "hf_id": "tencent/Youtu-LLM-2B",
+    "revision": null
+  },
+  "protocol": {
+    "prompt": "The capital of France is",
+    "max_new_tokens": 16,
+    "greedy": true,
+    "oracle_dtype": "fp32",
+    "engine_variant": "coreai-pipelined",
+    "warmup": "off",
+    "env": {
+      "COREAI_CHUNK_THRESHOLD": "1"
+    },
+    "tie_rule": "a first divergence passes only where the oracle's top-2 margin < 0.1"
+  },
+  "input_ids": [
+    837,
+    6849,
+    324,
+    7664,
+    371
+  ],
+  "oracle": {
+    "gen_ids": [
+      9495,
+      13,
+      37317,
+      11,
+      716,
+      290,
+      1483,
+      371,
+      8824,
+      913,
+      290,
+      6849,
+      324,
+      7664,
+      13,
+      2524
+    ],
+    "gen_text": " Paris.Okay, so the user is talking about the capital of France. They",
+    "top2_margins": [
+      0.7316742539405823,
+      0.14934292435646057,
+      0.005473470315337181,
+      0.9010910391807556,
+      0.05366133153438568,
+      0.05990537256002426,
+      0.227248877286911,
+      0.17987194657325745,
+      0.13912783563137054,
+      0.9934727549552917,
+      0.7495777010917664,
+      0.9660596251487732,
+      0.6639164686203003,
+      0.9355877637863159,
+      0.11277908086776733,
+      0.1741776466369629
+    ]
+  },
+  "engine": {
+    "gen_text": " Paris.Okay, so the user is talking about the capital of France. They"
+  },
+  "match": {
+    "exact_prefix": 16,
+    "of": 16,
+    "first_divergence": null
+  },
+  "schema": "coreai-gate-transcript/1",
+  "generated_at": "2026-07-28T04:32:43+00:00",
+  "environment": {
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+    "python": "3.14.6",
+    "runner": "/Users/majimadaisuke/code/coreai/coreai-models/.build/release/llm-runner"
+  },
+  "recheck": {
+    "engine_side_only": "Download the bundle at the pinned revision, then feed the recorded input_ids to llm-runner with the protocol above (greedy, warmup off, coreai-pipelined, COREAI_CHUNK_THRESHOLD=1). The output must equal engine.gen_text. No oracle, no fp32 weights, no GPU beyond the one running the bundle.",
+    "full_gate": "python3 conversion/coreai_gate.py <bundle> tencent/Youtu-LLM-2B --arch youtu --prompt 'The capital of France is' -n 16"
+  }
+}

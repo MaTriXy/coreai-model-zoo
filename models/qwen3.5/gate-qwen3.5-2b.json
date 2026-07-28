@@ -1,0 +1,87 @@
+{
+  "result": "PASS",
+  "arch": "qwen3.5",
+  "bundle": "qwen3_5_2b_decode_int8hu_block32_sym",
+  "artifact": "mlboydaisuke/qwen3.5-2B-CoreAI@3aa6c97d9545",
+  "source_model": {
+    "hf_id": "Qwen/Qwen3.5-2B",
+    "revision": null
+  },
+  "protocol": {
+    "prompt": "The capital of France is",
+    "max_new_tokens": 16,
+    "greedy": true,
+    "oracle_dtype": "fp32",
+    "engine_variant": "coreai-pipelined",
+    "warmup": "off",
+    "env": {
+      "COREAI_CHUNK_THRESHOLD": "1"
+    },
+    "tie_rule": "a first divergence passes only where the oracle's top-2 margin < 0.1"
+  },
+  "input_ids": [
+    760,
+    6511,
+    314,
+    9338,
+    369
+  ],
+  "oracle": {
+    "gen_ids": [
+      11751,
+      13,
+      198,
+      32,
+      13,
+      2912,
+      198,
+      33,
+      13,
+      3439,
+      271,
+      248068,
+      198,
+      90700,
+      8340,
+      25
+    ],
+    "gen_text": " Paris.\nA. True\nB. False\n\n<think>\nThinking Process:",
+    "top2_margins": [
+      0.45157742500305176,
+      0.3637835681438446,
+      0.07262171059846878,
+      0.09066854417324066,
+      0.8966464996337891,
+      0.5872177481651306,
+      0.9719730019569397,
+      0.9943262338638306,
+      0.9999868273735046,
+      0.988732635974884,
+      0.49526721239089966,
+      0.998893141746521,
+      0.10070756077766418,
+      0.9980366826057434,
+      0.9998739361763,
+      0.9996496438980103
+    ]
+  },
+  "engine": {
+    "gen_text": " Paris.\nA. True\nB. False\n\n<think>\nThinking Process:"
+  },
+  "match": {
+    "exact_prefix": 16,
+    "of": 16,
+    "first_divergence": null
+  },
+  "schema": "coreai-gate-transcript/1",
+  "generated_at": "2026-07-28T04:32:31+00:00",
+  "environment": {
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+    "python": "3.14.6",
+    "runner": "/Users/majimadaisuke/code/coreai/coreai-models/.build/release/llm-runner"
+  },
+  "recheck": {
+    "engine_side_only": "Download the bundle at the pinned revision, then feed the recorded input_ids to llm-runner with the protocol above (greedy, warmup off, coreai-pipelined, COREAI_CHUNK_THRESHOLD=1). The output must equal engine.gen_text. No oracle, no fp32 weights, no GPU beyond the one running the bundle.",
+    "full_gate": "python3 conversion/coreai_gate.py <bundle> Qwen/Qwen3.5-2B --arch qwen3.5 --prompt 'The capital of France is' -n 16"
+  }
+}

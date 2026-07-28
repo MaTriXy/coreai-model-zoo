@@ -622,7 +622,7 @@
      "bundle": "gpu-pipelined/granite_4_0_h_1b_decode_int8lin",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run granite-4.0-h-1b",
-     "gate_transcript": null,
+     "gate_transcript": "models/granite-4.0-h/gate-granite-4.0-h-1b.json",
      "open_questions": []
     },
     {
@@ -731,7 +731,7 @@
      "bundle": "gpu-pipelined/lfm2_5_1_2b_instruct_decode_int8hu_block32_sym",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run lfm2.5-1.2b",
-     "gate_transcript": null,
+     "gate_transcript": "models/lfm2.5/gate-lfm2.5-1.2b.json",
      "open_questions": []
     }
    ],
@@ -984,7 +984,7 @@
      "bundle": "gpu-pipelined/nanbeige4_1_3b_decode_int8hu_block32_sym_s1",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run nanbeige4.1-3b",
-     "gate_transcript": null,
+     "gate_transcript": "models/nanbeige4.1-3b/gate-nanbeige4.1-3b.json",
      "open_questions": []
     }
    ],
@@ -1015,7 +1015,7 @@
      "bundle": "gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run nanbeige4.2-3b",
-     "gate_transcript": null,
+     "gate_transcript": "models/nanbeige4.2-3b/gate-nanbeige4.2-3b.json",
      "open_questions": []
     }
    ],
@@ -1408,7 +1408,7 @@
      "bundle": "gpu-pipelined/qwen3_5_0_8b_decode_int8hu_block32_sym",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run qwen3.5-0.8b",
-     "gate_transcript": null,
+     "gate_transcript": "models/qwen3.5/gate-qwen3.5-0.8b.json",
      "open_questions": []
     },
     {
@@ -1420,7 +1420,7 @@
      "bundle": "gpu-pipelined/qwen3_5_2b_decode_int8hu_block32_sym",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run qwen3.5-2b",
-     "gate_transcript": null,
+     "gate_transcript": "models/qwen3.5/gate-qwen3.5-2b.json",
      "open_questions": []
     }
    ],
@@ -2012,7 +2012,7 @@
      "bundle": "gpu-pipelined/youtu_llm_2b_decode_absorbed_int8_msdpa",
      "steps": 1,
      "run": "python3 conversion/zoo_convert.py run youtu-llm-2b",
-     "gate_transcript": null,
+     "gate_transcript": "models/youtu/gate-youtu-llm-2b.json",
      "open_questions": []
     }
    ],

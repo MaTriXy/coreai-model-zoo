@@ -180,8 +180,12 @@ def build(arch, hf_id):
         if source_config.model_type not in model_classes:
             raise ValueError(f"unsupported Nanbeige gate model_type: {source_config.model_type}")
         model_class = model_classes[source_config.model_type]
+        # `from_hf_memory_efficient` takes no `revision` and rejects a local snapshot path
+        # (it validates its argument as a repo id), so the oracle loads the source model's
+        # default branch even when the recipe pins one. The gate reports that rather than
+        # implying a pin it cannot honour — see `source_model.weights_pinned` in the transcript.
         m = model_class.from_hf_memory_efficient(
-            hf_id, revision=revision, max_context_length=CTX, target_dtype=FP32
+            hf_id, max_context_length=CTX, target_dtype=FP32
         )
         saved = m.config.max_position_embeddings; m.config.max_position_embeddings = TRACE_KV_CACHE_SEQ_LEN
         if source_config.model_type == "nanbeige":
@@ -256,11 +260,23 @@ def run_oracle(
     dtype: str,
     revision: str | None,
 ) -> dict:
-    with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
+    # Named so the child is findable. It runs from a temp file, so it used to appear in `ps` as
+    # `python /var/folders/.../tmpXXXX.py` — which `pkill -f coreai_gate` does not match, so
+    # killing the gate left the oracle running, holding the Hugging Face cache lock and stalling
+    # every later attempt with no visible cause.
+    with tempfile.NamedTemporaryFile("w", prefix="coreai_gate_oracle_", suffix=".py",
+                                     delete=False) as f:
         f.write(ORACLE_SRC)
         script = f.name
+    # The oracle downloads the source checkpoint in a child interpreter, so it needs the same
+    # plain-HTTP transfer settings the conversion scripts get from `_paths` — Xet stalls at 0%
+    # CPU on large shards, and hf_transfer has no reliable mid-file resume. Set explicitly
+    # because this file is standalone by design and does not import `_paths`.
+    env = {**os.environ,
+           "HF_HUB_DISABLE_XET": os.environ.get("HF_HUB_DISABLE_XET", "1"),
+           "HF_HUB_ENABLE_HF_TRANSFER": os.environ.get("HF_HUB_ENABLE_HF_TRANSFER", "0")}
     r = subprocess.run([python, script, arch, hf_id, prompt, str(n), dtype, revision or ""],
-                       capture_output=True, text=True, cwd=tempfile.gettempdir())
+                       capture_output=True, text=True, cwd=tempfile.gettempdir(), env=env)
     line = next((line for line in r.stdout.splitlines() if line.startswith("{")), None)
     if not line:
         sys.exit("ORACLE FAILED:\n" + r.stdout[-1000:] + r.stderr[-1000:])
@@ -344,6 +360,11 @@ def main() -> None:
                                      "else sibling coreai-models/.venv)")
     ap.add_argument("--runner", help="llm-runner executable (default: $ZOO_LLM_RUNNER, "
                                      "else sibling coreai-models build, else PATH)")
+    ap.add_argument("--artifact", metavar="REPO@REV",
+                    help="the published artifact this bundle is a copy of, e.g. "
+                         "owner/repo@abcdef123456. Recorded in the transcript: a reader checking "
+                         "the evidence needs to know which published bytes were gated, not just "
+                         "a local directory name.")
     ap.add_argument("--transcript", metavar="PATH",
                     help="write the gate transcript as JSON: the pinned revision, the exact "
                          "input_ids, both sides' output, and the verdict. Publish it next to "
@@ -373,7 +394,16 @@ def main() -> None:
         "result": None,
         "arch": arch,
         "bundle": Path(args.bundle).name,
-        "source_model": {"hf_id": args.hf_id, "revision": args.revision},
+        "artifact": args.artifact,
+        # `revision` is what the recipe pinned for the *export*. `weights_pinned` says whether
+        # this gate's oracle actually loaded that revision: the overlay's loader takes a repo id
+        # and no revision, so it reads the default branch. Recorded rather than glossed, because
+        # a transcript that implies a pin it did not honour is worse than one that admits the
+        # gap — a reader can then decide how much the comparison is worth.
+        "source_model": {"hf_id": args.hf_id, "revision": args.revision,
+                         "weights_pinned": False,
+                         "note": ("the oracle loads the source repo's default branch; the "
+                                  "recipe's revision pins the export, not this comparison")},
         "protocol": {
             "prompt": args.prompt,
             "max_new_tokens": args.n,

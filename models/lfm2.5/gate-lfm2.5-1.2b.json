@@ -1,0 +1,90 @@
+{
+  "result": "PASS",
+  "arch": "lfm2_5",
+  "bundle": "lfm2_5_1_2b_instruct_decode_int8hu_block32_sym",
+  "artifact": "mlboydaisuke/LFM2.5-1.2B-CoreAI@8dc37422e5ac",
+  "source_model": {
+    "hf_id": "LiquidAI/LFM2.5-1.2B-Instruct",
+    "revision": null,
+    "weights_pinned": false,
+    "note": "the oracle loads the source repo's default branch; the recipe's revision pins the export, not this comparison"
+  },
+  "protocol": {
+    "prompt": "The capital of France is",
+    "max_new_tokens": 16,
+    "greedy": true,
+    "oracle_dtype": "fp32",
+    "engine_variant": "coreai-pipelined",
+    "warmup": "off",
+    "env": {
+      "COREAI_CHUNK_THRESHOLD": "1"
+    },
+    "tie_rule": "a first divergence passes only where the oracle's top-2 margin < 0.1"
+  },
+  "input_ids": [
+    1,
+    1098,
+    5706,
+    803,
+    4481,
+    856
+  ],
+  "oracle": {
+    "gen_ids": [
+      5242,
+      523,
+      1311,
+      856,
+      779,
+      1529,
+      15666,
+      1069,
+      3771,
+      797,
+      4481,
+      810,
+      779,
+      5706,
+      803,
+      779
+    ],
+    "gen_text": " Paris. It is the most populous city in France and the capital of the",
+    "top2_margins": [
+      0.5285566449165344,
+      0.7277141213417053,
+      0.18862813711166382,
+      0.8588439226150513,
+      0.370375394821167,
+      0.13838909566402435,
+      0.4822658896446228,
+      0.9996428489685059,
+      0.7798382639884949,
+      0.7402257919311523,
+      0.4237303137779236,
+      0.4723450541496277,
+      0.17541953921318054,
+      0.03132183849811554,
+      0.6700639724731445,
+      0.9881214499473572
+    ]
+  },
+  "engine": {
+    "gen_text": " Paris. It is the most populous city in France and the capital of the"
+  },
+  "match": {
+    "exact_prefix": 16,
+    "of": 16,
+    "first_divergence": null
+  },
+  "schema": "coreai-gate-transcript/1",
+  "generated_at": "2026-07-28T04:41:28+00:00",
+  "environment": {
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+    "python": "3.14.6",
+    "runner": "/Users/majimadaisuke/code/coreai/coreai-models/.build/release/llm-runner"
+  },
+  "recheck": {
+    "engine_side_only": "Download the bundle at the pinned revision, then feed the recorded input_ids to llm-runner with the protocol above (greedy, warmup off, coreai-pipelined, COREAI_CHUNK_THRESHOLD=1). The output must equal engine.gen_text. No oracle, no fp32 weights, no GPU beyond the one running the bundle.",
+    "full_gate": "python3 conversion/coreai_gate.py <bundle> LiquidAI/LFM2.5-1.2B-Instruct --arch lfm2_5 --prompt 'The capital of France is' -n 16"
+  }
+}

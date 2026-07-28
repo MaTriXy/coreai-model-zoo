@@ -1,0 +1,90 @@
+{
+  "result": "PASS",
+  "arch": "nanbeige",
+  "bundle": "nanbeige4_1_3b_decode_int8hu_block32_sym_s1",
+  "artifact": "mlboydaisuke/Nanbeige4.1-3B-CoreAI@b2efbe7b01a8",
+  "source_model": {
+    "hf_id": "Nanbeige/Nanbeige4.1-3B",
+    "revision": null,
+    "weights_pinned": false,
+    "note": "the oracle loads the source repo's default branch; the recipe's revision pins the export, not this comparison"
+  },
+  "protocol": {
+    "prompt": "The capital of France is",
+    "max_new_tokens": 16,
+    "greedy": true,
+    "oracle_dtype": "fp32",
+    "engine_variant": "coreai-pipelined",
+    "warmup": "off",
+    "env": {
+      "COREAI_CHUNK_THRESHOLD": "1"
+    },
+    "tie_rule": "a first divergence passes only where the oracle's top-2 margin < 0.1"
+  },
+  "input_ids": [
+    166100,
+    363,
+    5463,
+    290,
+    7914,
+    322
+  ],
+  "oracle": {
+    "gen_ids": [
+      9965,
+      152361,
+      108396,
+      415,
+      152382,
+      13,
+      166103,
+      13,
+      166103,
+      13,
+      2359,
+      17201,
+      1345,
+      322,
+      4821,
+      152382
+    ],
+    "gen_text": "Paris.Edited by:\n<think>\n<think>\nWeimplify is asked:",
+    "top2_margins": [
+      0.7005117535591125,
+      0.13776570558547974,
+      0.012647601775825024,
+      0.26966598629951477,
+      0.24789166450500488,
+      0.22982285916805267,
+      0.027953535318374634,
+      0.9619924426078796,
+      0.5986716747283936,
+      0.9999620318412781,
+      0.9648749828338623,
+      0.02244812250137329,
+      0.9956817626953125,
+      0.4421839118003845,
+      0.9937521815299988,
+      0.9999068379402161
+    ]
+  },
+  "engine": {
+    "gen_text": "Paris.Edited by:\n<think>\n<think>\nWeimplify is asked:"
+  },
+  "match": {
+    "exact_prefix": 16,
+    "of": 16,
+    "first_divergence": null
+  },
+  "schema": "coreai-gate-transcript/1",
+  "generated_at": "2026-07-28T04:41:40+00:00",
+  "environment": {
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+    "python": "3.14.6",
+    "runner": "/Users/majimadaisuke/code/coreai/coreai-models/.build/release/llm-runner"
+  },
+  "recheck": {
+    "engine_side_only": "Download the bundle at the pinned revision, then feed the recorded input_ids to llm-runner with the protocol above (greedy, warmup off, coreai-pipelined, COREAI_CHUNK_THRESHOLD=1). The output must equal engine.gen_text. No oracle, no fp32 weights, no GPU beyond the one running the bundle.",
+    "full_gate": "python3 conversion/coreai_gate.py <bundle> Nanbeige/Nanbeige4.1-3B --arch nanbeige --prompt 'The capital of France is' -n 16"
+  }
+}

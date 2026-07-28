@@ -1,0 +1,61 @@
+{
+  "result": "PASS",
+  "arch": "granite",
+  "bundle": "granite_4_0_h_1b_decode_int8lin",
+  "artifact": "mlboydaisuke/granite-4.0-h-CoreAI@e0c884d19ecb",
+  "source_model": {
+    "hf_id": "ibm-granite/granite-4.0-h-1b",
+    "revision": null,
+    "weights_pinned": false,
+    "note": "the oracle loads the source repo's default branch; the recipe's revision pins the export, not this comparison"
+  },
+  "protocol": {
+    "prompt": "The capital of France is",
+    "max_new_tokens": 16,
+    "greedy": true,
+    "oracle_dtype": "fp32",
+    "engine_variant": "coreai-pipelined",
+    "warmup": "off",
+    "env": {
+      "COREAI_CHUNK_THRESHOLD": "1"
+    },
+    "tie_rule": "a first divergence passes only where the oracle's top-2 margin < 0.1"
+  },
+  "input_ids": [
+    791,
+    6864,
+    315,
+    9822,
+    374
+  ],
+  "oracle": {
+    "gen_ids": [
+      12366,
+      13
+    ],
+    "gen_text": " Paris.",
+    "top2_margins": [
+      0.42281070351600647,
+      0.16295601427555084
+    ]
+  },
+  "engine": {
+    "gen_text": " Paris."
+  },
+  "match": {
+    "exact_prefix": 2,
+    "of": 2,
+    "first_divergence": null
+  },
+  "schema": "coreai-gate-transcript/1",
+  "generated_at": "2026-07-28T04:41:07+00:00",
+  "environment": {
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+    "python": "3.14.6",
+    "runner": "/Users/majimadaisuke/code/coreai/coreai-models/.build/release/llm-runner"
+  },
+  "recheck": {
+    "engine_side_only": "Download the bundle at the pinned revision, then feed the recorded input_ids to llm-runner with the protocol above (greedy, warmup off, coreai-pipelined, COREAI_CHUNK_THRESHOLD=1). The output must equal engine.gen_text. No oracle, no fp32 weights, no GPU beyond the one running the bundle.",
+    "full_gate": "python3 conversion/coreai_gate.py <bundle> ibm-granite/granite-4.0-h-1b --arch granite --prompt 'The capital of France is' -n 16"
+  }
+}
