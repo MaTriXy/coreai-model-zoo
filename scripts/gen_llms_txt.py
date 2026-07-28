@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Generate llms.txt — the one fetch that tells a model what this repository knows.
 
-Why it matters here specifically: Apple's own Core AI documentation is a JavaScript
-application. Fetching `developer.apple.com/documentation/coreai` returns 63 words, all of
-them "This page requires JavaScript." So for an agent answering a Core AI question there is
-no fetchable authoritative source, and the verified notes in `knowledge/` are among the few
-that exist. They are useless if nothing announces them.
+Why it matters here specifically: Apple's documentation answers "what is the API." Its plain
+URLs return no body to a fetcher — the content is reachable, but only through the
+`developer.apple.com/tutorials/data/documentation/<path>.json` backing endpoint, which a
+reader has to already know about. What no source answers is "what does it do when you run
+it": thresholds, failure modes, measured numbers. The notes in `knowledge/` are that, and
+they are useless if nothing announces them.
 
 Follows the llms.txt convention: an H1, a blockquote summary, then link sections where every
 entry is `[title](url): description`. Descriptions are lifted from `knowledge/README.md`, so
@@ -36,9 +37,9 @@ PREAMBLE = f"""\
 
 > Community ports of open models to Apple's Core AI runtime (`.aimodel`, iOS/macOS 27), each
 > with the recipe that produced it, plus a knowledge base of verified findings about the
-> runtime itself. Apple's own Core AI documentation is a JavaScript application and returns no
-> readable body to a fetcher, so these notes are written to be the fetchable answer: measured,
-> dated, and specific about what was verified and how.
+> runtime itself. Apple documents the API surface; these notes cover what it does when you run
+> it — thresholds, failure modes, and measured numbers — and are specific about what was
+> verified, on what hardware, and how.
 
 ## Start here
 

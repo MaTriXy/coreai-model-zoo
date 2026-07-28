@@ -1,11 +1,9 @@
 # GitHub Pages configuration.
 #
-# The point of this site is narrow and worth stating: Apple's own Core AI documentation is a
-# JavaScript application. Fetching developer.apple.com/documentation/coreai returns a body
-# whose entire text is "This page requires JavaScript." So for anything — a person reading
-# without JS, a search crawler, a coding agent answering a question — there is no fetchable
-# authoritative reference for this runtime. The notes in knowledge/ are written to be one, and
-# a page per topic is what makes them citable.
+# The point of this site is narrow and worth stating: Apple documents the Core AI API surface,
+# but not what the runtime does once you run it — the thresholds, the failure modes, the numbers
+# you only get by measuring. The notes in knowledge/ are that, and a page per topic is what makes
+# them citable and findable rather than a directory listing.
 #
 # Served from the repository root rather than a docs/ copy, so a note has exactly one source of
 # truth and the site cannot drift from what contributors read on GitHub.

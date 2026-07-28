@@ -267,10 +267,10 @@ kernel — the stock MPSGraph SDPA crashes on the ≥16-head × 512 Q (a GPU scr
   [**`llms.txt`**](https://john-rocky.github.io/coreai-model-zoo/llms.txt).
 - **Looking something up about the runtime itself** →
   [**john-rocky.github.io/coreai-model-zoo**](https://john-rocky.github.io/coreai-model-zoo/) —
-  the knowledge base as a page per topic. Worth knowing why it exists: Apple's own Core AI
-  documentation is a JavaScript application, and fetching it returns a body whose entire text is
-  "This page requires JavaScript." These pages are plain HTML, so a reader without JS, a search
-  crawler, and a coding agent all get the same words.
+  the knowledge base as a page per topic. Apple documents the API surface well; what these notes
+  add is what the runtime *does* when you run it — the thresholds, the failure modes, the
+  measured numbers — which is not written down anywhere. Plain HTML, so a reader without JS, a
+  search crawler and a coding agent all get the same words.
 - **Reading start to finish rather than looking one thing up** →
   [**The Art of Core AI**](https://john-rocky.github.io/the-art-of-core-ai/) — a free book built
   from these same measurements ([Japanese edition](https://zenn.dev/mlboydaisuke/books/coreai-textbook)).

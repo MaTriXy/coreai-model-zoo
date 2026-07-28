@@ -2,9 +2,9 @@
 
 > Community ports of open models to Apple's Core AI runtime (`.aimodel`, iOS/macOS 27), each
 > with the recipe that produced it, plus a knowledge base of verified findings about the
-> runtime itself. Apple's own Core AI documentation is a JavaScript application and returns no
-> readable body to a fetcher, so these notes are written to be the fetchable answer: measured,
-> dated, and specific about what was verified and how.
+> runtime itself. Apple documents the API surface; these notes cover what it does when you run
+> it — thresholds, failure modes, and measured numbers — and are specific about what was
+> verified, on what hardware, and how.
 
 ## Start here
 
