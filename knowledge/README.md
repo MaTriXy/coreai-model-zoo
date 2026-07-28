@@ -2,6 +2,14 @@
 
 Hard-won, verified notes on Apple's Core AI (iOS/macOS 27) — what the docs don't spell out.
 
+Published as a page per topic at **[john-rocky.github.io/coreai-model-zoo](https://john-rocky.github.io/coreai-model-zoo/)**,
+because Apple's own Core AI documentation is a JavaScript application: fetching it returns a body
+whose entire text is "This page requires JavaScript." These pages are plain HTML, so a reader
+without JS, a search crawler and a coding agent all get the same words.
+[`llms.txt`](https://john-rocky.github.io/coreai-model-zoo/llms.txt) indexes every one of them.
+For the long-form version of the same material, read
+[The Art of Core AI](https://john-rocky.github.io/the-art-of-core-ai/) — a free book.
+
 ## Orientation
 - [`coreai-overview.md`](coreai-overview.md) — what Core AI is, the 3 Apple repos, the `.aimodel`
   format, the PyTorch → `.aimodel` → Swift-runtime pipeline.

@@ -56,6 +56,9 @@ PREAMBLE = f"""\
   absent — pinned revisions rather than signatures, and no checksum manifest.
 - [Source repository]({REPO_URL}): the conversion scripts, the gates, and the recipes behind
   every page here. The site renders the same files; nothing is written for it separately.
+- [The Art of Core AI](https://john-rocky.github.io/the-art-of-core-ai/): the long-form version
+  — a free book built from these same measurements, for reading start to finish rather than
+  looking one thing up.
 """
 
 FOOTER = f"""
