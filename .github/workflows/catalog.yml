@@ -29,6 +29,11 @@ jobs:
         # directories on disk. A contributor's PR gets this before a human reads it.
         run: python3 scripts/validate_catalog.py
 
+      - name: llms.txt matches the knowledge index
+        # The one fetch that tells a model what is here. Generated from knowledge/README.md,
+        # so a note added without regenerating would be invisible to every agent.
+        run: python3 scripts/gen_llms_txt.py --check
+
       - name: Python sources compile
         run: |
           python3 -m compileall -q conversion scripts \

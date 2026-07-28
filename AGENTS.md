@@ -32,6 +32,12 @@ is a guess with extra steps.
 | Make it fast (custom Metal kernels, the bandwidth floor) | [`knowledge/custom-metal-kernels.md`](knowledge/custom-metal-kernels.md) · [`knowledge/performance-ceiling.md`](knowledge/performance-ceiling.md) |
 | Use an already-ported model in a Swift app | [CoreAIKit ↗](https://github.com/john-rocky/coreai-kit) — `ChatSession(catalog: "<id>")` |
 | Anything architecture-specific | [`knowledge/README.md`](knowledge/README.md) — per-architecture notes, written from ports that shipped |
+| A list of everything here, in one fetch | [`llms.txt`](llms.txt) — every note with a one-line description and a raw URL |
+
+Worth knowing why that last row exists: Apple's own Core AI documentation is a JavaScript
+application, and fetching it returns a page whose entire body is "This page requires
+JavaScript." If you need a runtime fact and cannot find it in Apple's docs, that is why — and
+the notes below were written to be the fetchable answer.
 
 The closest existing exporter is a better starting point than a blank file:
 `conversion/export_da3.py` is the stateless archetype, `conversion/export_qwen3_5_decode_pipelined.py`
