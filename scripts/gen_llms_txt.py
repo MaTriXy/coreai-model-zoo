@@ -103,18 +103,52 @@ def parse_sections() -> list[tuple[str, list[tuple[str, str, str]]]]:
     return sections
 
 
+def heading(path: Path) -> str:
+    """A note's own H1, used when the curated index does not describe it."""
+    for line in path.read_text().splitlines():
+        if line.startswith("# "):
+            return re.sub(r"\*\*|`", "", line[2:].strip())
+    return path.stem.replace("-", " ")
+
+
+def uncurated(covered: set[str]) -> list[tuple[str, str]]:
+    """Notes on disk that `knowledge/README.md` does not list, newest content last.
+
+    They are published either way — they live in `knowledge/`, so the site renders them — and
+    being absent from the index only made them unfindable. Including them automatically means
+    adding a note costs nothing: write it, regenerate, and it is announced. The curated
+    sections still win where a description was written by hand.
+    """
+    out = []
+    for path in sorted((REPO / "knowledge").glob("*.md")):
+        if path.name == "README.md" or path.name in covered:
+            continue
+        out.append((path.name, heading(path)))
+    return out
+
+
 def render() -> str:
     out = [PREAMBLE]
+    covered: set[str] = set()
     for title, entries in parse_sections():
         if not entries:
             continue
         out.append(f"\n## {title}\n")
         for name, url, desc in entries:
+            covered.add(url)
             # Strip the emphasis markers that read as noise once flattened to one line.
             clean = re.sub(r"\*\*|`", "", desc)
             page = url.removesuffix(".md") + ".html"
             out.append(f"- [{name}]({SITE}/knowledge/{page}): {clean}")
         out.append("")
+
+    if rest := uncurated(covered):
+        out.append("\n## Everything else in the knowledge base\n")
+        for name, title in rest:
+            page = name.removesuffix(".md") + ".html"
+            out.append(f"- [{name}]({SITE}/knowledge/{page}): {title}")
+        out.append("")
+
     out.append(FOOTER)
     return "\n".join(out).replace("\n\n\n", "\n\n")
 
@@ -128,8 +162,9 @@ def main() -> None:
     if args.check:
         have = OUT.read_text() if OUT.exists() else ""
         if have != want:
-            sys.exit("llms.txt is stale — knowledge/README.md changed without regenerating it.\n"
-                     "  Fix with: python3 scripts/gen_llms_txt.py")
+            sys.exit("llms.txt is stale — a note was added, or knowledge/README.md changed,\n"
+                     "  without regenerating the index. An unannounced note is one no agent\n"
+                     "  will find. Fix with: python3 scripts/gen_llms_txt.py")
         print(f"OK: llms.txt matches knowledge/README.md ({want.count('](') } links)")
         return
     OUT.write_text(want)

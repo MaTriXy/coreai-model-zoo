@@ -103,6 +103,31 @@
 - [vibevoice-multispeaker-tts.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/vibevoice-multispeaker-tts.html): VibeVoice, the zoo's first multi-speaker / dialogue TTS: dual-LM next-token diffusion, why the speech feedback loop forces fp16, and why the expectFrequentReshapes hint must be off on iOS
 - [melband-source-separation.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/melband-source-separation.html): Mel-Band RoFormer, the zoo's first source separation: complex → real arithmetic, and folding STFT/iSTFT into the graph as constant DFT matmuls so the on-device host needs no FFT
 
+## Everything else in the knowledge base
+
+- [accel-levers-survey-and-plan.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/accel-levers-survey-and-plan.html): Accel levers — industry survey + zoo maximal-optimization plan (2026-07-01)
+- [coreai-torch-041-ir-incident.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/coreai-torch-041-ir-incident.html): The coreai-torch 0.4.0 IR-location incident, and how to recover / re-verify
+- [cross-runtime-quality-benchmarking.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/cross-runtime-quality-benchmarking.html): Cross-runtime quality benchmarking: how to not measure your own harness
+- [dense-int4km-flagship-session-findings.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/dense-int4km-flagship-session-findings.html): Dense-path int4km coverage + flagship Qwen3.6-35B — session findings & methods (2026-07-01)
+- [flagship-full-tuning-stack.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/flagship-full-tuning-stack.html): Flagship dramatic-speedup plan — the full stackable tuning set (2026-07-01)
+- [gemma4-litertlm-to-official-migration.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/gemma4-litertlm-to-official-migration.html): Gemma-4 E2B mixed-bit QAT — migration from .litertlm extraction to the official HF checkpoint
+- [gemma4-raw-metal-a19-levers.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/gemma4-raw-metal-a19-levers.html): Gemma4 raw-Metal loop on A19 — findings + the remaining (parked) levers
+- [gemma4-raw-metal-port.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/gemma4-raw-metal-port.html): Gemma-4-E2B raw-Metal port — hand-written mixed-bit decode loop (ship doc)
+- [gemma4-wna8o8-requires-int8-activations.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/gemma4-wna8o8-requires-int8-activations.html): Gemma-4 E2B mobile QAT (wNa8o8): the weights require their int8 activation path
+- [glm-ocr-port.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/glm-ocr-port.html): GLM-OCR → Core AI: port notes
+- [kernel-campaign-handoff-2026-07-02.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/kernel-campaign-handoff-2026-07-02.html): Kernel campaign — session handoff (2026-07-02)
+- [lfm2audio-port.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/lfm2audio-port.html): LFM2.5-Audio — unified speech↔speech (ASR + TTS) on Core AI (port notes)
+- [mineru-port.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/mineru-port.html): MinerU2.5-Pro → Core AI — port notes
+- [nanbeige4.2-coreai-support.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/nanbeige4.2-coreai-support.html): Nanbeige4.2-3B on Core AI
+- [quant-d-fp4-qat-feasibility-and-plan.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/quant-d-fp4-qat-feasibility-and-plan.html): Stream D — Quantization (FP4 + QAT-int4): feasibility, first result, and plan
+- [raw-metal-loop-playbook.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/raw-metal-loop-playbook.html): Raw-Metal loop playbook — when leaving the engine pays, and when it doesn't
+- [spec-decode-c-feasibility-and-plan.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/spec-decode-c-feasibility-and-plan.html): Stream C — Speculative decoding: feasibility verdict + implementation plan (2026-07-01)
+- [spec-decode-c1-handoff-2026-07-03.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/spec-decode-c1-handoff-2026-07-03.html): Spec-decode C1 — DONE (2026-07-03): the loop now beats shipped 15.9 tok/s
+- [spec-decode-hybrid-verify-design.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/spec-decode-hybrid-verify-design.html): Spec-decode on GDN hybrids (Qwen3.5/3.6 family) — static-S verify design (2026-07-02)
+- [ssm-hybrid-decode-int4-prefill-findings.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/ssm-hybrid-decode-int4-prefill-findings.html): SSM-hybrid decode, int4, and chunked prefill on Core AI — session findings (2026-07-10/11)
+- [ternary-chunked-prefill.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/ternary-chunked-prefill.html): Tiled ternary GEMM + chunked prefill — lifting the S=1 tax off custom-kernel bundles
+- [unlimited-ocr-rswa-static-decode.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/unlimited-ocr-rswa-static-decode.html): Static-shape stateful decode + stock-runtime VLM (Unlimited-OCR)
+
 ## Optional
 
 - [CONTRIBUTING.md](https://john-rocky.github.io/coreai-model-zoo/CONTRIBUTING.html): what an accepted port must clear, and the device
