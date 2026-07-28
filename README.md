@@ -271,6 +271,9 @@ kernel — the stock MPSGraph SDPA crashes on the ≥16-head × 512 Q (a GPU scr
   documentation is a JavaScript application, and fetching it returns a body whose entire text is
   "This page requires JavaScript." These pages are plain HTML, so a reader without JS, a search
   crawler, and a coding agent all get the same words.
+- **Reading start to finish rather than looking one thing up** →
+  [**The Art of Core AI**](https://john-rocky.github.io/the-art-of-core-ai/) — a free book built
+  from these same measurements ([Japanese edition](https://zenn.dev/mlboydaisuke/books/coreai-textbook)).
 - **Surveying the whole Core AI ecosystem**, not just this catalog →
   [**awesome-core-ai**](https://github.com/john-rocky/awesome-core-ai) — Apple's own tooling,
   other people's converters and runtimes, sample apps, benchmarks, and learning material.
