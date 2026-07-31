@@ -215,9 +215,17 @@ that the published Gemma-4 12B/31B bundles still carried the old `<eos>`; they d
 note was stale, and acting on it would have been wasted work. Reading the artifacts beat
 reading the note about the artifacts.
 
-Still open, and a different rule: the four legacy `gemma-4-E{2,4}B*-coreml` repos ship no
-chat template at all (`CHAT-TEMPLATE-MISSING`). That is not a one-line fix — it changes what
-those bundles ship — so it is left as a decision.
+The same sweep flagged `CHAT-TEMPLATE-MISSING` on the four legacy
+`gemma-4-E{2,4}B*-coreml` ports, which shipped a tokenizer and no template — a runtime
+applying one had nothing to apply and fell back to raw completion without a word. They also
+carried the `<eos>` defect. Fixed 2026-07-31 by `logs/fix_gemma4_coreml_chat.py`, which
+ships `google/gemma-4-{E2B,E4B}-it`'s own template verbatim; both sizes serve the same file
+and it is byte-identical to the one the Core AI Gemma-4 bundles already carry, so this
+adopts a decision already made rather than making a new one.
+
+All 18 published Gemma tokenizer configs now come back clean. The two that still report no
+chat template are the embeddinggemma repos — an embedding model has no chat surface, which
+is the rule reporting correctly, not a gap.
 
 ## Where this lives
 
