@@ -31,12 +31,12 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
-from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
 import torch
 from safetensors import safe_open
+from _bundle import write_bundle_metadata
 from _paths import code_path
 
 from coreai_models.export._constants import TRACE_KV_CACHE_SEQ_LEN
@@ -206,28 +206,6 @@ def int8_requant_config() -> dict:
     }
 
 
-def write_bundle_metadata(out_dir: Path, name: str, hf_id: str, cfg, max_ctx: int,
-                          weights_source: str) -> None:
-    meta = {
-        "metadata_version": "0.2",
-        "kind": "llm",
-        "name": name,
-        "assets": {"main": f"{name}.aimodel"},
-        "language": {
-            "tokenizer": hf_id,
-            "vocab_size": cfg.vocab_size,
-            "max_context_length": max_ctx,
-            "embedded_tokenizer": True,
-            "function_map": {"main": ["main"]},
-        },
-        "source": {"model_definition": "torch", "hf_model_id": hf_id,
-                   "weights": weights_source},
-        "compression": None,
-        "compilation": {"date": datetime.now(timezone.utc).isoformat(), "targets": []},
-    }
-    (out_dir / "metadata.json").write_text(json.dumps(meta, indent=2))
-
-
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--extract-dir", default=DEFAULT_EXTRACT)
@@ -344,7 +322,8 @@ def main() -> None:
     print(f"saving {aimodel} ...", flush=True)
     prog.save_asset(aimodel, rt.AIModelAssetMetadata())
 
-    write_bundle_metadata(out_dir, name, args.hf_id, cfg, args.max_ctx, args.weights_source)
+    write_bundle_metadata(out_dir, name, args.hf_id, cfg.vocab_size, args.max_ctx,
+                          weights=args.weights_source)
     tok_src = Path(snapshot_download(
         args.hf_id, allow_patterns=["tokenizer*", "special_tokens_map.json"]))
     tok_dir = out_dir / "tokenizer"

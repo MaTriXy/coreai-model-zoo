@@ -37,13 +37,12 @@ the identical quality gates. The 4.1 defaults above are intentionally unchanged.
 from __future__ import annotations
 
 import argparse
-import json
 import shutil
-from datetime import datetime, timezone
 from pathlib import Path
 
 import torch
 import torch.nn as nn
+from _bundle import head_quant_spec, write_bundle_metadata
 
 from coreai_models.export._constants import (
     KEY_CACHE_NAME,
@@ -90,28 +89,6 @@ def linear_quant_config(dtype: str = "int8") -> dict:
     }
 
 
-def head_quant_spec(gran: str, sym: bool) -> dict:
-    """Explicit lm_head spec for the *hu modes. The 166144-vocab untied head is
-    fat-tailed -> use `--head-sym` (plain symmetric / absmax); `symmetric_with_clipping`
-    crushes outlier rows. SHIP SHAPE: per-block-32 + --head-sym. (`perchan` axis-0 int8
-    dequant is BROKEN on the macOS-27-beta GPU delegate — kept only for future re-test.)"""
-    if gran == "perchan":
-        g: dict = {"type": "per_channel", "axis": 0}
-    else:
-        g = {"type": "per_block", "block_size": int(gran[len("block"):]), "axis": 1}
-    return {
-        "op_state_spec": {
-            "weight": {
-                "dtype": "int8",
-                "qscheme": "symmetric" if sym else "symmetric_with_clipping",
-                "granularity": g,
-            }
-        },
-        "op_input_spec": None,
-        "op_output_spec": None,
-    }
-
-
 def build_kv_reference(cfg, max_ctx: int, static_ids: bool = False):
     """KV-only reference inputs + dynamic shapes.
 
@@ -155,25 +132,6 @@ def build_kv_reference(cfg, max_ctx: int, static_ids: bool = False):
         "v_cache": {KVCache.seq_len_dim(): torch.export.Dim("v_seq", min=TRACE_KV_CACHE_SEQ_LEN, max=max_ctx)},
     }
     return reference_inputs, dynamic_shapes
-
-
-def write_bundle_metadata(
-    out_dir: Path, name: str, hf_id: str, revision: str | None, cfg, max_ctx: int, mode: str
-) -> None:
-    source = {"model_definition": "torch", "hf_model_id": hf_id}
-    if revision:
-        source["hf_revision"] = revision
-    meta = {
-        "metadata_version": "0.2", "kind": "llm", "name": name,
-        "assets": {"main": f"{name}.aimodel"},
-        "language": {"tokenizer": hf_id, "vocab_size": cfg.vocab_size,
-                     "max_context_length": max_ctx, "embedded_tokenizer": True,
-                     "function_map": {"main": ["main"]}},
-        "source": source,
-        "compression": None if mode == "fp16" else {"scheme": mode},
-        "compilation": {"date": datetime.now(timezone.utc).isoformat(), "targets": []},
-    }
-    (out_dir / "metadata.json").write_text(json.dumps(meta, indent=2))
 
 
 def main() -> None:
@@ -266,7 +224,8 @@ def main() -> None:
     print(f"saving {aimodel} ...", flush=True)
     prog.save_asset(aimodel, rt.AIModelAssetMetadata())
 
-    write_bundle_metadata(out_dir, name, args.hf_id, args.revision, cfg, args.max_ctx, args.mode)
+    write_bundle_metadata(out_dir, name, args.hf_id, cfg.vocab_size, args.max_ctx,
+                          revision=args.revision, mode=args.mode)
     from transformers import AutoTokenizer
 
     AutoTokenizer.from_pretrained(args.hf_id, revision=args.revision).save_pretrained(

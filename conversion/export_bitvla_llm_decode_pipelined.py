@@ -15,12 +15,11 @@ GPU exclusivity: grab the community-repo _GPU_LOCK before the export path.
 from __future__ import annotations
 
 import argparse
-import json
 import shutil
-from datetime import datetime, timezone
 from pathlib import Path
 
 import torch
+from _bundle import write_bundle_metadata
 from _paths import work_path
 
 from coreai_models.export._constants import (
@@ -56,18 +55,6 @@ def build_reference(cfg, max_ctx: int):
         "v_cache": {KVCache.seq_len_dim(): torch.export.Dim("v_seq", min=TRACE_KV_CACHE_SEQ_LEN, max=max_ctx)},
     }
     return reference_inputs, dynamic_shapes
-
-
-def write_bundle_metadata(out_dir: Path, name: str, cfg, max_ctx: int):
-    meta = {"metadata_version": "0.2", "kind": "llm", "name": name,
-            "assets": {"main": f"{name}.aimodel"},
-            "language": {"tokenizer": "lxsy/bitvla-bf16", "vocab_size": cfg.vocab_size,
-                         "max_context_length": max_ctx, "embedded_tokenizer": False,
-                         "input": "inputs_embeds[1,1,2560]", "function_map": {"main": ["main"]}},
-            "source": {"model_definition": "torch", "hf_model_id": "lxsy/bitvla-bf16"},
-            "compression": None,
-            "compilation": {"date": datetime.now(timezone.utc).isoformat(), "targets": []}}
-    (out_dir / "metadata.json").write_text(json.dumps(meta, indent=2))
 
 
 def main():
@@ -107,7 +94,9 @@ def main():
     aimodel = out_dir / f"{name}.aimodel"
     print(f"saving {aimodel} ...", flush=True)
     prog.save_asset(aimodel, rt.AIModelAssetMetadata())
-    write_bundle_metadata(out_dir, name, cfg, args.max_ctx)
+    write_bundle_metadata(out_dir, name, "lxsy/bitvla-bf16", cfg.vocab_size, args.max_ctx,
+                          embedded_tokenizer=False,
+                          language_extra={"input": "inputs_embeds[1,1,2560]"})
     print(f"bundle ready: {out_dir}", flush=True)
 
 

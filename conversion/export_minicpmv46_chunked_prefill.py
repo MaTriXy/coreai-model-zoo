@@ -28,6 +28,7 @@ from pathlib import Path
 
 import torch
 from safetensors import safe_open
+from _bundle import head_quant_spec
 from _paths import hf_snapshot
 
 from coreai_models.export._constants import TRACE_KV_CACHE_SEQ_LEN
@@ -97,18 +98,6 @@ def linear_quant_config(dtype: str = "int8") -> dict:
     }
 
 
-def head_quant_spec() -> dict:
-    """int8 lm_head spec. Big-vocab heads are fat-tailed → plain `symmetric` (absmax), NOT
-    symmetric_with_clipping (clipping craters outlier rows → oracle flips). per-block-32 (per_channel
-    is broken on the beta GPU delegate). Mirrors export_qwen3_5_decode_pipelined int8hu --head-sym."""
-    return {
-        "op_state_spec": {"weight": {
-            "dtype": "int8", "qscheme": "symmetric",
-            "granularity": {"type": "per_block", "block_size": 32, "axis": 1}}},
-        "op_input_spec": None, "op_output_spec": None,
-    }
-
-
 def main() -> None:
     ap = argparse.ArgumentParser()
     # int8hu = int8 body + UNTIED int8 lm_head (head fp16 in int8lin = 508MB read/token = ~half the
@@ -157,7 +146,7 @@ def main() -> None:
         if quant_mode == "int8hu":
             # Untie the head (the eager quantizer silently skips shared params) then quantize it.
             model.lm_head.weight = torch.nn.Parameter(model.lm_head.weight.detach().clone())
-            cfg_q["module_name_configs"] = {r".*lm_head$": head_quant_spec()}
+            cfg_q["module_name_configs"] = {r".*lm_head$": head_quant_spec("block32", True)}
             print("[quant] linear int8 per-block-32 + UNTIED int8 head (block32 symmetric) ...")
         else:
             print("[quant] linear int8 per-block-32 (fp16 tied head) ...")

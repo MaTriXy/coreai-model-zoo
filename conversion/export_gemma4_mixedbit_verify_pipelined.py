@@ -16,10 +16,10 @@ import importlib.util
 import json
 import shutil
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 import torch
+from _bundle import write_bundle_metadata
 
 from coreai_models.export._constants import TRACE_KV_CACHE_SEQ_LEN
 from coreai_models.models.macos.gemma4_metal_mlp import export_to_coreai_with_kernels
@@ -155,11 +155,8 @@ def main() -> None:
     import coreai.runtime as rt
 
     prog.save_asset(out_dir / f"{name}.aimodel", rt.AIModelAssetMetadata())
-    _dec.write_bundle_metadata(out_dir, name, args.hf_id, cfg, args.max_ctx)
-    meta = json.loads((out_dir / "metadata.json").read_text())
-    meta["verify_query_len"] = 4
-    meta["compilation"]["date"] = datetime.now(timezone.utc).isoformat()
-    (out_dir / "metadata.json").write_text(json.dumps(meta, indent=2))
+    write_bundle_metadata(out_dir, name, args.hf_id, cfg.vocab_size, args.max_ctx,
+                          extra={"verify_query_len": 4})
     print(f"bundle ready: {out_dir}")
 
 

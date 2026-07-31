@@ -25,6 +25,15 @@ and the Hugging Face cache all resolve through [`_paths.py`](_paths.py) — run 
 (`python3 _paths.py`) to print where they land, and set `ZOO_WORK_ROOT` / `ZOO_EXPORTS` /
 `ZOO_CODE_ROOT` / `HF_HUB_CACHE` to move them.
 
+**The tail every exporter shares**: writing `metadata.json`, specifying the `lm_head`
+quantization, and copying the tokenizer in are the same job in every driver, and live in
+[`_bundle.py`](_bundle.py). They used to be copy-pasted — 28 private copies of the metadata
+writer, in ten variants — and the drift cost a `TypeError` at the end of a completed export and
+a tokenizer fetch that could not retrieve a file its own copy step asked for. What a driver
+*quantizes* stays in the driver: `linear_quant_config` is the recipe, not boilerplate.
+[`_bundle_selftest.py`](_bundle_selftest.py) holds each driver's pre-extraction output and checks
+the call sites on disk still produce it, byte for byte.
+
 ## How it relates to Apple's `coreai_models`
 
 The re-authored decoders use `coreai_models` primitives (KVCache, RMSNorm, RoPE, SDPA, SSMState,

@@ -1,0 +1,1329 @@
+{
+ "head_quant": {
+  "export_glm47_absorbed_decode_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 16,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 8,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_glm47_decode_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 16,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 8,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_glm47_moe_metal_decode_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 16,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 8,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_glm_image_ar.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_glm_ocr_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_granite4h_decode_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 16,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 8,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_lfm2_decode_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 16,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 8,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_lfm2_moe_decode_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 16,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 8,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_mineru_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_minicpmv46_chunked_prefill.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_minicpmv46_vlm_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_nanbeige41_decode_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 16,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 8,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_nemotron_h_decode_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 16,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 8,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_qwen3_5_decode_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 16,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 8,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_qwen3_5_verify_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 16,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 8,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_qwen3_6_decode_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 16,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 8,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_qwen3_6_moe_metal_decode_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 16,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 8,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_qwen3_vl_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_youtu_decode_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 16,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 8,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   },
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 0,
+       "type": "per_channel"
+      },
+      "qscheme": "symmetric"
+     }
+    }
+   }
+  ],
+  "export_zaya_moe_metal_decode_pipelined.py": [
+   {
+    "op_input_spec": null,
+    "op_output_spec": null,
+    "op_state_spec": {
+     "weight": {
+      "dtype": "int8",
+      "granularity": {
+       "axis": 1,
+       "block_size": 32,
+       "type": "per_block"
+      },
+      "qscheme": "symmetric_with_clipping"
+     }
+    }
+   }
+  ]
+ },
+ "metadata": {
+  "export_bitcpm8b_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"openbmb/BitCPM-CANN-8B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"openbmb/BitCPM-CANN-8B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_bitvla_llm_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"lxsy/bitvla-bf16\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": false,\n    \"input\": \"inputs_embeds[1,1,2560]\",\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"lxsy/bitvla-bf16\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_gemma4_12b_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_gemma4_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_gemma4_mixedbit_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"weights\": \"gemma-4-E2B-it-qat-mobile-transformers\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_gemma4_mixedbit_verify_pipelined.py::verify": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"verify_query_len\": 4,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_gemma4_pf_pipelined.py::pf": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\",\n        \"prefill\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_gemma4_vl_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_glm47_absorbed_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_glm47_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_glm47_moe_metal_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_glm_ocr_pipelined.py::llm": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_glm_ocr_pipelined.py::prefill": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\",\n        \"prefill\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_granite4h_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_lfm2_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_lfm2_moe_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_lfm2_moe_dense_int4km_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_lfm2_moe_metal_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_mineru_pipelined.py::llm": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_mineru_pipelined.py::prefill": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\",\n        \"prefill\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_nanbeige41_decode_pipelined.py::fp16": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_nanbeige41_decode_pipelined.py::int8hu": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"hf_revision\": \"abc123\"\n  },\n  \"compression\": {\n    \"scheme\": \"int8hu\"\n  },\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_nemotron_h_decode_pipelined.py::fp16": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_nemotron_h_decode_pipelined.py::int8hu": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": {\n    \"scheme\": \"int8hu\"\n  },\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_qwen3_5_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_qwen3_5_verify_pipelined.py::verify": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"verify_query_len\": 4,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_qwen3_6_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_qwen3_6_moe_dense_fp4_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_qwen3_6_moe_dense_int4km_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_qwen3_6_moe_metal_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_qwen3_vl_pipelined.py::llm": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_qwen3_vl_pipelined.py::prefill": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\",\n        \"prefill\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_youtu_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Qwen/Qwen3.6-35B-A3B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Qwen/Qwen3.6-35B-A3B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}",
+  "export_zaya_moe_metal_decode_pipelined.py::decode": "{\n  \"metadata_version\": \"0.2\",\n  \"kind\": \"llm\",\n  \"name\": \"qwen3-6-35b-a3b_int8hu\",\n  \"assets\": {\n    \"main\": \"qwen3-6-35b-a3b_int8hu.aimodel\"\n  },\n  \"language\": {\n    \"tokenizer\": \"Zyphra/ZAYA1-8B\",\n    \"vocab_size\": 151936,\n    \"max_context_length\": 8192,\n    \"embedded_tokenizer\": true,\n    \"function_map\": {\n      \"main\": [\n        \"main\"\n      ]\n    }\n  },\n  \"source\": {\n    \"model_definition\": \"torch\",\n    \"hf_model_id\": \"Zyphra/ZAYA1-8B\"\n  },\n  \"compression\": null,\n  \"compilation\": {\n    \"date\": \"FROZEN\",\n    \"targets\": []\n  }\n}"
+ }
+}

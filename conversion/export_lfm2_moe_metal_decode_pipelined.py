@@ -28,12 +28,11 @@ Bench: COREAI_CHUNK_THRESHOLD=1 llm-benchmark --model <out> -p 128 -g 256 -n 3
 from __future__ import annotations
 
 import argparse
-import json
 import shutil
-from datetime import datetime, timezone
 from pathlib import Path
 
 import torch
+from _bundle import save_tokenizer, write_bundle_metadata
 
 from coreai_models.export._constants import TRACE_KV_CACHE_SEQ_LEN
 from coreai_models.export.macos import _EXTERNALIZE_SPECS
@@ -81,47 +80,6 @@ def linear_quant_config(dtype: str = "int8", block: int = 32) -> dict:
             r".*feed_forward\.gate$": None,                            # router stays fp16
         },
     }
-
-
-def write_bundle_metadata(out_dir: Path, name: str, hf_id: str, cfg, max_ctx: int) -> None:
-    meta = {
-        "metadata_version": "0.2",
-        "kind": "llm",
-        "name": name,
-        "assets": {"main": f"{name}.aimodel"},
-        "language": {
-            "tokenizer": hf_id,
-            "vocab_size": cfg.vocab_size,
-            "max_context_length": max_ctx,
-            "embedded_tokenizer": True,
-            "function_map": {"main": ["main"]},
-        },
-        "source": {"model_definition": "torch", "hf_model_id": hf_id},
-        "compression": None,
-        "compilation": {"date": datetime.now(timezone.utc).isoformat(), "targets": []},
-    }
-    (out_dir / "metadata.json").write_text(json.dumps(meta, indent=2))
-
-
-def save_tokenizer(hf_id: str, out_dir: Path) -> None:
-    try:
-        from transformers import AutoTokenizer
-
-        AutoTokenizer.from_pretrained(hf_id).save_pretrained(out_dir / "tokenizer")
-    except Exception as e:
-        print(f"AutoTokenizer failed ({e}); copying raw tokenizer files")
-        from huggingface_hub import snapshot_download
-
-        # snapshot_download returns the shared cache root (which also holds the model
-        # weights) — copy ONLY the tokenizer-related files, never the *.safetensors.
-        src = Path(snapshot_download(hf_id, allow_patterns=[
-            "tokenizer*", "*.txt", "chat_template*", "special_tokens*", "vocab*", "merges*"]))
-        (out_dir / "tokenizer").mkdir(exist_ok=True)
-        wanted = ("tokenizer.json", "tokenizer_config.json", "tokenizer.model",
-                  "special_tokens_map.json", "vocab.json", "merges.txt", "chat_template.jinja")
-        for f in src.iterdir():
-            if f.is_file() and (f.name in wanted or f.name.startswith("tokenizer")):
-                shutil.copy2(f, out_dir / "tokenizer" / f.name)
 
 
 def main() -> None:
@@ -213,7 +171,7 @@ def main() -> None:
     print(f"saving {aimodel} ...", flush=True)
     prog.save_asset(aimodel, rt.AIModelAssetMetadata())
 
-    write_bundle_metadata(out_dir, name, args.hf_id, cfg, args.max_ctx)
+    write_bundle_metadata(out_dir, name, args.hf_id, cfg.vocab_size, args.max_ctx)
     save_tokenizer(args.hf_id, out_dir)
     if quant_mmap is not None:
         shutil.rmtree(quant_mmap, ignore_errors=True)

@@ -20,6 +20,7 @@ import shutil
 from pathlib import Path
 
 import torch
+from _bundle import head_quant_spec
 
 from coreai_models.export._constants import TRACE_KV_CACHE_SEQ_LEN
 from coreai_models.export.macos import _EXTERNALIZE_SPECS, export_to_coreai
@@ -60,22 +61,6 @@ def linear_quant_config(dtype: str = "int8") -> dict:
     }
 
 
-def head_quant_spec() -> dict:
-    """int8hu head: per-block-32 + plain symmetric (absmax) — big-vocab rule.
-    (GLM-Image head is only vision_vocab=16512, so this is optional.)"""
-    return {
-        "op_state_spec": {
-            "weight": {
-                "dtype": "int8",
-                "qscheme": "symmetric",
-                "granularity": {"type": "per_block", "block_size": 32, "axis": 1},
-            }
-        },
-        "op_input_spec": None,
-        "op_output_spec": None,
-    }
-
-
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("mode", nargs="?", default="int8lin",
@@ -103,7 +88,9 @@ def main() -> None:
 
         cfg_q = linear_quant_config("int8")
         if args.mode == "int8hu":
-            cfg_q["module_name_configs"] = {r".*lm_head$": head_quant_spec()}
+            # Optional here, unlike the text models: this head is vision_vocab=16512, well
+            # short of the fat tail the big-vocab rule exists for.
+            cfg_q["module_name_configs"] = {r".*lm_head$": head_quant_spec("block32", True)}
             model.lm_head.weight = torch.nn.Parameter(model.lm_head.weight.detach().clone())
         print(f"quantizing ({args.mode}) ...", flush=True)
         model = quantize_pytorch_model(

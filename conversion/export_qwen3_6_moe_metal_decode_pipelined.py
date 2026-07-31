@@ -19,12 +19,11 @@ Run:  cd ~/code/coreai/coreai-models && .venv/bin/python \
 from __future__ import annotations
 
 import argparse
-import json
 import shutil
-from datetime import datetime, timezone
 from pathlib import Path
 
 import torch
+from _bundle import head_quant_spec, save_tokenizer, write_bundle_metadata
 
 from coreai_models.export._constants import TRACE_KV_CACHE_SEQ_LEN
 from coreai_models.export.macos import _EXTERNALIZE_SPECS
@@ -72,45 +71,6 @@ def linear_quant_config(dtype: str = "int8") -> dict:
             r".*lm_head$": None,
         },
     }
-
-
-def head_quant_spec(gran: str, sym: bool) -> dict:
-    if gran == "perchan":
-        g: dict = {"type": "per_channel", "axis": 0}
-    else:
-        g = {"type": "per_block", "block_size": int(gran[len("block"):]), "axis": 1}
-    return {
-        "op_state_spec": {"weight": {"dtype": "int8",
-                                     "qscheme": "symmetric" if sym else "symmetric_with_clipping",
-                                     "granularity": g}},
-        "op_input_spec": None,
-        "op_output_spec": None,
-    }
-
-
-def write_bundle_metadata(out_dir: Path, name: str, hf_id: str, cfg, max_ctx: int) -> None:
-    meta = {
-        "metadata_version": "0.2", "kind": "llm", "name": name,
-        "assets": {"main": f"{name}.aimodel"},
-        "language": {"tokenizer": hf_id, "vocab_size": cfg.vocab_size,
-                     "max_context_length": max_ctx, "embedded_tokenizer": True,
-                     "function_map": {"main": ["main"]}},
-        "source": {"model_definition": "torch", "hf_model_id": hf_id},
-        "compression": None,
-        "compilation": {"date": datetime.now(timezone.utc).isoformat(), "targets": []},
-    }
-    (out_dir / "metadata.json").write_text(json.dumps(meta, indent=2))
-
-
-def save_tokenizer(hf_id: str, out_dir: Path) -> None:
-    from huggingface_hub import snapshot_download
-    src = Path(snapshot_download(hf_id, allow_patterns=[
-        "tokenizer*", "*.txt", "chat_template*", "vocab*", "merges*"]))
-    (out_dir / "tokenizer").mkdir(exist_ok=True)
-    for f in src.iterdir():
-        if f.is_file() and (f.name.startswith("tokenizer") or f.name in (
-                "vocab.json", "merges.txt", "chat_template.jinja", "special_tokens_map.json")):
-            shutil.copy2(f, out_dir / "tokenizer" / f.name)
 
 
 def main() -> None:
@@ -201,8 +161,8 @@ def main() -> None:
     aimodel = out_dir / f"{name}.aimodel"
     print(f"saving {aimodel} ...", flush=True)
     prog.save_asset(aimodel, rt.AIModelAssetMetadata())
-    write_bundle_metadata(out_dir, name, args.hf_id, cfg, args.max_ctx)
-    save_tokenizer(args.hf_id, out_dir)
+    write_bundle_metadata(out_dir, name, args.hf_id, cfg.vocab_size, args.max_ctx)
+    save_tokenizer(args.hf_id, out_dir, via_transformers=False)
     if quant_mmap is not None:
         shutil.rmtree(quant_mmap, ignore_errors=True)
     print(f"bundle ready: {out_dir}")

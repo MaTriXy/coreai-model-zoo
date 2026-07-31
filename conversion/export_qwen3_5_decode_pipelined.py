@@ -37,12 +37,11 @@ quantizer silently skips shared parameters).
 from __future__ import annotations
 
 import argparse
-import json
 import shutil
-from datetime import datetime, timezone
 from pathlib import Path
 
 import torch
+from _bundle import head_quant_spec, write_bundle_metadata
 
 from coreai_models.export._constants import TRACE_KV_CACHE_SEQ_LEN
 from coreai_models.export.macos import _EXTERNALIZE_SPECS, export_to_coreai
@@ -97,55 +96,6 @@ def linear_quant_config(dtype: str = "int8") -> dict:
         },
         "module_name_configs": {r".*lm_head$": None},
     }
-
-
-def head_quant_spec(gran: str, sym: bool) -> dict:
-    """int8hu: the explicit lm_head spec. Big-vocab heads are fat-tailed —
-    `symmetric_with_clipping` crushes outlier rows (the 2B 6/16 oracle-flip
-    signature: one position craters to cos 0.62 while neighbors sit at 0.999x);
-    plain `symmetric` (absmax) gates 16/16. SHIP SHAPE: per-block-32 +
-    --head-sym. WARNING: per_channel axis-0 int8 dequant is BROKEN on the
-    macOS-27-beta GPU delegate (garbage logits, cos ~0 vs torch, any vocab
-    shape, sym or clipping — minimal head-only repro 2026-06-11); the
-    "perchan" choice is kept for re-testing on future OS builds only. The
-    historically-named *_perchan_sym bundles were byte-identical to block32
-    (an earlier version of this script never applied the granularity flag) —
-    every shipped number was measured on per-block-32 + symmetric."""
-    if gran == "perchan":
-        g: dict = {"type": "per_channel", "axis": 0}
-    else:
-        g = {"type": "per_block", "block_size": int(gran[len("block"):]), "axis": 1}
-    return {
-        "op_state_spec": {
-            "weight": {
-                "dtype": "int8",
-                "qscheme": "symmetric" if sym else "symmetric_with_clipping",
-                "granularity": g,
-            }
-        },
-        "op_input_spec": None,
-        "op_output_spec": None,
-    }
-
-
-def write_bundle_metadata(out_dir: Path, name: str, hf_id: str, cfg, max_ctx: int) -> None:
-    meta = {
-        "metadata_version": "0.2",
-        "kind": "llm",
-        "name": name,
-        "assets": {"main": f"{name}.aimodel"},
-        "language": {
-            "tokenizer": hf_id,
-            "vocab_size": cfg.vocab_size,
-            "max_context_length": max_ctx,
-            "embedded_tokenizer": True,
-            "function_map": {"main": ["main"]},
-        },
-        "source": {"model_definition": "torch", "hf_model_id": hf_id},
-        "compression": None,
-        "compilation": {"date": datetime.now(timezone.utc).isoformat(), "targets": []},
-    }
-    (out_dir / "metadata.json").write_text(json.dumps(meta, indent=2))
 
 
 def main() -> None:
@@ -222,6 +172,11 @@ def main() -> None:
 
         cfg_q = linear_quant_config("int4" if args.mode == "int4lin" else "int8")
         if args.mode == "int8hu":
+            # Provenance for the published bundles: the ones named `*_perchan_sym` contain
+            # per-block-32 heads. An earlier version of this script parsed --head-quant
+            # without applying it, so both arms of that A/B were block32 — byte-identical
+            # sizes confirm it, and every published number stands.
+            # knowledge/pipelined-engine.md records the bisect.
             cfg_q["module_name_configs"] = {
                 r".*lm_head$": head_quant_spec(args.head_quant, args.head_sym)}
             model.lm_head.weight = torch.nn.Parameter(
@@ -258,7 +213,7 @@ def main() -> None:
     print(f"saving {aimodel} ...")
     prog.save_asset(aimodel, rt.AIModelAssetMetadata())
 
-    write_bundle_metadata(out_dir, name, args.hf_id, cfg, args.max_ctx)
+    write_bundle_metadata(out_dir, name, args.hf_id, cfg.vocab_size, args.max_ctx)
     from transformers import AutoTokenizer
 
     AutoTokenizer.from_pretrained(args.hf_id).save_pretrained(out_dir / "tokenizer")

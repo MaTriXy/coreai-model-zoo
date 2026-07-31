@@ -17,12 +17,11 @@ GPU exclusivity: grab the community-repo _GPU_LOCK before the export path.
 from __future__ import annotations
 
 import argparse
-import json
 import shutil
-from datetime import datetime, timezone
 from pathlib import Path
 
 import torch
+from _bundle import write_bundle_metadata
 from _paths import work_path
 
 from coreai_models.export._constants import (
@@ -101,18 +100,6 @@ def cpu_generate(model, cfg, prompt: str, new: int = 8):
     print("GENERATION:", repr(tok.decode(out)), flush=True)
 
 
-def write_bundle_metadata(out_dir: Path, name: str, cfg, max_ctx: int):
-    meta = {"metadata_version": "0.2", "kind": "llm", "name": name,
-            "assets": {"main": f"{name}.aimodel"},
-            "language": {"tokenizer": "openbmb/BitCPM-CANN-8B", "vocab_size": cfg.vocab_size,
-                         "max_context_length": max_ctx, "embedded_tokenizer": True,
-                         "function_map": {"main": ["main"]}},
-            "source": {"model_definition": "torch", "hf_model_id": "openbmb/BitCPM-CANN-8B"},
-            "compression": None,
-            "compilation": {"date": datetime.now(timezone.utc).isoformat(), "targets": []}}
-    (out_dir / "metadata.json").write_text(json.dumps(meta, indent=2))
-
-
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--check", action="store_true", help="CPU greedy parity (no export, no GPU)")
@@ -156,7 +143,8 @@ def main():
     aimodel = out_dir / f"{name}.aimodel"
     print(f"saving {aimodel} ...", flush=True)
     prog.save_asset(aimodel, rt.AIModelAssetMetadata())
-    write_bundle_metadata(out_dir, name, cfg, args.max_ctx)
+    write_bundle_metadata(out_dir, name, "openbmb/BitCPM-CANN-8B", cfg.vocab_size,
+                          args.max_ctx)
     from transformers import AutoTokenizer
     AutoTokenizer.from_pretrained(HF, trust_remote_code=True).save_pretrained(out_dir / "tokenizer")
     print(f"bundle ready: {out_dir}", flush=True)

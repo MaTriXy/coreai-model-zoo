@@ -32,12 +32,11 @@ clipping crushes outlier head rows). Vision stays fp16 in all modes.
 from __future__ import annotations
 
 import argparse
-import json
 import shutil
-from datetime import datetime, timezone
 from pathlib import Path
 
 import torch
+from _bundle import head_quant_spec, write_bundle_metadata
 
 from coreai_models.export._constants import TRACE_KV_CACHE_SEQ_LEN
 from coreai_models.export.macos import _EXTERNALIZE_SPECS, export_to_coreai
@@ -73,42 +72,6 @@ def linear_quant_config(dtype: str = "int8") -> dict:
         },
         "module_name_configs": {r".*lm_head$": None},
     }
-
-
-def head_quant_spec() -> dict:
-    """int8hu head: per-block-32 + plain symmetric (absmax) — the big-vocab rule."""
-    return {
-        "op_state_spec": {
-            "weight": {
-                "dtype": "int8",
-                "qscheme": "symmetric",
-                "granularity": {"type": "per_block", "block_size": 32, "axis": 1},
-            }
-        },
-        "op_input_spec": None,
-        "op_output_spec": None,
-    }
-
-
-def write_bundle_metadata(out_dir: Path, name: str, hf_id: str, vocab: int, max_ctx: int,
-                          functions: tuple[str, ...] = ("main",)) -> None:
-    meta = {
-        "metadata_version": "0.2",
-        "kind": "llm",
-        "name": name,
-        "assets": {"main": f"{name}.aimodel"},
-        "language": {
-            "tokenizer": hf_id,
-            "vocab_size": vocab,
-            "max_context_length": max_ctx,
-            "embedded_tokenizer": True,
-            "function_map": {"main": list(functions)},
-        },
-        "source": {"model_definition": "torch", "hf_model_id": hf_id},
-        "compression": None,
-        "compilation": {"date": datetime.now(timezone.utc).isoformat(), "targets": []},
-    }
-    (out_dir / "metadata.json").write_text(json.dumps(meta, indent=2))
 
 
 def export_vision(args, name: str) -> None:
@@ -185,7 +148,7 @@ def main() -> None:
 
         cfg_q = linear_quant_config("int8")
         if args.mode == "int8hu":
-            cfg_q["module_name_configs"] = {r".*lm_head$": head_quant_spec()}
+            cfg_q["module_name_configs"] = {r".*lm_head$": head_quant_spec("block32", True)}
             model.lm_head.weight = torch.nn.Parameter(
                 model.lm_head.weight.detach().clone())
         print(f"quantizing ({args.mode}) ...")

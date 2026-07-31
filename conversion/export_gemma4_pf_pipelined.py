@@ -22,12 +22,12 @@ import argparse
 import json
 import re
 import shutil
-from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
 import torch
 from huggingface_hub import snapshot_download
+from _bundle import write_bundle_metadata
 
 import coreai_torch.converter as _ct_conv
 from coreai_models.export._constants import TRACE_KV_CACHE_SEQ_LEN
@@ -73,26 +73,6 @@ def bundle_basename(hf_id: str) -> str:
     low = hf_id.lower()
     tag = "e4b" if "e4b" in low else "e2b"
     return f"gemma4_{tag}"
-
-
-def write_bundle_metadata(out_dir: Path, name: str, hf_id: str, cfg, max_ctx: int) -> None:
-    meta = {
-        "metadata_version": "0.2",
-        "kind": "llm",
-        "name": name,
-        "assets": {"main": f"{name}.aimodel"},
-        "language": {
-            "tokenizer": hf_id,
-            "vocab_size": cfg.vocab_size,
-            "max_context_length": max_ctx,
-            "embedded_tokenizer": True,
-            "function_map": {"main": ["main", "prefill"]},
-        },
-        "source": {"model_definition": "torch", "hf_model_id": hf_id},
-        "compression": None,
-        "compilation": {"date": datetime.now(timezone.utc).isoformat(), "targets": []},
-    }
-    (out_dir / "metadata.json").write_text(json.dumps(meta, indent=2))
 
 
 def _install_dim_retry_shim() -> None:
@@ -224,7 +204,8 @@ def main() -> None:
     print(f"saving {aimodel} ...")
     prog.save_asset(aimodel, rt.AIModelAssetMetadata())
 
-    write_bundle_metadata(out_dir, name, args.hf_id, cfg, args.max_ctx)
+    write_bundle_metadata(out_dir, name, args.hf_id, cfg.vocab_size, args.max_ctx,
+                          functions=("main", "prefill"))
     tok_dir = out_dir / "tokenizer"
     tok_dir.mkdir()
     for f in ("tokenizer.json", "tokenizer_config.json", "special_tokens_map.json",

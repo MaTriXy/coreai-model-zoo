@@ -39,11 +39,11 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
-from datetime import datetime, timezone
 from pathlib import Path
 
 import torch
 from huggingface_hub import snapshot_download
+from _bundle import write_bundle_metadata
 
 from coreai_models.export._constants import TRACE_KV_CACHE_SEQ_LEN
 from coreai_models.export.macos import _EXTERNALIZE_SPECS, export_to_coreai
@@ -88,26 +88,6 @@ def linear_quant_config(dtype: str = "int8", qscheme: str = "symmetric_with_clip
         },
         "module_name_configs": {r".*embed_tokens$": None},
     }
-
-
-def write_bundle_metadata(out_dir: Path, name: str, hf_id: str, cfg, max_ctx: int) -> None:
-    meta = {
-        "metadata_version": "0.2",
-        "kind": "llm",
-        "name": name,
-        "assets": {"main": f"{name}.aimodel"},
-        "language": {
-            "tokenizer": hf_id,
-            "vocab_size": cfg.vocab_size,
-            "max_context_length": max_ctx,
-            "embedded_tokenizer": True,
-            "function_map": {"main": ["main"]},
-        },
-        "source": {"model_definition": "torch", "hf_model_id": hf_id},
-        "compression": None,
-        "compilation": {"date": datetime.now(timezone.utc).isoformat(), "targets": []},
-    }
-    (out_dir / "metadata.json").write_text(json.dumps(meta, indent=2))
 
 
 def export_vision(args, base: str) -> None:
@@ -238,7 +218,7 @@ def main() -> None:
     print(f"saving {aimodel} ...")
     prog.save_asset(aimodel, rt.AIModelAssetMetadata())
 
-    write_bundle_metadata(out_dir, name, args.hf_id, cfg, args.max_ctx)
+    write_bundle_metadata(out_dir, name, args.hf_id, cfg.vocab_size, args.max_ctx)
     tok_dir = out_dir / "tokenizer"
     tok_dir.mkdir()
     for f in ("tokenizer.json", "tokenizer_config.json", "special_tokens_map.json",
