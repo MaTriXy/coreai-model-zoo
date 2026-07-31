@@ -186,6 +186,9 @@ def cmd_doctor(python: str) -> int:
         return 1
     print(f"package: {res.stdout.strip()}")
     print(f"overlay: OK ({OVERLAY_CANARY} imports)")
+    print("note   : this checks the ENVIRONMENT. To check an artifact — a bundle, an asset, a "
+          "checkpoint —\n         use `python3 cli/coreai_doctor.py <target>`, which also "
+          "carries this probe as --env.")
     return 0
 
 

@@ -50,11 +50,19 @@ only "how was *that* bundle produced" from a recipe name.
 ```bash
 python3 conversion/zoo_verify.py mlboydaisuke/qwen3.5-0.8B-CoreAI   # one repo
 python3 conversion/zoo_verify.py --all --json models/_VERIFY.json   # the whole catalog
+
+python3 cli/coreai_doctor.py exports/my_bundle --profile iphone     # known failure patterns
+python3 cli/coreai_verify.py exports/my_bundle -n 16                # vs an HF oracle
 ```
 
 Tier 1 compares a bundle's tokenizer, chat template, context length and declared precision
 against the source repository named in its own `metadata.json` — no oracle, no device, no
 weights, so the whole catalog checks in minutes.
+
+[`cli/`](../cli/) asks a different question of the same bundle: not "does it match its
+source" but "does it match what the runtime will do with it", from the bundle's own files.
+The two are complementary — a port can copy its source perfectly and still ship a value the
+chat template never emits. See [`cli/DOCTOR_RULES.md`](../cli/DOCTOR_RULES.md).
 
 ## Catalog
 

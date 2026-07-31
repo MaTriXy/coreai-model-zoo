@@ -303,6 +303,7 @@ kernel — the stock MPSGraph SDPA crashes on the ≥16-head × 512 Q (a GPU scr
 | [`skills/`](skills/) | Agent skills — install them and your coding agent can pick a model, reproduce its bundle, and verify the result. |
 | [`knowledge/`](knowledge/) | Verified notes on the framework: conversion, compression, stateful KV, custom Metal kernels, AOT, compute-unit rules, the Swift runtime. |
 | [`conversion/`](conversion/) | Re-authored models + convert / verify / compress scripts (PyTorch → `.aimodel`). |
+| [`cli/`](cli/) | `coreai export` / `doctor` / `verify` — find a model's export route, lint an artifact against the failure patterns in [`knowledge/`](knowledge/), gate it against an HF oracle. [`DOCTOR_RULES.md`](cli/DOCTOR_RULES.md) is the table those checks come from: 64 ways a conversion succeeds and the result is quietly wrong. |
 | [`swift/`](swift/) | `CoreAIRunner` — a Swift package that drives `.aimodel` LLM bundles, including architectures beyond the standard runtime. |
 | [`apps/`](apps/) | **Engine showcases** — apps for models that need a hand-tuned backend (custom Metal kernels, patch stack: BitCPM, RWKV-7, LLaDA, …) and the device-verification bench behind the published numbers. Want to *just run a model*? Use the [kit examples ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples) instead. |
 

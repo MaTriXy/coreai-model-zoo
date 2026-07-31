@@ -1,0 +1,188 @@
+coreai export — routing validation, 2026-07-31 (re-run after the source-id recovery)
+Exit: 0 route, 1 preflight defect, 2 blocked.
+
+############################################################
+$ python3 coreai_export.py Qwen/Qwen3-0.6B --device mac
+
+coreai export  Qwen/Qwen3-0.6B
+model_type     'qwen3'   (fetched config.json for Qwen/Qwen3-0.6B)
+device         mac -> --platform macOS, AOT arch h16c
+tables         live (~/code/coreai/coreai-models/.venv/bin/python)
+route          PRESET — Apple stock exporter, named preset for this checkpoint
+
+--- CHECKPOINT PRE-FLIGHT (coreai doctor) ------------------------------
+  PERF     TIED-EMBEDDINGS-SKIP-QUANT
+            tie_word_embeddings = true
+  RUNAWAY  EOS-SOURCE-MISMATCH
+            generation_config eos_token_id = [151645 (<|im_end|>), 151643 (<|endoftext|>)], tokenizer_config eos_token = '<|im_end|>'
+
+--- WHAT IS AND IS NOT SETTLED ------------------------------------------
+  - named preset 'qwen3-0.6b' — compute precision, compression and context length all come from the preset, and Apple has run this combination.
+
+--- COMMAND ------------------------------------------------------------
+  $ ~/code/coreai/coreai-models/.venv/bin/python -m coreai_models.llm.export qwen3-0.6b --platform macOS
+
+--- AFTER THE EXPORT ---------------------------------------------------
+  - AOT, if the cold specialization stalls or aborts: xcrun coreai-build compile <bundle>.aimodel --output <dir> --platform macOS --architecture h16c --preferred-compute gpu --min-deployment-version 27.0
+  - Gate before you believe it: python3 conversion/coreai_gate.py <bundle> <hf-id> -n 16 — token-exact against the HF oracle on a prompt whose fp32 top-2 margin clears 0.1 at every position. An export that has not been gated is not a port.
+  - Lint the result: python3 ~/code/coreai/coreai-cli/coreai_doctor.py <bundle> --profile mac
+
+  h16c is the only macOS arch that loads on an M4 Max here; the other 19 raise.
+$ echo $?  ->  0
+
+############################################################
+$ python3 coreai_export.py TinyLlama/TinyLlama-1.1B-Chat-v1.0 --device iphone
+
+coreai export  TinyLlama/TinyLlama-1.1B-Chat-v1.0
+model_type     'llama'   (fetched config.json for TinyLlama/TinyLlama-1.1B-Chat-v1.0)
+device         iphone -> --platform iOS, AOT arch h18p
+tables         live (~/code/coreai/coreai-models/.venv/bin/python)
+route          GENERIC — Apple stock exporter, routed by model_type only — UNVALIDATED for this checkpoint
+
+--- WHAT IS AND IS NOT SETTLED ------------------------------------------
+  - model_type 'llama' (remapped to 'mistral') routes, but there is NO preset for this checkpoint. --experimental is required, and nothing about the recipe has been validated for these weights.
+  - Quantization tolerance is a per-model property, not an architecture property: the same int4-linear recipe is top-1 exact on Gemma-4 and Ornith-9B and fails the gate on Qwen3.5-0.8B/2B and LFM2.5. Expect to gate, not to ship.
+
+--- COMMAND ------------------------------------------------------------
+  $ ~/code/coreai/coreai-models/.venv/bin/python -m coreai_models.llm.export TinyLlama/TinyLlama-1.1B-Chat-v1.0 --platform iOS --compute-precision float16 --experimental
+
+--- AFTER THE EXPORT ---------------------------------------------------
+  - AOT, if the cold specialization stalls or aborts: xcrun coreai-build compile <bundle>.aimodel --output <dir> --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0
+  - Gate before you believe it: python3 conversion/coreai_gate.py <bundle> <hf-id> -n 16 — token-exact against the HF oracle on a prompt whose fp32 top-2 margin clears 0.1 at every position. An export that has not been gated is not a port.
+  - Lint the result: python3 ~/code/coreai/coreai-cli/coreai_doctor.py <bundle> --profile iphone
+
+  h18p = iPhone18,1 = iPhone 17 Pro. A different iPhone needs its own arch, and an h17p bundle pushed to an iPhone18,1 fails with invalidCompiledModel.
+$ echo $?  ->  0
+
+############################################################
+$ python3 coreai_export.py Nanbeige/Nanbeige4.2-3B --device iphone
+
+coreai export  Nanbeige/Nanbeige4.2-3B
+model_type     'nanbeige'   (fetched config.json for Nanbeige/Nanbeige4.2-3B)
+device         iphone -> --platform iOS, AOT arch h18p
+tables         live (~/code/coreai/coreai-models/.venv/bin/python)
+route          ZOO — zoo recorded recipe — reproduces a bundle that shipped
+
+--- WHAT IS AND IS NOT SETTLED ------------------------------------------
+  - Apple's stock exporter has no route here — model_type 'nanbeige' is not in Apple's registry and has no remapping. There is no route. A new architecture needs a re-authored model class in coreai_models/models/macos/ — that is a port, not a flag, and it is exactly why the zoo carries 57 export scripts instead of one.
+  - the zoo has a recorded recipe for this exact source model: nanbeige4.2-3b. That reproduces a bundle that shipped and gated — prefer it over a generic route: python3 conversion/zoo_convert.py show nanbeige4.2-3b
+  - this recipe needs coreai_models with the zoo overlay applied — check with python3 conversion/zoo_convert.py doctor
+
+--- COMMAND ------------------------------------------------------------
+  $ python3 conversion/zoo_convert.py run nanbeige4.2-3b
+
+--- AFTER THE EXPORT ---------------------------------------------------
+  - AOT, if the cold specialization stalls or aborts: xcrun coreai-build compile <bundle>.aimodel --output <dir> --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0
+  - Gate before you believe it: python3 conversion/coreai_gate.py <bundle> <hf-id> -n 16 — token-exact against the HF oracle on a prompt whose fp32 top-2 margin clears 0.1 at every position. An export that has not been gated is not a port.
+  - Lint the result: python3 ~/code/coreai/coreai-cli/coreai_doctor.py <bundle> --profile iphone
+
+  h18p = iPhone18,1 = iPhone 17 Pro. A different iPhone needs its own arch, and an h17p bundle pushed to an iPhone18,1 fails with invalidCompiledModel.
+$ echo $?  ->  0
+
+############################################################
+$ python3 coreai_export.py LiquidAI/LFM2.5-1.2B-Instruct --device iphone
+
+coreai export  LiquidAI/LFM2.5-1.2B-Instruct
+model_type     'lfm2'   (fetched config.json for LiquidAI/LFM2.5-1.2B-Instruct)
+device         iphone -> --platform iOS, AOT arch h18p
+tables         live (~/code/coreai/coreai-models/.venv/bin/python)
+route          ZOO — zoo recorded recipe — reproduces a bundle that shipped
+
+--- WHAT IS AND IS NOT SETTLED ------------------------------------------
+  - Apple's stock exporter has no route here — model_type 'lfm2' is not in Apple's registry and has no remapping. There is no route. A new architecture needs a re-authored model class in coreai_models/models/macos/ — that is a port, not a flag, and it is exactly why the zoo carries 57 export scripts instead of one.
+  - the zoo has a recorded recipe for this exact source model: lfm2.5-1.2b. That reproduces a bundle that shipped and gated — prefer it over a generic route: python3 conversion/zoo_convert.py show lfm2.5-1.2b
+  - this recipe needs coreai_models with the zoo overlay applied — check with python3 conversion/zoo_convert.py doctor
+
+--- COMMAND ------------------------------------------------------------
+  $ python3 conversion/zoo_convert.py run lfm2.5-1.2b
+
+--- AFTER THE EXPORT ---------------------------------------------------
+  - AOT, if the cold specialization stalls or aborts: xcrun coreai-build compile <bundle>.aimodel --output <dir> --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0
+  - Gate before you believe it: python3 conversion/coreai_gate.py <bundle> <hf-id> -n 16 — token-exact against the HF oracle on a prompt whose fp32 top-2 margin clears 0.1 at every position. An export that has not been gated is not a port.
+  - Lint the result: python3 ~/code/coreai/coreai-cli/coreai_doctor.py <bundle> --profile iphone
+
+  h18p = iPhone18,1 = iPhone 17 Pro. A different iPhone needs its own arch, and an h17p bundle pushed to an iPhone18,1 fails with invalidCompiledModel.
+$ echo $?  ->  0
+
+############################################################
+$ python3 coreai_export.py google/gemma-3-4b-it --device iphone
+
+coreai export  google/gemma-3-4b-it
+model_type     'gemma3'   (fetched config.json for google/gemma-3-4b-it)
+device         iphone -> --platform iOS, AOT arch h18p
+tables         live (~/code/coreai/coreai-models/.venv/bin/python)
+route          GENERIC — Apple stock exporter, routed by model_type only — UNVALIDATED for this checkpoint
+
+--- CHECKPOINT PRE-FLIGHT (coreai doctor) ------------------------------
+  RUNAWAY  EOS-SOURCE-MISMATCH
+            generation_config eos_token_id = [1 (<eos>), 106 (<end_of_turn>)], tokenizer_config eos_token = '<eos>'
+
+--- BLOCKED ------------------------------------------------------------
+  'gemma3_text' has a macOS re-authoring but NO iOS one, so the stock exporter has no iOS path for it. This is the single most common wasted hour: the macOS export succeeds and there is simply nothing to target the phone with.
+
+--- WHAT IS AND IS NOT SETTLED ------------------------------------------
+  - model_type 'gemma3' (remapped to 'gemma3_text') routes, but there is NO preset for this checkpoint. --experimental is required, and nothing about the recipe has been validated for these weights.
+  - Quantization tolerance is a per-model property, not an architecture property: the same int4-linear recipe is top-1 exact on Gemma-4 and Ornith-9B and fails the gate on Qwen3.5-0.8B/2B and LFM2.5. Expect to gate, not to ship.
+  - a preset for this model exists, but only for: macOS
+
+--- COMMAND ------------------------------------------------------------
+  $ ~/code/coreai/coreai-models/.venv/bin/python -m coreai_models.llm.export google/gemma-3-4b-it --platform iOS --compute-precision float16 --experimental
+
+--- AFTER THE EXPORT ---------------------------------------------------
+  - AOT, if the cold specialization stalls or aborts: xcrun coreai-build compile <bundle>.aimodel --output <dir> --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0
+  - Gate before you believe it: python3 conversion/coreai_gate.py <bundle> <hf-id> -n 16 — token-exact against the HF oracle on a prompt whose fp32 top-2 margin clears 0.1 at every position. An export that has not been gated is not a port.
+  - Lint the result: python3 ~/code/coreai/coreai-cli/coreai_doctor.py <bundle> --profile iphone
+
+  h18p = iPhone18,1 = iPhone 17 Pro. A different iPhone needs its own arch, and an h17p bundle pushed to an iPhone18,1 fails with invalidCompiledModel.
+$ echo $?  ->  2
+
+############################################################
+$ python3 coreai_export.py google/gemma-4-E2B-it-qat-mobile-transformers --device mac
+
+coreai export  google/gemma-4-E2B-it-qat-mobile-transformers
+model_type     'gemma4'   (fetched config.json for google/gemma-4-E2B-it-qat-mobile-transformers)
+device         mac -> --platform macOS, AOT arch h16c
+tables         live (~/code/coreai/coreai-models/.venv/bin/python)
+route          GENERIC — Apple stock exporter, routed by model_type only — UNVALIDATED for this checkpoint
+
+--- CHECKPOINT PRE-FLIGHT (coreai doctor) ------------------------------
+  INFO     CHECKPOINT-PREQUANTIZED
+            quant_method='gemma' num_bits=4 quantize_embeddings=True, 11 per-module overrides
+  RUNAWAY  EOS-SOURCE-MISMATCH
+            generation_config eos_token_id = [1, 106, 50], tokenizer_config eos_token = '<eos>'
+  SILENT   QAT-STATIC-ACTIVATION-SCALES
+            1166 activation/KV scale tensors, e.g. lm_head.input_activation_scale, lm_head.output_activation_scale, model.audio_tower.layers.0.feed_forward1.ffw_layer_1.linear.input_activation_scale
+
+--- WHAT IS AND IS NOT SETTLED ------------------------------------------
+  - model_type 'gemma4' (remapped to 'gemma4_text') routes, but there is NO preset for this checkpoint. --experimental is required, and nothing about the recipe has been validated for these weights.
+  - Quantization tolerance is a per-model property, not an architecture property: the same int4-linear recipe is top-1 exact on Gemma-4 and Ornith-9B and fails the gate on Qwen3.5-0.8B/2B and LFM2.5. Expect to gate, not to ship.
+
+--- COMMAND ------------------------------------------------------------
+  $ ~/code/coreai/coreai-models/.venv/bin/python -m coreai_models.llm.export google/gemma-4-E2B-it-qat-mobile-transformers --platform macOS --compute-precision float16 --experimental
+
+--- AFTER THE EXPORT ---------------------------------------------------
+  - AOT, if the cold specialization stalls or aborts: xcrun coreai-build compile <bundle>.aimodel --output <dir> --platform macOS --architecture h16c --preferred-compute gpu --min-deployment-version 27.0
+  - Gate before you believe it: python3 conversion/coreai_gate.py <bundle> <hf-id> -n 16 — token-exact against the HF oracle on a prompt whose fp32 top-2 margin clears 0.1 at every position. An export that has not been gated is not a port.
+  - Lint the result: python3 ~/code/coreai/coreai-cli/coreai_doctor.py <bundle> --profile mac
+
+  h16c is the only macOS arch that loads on an M4 Max here; the other 19 raise.
+$ echo $?  ->  1
+
+############################################################
+$ python3 coreai_export.py state-spaces/mamba-130m-hf --device mac
+
+coreai export  state-spaces/mamba-130m-hf
+model_type     'mamba'   (fetched config.json for state-spaces/mamba-130m-hf)
+device         mac -> --platform macOS, AOT arch h16c
+tables         live (~/code/coreai/coreai-models/.venv/bin/python)
+route          NONE — no route
+
+--- CHECKPOINT PRE-FLIGHT (coreai doctor) ------------------------------
+  SILENT   QUANT-BLOCK-DIVISIBILITY
+            not divisible by block size 32: vocab_size=50280
+
+--- BLOCKED ------------------------------------------------------------
+  model_type 'mamba' is not in Apple's registry and has no remapping. There is no route. A new architecture needs a re-authored model class in coreai_models/models/macos/ — that is a port, not a flag, and it is exactly why the zoo carries 57 export scripts instead of one.
+
+$ echo $?  ->  2
+

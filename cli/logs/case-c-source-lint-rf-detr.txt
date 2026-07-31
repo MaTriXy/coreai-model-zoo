@@ -1,0 +1,43 @@
+$ python3 coreai_doctor.py <transformers>/models/rf_detr/ -v
+
+coreai doctor  ~/code/coreai/.venv-diffgemma/lib/python3.12/site-packages/transformers/models/rf_detr
+kind           source
+rules run      16
+
+--- DEFECTS -----------------------------------------------------------
+
+FATAL   SRC-SQUEEZE-DIM
+  squeeze(dim) is a no-op in torch when that dim != 1, but coreai-torch lowers it to a hard shrink and aborts
+  where : ~/code/coreai/.venv-diffgemma/lib/python3.12/site-packages/transformers/models/rf_detr/image_processing_rf_detr.py:725
+  found : ).squeeze(1)
+  fix   : Guard it so the trace resolves it away: if x.shape[1] == 1: x = x.squeeze(1).
+  source: knowledge/conversion-guide.md 'Gotchas that cost real time'
+
+FATAL   SRC-SQUEEZE-DIM
+  squeeze(dim) is a no-op in torch when that dim != 1, but coreai-torch lowers it to a hard shrink and aborts
+  where : ~/code/coreai/.venv-diffgemma/lib/python3.12/site-packages/transformers/models/rf_detr/modular_rf_detr.py:344
+  found : ).squeeze(1)
+  fix   : Guard it so the trace resolves it away: if x.shape[1] == 1: x = x.squeeze(1).
+  source: knowledge/conversion-guide.md 'Gotchas that cost real time'
+
+SILENT  SRC-FLOOR-ON-GPU
+  aten.floor / trunc / ceil execute as the identity function on the GPU delegate, and the same asset is correct on CPU
+  where : ~/code/coreai/.venv-diffgemma/lib/python3.12/site-packages/transformers/models/rf_detr/modeling_rf_detr.py:381
+  found : random_tensor = torch.floor(random_tensor + keep_prob)
+  fix   : The floor that survives every compute unit is torch.div(x * 2.0, 2.0, rounding_mode='floor') — floor-div with a divisor != 1 lowers correctly. Verify on GPU, not CPU. Check first whether the call is on the traced path at all: drop-path and other training-only branches match this pattern and never reach the graph.
+  source: apple/coreai-torch#10; knowledge/conversion-guide.md 'Detection transformers' 3
+
+SILENT  SRC-INT64-BOOL-MASK
+  an int64-comparison -> bool -> float mask chain corrupts an unrelated, still-live tensor elsewhere in the graph (even a declared graph output); clone()/contiguous() barriers do not protect the victim and skipping optimize() does not help
+  where : ~/code/coreai/.venv-diffgemma/lib/python3.12/site-packages/transformers/models/rf_detr/modeling_rf_detr.py:1488
+  found : output_proposals_valid = ((output_proposals > 0.01) & (output_proposals < 0.99)).all(-1, keepdim=True)
+  fix   : Compute 0/1 masks in float arithmetic: 1 - (x - x.clamp(lo, hi)).abs().clamp(max=1) is exact on integer-valued floats. Diagnosis pattern: a tensor is provably computed right (another consumer sees exact values) but reads wrong later.
+  source: apple/coreai-torch#11; knowledge/conversion-guide.md 'Detection transformers' 2
+
+summary        2 fatal, 2 silent
+
+What doctor does NOT tell you: it is a static lint and it cannot check numerics.
+Gate the bundle against an HF oracle before trusting it — teacher-forced top-1 over a
+prompt whose fp32 top-2 margin clears 0.1 at every position, 16/16. And gate the ENGINE
+path, not only the python runtime.
+

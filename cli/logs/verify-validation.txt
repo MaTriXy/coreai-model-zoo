@@ -1,0 +1,60 @@
+coreai verify — validation, 2026-07-31
+
+############ 1. the canonical gate prompt, REJECTED by its own margin rule
+$ python3 coreai_verify.py <bundle> -n 16     # default prompt 'The capital of France is'
+
+coreai verify  ~/code/coreai/coreai-models/exports/_cli_validation/qwen3_0_6b_4bit_dynamic
+oracle         Qwen/Qwen3-0.6B
+graph          2 states, query dynamic, logits dynamic
+backend        stock (plain transformers reference — no overlay needed)
+driver         llm-runner
+
+running the oracle (Qwen/Qwen3-0.6B, fp32) …
+  oracle: [12095, 13, 576, 6722, 315, 15344, 374, 21718, 13, 576, 6722, 315, 17689, 374, 24081, 13]
+  text  : ' Paris. The capital of Italy is Rome. The capital of Spain is Madrid.'
+
+--- PROMPT REJECTED ----------------------------------------------------
+  2 oracle position(s) sit below the 0.1 top-2 margin floor:
+    position 1: top-2 margin 0.0885
+    position 5: top-2 margin 0.0041
+  These are statistical coin flips: healthy int8 noise flips them and fp16 passes
+  by luck, so a score against this prompt means nothing in either direction.
+  Pick a more deterministic prompt and re-run. This is computable from the
+  oracle alone, before any bundle exists.
+$ echo $? -> 3
+
+############ 2. a prompt that clears the floor — full run
+$ python3 coreai_verify.py <bundle> -n 16 --prompt 'The alphabet begins A, B, C, D, E, F,'
+
+coreai verify  ~/code/coreai/coreai-models/exports/_cli_validation/qwen3_0_6b_4bit_dynamic
+oracle         Qwen/Qwen3-0.6B
+graph          2 states, query dynamic, logits dynamic
+backend        stock (plain transformers reference — no overlay needed)
+driver         llm-runner
+
+running the oracle (Qwen/Qwen3-0.6B, fp32) …
+  oracle: [479, 11, 472, 11, 358, 11, 619, 11, 730, 11, 444, 11, 386, 11, 451, 11]
+  text  : ' G, H, I, J, K, L, M, N,'
+  margins: min 0.958 — clears the 0.1 floor
+
+running the bundle (llm-runner) …
+  bundle: ' G, H, I, J, K, L, M, N,'
+
+--- PASS --------------------------------------------------------------
+  16/16 token-exact (decoded text identical to the fp32 oracle).
+$ echo $? -> 0
+
+############ 3. a family the zoo already owns: delegate, do not reimplement
+$ python3 coreai_verify.py <nanbeige bundle> --plan
+
+coreai verify  ~/code/coreai/_nanbeige42_pr6_bundle/gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1
+oracle         Nanbeige/Nanbeige4.2-3B @ 5ff54fb7
+graph          2 states, query static S=1, logits static
+backend        zoo (zoo arch 'nanbeige')
+driver         python-cpu
+
+--- DELEGATED ----------------------------------------------------------
+  The zoo carries a hand-transcribed fp32 oracle for 'nanbeige'. That is the
+  authority for this family; reimplementing it here would be a second copy to
+  drift. Run:
+    $ cd ~/code/coreai/coreai-models-community && python3 conversion/coreai_gate.py ~/code/coreai/_nanbeige42_pr6_bundle/gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1 Nanbeige/Nanbeige4.2-3B --arch nanbeige -n 16

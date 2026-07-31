@@ -1,0 +1,57 @@
+$ python3 coreai_doctor.py ~/code/coreai/coreai-models/exports/gemma4_e2b_mixedbit_decode_l5 --profile iphone -v
+
+coreai doctor  ~/code/coreai/coreai-models/exports/gemma4_e2b_mixedbit_decode_l5
+kind           bundle
+note           graph: 1 function(s), 2 state(s), 3626 ops in 52 kinds
+note           growing (dynamic-seq) states: keyCache, valueCache
+note           asset gemma4_e2b_mixedbit_decode_l5.aimodel: 373.4 MB
+rules run      17
+
+--- DEFECTS -----------------------------------------------------------
+
+FATAL   IR-040-DEBUG-LOC
+  asset was converted by coreai-torch 0.4.0 (no producer stamp) — the OS 27 beta 2+ compiler refuses its IR debug locations, so it loads on beta 1 and nowhere after
+  where : ~/code/coreai/coreai-models/exports/gemma4_e2b_mixedbit_decode_l5/gemma4_e2b_mixedbit_decode_l5.aimodel/metadata.json
+  found : no 'producer' key — a 0.4.1+ asset carries {"producer": "coreai-core 1.0.0b2", ...}; a 0.4.0 one carries only assetVersion
+  fix   : strip_debug_info is the cheap fix: weights stay byte-identical, minutes per model, no re-export. It needs an isolated coreai-torch 0.4.0 + coreai-core 1.0.0b1 venv to parse the old locations, then a b2 re-save to restamp the producer. Note coreai-build inspect reads a broken asset happily — inspect succeeding is not evidence the asset loads.
+  source: knowledge/coreai-torch-041-ir-incident.md; apple/coreai-torch#37, #44; RECOVERY_STATUS.md
+
+RUNAWAY CHAT-TEMPLATE-MISSING
+  an instruction-tuned model with no chat template in the bundle — the runtime silently falls back to raw completion and the model never sees turn markers
+  where : ~/code/coreai/coreai-models/exports/gemma4_e2b_mixedbit_decode_l5/tokenizer
+  found : neither chat_template.jinja nor a chat_template key in tokenizer_config.json; source model 'google/gemma-4-E2B-it' looks instruction-tuned
+  fix   : Copy the source model's chat template into the bundle. --apply-chat-template defaults to true and does NOT warn when there is nothing to apply — the model simply never sees turn markers, and any quality number measured this way is measuring raw completion.
+  source: knowledge/cross-runtime-quality-benchmarking.md 'Ops notes'
+
+--- NOTES AND SHIP REQUIREMENTS ---------------------------------------
+
+REQUIRE GRAPH-S1-RUN-CONTRACT
+  static S=1 decode graph: the engine's default warmup prefills 256 tokens and this graph rejects the substitution, and any multi-token prefill chunk is fatal
+  where : ~/code/coreai/coreai-models/exports/gemma4_e2b_mixedbit_decode_l5/gemma4_e2b_mixedbit_decode_l5.aimodel
+  found : input_ids is static NDArray (Int32, 1 × 1)
+  fix   : Set COREAI_CHUNK_THRESHOLD=1 BEFORE engine creation, never call engine.warmup() (it warms query length 256 and the static [1,1] graph rejects it), and drive llm-runner with --warmup exact --warmup-length 1. In an app, a 1-token generate after load IS the warmup.
+  source: knowledge/pipelined-engine.md 'Run contract'; knowledge/coreai-torch-041-ir-incident.md 'Non-obvious things the gate encodes'
+
+REQUIRE GRAPH-CUSTOM-METAL-KERNEL
+  the graph embeds custom Metal kernels — GPU-only by construction (the ANE runs fixed hardware ops and can never execute MSL)
+  where : ~/code/coreai/coreai-models/exports/gemma4_e2b_mixedbit_decode_l5/gemma4_e2b_mixedbit_decode_l5.aimodel
+  found : 26 metal4_kernel ops
+  fix   : This bundle is GPU-only: the ANE runs fixed hardware ops and can never execute hand-written MSL. Custom kernels do survive AOT (the .aimodelc embeds the MSL and the compiled outputs are bit-identical). If the kernel is gather_qmm-class, note its logits shape asserts in the pipelined GrowingLogitsBuffer.
+  source: knowledge/custom-metal-kernels.md; knowledge/compute-units-and-authoring.md
+
+REQUIRE GRAPH-DYNAMIC-KV-IOS-2048
+  growing (dynamic-seq) KV state plus a declared context of 2048 or more — the iOS on-device compiler miscompiles this graph class once the bound KV seq dim reaches 2048, and output is corrupt from token 1 at full pipeline speed. The host engine must carry the capacity guard; the artifact itself is fine
+  where : ~/code/coreai/coreai-models/exports/gemma4_e2b_mixedbit_decode_l5/gemma4_e2b_mixedbit_decode_l5.aimodel
+  found : dynamic-seq state(s) keyCache, valueCache with declared max_context_length=4096
+  fix   : Drive it with an engine that caps the resolved iOS KV capacity at 1024 (the guard shipped in coreai-models bd8dcf7), or clamp prompt + maxTokens below 1024 at the app layer. Capacity <=1024 is clean every time; .fixedSize(4096) is WORSE, because every generation then rides the broken shape, and a full cache evict plus fresh compile still soups. Mac is clean at every shape, so this cannot reproduce on your development machine — and a device gate capped at 256 generated tokens cannot see it either, which is exactly how it reached a chat app.
+  source: apple/coreai-models#124; coreai-kit#5; coreai-models bd8dcf7 (the shipped engine guard); coreai-kit Sources/CoreAIKit/ModelRuntime.swift; knowledge/undocumented-answers.md; NANBEIGE42_PR6_STATE.md (the bisect)
+
+summary        1 fatal, 1 runaway, 3 requires
+
+What doctor does NOT tell you: it is a static lint and it cannot check numerics.
+Gate the bundle against an HF oracle before trusting it — teacher-forced top-1 over a
+prompt whose fp32 top-2 margin clears 0.1 at every position, 16/16. And gate the ENGINE
+path, not only the python runtime.
+
+$ echo $?
+2

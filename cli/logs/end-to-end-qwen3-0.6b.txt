@@ -1,0 +1,67 @@
+$ python3 coreai_export.py Qwen/Qwen3-0.6B --device mac --out <dir> --run
+$ python3 coreai_doctor.py <bundle> --profile mac
+$ python3 coreai_verify.py <bundle> -n 16 --prompt '...'
+
+The whole chain on one model, 2026-07-31. Export -> lint -> gate.
+
+coreai export  Qwen/Qwen3-0.6B
+model_type     'qwen3'   (fetched config.json for Qwen/Qwen3-0.6B)
+device         mac -> --platform macOS, AOT arch h16c
+tables         live (~/code/coreai/coreai-models/.venv/bin/python)
+route          PRESET — Apple stock exporter, named preset for this checkpoint
+
+--- CHECKPOINT PRE-FLIGHT (coreai doctor) ------------------------------
+  PERF     TIED-EMBEDDINGS-SKIP-QUANT
+            tie_word_embeddings = true
+
+--- WHAT IS AND IS NOT SETTLED ------------------------------------------
+  - named preset 'qwen3-0.6b' — compute precision, compression and context length all come from the preset, and Apple has run this combination.
+
+--- COMMAND ------------------------------------------------------------
+  $ ~/code/coreai/coreai-models/.venv/bin/python -m coreai_models.llm.export qwen3-0.6b --platform macOS --output-dir ~/code/coreai/coreai-models/exports/_cli_validation
+
+--- AFTER THE EXPORT ---------------------------------------------------
+  - AOT, if the cold specialization stalls or aborts: xcrun coreai-build compile <bundle>.aimodel --output <dir> --platform macOS --architecture h16c --preferred-compute gpu --min-deployment-version 27.0
+  - Gate before you believe it: python3 conversion/coreai_gate.py <bundle> <hf-id> -n 16 — token-exact against the HF oracle on a prompt whose fp32 top-2 margin clears 0.1 at every position. An export that has not been gated is not a port.
+  - Lint the result: python3 ~/code/coreai/coreai-cli/coreai_doctor.py <bundle> --profile mac
+
+  h16c is the only macOS arch that loads on an M4 Max here; the other 19 raise.
+
+==========================================================
+coreai doctor  ~/code/coreai/coreai-models/exports/_cli_validation/qwen3_0_6b_4bit_dynamic
+kind           bundle
+note           asset producer: coreai-core 1.0.0b2
+note           graph: 1 function(s), 2 state(s), 4703 ops in 44 kinds
+note           growing (dynamic-seq) states: keyCache, valueCache
+note           asset qwen3_0_6b_4bit_dynamic.aimodel: 320.4 MB
+rules run      17
+
+no known failure pattern detected.
+
+
+What doctor does NOT tell you: it is a static lint and it cannot check numerics.
+Gate the bundle against an HF oracle before trusting it — teacher-forced top-1 over a
+prompt whose fp32 top-2 margin clears 0.1 at every position, 16/16. And gate the ENGINE
+path, not only the python runtime.
+
+==========================================================
+############ 2. a prompt that clears the floor — full run
+$ python3 coreai_verify.py <bundle> -n 16 --prompt 'The alphabet begins A, B, C, D, E, F,'
+
+coreai verify  ~/code/coreai/coreai-models/exports/_cli_validation/qwen3_0_6b_4bit_dynamic
+oracle         Qwen/Qwen3-0.6B
+graph          2 states, query dynamic, logits dynamic
+backend        stock (plain transformers reference — no overlay needed)
+driver         llm-runner
+
+running the oracle (Qwen/Qwen3-0.6B, fp32) …
+  oracle: [479, 11, 472, 11, 358, 11, 619, 11, 730, 11, 444, 11, 386, 11, 451, 11]
+  text  : ' G, H, I, J, K, L, M, N,'
+  margins: min 0.958 — clears the 0.1 floor
+
+running the bundle (llm-runner) …
+  bundle: ' G, H, I, J, K, L, M, N,'
+
+--- PASS --------------------------------------------------------------
+  16/16 token-exact (decoded text identical to the fp32 oracle).
+$ echo $? -> 0

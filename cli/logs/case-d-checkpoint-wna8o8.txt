@@ -1,0 +1,41 @@
+$ HF_HUB_DISABLE_XET=1 python3 coreai_doctor.py google/gemma-4-E2B-it-qat-mobile-transformers -v
+
+fetched 4 metadata files for google/gemma-4-E2B-it-qat-mobile-transformers -> ~/.cache/coreai-doctor/google__gemma-4-E2B-it-qat-mobile-transformers
+coreai doctor  google/gemma-4-E2B-it-qat-mobile-transformers
+kind           checkpoint
+note           architectures=None model_type=gemma4
+note           dims divisible by 32: hidden_size=1536, intermediate_size=6144, head_dim=256, vocab_size=262144
+rules run      5
+
+--- DEFECTS -----------------------------------------------------------
+
+SILENT  QAT-STATIC-ACTIVATION-SCALES
+  the checkpoint carries static activation / KV-cache scales — these weights were trained with a learned activation clamp in the loop, and exporting them into an fp16-activation graph loses about half the reasoning accuracy while every equivalence gate still passes
+  where : ~/.cache/coreai-doctor/google__gemma-4-E2B-it-qat-mobile-transformers
+  found : 1166 activation/KV scale tensors, e.g. lm_head.input_activation_scale, lm_head.output_activation_scale, model.audio_tower.layers.0.feed_forward1.ffw_layer_1.linear.input_activation_scale
+  fix   : Implement per-linear static activation quantization in the export (quantize with input_activation_scale -> int8 matmul -> requantize with output_activation_scale -> dequantize), then int8 KV storage for the remainder. Do NOT gate this against an fp16 oracle built from the same weights: an equivalence gate cannot see a defect its reference shares, and single-hop recall prompts cannot see it at all.
+  source: knowledge/gemma4-wna8o8-requires-int8-activations.md
+
+RUNAWAY EOS-SOURCE-MISMATCH
+  generation_config lists more eos ids than tokenizer_config's eos_token resolves to — pick the turn terminator and retag the exported bundle, or anything that stops on a single eosTokenId runs to the cap
+  where : ~/.cache/coreai-doctor/google__gemma-4-E2B-it-qat-mobile-transformers/generation_config.json
+  found : generation_config eos_token_id = [1, 106, 50], tokenizer_config eos_token = '<eos>'
+  fix   : Decide which id ends a CHAT TURN and set the exported bundle's eos_token to it at export time, in the save_tokenizer step after the verbatim HF copy. Anything that stops on a single eosTokenId — swift-transformers does — otherwise misses the turn terminator and runs to the cap.
+  source: GEMMA4_12B_STATE.md 'THE ONE REAL FIX — chat-EOS'; knowledge/minicpm5-1b.md 'Chat EOS'
+
+--- NOTES AND SHIP REQUIREMENTS ---------------------------------------
+
+INFO    CHECKPOINT-PREQUANTIZED
+  the checkpoint carries a quantization_config — its weights are already fitted to one runtime's grid, so re-quantizing it to 'int4' produces a different product, not a comparable one
+  where : ~/.cache/coreai-doctor/google__gemma-4-E2B-it-qat-mobile-transformers/config.json
+  found : quant_method='gemma' num_bits=4 quantize_embeddings=True, 11 per-module overrides
+  fix   : Read the per-module bit-widths before choosing a recipe, and never compare this against a generic same-bit build and call the delta 'runtime quality'. To build a matched pair, compile every arm from the same UNQUANTIZED checkpoint at the same block size.
+  source: knowledge/cross-runtime-quality-benchmarking.md 'Bits are not a spec'
+
+summary        1 silent, 1 runaway, 1 info
+
+What doctor does NOT tell you: it is a static lint and it cannot check numerics.
+Gate the bundle against an HF oracle before trusting it — teacher-forced top-1 over a
+prompt whose fp32 top-2 margin clears 0.1 at every position, 16/16. And gate the ENGINE
+path, not only the python runtime.
+

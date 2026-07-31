@@ -1,0 +1,8 @@
+# Ground truth for case A: the asset doctor calls fatal really does abort on load.
+# (Run in a subprocess — a 0.4.0 asset aborts the process, it does not raise.)
+
+$ ~/code/coreai/coreai-models/.venv/bin/python probe_load.py <asset>
+
+div"], output_maps = [{source = {id = 1610 : ui64, level = "torch", output = 0 : ui32}, target = {level = "coreai", output = 0 : ui32}}]}>["~/code/coreai/coreai-models/python/src/coreai_models/models/macos/gemma4_mixedbit_pipelined.py":140:0, "coreai"("op_id":1796:0), "torch"("op_id":1610:0)], fused<{call_stack = ["MetalInt2SymLinear$1", "Gemma4MixedbitPipelinedForCausalLM$1"], identifiers = ["view_142"], output_maps = [{source = {id = 1609 : ui64, level = "torch", output = 0 : ui32}, target = {level = "coreai", output = 0 : ui32}}]}>["~/code/coreai/coreai-models/python/src/coreai_models/models/macos/gemma4_metal_mlp_int2.py":168:0, "~/code/coreai/coreai-models/python/src/coreai_models/models/macos/gemma4_mixedbit_pipelined.py":137:0, "coreai"("op_id":1795:0), "torch"("op_id":1609:0)], "coreai"("op_id":1291:0)])
+loc(fused<{call_stack = ["_empty_nn_module_stack_from_metadata_hook$1"], identifiers = ["sym_size_int_28"]}>["torch/fx/passes/runtime_assert.py":24:0, "coreai"("op_id":1294:0), "torch"("op_id":337:0), "coreai"("op_id":1294:0)]): error: Failed to convert to versioned IR
+LLVM ERROR: cannot unwrap empty `odiec_module_t`

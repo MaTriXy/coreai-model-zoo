@@ -1,0 +1,38 @@
+Do the emitted commands actually resolve? (the exporter's own --dry-run, CPU only)
+A full conversion was NOT run: ~/code/coreai/_GPU_LOCK was held by another session.
+
+### PRESET route
+$ ... coreai_models.llm.export qwen3-0.6b --platform macOS --dry-run
+Dry run — resolved export config:
+  model:              Qwen/Qwen3-0.6B
+  platform:           macOS
+  compression:        4bit
+  compute_precision:  float16
+  max_context_length: 8192
+  output_dir:         ~/code/coreai/coreai-models/exports
+  overwrite:          False
+
+### GENERIC route
+$ ... coreai_models.llm.export TinyLlama/TinyLlama-1.1B-Chat-v1.0 --platform iOS --compute-precision float16 --experimental --dry-run
+Dry run — resolved export config:
+  model:              TinyLlama/TinyLlama-1.1B-Chat-v1.0
+  platform:           iOS
+  compression:        4bit_weight_palettized_group32
+  compute_precision:  float16
+  output_dir:         ~/code/coreai/coreai-models/exports
+  overwrite:          False
+
+### The BLOCKED case — note the exporter's own --dry-run resolves it happily
+$ ... coreai_models.llm.export google/gemma-3-4b-it --platform iOS --compute-precision float16 --experimental --dry-run
+Dry run — resolved export config:
+  model:              google/gemma-3-4b-it
+  platform:           iOS
+  compression:        4bit_weight_palettized_group32
+  compute_precision:  float16
+  output_dir:         ~/code/coreai/coreai-models/exports
+  overwrite:          False
+
+The failure is real but late — export/pipeline.py:150-151:
+    if config.variant == "iOS" and entry.ios_class is None:
+        raise ValueError(f"Model '{model_type}' does not support iOS variant")
+…which is reached only after AutoConfig has read the checkpoint. --dry-run returns before it.

@@ -1,0 +1,51 @@
+$ python3 coreai_doctor.py ~/code/coreai/_nanbeige42_pr6_bundle/gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1 --profile iphone -v
+
+coreai doctor  ~/code/coreai/_nanbeige42_pr6_bundle/gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1
+kind           bundle
+note           asset producer: coreai-core 1.0.0b2
+note           graph: 1 function(s), 2 state(s), 5627 ops in 44 kinds
+note           growing (dynamic-seq) states: keyCache, valueCache
+note           asset nanbeige4_2_3b_decode_int8hu_block32_sym_s1.aimodel: 4.6 GB
+rules run      18
+
+no known failure pattern detected.
+
+--- NOTES AND SHIP REQUIREMENTS ---------------------------------------
+
+REQUIRE GRAPH-S1-RUN-CONTRACT
+  static S=1 decode graph: the engine's default warmup prefills 256 tokens and this graph rejects the substitution, and any multi-token prefill chunk is fatal
+  where : ~/code/coreai/_nanbeige42_pr6_bundle/gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1/nanbeige4_2_3b_decode_int8hu_block32_sym_s1.aimodel
+  found : input_ids is static NDArray (Int32, 1 × 1)
+  fix   : Set COREAI_CHUNK_THRESHOLD=1 BEFORE engine creation, never call engine.warmup() (it warms query length 256 and the static [1,1] graph rejects it), and drive llm-runner with --warmup exact --warmup-length 1. In an app, a 1-token generate after load IS the warmup.
+  source: knowledge/pipelined-engine.md 'Run contract'; knowledge/coreai-torch-041-ir-incident.md 'Non-obvious things the gate encodes'
+
+REQUIRE GRAPH-DYNAMIC-KV-IOS-2048
+  growing (dynamic-seq) KV state plus a declared context of 2048 or more — the iOS on-device compiler miscompiles this graph class once the bound KV seq dim reaches 2048, and output is corrupt from token 1 at full pipeline speed. The host engine must carry the capacity guard; the artifact itself is fine
+  where : ~/code/coreai/_nanbeige42_pr6_bundle/gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1/nanbeige4_2_3b_decode_int8hu_block32_sym_s1.aimodel
+  found : dynamic-seq state(s) keyCache, valueCache with declared max_context_length=4096
+  fix   : Drive it with an engine that caps the resolved iOS KV capacity at 1024 (the guard shipped in coreai-models bd8dcf7), or clamp prompt + maxTokens below 1024 at the app layer. Capacity <=1024 is clean every time; .fixedSize(4096) is WORSE, because every generation then rides the broken shape, and a full cache evict plus fresh compile still soups. Mac is clean at every shape, so this cannot reproduce on your development machine — and a device gate capped at 256 generated tokens cannot see it either, which is exactly how it reached a chat app.
+  source: apple/coreai-models#124; coreai-kit#5; coreai-models bd8dcf7 (the shipped engine guard); coreai-kit Sources/CoreAIKit/ModelRuntime.swift; knowledge/undocumented-answers.md; NANBEIGE42_PR6_STATE.md (the bisect)
+
+REQUIRE IOS-LARGE-GRAPH-JIT
+  a GB-class graph's on-device specialization is the coin-flip step — some bundles of this size JIT fine on iPhone and some abort; measure it before you ship
+  where : ~/code/coreai/_nanbeige42_pr6_bundle/gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1/nanbeige4_2_3b_decode_int8hu_block32_sym_s1.aimodel
+  found : 4.6 GB portable IR, no .aimodelc in the bundle
+  fix   : Time a cold on-device specialization before shipping this as portable IR. It is graph-shaped, not purely size-driven: a 4.6 GB static-S=1 int8 pipelined bundle JITs on iPhone in ~54 s, while a 4B dense GPU bundle exhausts the device's scratch disk and a 2 GB-constants graph fails mmap allocation. If it aborts: xcrun coreai-build compile <m>.aimodel --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0.
+  source: knowledge/aot-and-specialization.md 'The 4B wall'; knowledge/ship-playbook.md; knowledge/pipelined-engine.md 'Run contract'; NANBEIGE42_PR6_STATE.md (the counter-case)
+
+REQUIRE IPHONE-MEMORY-ENTITLEMENT
+  at this size cold specialization hits the default jetsam limit and dies with std::bad_alloc — the app needs the increased-memory-limit entitlement
+  where : ~/code/coreai/_nanbeige42_pr6_bundle/gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1/nanbeige4_2_3b_decode_int8hu_block32_sym_s1.aimodel
+  found : 4.6 GB is past the ~2 GB point where cold specialization hits the default jetsam limit
+  fix   : Ship com.apple.developer.kernel.increased-memory-limit. Also budget for the failure mode: an aborted cold specialization leaves partial e-caches that make every later attempt fail as NSPOSIXErrorDomain code=2, so carry a Library/Caches/coreai-cache wipe hook.
+  source: knowledge/pipelined-engine.md 'Run contract'
+
+summary        4 requires
+
+What doctor does NOT tell you: it is a static lint and it cannot check numerics.
+Gate the bundle against an HF oracle before trusting it — teacher-forced top-1 over a
+prompt whose fp32 top-2 margin clears 0.1 at every position, 16/16. And gate the ENGINE
+path, not only the python runtime.
+
+$ echo $?
+0

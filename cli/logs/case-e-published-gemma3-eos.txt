@@ -1,0 +1,46 @@
+mlboydaisuke/DiffusionGemma-26B-A4B-CoreAI: no tokenizer_config.json (not a chat bundle)
+mlboydaisuke/Gemma-4-12B-CoreAI  gpu-pipelined/gemma4_12b_qat_decode_int4linsym_msdpa_g8/tokenizer/tokenizer_config.json
+    eos='<turn|>' literal=True var=False turn-markers=['<turn|>']  => clean
+mlboydaisuke/Gemma-4-12B-CoreAI  gpu-pipelined/gemma4_12b_qat_decode_int8lin_msdpa_g8/tokenizer/tokenizer_config.json
+    eos='<turn|>' literal=True var=False turn-markers=['<turn|>']  => clean
+mlboydaisuke/Gemma-4-31B-CoreAI  gpu-pipelined/gemma4_31b_qat_decode_int4linsym_msdpa_g8/tokenizer/tokenizer_config.json
+    eos='<turn|>' literal=True var=False turn-markers=['<turn|>']  => clean
+mlboydaisuke/embeddinggemma-300m-CoreAI  model/tokenizer/tokenizer_config.json: eos='<eos>'  NO CHAT TEMPLATE
+mlboydaisuke/embeddinggemma-300m-coreml  hf_model/tokenizer_config.json: eos='<eos>'  NO CHAT TEMPLATE
+mlboydaisuke/functiongemma-270m-coreml  hf_model/tokenizer_config.json
+    eos='<end_of_turn>' literal=True var=False turn-markers=['<end_of_turn>']  => clean
+mlboydaisuke/gemma-3-12b-it-CoreAI-official  macos/tokenizer/tokenizer_config.json
+    eos='<end_of_turn>' literal=True var=False turn-markers=['<end_of_turn>']  => clean
+mlboydaisuke/gemma-3-4b-it-CoreAI-official  macos/tokenizer/tokenizer_config.json
+    eos='<end_of_turn>' literal=True var=False turn-markers=['<end_of_turn>']  => clean
+mlboydaisuke/gemma-4-E2B-CoreAI  gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl/tokenizer/tokenizer_config.json
+    eos='<turn|>' literal=True var=False turn-markers=['<turn|>']  => clean
+mlboydaisuke/gemma-4-E2B-CoreAI  gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl_aotc_h18p/tokenizer/tokenizer_config.json
+    eos='<turn|>' literal=True var=False turn-markers=['<turn|>']  => clean
+mlboydaisuke/gemma-4-E2B-CoreAI  gpu-pipelined/gemma4_e2b_decode_int4lin_tbl/tokenizer/tokenizer_config.json
+    eos='<turn|>' literal=True var=False turn-markers=['<turn|>']  => clean
+mlboydaisuke/gemma-4-E2B-CoreAI  gpu-pipelined/gemma4_e2b_decode_int4lin_tbl_aotc_h18p/tokenizer/tokenizer_config.json
+    eos='<turn|>' literal=True var=False turn-markers=['<turn|>']  => clean
+mlboydaisuke/gemma-4-E2B-CoreAI  gpu-pipelined/gemma4_e2b_qat_decode_int4lin_tbl/tokenizer/tokenizer_config.json
+    eos='<turn|>' literal=True var=False turn-markers=['<turn|>']  => clean
+mlboydaisuke/gemma-4-E2B-CoreAI  gpu-pipelined/gemma4_e2b_qat_decode_int4lin_tbl_aotc_h18p/tokenizer/tokenizer_config.json
+    eos='<turn|>' literal=True var=False turn-markers=['<turn|>']  => clean
+mlboydaisuke/gemma-4-E2B-CoreAI  gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym/tokenizer/tokenizer_config.json
+    eos='<turn|>' literal=True var=False turn-markers=['<turn|>']  => clean
+mlboydaisuke/gemma-4-E2B-CoreAI  gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym_aotc_h18p/tokenizer/tokenizer_config.json
+    eos='<turn|>' literal=True var=False turn-markers=['<turn|>']  => clean
+mlboydaisuke/gemma-4-E2B-CoreAI  gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym_tbl/tokenizer/tokenizer_config.json
+    eos='<turn|>' literal=True var=False turn-markers=['<turn|>']  => clean
+mlboydaisuke/gemma-4-E2B-coreml  hf_model/tokenizer_config.json: eos='<eos>'  NO CHAT TEMPLATE
+mlboydaisuke/gemma-4-E2B-stateful-coreml  hf_model/tokenizer_config.json: eos='<eos>'  NO CHAT TEMPLATE
+mlboydaisuke/gemma-4-E4B-CoreAI  gpu-pipelined/gemma4_e4b_qat_decode_int4lin/tokenizer/tokenizer_config.json
+    eos='<turn|>' literal=True var=False turn-markers=['<turn|>']  => clean
+mlboydaisuke/gemma-4-E4B-CoreAI  gpu-pipelined/gemma4_e4b_qat_decode_int4lin_aotc_h18p/tokenizer/tokenizer_config.json
+    eos='<turn|>' literal=True var=False turn-markers=['<turn|>']  => clean
+mlboydaisuke/gemma-4-E4B-CoreAI  gpu-pipelined/gemma4_e4b_qat_decode_int4lin_tbl/tokenizer/tokenizer_config.json
+    eos='<turn|>' literal=True var=False turn-markers=['<turn|>']  => clean
+mlboydaisuke/gemma-4-E4B-coreml  hf_model/tokenizer_config.json: eos='<eos>'  NO CHAT TEMPLATE
+mlboydaisuke/gemma-4-E4B-multimodal-coreml  hf_model/tokenizer_config.json: eos='<eos>'  NO CHAT TEMPLATE
+
+# All 18 published Gemma tokenizer configs re-audited AFTER the fix (2026-07-31).
+# The three that fired were patched by logs/fix_gemma_eos.py --apply; none fire now.
