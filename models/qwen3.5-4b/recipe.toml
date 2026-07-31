@@ -7,6 +7,7 @@ script = "export_qwen3_5_decode_pipelined.py"
 args = ["int8hu", "--head-sym", "--hf-id", "Qwen/Qwen3.5-4B"]
 card = "README.md"
 hf_repo = "mlboydaisuke/qwen3.5-4B-CoreAI"
+source_hf_id = "Qwen/Qwen3.5-4B"
 bundle = "gpu-pipelined-b2/qwen3_5_4b_decode_int8hu_block32_sym"
 status = "verified"
 overlay = true

@@ -5,6 +5,7 @@
 ["voxcpm2-2b"]
 card = "README.md"
 hf_repo = "mlboydaisuke/VoxCPM2-CoreAI"
+source_hf_id = "openbmb/VoxCPM2"
 status = "verified"
 overlay = true
 steps = [

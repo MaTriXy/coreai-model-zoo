@@ -5,6 +5,7 @@
 ["colmodernvbert"]
 card = "README.md"
 hf_repo = "mlboydaisuke/ColModernVBERT-CoreAI"
+source_hf_id = "ModernVBERT/colmodernvbert"
 status = "verified"
 steps = [
   { script = "export_colmodernvbert.py", args = ["--phase", "query", "--dtype", "float16", "--seq-len", "32"], bundle = "query/colmodernvbert-query_float16_s32_static.aimodel" },

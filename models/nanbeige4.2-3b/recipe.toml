@@ -15,6 +15,7 @@ args = [
 ]
 card = "README.md"
 hf_repo = "ukint-vs/Nanbeige4.2-3B-CoreAI"
+source_hf_id = "Nanbeige/Nanbeige4.2-3B"
 bundle = "gpu-pipelined/nanbeige4_2_3b_decode_int8hu_block32_sym_s1"
 status = "verified"
 overlay = true

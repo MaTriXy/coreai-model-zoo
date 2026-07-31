@@ -5,6 +5,7 @@
 ["mineru-2.5-pro"]
 card = "README.md"
 hf_repo = "mlboydaisuke/MinerU2.5-Pro-CoreAI"
+source_hf_id = "opendatalab/MinerU2.5-Pro-2605-1.2B"
 script = "export_mineru_pipelined.py"
 args = ["int8lin"]
 bundle = "decoder"

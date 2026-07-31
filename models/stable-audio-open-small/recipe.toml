@@ -7,6 +7,7 @@ script = "stable_audio/export_all_fp16.py"
 args = []
 card = "README.md"
 hf_repo = "mlboydaisuke/Stable-Audio-Open-Small-CoreAI"
+source_hf_id = "stabilityai/stable-audio-open-small"
 bundle = "macos"
 status = "verified"
 overlay = true

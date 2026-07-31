@@ -7,5 +7,6 @@ script = "export_qwen3_reranker.py"
 args = ["--dtype", "float16", "--seq-len", "512"]
 card = "README.md"
 hf_repo = "mlboydaisuke/Qwen3-Reranker-0.6B-CoreAI"
+source_hf_id = "Qwen/Qwen3-Reranker-0.6B"
 bundle = "qwen3-reranker-0.6b_float16_s512_static.aimodel"
 status = "verified"

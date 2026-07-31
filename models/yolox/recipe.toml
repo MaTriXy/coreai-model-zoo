@@ -7,5 +7,6 @@ script = "export_yolox.py"
 args = ["--dtype", "float32"]
 card = "README.md"
 hf_repo = "mlboydaisuke/YOLOX-CoreAI"
+source_repo = "github.com/Megvii-BaseDetection/YOLOX"
 bundle = "yolox-s_float32.aimodel"
 status = "verified"

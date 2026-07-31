@@ -5,6 +5,7 @@
 ["ltx-video-2b"]
 card = "README.md"
 hf_repo = "mlboydaisuke/LTX-Video-2B-CoreAI"
+source_repo = "github.com/Lightricks/LTX-Video"
 status = "verified"
 steps = [
   { script = "ltxvideo/_conv_fp16.py", args = ["dit", "512", "768", "49"], bundle = "dit_fp16.aimodel" },

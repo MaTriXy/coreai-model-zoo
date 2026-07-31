@@ -7,6 +7,7 @@ script = "export_lfm2_decode_pipelined.py"
 args = ["int8hu", "--head-sym"]
 card = "README.md"
 hf_repo = "mlboydaisuke/LFM2.5-1.2B-CoreAI"
+source_hf_id = "LiquidAI/LFM2.5-1.2B-Instruct"
 bundle = "gpu-pipelined/lfm2_5_1_2b_instruct_decode_int8hu_block32_sym"
 status = "verified"
 overlay = true

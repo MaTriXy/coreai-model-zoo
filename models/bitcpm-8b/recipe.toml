@@ -7,6 +7,7 @@ script = "export_bitcpm8b_decode_pipelined.py"
 args = ["--static-ids"]
 card = "README.md"
 hf_repo = "mlboydaisuke/BitCPM-8B-CoreAI"
+source_hf_id = "openbmb/BitCPM-CANN-8B"
 bundle = "gpu-pipelined/bitcpm_8b_decode_ternary_s1"
 status = "verified"
 overlay = true

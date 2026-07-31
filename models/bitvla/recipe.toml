@@ -5,6 +5,7 @@
 ["bitvla"]
 card = "README.md"
 hf_repo = "mlboydaisuke/BitVLA-CoreAI"
+source_hf_id = "lxsy/bitvla-bf16"
 status = "verified"
 steps = [
   { script = "export_bitvla_vision.py", args = [], bundle = "aimodel/bitvla_vision/bitvla_vision.aimodel" },

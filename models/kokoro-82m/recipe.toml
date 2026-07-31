@@ -7,6 +7,7 @@ script = "export_kokoro.py"
 args = []
 card = "README.md"
 hf_repo = "mlboydaisuke/Kokoro-82M-CoreAI"
+source_hf_id = "hexgrad/Kokoro-82M"
 bundle = "kokoro_predictor.aimodel"
 status = "verified"
 notes = [

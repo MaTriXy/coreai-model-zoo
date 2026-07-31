@@ -7,6 +7,7 @@ script = "export_qwen3_vl_pipelined.py"
 args = ["int8lin", "--hf-id", "Hcompany/Holo2-4B"]
 card = "README.md"
 hf_repo = "mlboydaisuke/Holo2-4B-CoreAI"
+source_hf_id = "Hcompany/Holo2-4B"
 bundle = "gpu-pipelined/holo2_4b_decode_int8lin_s1"
 status = "verified"
 overlay = true

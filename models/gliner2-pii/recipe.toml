@@ -7,6 +7,7 @@ script = "export_gliner2_pii.py"
 args = ["--dtype", "float16"]
 card = "README.md"
 hf_repo = "mlboydaisuke/GLiNER2-PII-CoreAI"
+source_hf_id = "fastino/gliner2-privacy-filter-PII-multi"
 bundle = "macos/gliner2-pii_float16_s256_t96_m16.aimodel"
 status = "verified"
 notes = [

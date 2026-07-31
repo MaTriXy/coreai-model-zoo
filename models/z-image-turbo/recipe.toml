@@ -5,6 +5,7 @@
 ["z-image-turbo"]
 card = "README.md"
 hf_repo = "mlboydaisuke/Z-Image-Turbo-CoreAI"
+source_hf_id = "Tongyi-MAI/Z-Image-Turbo"
 status = "verified"
 steps = [
   { script = "zimage/export_dit.py", args = ["bf16", "--size", "512", "--cap", "32", "--dyn-cap", "--dyn-img", "--io-fp32"], bundle = "zimage_dit_512_cap32_full_native_bf16_dyncap_dynimg_iofp32.aimodel" },

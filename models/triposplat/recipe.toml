@@ -5,6 +5,7 @@
 ["triposplat"]
 card = "README.md"
 hf_repo = "mlboydaisuke/TripoSplat-CoreAI"
+source_repo = "github.com/VAST-AI-Research/TripoSplat"
 status = "verified"
 steps = [
   { script = "triposplat/_conv_fp16.py", args = ["dinov3"], bundle = "dinov3_fp16.aimodel" },

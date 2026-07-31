@@ -38,6 +38,13 @@ Qwen3.6-27B too), so the export scripts stay in [`../conversion/`](../conversion
 without `--force`: the repo does not record which configuration produced the published bundle,
 and a wrong recipe is worse than a missing one.
 
+Two fields name the two ends of a conversion, and they are easy to confuse:
+**`hf_repo`** is the repo the recipe publishes **to**; **`source_hf_id`** is the checkpoint it
+converts **from**. Ports whose upstream is not on the Hub carry **`source_repo`** instead
+(RF-DETR, YOLOX, AdcSR, TripoSplat, LTX-Video are released on GitHub). Recording the source is
+what lets a tool answer "how do I convert *this* model" from a Hugging Face id, rather than
+only "how was *that* bundle produced" from a recipe name.
+
 ## Check a published bundle
 
 ```bash

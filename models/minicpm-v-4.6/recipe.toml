@@ -5,6 +5,7 @@
 ["minicpm-v-4.6"]
 card = "README.md"
 hf_repo = "mlboydaisuke/MiniCPM-V-4.6-CoreAI"
+source_hf_id = "openbmb/MiniCPM-V-4.6"
 status = "verified"
 overlay = true
 runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]

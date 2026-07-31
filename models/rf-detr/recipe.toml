@@ -7,6 +7,7 @@ script = "export_rf_detr.py"
 args = ["--variant", "medium", "--dtype", "float32"]
 card = "README.md"
 hf_repo = "mlboydaisuke/RF-DETR-CoreAI"
+source_repo = "github.com/roboflow/rf-detr"
 bundle = "rfdetr-medium_float32.aimodel"
 status = "verified"
 notes = [

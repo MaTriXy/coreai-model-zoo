@@ -7,6 +7,7 @@ script = "export_glm47_moe_metal_decode_pipelined.py"
 args = ["sym8"]
 card = "README.md"
 hf_repo = "mlboydaisuke/GLM-4.7-Flash-CoreAI"
+source_hf_id = "zai-org/GLM-4.7-Flash"
 bundle = "gpu-pipelined/glm_4_7_flash_decode_sym8_gather"
 status = "unverified"
 overlay = true

@@ -7,6 +7,7 @@ script = "sortformer_diar/export_sortformer.py"
 args = ["--dtype", "float16"]
 card = "README.md"
 hf_repo = "mlboydaisuke/Streaming-Sortformer-Diar-CoreAI"
+source_hf_id = "nvidia/diar_streaming_sortformer_4spk-v2"
 bundle = "sortformer_float16.aimodel"
 status = "verified"
 aot = "xcrun coreai-build compile sortformer_float16.aimodel --output ship_ios/ --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"

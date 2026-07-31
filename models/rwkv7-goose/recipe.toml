@@ -7,6 +7,7 @@ script = "export_rwkv7_decode.py"
 args = ["int8keepproj"]
 card = "README.md"
 hf_repo = "mlboydaisuke/RWKV7-Goose-1.5B-CoreAI"
+source_hf_id = "RWKV/RWKV7-Goose-World3-1.5B-HF"
 bundle = "aimodel/rwkv7_goose_1_5b/rwkv7_goose_1_5b.aimodel"
 status = "verified"
 overlay = true

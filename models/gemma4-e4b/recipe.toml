@@ -7,6 +7,7 @@ script = "export_gemma4_decode_pipelined.py"
 args = ["int4lin", "--hf-id", "google/gemma-4-E4B-it-qat-q4_0-unquantized"]
 card = "README.md"
 hf_repo = "mlboydaisuke/gemma-4-E4B-CoreAI"
+source_hf_id = "google/gemma-4-E4B-it-qat-q4_0-unquantized"
 bundle = "gpu-pipelined/gemma4_e4b_qat_decode_int4lin"
 status = "verified"
 overlay = true

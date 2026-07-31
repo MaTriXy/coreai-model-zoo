@@ -5,6 +5,7 @@
 ["qwen2.5-omni-3b-audio"]
 card = "README.md"
 hf_repo = "mlboydaisuke/Qwen2.5-Omni-3B-Audio-CoreAI"
+source_hf_id = "Qwen/Qwen2.5-Omni-3B"
 status = "verified"
 overlay = true
 runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }

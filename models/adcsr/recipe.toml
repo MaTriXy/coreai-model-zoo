@@ -7,6 +7,7 @@ script = "export_adcsr.py"
 args = []
 card = "README.md"
 hf_repo = "mlboydaisuke/AdcSR-CoreAI"
+source_repo = "github.com/Guaishou74851/AdcSR"
 bundle = "adcsr_x4_float32.aimodel"
 status = "verified"
 notes = [

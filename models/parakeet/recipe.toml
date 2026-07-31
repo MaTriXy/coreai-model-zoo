@@ -5,6 +5,7 @@
 ["parakeet-tdt-0.6b"]
 card = "README.md"
 hf_repo = "mlboydaisuke/Parakeet-TDT-0.6B-CoreAI"
+source_hf_id = "nvidia/parakeet-tdt-0.6b-v3"
 status = "verified"
 steps = [
   { script = "parakeet/export_encoder.py", args = [], bundle = "parakeet_encoder_float16_L2885.aimodel" },

@@ -7,6 +7,7 @@ script = "vjepa2/export_fp16.py"
 args = []
 card = "README.md"
 hf_repo = "mlboydaisuke/VJEPA2-ViTL-SSv2-CoreAI"
+source_hf_id = "facebook/vjepa2-vitl-fpc16-256-ssv2"
 bundle = "macos"
 status = "verified"
 aot = "xcrun coreai-build compile vjepa2_ssv2_fp16.aimodel --output ios/ --platform iOS --architecture h18p --preferred-compute gpu --min-deployment-version 27.0"

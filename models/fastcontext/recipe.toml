@@ -6,6 +6,7 @@
 command = ["coreai.llm.export", "fastcontext-4b"]
 card = "README.md"
 hf_repo = "mlboydaisuke/FastContext-1.0-4B-CoreAI"
+source_hf_id = "microsoft/FastContext-1.0-4B-SFT"
 bundle = "gpu"
 status = "verified"
 overlay = true

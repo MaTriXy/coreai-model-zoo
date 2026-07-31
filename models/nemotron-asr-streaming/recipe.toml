@@ -5,6 +5,7 @@
 ["nemotron-3.5-asr-streaming"]
 card = "README.md"
 hf_repo = "mlboydaisuke/Nemotron-3.5-ASR-Streaming-CoreAI"
+source_hf_id = "nvidia/nemotron-3.5-asr-streaming-0.6b"
 status = "verified"
 steps = [
   { script = "nemotron_asr/export_encoder_streaming.py", args = [], bundle = "macos/nemotron_asr_stream_conformer_a_float16.aimodel" },

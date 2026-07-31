@@ -5,6 +5,7 @@
 ["flux2-klein-4b"]
 card = "README.md"
 hf_repo = "mlboydaisuke/FLUX.2-klein-4B-CoreAI"
+source_hf_id = "black-forest-labs/FLUX.2-klein-4B"
 status = "verified"
 command = ["coreai.diffusion.export", "flux2-klein-4b", "--platform", "macOS"]
 bundle = "Transformer.aimodel"
@@ -23,6 +24,7 @@ notes = [
 ["flux2-klein-4b-edit"]
 card = "README.md"
 hf_repo = "mlboydaisuke/FLUX.2-klein-4B-CoreAI"
+source_hf_id = "black-forest-labs/FLUX.2-klein-4B"
 bundle = "Transformer_edit.aimodel"
 status = "unverified"
 open_questions = [

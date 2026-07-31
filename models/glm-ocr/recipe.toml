@@ -5,6 +5,7 @@
 ["glm-ocr"]
 card = "README.md"
 hf_repo = "mlboydaisuke/GLM-OCR-CoreAI"
+source_hf_id = "zai-org/GLM-OCR"
 script = "export_glm_ocr_pipelined.py"
 args = ["int8hu"]
 bundle = "decoder"

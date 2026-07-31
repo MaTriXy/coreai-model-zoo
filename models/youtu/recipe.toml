@@ -7,6 +7,7 @@ script = "export_youtu_decode_pipelined.py"
 args = ["--hf-id", "tencent/Youtu-LLM-2B", "--split-g", "8"]
 card = "README.md"
 hf_repo = "mlboydaisuke/Youtu-LLM-2B-CoreAI"
+source_hf_id = "tencent/Youtu-LLM-2B"
 bundle = "gpu-pipelined/youtu_llm_2b_decode_absorbed_int8_msdpa"
 status = "verified"
 overlay = true

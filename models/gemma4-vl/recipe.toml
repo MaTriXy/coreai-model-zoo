@@ -7,6 +7,7 @@ script = "export_gemma4_vl_pipelined.py"
 args = ["int4lin", "--lin-sym", "--tbl"]
 card = "README.md"
 hf_repo = "mlboydaisuke/gemma-4-E2B-CoreAI"
+source_hf_id = "google/gemma-4-E2B-it-qat-q4_0-unquantized"
 bundle = "gpu-pipelined/gemma4_e2b_qat_vl_decode_int4linsym_tbl"
 status = "verified"
 overlay = true
