@@ -119,14 +119,29 @@ long-running starts, and `_GPU_LOCK` being held stops the run rather than conten
 
 ### It immediately caught something
 
-The canonical gate prompt — `"The capital of France is"`, the one `coreai_gate.py`'s own
-docstring recommends — **fails its own margin rule at n=16** on Qwen3-0.6B: positions 1 and
-5 sit at 0.0885 and 0.0041. It is deterministic at the *first* token and not over a
+The canonical gate prompt — `"The capital of France is"`, the one this repo recommended and
+shipped as the default — **fails its own margin rule at n=16** on Qwen3-0.6B: positions 1
+and 5 sit at 0.0885 and 0.0041. It is deterministic at the *first* token and not over a
 16-token continuation, because after "Paris." the model free-runs into a list where the next
-country is a near-tie. `"The alphabet begins A, B, C, D, E, F,"` clears it at min 0.958.
+country is a near-tie.
 
-The recommendation and the margin rule are both in the notes and they conflict at n=16.
-Nothing surfaced that until a tool checked the prompt instead of trusting it.
+The recommendation and the margin rule were both in the notes and had conflicted at n=16 for
+as long as both existed. Nothing surfaced it until a tool checked the prompt instead of
+trusting it.
+
+**Fixed 2026-08-01.** The default in `coreai_verify.py` and `conversion/coreai_gate.py` is
+now `"The alphabet begins A, B, C, D, E, F,"`. Measured across two model families at n=16,
+fp32, before changing it — a counting sequence was also tried and rejected, which is why the
+obvious-looking alternative is not the one that shipped:
+
+| prompt | Qwen3-0.6B | SmolLM2-360M |
+| --- | --- | --- |
+| `"The capital of France is"` (old default) | ✗ min 0.0041 | ✗ min 0.0172 |
+| `"Counting up: 1, 2, 3, 4, 5, 6,"` | ✓ 0.6500 | ✗ min 0.0289 |
+| `"The alphabet begins A, B, C, D, E, F,"` | ✓ **0.9585** | ✓ **0.9351** |
+
+Reciting a fixed sequence holds because there is nothing to free-run into. Counting drifts
+once the numbers get long enough to admit a second plausible formatting.
 
 ### Validation
 

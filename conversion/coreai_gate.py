@@ -356,8 +356,9 @@ def main() -> None:
     ap.add_argument("hf_id")
     ap.add_argument("--revision", help="immutable Hugging Face checkpoint revision")
     ap.add_argument("--arch", choices=list(ARCH))
-    ap.add_argument("--prompt", default="The capital of France is",
-                    help="deterministic prompt; open-ended ones hit ties and aren't good gates")
+    ap.add_argument("--prompt", default="The alphabet begins A, B, C, D, E, F,",
+                    help="deterministic for the WHOLE continuation, not just token 1 — a "
+                         "prompt that answers and then free-runs hits ties and gates nothing")
     ap.add_argument("-n", type=int, default=16)
     ap.add_argument("--oracle-dtype", choices=["fp32", "fp16"], default="fp32",
                     help="fp32 = strict ceiling; fp16 for models too big for fp32 (e.g. 35B needs ~140 GB)")

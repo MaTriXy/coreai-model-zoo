@@ -59,8 +59,13 @@ python3 conversion/coreai_gate.py <bundle-dir> <hf-id> [--arch KEY] [-n 16]
 ```
 
 PASS = token-for-token match, or a first divergence only at a top-2 margin < 0.1 (a
-knife-edge tie, fp16 class). Use a **deterministic** prompt ("The capital of France is");
-open-ended prompts hit ties everywhere and aren't gate material.
+knife-edge tie, fp16 class). Use a prompt that stays **deterministic for the whole
+continuation** — the default, `"The alphabet begins A, B, C, D, E, F,"`, holds at min 0.94+
+for 16 tokens on every model measured. This note used to recommend `"The capital of France
+is"`, which is wrong past the first token: it answers "Paris." and then free-runs into a
+list of countries where the next one is a coin flip, so it fails the 0.1 margin rule on both
+Qwen3-0.6B (0.0041) and SmolLM2-360M (0.0172). Open-ended prompts hit ties everywhere and
+aren't gate material either.
 
 - **Large models: `--oracle-dtype fp16`.** The fp32 oracle materialises all weights in
   fp32 — a 35B is ~140 GB and won't fit (27B at ~108 GB was the largest that fit 137 GB RAM).

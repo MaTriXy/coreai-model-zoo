@@ -49,7 +49,14 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import coreai_doctor as doctor  # noqa: E402  (shared asset/graph readers)
 
-DEFAULT_PROMPT = "The capital of France is"
+# A gate prompt has to stay deterministic for the WHOLE continuation, not just its first
+# token. "The capital of France is" — the prompt this repo recommended for a year — answers
+# "Paris." and then free-runs into a list of countries where the next one is a coin flip: it
+# is rejected by the margin rule below on both models measured (Qwen3-0.6B min 0.0041,
+# SmolLM2-360M min 0.0172). A counting sequence is not safe either (SmolLM2 min 0.0289 —
+# it drifts once the numbers get long). Reciting the alphabet holds: min 0.9585 and 0.9351
+# on the same two. Measured 2026-08-01 at n=16, fp32.
+DEFAULT_PROMPT = "The alphabet begins A, B, C, D, E, F,"
 MARGIN_FLOOR = 0.1
 GPU_LOCK = Path.home() / "code/coreai/_GPU_LOCK"  # workspace-level, not per-repo
 
