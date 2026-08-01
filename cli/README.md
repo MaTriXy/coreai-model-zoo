@@ -130,18 +130,21 @@ as long as both existed. Nothing surfaced it until a tool checked the prompt ins
 trusting it.
 
 **Fixed 2026-08-01.** The default in `coreai_verify.py` and `conversion/coreai_gate.py` is
-now `"The alphabet begins A, B, C, D, E, F,"`. Measured across two model families at n=16,
-fp32, before changing it — a counting sequence was also tried and rejected, which is why the
-obvious-looking alternative is not the one that shipped:
+now `"The alphabet begins A, B, C, D, E, F,"`. Measured across three model families at n=16,
+fp32, before changing it — both of the other candidates failed somewhere, which is the whole
+reason to measure rather than pick:
 
-| prompt | Qwen3-0.6B | SmolLM2-360M |
-| --- | --- | --- |
-| `"The capital of France is"` (old default) | ✗ min 0.0041 | ✗ min 0.0172 |
-| `"Counting up: 1, 2, 3, 4, 5, 6,"` | ✓ 0.6500 | ✗ min 0.0289 |
-| `"The alphabet begins A, B, C, D, E, F,"` | ✓ **0.9585** | ✓ **0.9351** |
+| prompt | Qwen3-0.6B | SmolLM2-360M | gemma-3-1b-it |
+| --- | --- | --- | --- |
+| `"The capital of France is"` (old default) | ✗ min 0.0041 | ✗ min 0.0172 | ✓ 0.3231 |
+| `"Counting up: 1, 2, 3, 4, 5, 6,"` | ✓ 0.6500 | ✗ min 0.0289 | ✗ min 0.0465 |
+| `"The alphabet begins A, B, C, D, E, F,"` | ✓ **0.9585** | ✓ **0.9351** | ✓ **0.8020** |
 
-Reciting a fixed sequence holds because there is nothing to free-run into. Counting drifts
-once the numbers get long enough to admit a second plausible formatting.
+Note the old default is **not** broken everywhere — gemma-3 clears it comfortably. That is
+what made it survive: whether it gates or silently refuses depends on the model under test,
+so it worked often enough to keep being recommended. Reciting a fixed sequence holds because
+there is nothing to free-run into once the answer is given. Counting drifts on two of the
+three, once the numbers get long enough to admit a second plausible formatting.
 
 ### Validation
 

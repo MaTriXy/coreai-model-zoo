@@ -136,9 +136,67 @@ Function prefill    input_ids [1 × 64]    logits [1 × 64 × 73472]
 GLM-OCR, the VL family — carry no custom kernel; the custom-kernel iOS precedents — BitCPM, BitVLA
 — are single-function). It compiles.
 
-Still open: the on-device run. The unknown is the **instantaneous footprint of one S=C chunk** on
-A19 — the ~2.3 KB·p² scratch law measured for this bundle class was measured on the S=1 walk and
-does not describe a batched chunk. C=32 exists as the fallback if C=64 doesn't fit.
+### On device (iPhone 17 Pro, A19 Pro, iOS 27.0 24A5380h)
+
+Driven by `ondevice/PipelinedBench` `PB_TERNPF=<dir>` (`Sources/TernaryPrefill.swift`).
+
+**Memory — the unknown Mac could not answer — is a non-issue:**
+
+| stage | footprint | headroom |
+|---|---:|---:|
+| start | 0.011 GB | 6.431 GB |
+| model loaded (3.0 GB bundle) | 0.076 GB | 6.367 GB |
+| **after one S=64 chunk** | **0.814 GB** | **5.628 GB** |
+
+Weights stay mapped; a C=64 chunk costs ~0.7 GB resident. The C=32 fallback is unnecessary, and
+C=128 would fit too.
+
+**Speed** (one entrypoint per launch — see the blocker below — alternating launches):
+
+| arm | run A | run B |
+|---|---:|---:|
+| S=1 sequential | 17.8 tok/s | 13.9 tok/s |
+| **S=64 chunk (GEMM)** | **66.6 tok/s** | **64.3 tok/s** |
+| speedup | **3.74×** | **4.63×** |
+
+The S=1 arm reproduces the shipped BitCPM-8B device record (17 tok/s decode) — the harness is
+sound. The prefill arm is stable (66.6 / 64.3) while the S=1 arm swings 13.9–17.8, the same
+DVFS-sensitivity the Mac interleave showed. Device gain is **3.7–4.6× vs Mac's 5.87×**.
+
+### ⛔ Blocker: alternating entrypoints aborts on iOS
+
+Whichever function runs **second in a process** aborts inside MPSGraph:
+
+| order | first arm | second arm |
+|---|---|---|
+| chunk → seq | chunk OK (0.814 GB) | `GPUMemrefOps.mm:159: Failed to resolve dynamic dimensions for memref.alloc` |
+| seq → chunk | S=1 steps 0,1,2 OK | `GPUMemrefOps.mm:700: Failed to acquire the source buffer for the ViewOp` |
+
+Both entrypoints work perfectly **alone**, on the same bundle, in the same app. macOS alternates
+them freely (that is how the whole Mac gate ran). **A real chat flow must alternate
+prefill → decode, so this bundle cannot ship on iOS until the switch is understood** — the device
+speed above is real but currently only reachable one arm per process.
+
+The device **equivalence gate is therefore still missing** — argmax 64/64 is a Mac result. Do not
+quote device correctness until the switch is fixed and the two arms run in one process.
+
+(A first guess — that the S=1 entrypoint's `position_ids` Dim `min=2` rejected a length-1 call at
+position 0 — was **wrong**: with `seq-first`, positions 0/1/2 all run. The contract was still
+relaxed to `min=query`, which is harmless and more correct.)
+
+### Two traps that cost the session
+
+- **Sideload paths must keep the `.aimodelc` extension.** `devicectl copy to --destination
+  Documents/models/<name>` (no extension) yields `failedToSpecialize` at load even though the
+  file tree is byte-for-byte identical to the source. Copy to
+  `Documents/models/<name>/<file>.h18p.aimodelc`. A control bundle with **no custom kernel**
+  (plain qwen3-0.6B) failed identically — without that control this reads as "the ternary kernel
+  doesn't work on iOS."
+- **`Duration.components` splits whole seconds out.** Timing with `.components.attoseconds / 1e15`
+  alone drops everything past 1 s: a 3.60 s walk read as 600 ms, which reported the S=1 arm at
+  97 tok/s (physically impossible for a 2.1 GB-per-token model on A19) and made chunked prefill
+  look *slower* than sequential. Use
+  `Double(seconds) * 1000 + Double(attoseconds) / 1e15`.
 
 ## 7. What this says about speculative decoding
 

@@ -91,7 +91,10 @@ def build_spec(cfg, max_ctx: int, query: int):
                              "k_cache": k_cache, "v_cache": v_cache},
         "dynamic_shapes": {
             "input_ids": None,
-            "position_ids": {1: torch.export.Dim("seq_pos", min=max(2, query), max=max_ctx - 1)},
+            # min=query, NOT max(2,query): iOS MPSGraph asserts `Failed to resolve dynamic
+            # dimensions for memref.alloc` when the S=1 entrypoint is driven at position 0
+            # (length 1 < min 2). macOS tolerates it; the device does not.
+            "position_ids": {1: torch.export.Dim("seq_pos", min=query, max=max_ctx - 1)},
             "k_cache": {seq_dim: torch.export.Dim("k_seq", min=TRACE_KV_CACHE_SEQ_LEN, max=max_ctx)},
             "v_cache": {seq_dim: torch.export.Dim("v_seq", min=TRACE_KV_CACHE_SEQ_LEN, max=max_ctx)},
         },
