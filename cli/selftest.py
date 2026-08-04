@@ -17,6 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import coreai_doctor as doctor  # noqa: E402
+import coreai_eval as ev  # noqa: E402
 
 # (rule id, line that must fire, line that must NOT fire)
 CASES: list[tuple[str, str, str]] = [
@@ -74,6 +75,84 @@ def findings_for(text: str) -> set[str]:
         return {x.rule.id for x in rep.findings}
 
 
+
+def check_eval() -> int:
+    """eval's refusals. A comparison tool that prints a delta it cannot justify is worse
+    than no tool — it launders a configuration difference into a claim about the models,
+    which is exactly how this project published a 12-point gap that was a token budget."""
+    failures: list[str] = []
+
+    def arm(**over):
+        base = {"task": "gsm8k", "n": 10, "data_digest": "d0", "instruction_digest": "i0",
+                "template_digest": "t0", "max_new_tokens": 2048, "temperature": 0.0,
+                "stop": "eos", "arm": "x"}
+        base.update(over)
+        return base
+
+    def side(correct, unmarked=0, missing=0, **over):
+        rows = [{"i": i, "ok": i < correct, "unmarked": i >= 10 - unmarked,
+                 "missing": False, "pred": None, "gold": None} for i in range(10)]
+        return {"arm": arm(**over),
+                "score": {"n": 10, "correct": correct, "accuracy": correct / 10,
+                          "unmarked": unmarked, "unmarked_rate": unmarked / 10,
+                          "missing": missing, "rows": rows}}
+
+    cases = [
+        ("matched protocol compares", side(8), side(9), 0),
+        ("budget mismatch refuses", side(8), side(9, max_new_tokens=600), 3),
+        ("template mismatch refuses", side(8), side(9, template_digest="t1"), 3),
+        ("different questions refuse", side(8), side(9, data_digest="d1"), 3),
+        ("both unrecorded still refuses",
+         side(8, template_digest="unrecorded", stop="unrecorded"),
+         side(9, template_digest="unrecorded", stop="unrecorded"), 3),
+        ("a free field never blocks", side(8, arm="mac"), side(9, arm="iphone"), 0),
+        # A run that crashed part way through scores its missing items wrong, so its
+        # accuracy is a floor. Comparing against it reads a broken run as a worse model —
+        # the misattribution this whole file exists to stop.
+        ("an incomplete arm refuses", side(8), side(7, missing=3), 3),
+    ]
+    for label, a, b, expected in cases:
+        code, _lines = ev.compare(a, b)
+        if code != expected:
+            failures.append(f"eval.compare — {label}: got {code}, expected {expected}")
+
+    # Truncation is reported even when the protocol matches: equal budgets do not mean
+    # equal room to answer, and the delta is partly measuring the difference.
+    _code, lines = ev.compare(side(8), side(7, unmarked=3))
+    if not any("truncation differs" in x for x in lines):
+        failures.append("eval.compare — a 30% truncation gap went unreported")
+    _code, lines = ev.compare(side(8), side(9))
+    if any("truncation differs" in x for x in lines):
+        failures.append("eval.compare — warned about truncation when there was none")
+
+    # Scoring: formatting is not disagreement, and a missing marker is not a wrong answer.
+    task = ev.BUILTIN_TASKS["gsm8k"]
+    if not ev.score_one(task, "so\n#### 1,234", "x\n#### 1234")["ok"]:
+        failures.append("eval.score_one — a thousands separator counted as wrong")
+    if not ev.score_one(task, "so\n#### 18.0", "x\n#### 18")["ok"]:
+        failures.append("eval.score_one — 18.0 counted as different from 18")
+    if not ev.score_one(task, "first #### 9 then #### 18", "x\n#### 18")["ok"]:
+        failures.append("eval.score_one — took the first restated number, not the last")
+    truncated = ev.score_one(task, "let me work out the number of", "x\n#### 18")
+    if truncated["ok"] or not truncated["unmarked"]:
+        failures.append("eval.score_one — a truncated generation was not flagged unmarked")
+    wrong = ev.score_one(task, "so\n#### 19", "x\n#### 18")
+    if wrong["ok"] or wrong["unmarked"]:
+        failures.append("eval.score_one — a plain wrong answer was called truncated")
+
+    # Absence of a run is not truncation of one. Scoring them the same way makes a driver
+    # that died look like a budget that was too small.
+    absent = ev.score_one(task, None, "x\n#### 18")
+    if not absent["missing"] or absent["unmarked"]:
+        failures.append("eval.score_one — a missing generation was counted as truncated")
+
+    for f in failures:
+        print(f"FAIL {f}")
+    if failures:
+        raise SystemExit(1)
+    return len(cases) + 8
+
+
 def main() -> int:
     failures: list[str] = []
     for rule_id, trigger, workaround in CASES:
@@ -106,11 +185,13 @@ def main() -> int:
         failures.append(f"source rules with no self-test: {', '.join(sorted(untested))}")
 
     n_verify = check_verify(failures)
+    n_eval = check_eval()
 
     for line in failures:
         print("FAIL  " + line)
     print(f"\n{len(CASES) + 4} checks over {len(covered)} source rules, "
-          f"{n_verify} over verify's verdict: {'FAILED' if failures else 'all pass'}")
+          f"{n_verify} over verify's verdict, {n_eval} over eval's refusals: "
+          f"{'FAILED' if failures else 'all pass'}")
     return 1 if failures else 0
 
 

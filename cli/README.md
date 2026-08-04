@@ -1,8 +1,8 @@
-# `cli/` — coreai export / doctor / verify
+# `cli/` — coreai export / doctor / verify / eval
 
-Three commands for the part of a Core AI port that is knowledge rather than code: which
-route a model has, which known trap an artifact is standing on, and whether the bundle still
-speaks.
+Four commands for the part of a Core AI port that is knowledge rather than code: which
+route a model has, which known trap an artifact is standing on, whether the bundle still
+speaks, and whether it still does the job.
 
 ```
 python3 cli/coreai_export.py <hf-id | short-name | checkpoint-dir> [--device mac|iphone] [--run]
@@ -13,6 +13,10 @@ python3 cli/coreai_doctor.py --rules          # every rule, machine-readable
 
 python3 cli/coreai_verify.py <bundle-dir> [-n 16] [--prompt "..."] [--transcript out.json]
 python3 cli/coreai_verify.py <bundle-dir> --plan     # what it would do, and what blocks it
+
+python3 cli/coreai_eval.py --score gen.json --task gsm8k --arm "iphone int8" --max-new-tokens 2048
+python3 cli/coreai_eval.py --compare a.json b.json   # refuses on a protocol mismatch
+python3 cli/coreai_eval.py --tasks
 
 python3 cli/selftest.py                       # decision-rule fixtures
 ```
@@ -277,3 +281,82 @@ answering coreai-models#56 ("model-by-model support does not seem sustainable") 
 half-answered by it — the other half is "how do you make a new architecture's re-authoring
 cheap", which is not a CLI feature. The README should keep saying so rather than letting the
 command's name imply otherwise.
+
+---
+
+# `eval` — the other question
+
+`verify` asks whether the bundle computes what the reference computes. That is the right
+question, and the notes state its blind spot plainly: **an equivalence gate cannot detect a
+defect its reference shares.** The case that produced this command: identical weights, int8
+activations scoring 85/100 on GSM8K and fp16 activations scoring 48/100. Token-exact against
+an fp16 oracle passes all day.
+
+So `verify` gates the export and `eval` gates the product. It is the number a client asks
+for, and the one nobody publishes.
+
+### Most of it is about comparing, not scoring
+
+Scoring is thirty lines. The expensive part is that a task number means almost nothing next
+to a number produced under a different protocol, and this project has published a wrong
+conclusion from that twice: a "12-point quality gap" between two runtimes that was a 600-token
+generation budget against 2048, and a quantization blamed for a loss before the arms were
+matched at all. Both were invisible in the number and obvious in the configuration.
+
+So an arm records its configuration, and `--compare` **refuses to print a delta** until the
+arms agree on the fields that decide the answer:
+
+```
+$ coreai_eval.py --compare mac.json iphone.json
+A  mac int8                     8/10 (80.0%)   unmarked 0
+B  iphone int8 (short budget)   9/10 (90.0%)   unmarked 0
+
+REFUSED — the arms were not run under the same protocol:
+    max_new_tokens       A=2048   B=600
+
+    The two numbers above are real; the difference between them is not attributable
+    to the models until these agree. Re-run the shorter arm with the other's settings.
+```
+
+| protocol field | why it is on the list |
+|---|---|
+| `task`, `n`, `data_digest` | the same questions, or it is not the same test |
+| `instruction_digest` | the prompt suffix changes the format the answer arrives in |
+| `template_digest` | whether a thinking model thinks is a property of the *renderer*, not the weights |
+| `max_new_tokens` | the field that produced the published wrong answer |
+| `temperature`, `stop` | greedy vs sampled, and where generation was cut |
+
+Everything else — bundle, driver, device, precision — is free, because that is what a
+comparison is *for*. And **unrecorded is not the same as equal**: two runs that both omit a
+field are refused rather than compared, which is the case that would otherwise slip through.
+
+### Truncation is reported whether or not you asked
+
+Equal budgets do not mean equal room to answer. An arm that hits the cap before reaching the
+answer marker is being scored on a different task, so the unanswered rate sits next to every
+score, and a gap of 5 points or more between arms is called out even when the protocol
+matches.
+
+### Driver-agnostic on purpose
+
+`--score` takes generations from anything that can write JSON — `llm-runner`, a device batch
+run, `transformers`, an ad-hoc script — in three shapes: a list, an object keyed by index, or
+either of those carrying `{"id": …, "text": …}`. A device number and a Mac number then go
+through exactly the same scoring code, which is the only circumstance under which they are
+comparable.
+
+**It will not decode token ids.** The zoo's existing device batch format (`g4out.json`)
+carries `ids`, not text, and this refuses it rather than growing a tokenizer: the moment
+scoring owns a tokenizer, the two arms are no longer scored by identical code, which is the
+one property that made them comparable. Decode in the driver, where the tokenizer already
+is, and emit `text`.
+
+Two things it refuses that are easy to miss:
+
+* **An incomplete arm.** Items with no generation score wrong, so the accuracy is a floor
+  rather than a measurement. A run that crashed at item 70 otherwise reads as a worse model.
+* **A truncated one, separately.** Missing a generation and running out of budget mid-answer
+  look identical in the score and have opposite fixes, so they are counted apart.
+
+Bring your own task with `--task path/to/task.json`; a client's eval set is the point, and
+the harness does not need to know what is in it.
