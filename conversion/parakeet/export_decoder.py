@@ -6,8 +6,12 @@ Two tiny static graphs drive the transducer; the host runs the loop:
   predict : token[1,1] i32 + h[2,1,640] + c[2,1,640] -> dec_out[1,640] + h'[2,1,640] + c'[2,1,640]
             (embedding -> 2× manual LSTM cell -> decoder_projector; nn.LSTM avoided per the
              Kokoro lesson — single-step, so it's just two cell steps)
-  joint   : dec_out[1,640] + enc_frame[1,640] -> token_logits[1,8193] + dur_logits[1,5]
+  joint   : dec_out[1,640] + enc_frame[1,640] -> token_logits[1,V] + dur_logits[1,D]
             (head(relu(enc + dec)), split into the token and duration heads)
+
+The vocab is the one thing v2 and v3 disagree on — V=1025/blank 1024 vs V=8193/blank 8192 — so
+it is read from the oracle bundle rather than hardcoded, and `--hf-id` picks the checkpoint
+(an HF repo id, or a local dir in HF layout for v2).
 
 Gate ladder:
   1. eager re-author: run the host loop on golden enc_proj -> tokens must equal oracle tokens,
@@ -29,15 +33,15 @@ import torch
 import torch.nn as nn
 
 HERE = Path(__file__).resolve().parent
-HID, NL, VOCAB, NDUR, BLANK = 640, 2, 8193, 5, 8192
-DURATIONS = [0, 1, 2, 3, 4]
+DEFAULT_HF_ID = "nvidia/parakeet-tdt-0.6b-v3"
+HID, NL = 640, 2
 
 
 # --------------------------------------------------------------------------- modules
 class Predict(nn.Module):
-    def __init__(self):
+    def __init__(self, vocab: int):
         super().__init__()
-        self.embedding = nn.Embedding(VOCAB, HID)
+        self.embedding = nn.Embedding(vocab, HID)
         self.decoder_projector = nn.Linear(HID, HID, bias=True)
         for l in range(NL):
             self.register_buffer(f"w_ih{l}", torch.zeros(4 * HID, HID), persistent=True)
@@ -62,19 +66,30 @@ class Predict(nn.Module):
 
 
 class Joint(nn.Module):
-    def __init__(self):
+    def __init__(self, vocab: int, ndur: int):
         super().__init__()
-        self.head = nn.Linear(HID, VOCAB + NDUR, bias=True)
+        self.vocab = vocab
+        self.head = nn.Linear(HID, vocab + ndur, bias=True)
 
     def forward(self, dec_out, enc_frame):  # [1,640] each
-        logits = self.head(torch.relu(enc_frame + dec_out))   # [1,8198]
-        return logits[:, :VOCAB], logits[:, VOCAB:]
+        logits = self.head(torch.relu(enc_frame + dec_out))   # [1,V+D]
+        return logits[:, :self.vocab], logits[:, self.vocab:]
 
 
-def load_weights(predict: Predict, joint: Joint):
-    from safetensors import safe_open
+def weights_file(hf_id: str) -> str:
+    """model.safetensors for an HF repo id, or for a local dir in HF layout (how v2 arrives:
+    nvidia/parakeet-tdt-0.6b-v2 publishes only the .nemo, converted with transformers'
+    models/parakeet/convert_nemo_to_hf.py)."""
+    local = Path(hf_id) / "model.safetensors"
+    if local.is_file():
+        return str(local)
     from huggingface_hub import hf_hub_download
-    p = hf_hub_download("nvidia/parakeet-tdt-0.6b-v3", "model.safetensors")
+    return hf_hub_download(hf_id, "model.safetensors")
+
+
+def load_weights(predict: Predict, joint: Joint, hf_id: str):
+    from safetensors import safe_open
+    p = weights_file(hf_id)
     with safe_open(p, framework="pt") as f:
         predict.embedding.weight.data.copy_(f.get_tensor("decoder.embedding.weight"))
         predict.decoder_projector.weight.data.copy_(f.get_tensor("decoder.decoder_projector.weight"))
@@ -90,21 +105,21 @@ def load_weights(predict: Predict, joint: Joint):
 
 
 # --------------------------------------------------------------------------- TDT host loop
-def tdt_decode(predict_fn, joint_fn, enc_proj, T, collect_logits=False):
+def tdt_decode(predict_fn, joint_fn, enc_proj, T, blank, durations, collect_logits=False):
     """predict_fn(token,h,c)->(dec,h,c) ; joint_fn(dec,enc_frame)->(tl,dl). enc_proj[T,640]."""
     h = torch.zeros(NL, 1, HID)
     c = torch.zeros(NL, 1, HID)
-    dec, h, c = predict_fn(torch.tensor([[BLANK]]), h, c)
+    dec, h, c = predict_fn(torch.tensor([[blank]]), h, c)
     frame, emitted, logits_log = 0, [], []
     while frame < T and len(logits_log) < 12 * T:
         tl, dl = joint_fn(dec, enc_proj[frame:frame + 1])
-        token = int(tl.argmax()); dur = DURATIONS[int(dl.argmax())]
+        token = int(tl.argmax()); dur = durations[int(dl.argmax())]
         if collect_logits:
             logits_log.append(torch.cat([tl[0], dl[0]]).detach().numpy())
-        if token == BLANK and dur == 0:
+        if token == blank and dur == 0:
             dur = 1
         frame += dur
-        if token != BLANK:
+        if token != blank:
             emitted.append(token)
             dec, h, c = predict_fn(torch.tensor([[token]]), h, c)
     return emitted, logits_log
@@ -112,23 +127,34 @@ def tdt_decode(predict_fn, joint_fn, enc_proj, T, collect_logits=False):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--hf-id", default=DEFAULT_HF_ID, help="HF repo id, or a local dir in HF layout")
     ap.add_argument("--dtype", choices=["float32", "float16"], default="float32")
+    ap.add_argument("--oracle", default="oracle.npz")
+    ap.add_argument("--artifacts", default="artifacts", help="output dir (relative to this script)")
     ap.add_argument("--skip-export", action="store_true")
     args = ap.parse_args()
 
-    d = np.load(HERE / "oracle.npz")
+    d = np.load(HERE / args.oracle)
     enc_proj = torch.from_numpy(d["enc_proj"]).float()      # [T,640] golden
     T = int(d["T_valid"])
     gold_tokens = d["tokens"].tolist()
     gold_logits = torch.from_numpy(d["step_logits"]).float()
     text = str(d["text"])
+    # Vocab geometry comes from the oracle, not a constant: v2 is 1025/blank 1024, v3 8193/8192.
+    vocab, blank = int(d["vocab_size"]), int(d["blank_id"])
+    durations = (d["durations"].tolist() if "durations" in d
+                 else list(range(int(d["n_durations"]))))
+    src = str(d["source"]) if "source" in d else None
+    if src and src != args.hf_id:
+        print(f"⚠️  {args.oracle} was generated from {src!r}, not {args.hf_id!r}")
+    print(f"[model] {args.hf_id}  vocab={vocab} blank={blank} durations={durations}")
 
-    predict, joint = Predict().eval(), Joint().eval()
-    load_weights(predict, joint)
+    predict, joint = Predict(vocab).eval(), Joint(vocab, len(durations)).eval()
+    load_weights(predict, joint, args.hf_id)
 
     # ---- 1. eager re-author gate ----
     with torch.no_grad():
-        emitted, logs = tdt_decode(predict, joint, enc_proj, T, collect_logits=True)
+        emitted, logs = tdt_decode(predict, joint, enc_proj, T, blank, durations, collect_logits=True)
     tok_ok = emitted == gold_tokens
     n = min(len(logs), gold_logits.shape[0])
     lcos = torch.nn.functional.cosine_similarity(
@@ -145,7 +171,7 @@ def main():
     import coreai.runtime as rt
     from coreai_models.export.macos import export_to_coreai
     dtype = torch.float16 if args.dtype == "float16" else torch.float32
-    art = HERE / "artifacts"; art.mkdir(exist_ok=True)
+    art = HERE / args.artifacts; art.mkdir(exist_ok=True)
 
     def export(mod, example, ins, outs, name):
         prog = export_to_coreai(mod.to(dtype), example, dynamic_shapes=None,
@@ -185,15 +211,15 @@ def main():
                     torch.from_numpy(r["dur_logits"].numpy().astype(np.float32)))
 
         h = torch.zeros(NL, 1, HID); c = torch.zeros(NL, 1, HID)
-        dec, h, c = await step_p(torch.tensor([[BLANK]]), h, c)
+        dec, h, c = await step_p(torch.tensor([[blank]]), h, c)
         frame, emitted = 0, []
         while frame < T and len(emitted) < 12 * T:
             tl, dl = await step_j(dec, enc_proj[frame:frame + 1])
-            token = int(tl.argmax()); dur = DURATIONS[int(dl.argmax())]
-            if token == BLANK and dur == 0:
+            token = int(tl.argmax()); dur = durations[int(dl.argmax())]
+            if token == blank and dur == 0:
                 dur = 1
             frame += dur
-            if token != BLANK:
+            if token != blank:
                 emitted.append(token)
                 dec, h, c = await step_p(torch.tensor([[token]]), h, c)
         return emitted

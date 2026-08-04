@@ -12,6 +12,7 @@ Run (MAIN venv, _GPU_LOCK held):
     coreai-models/.venv/bin/python gate_mel_swift.py
 """
 from __future__ import annotations
+import argparse
 import asyncio
 from pathlib import Path
 import numpy as np
@@ -20,9 +21,7 @@ import librosa
 import coreai.runtime as rt
 
 HERE = Path(__file__).resolve().parent
-ART = HERE / "artifacts"
-HID, NL, VOCAB, BLANK = 640, 2, 8193, 8192
-DURATIONS = [0, 1, 2, 3, 4]
+HID, NL = 640, 2
 N_FFT, WIN, HOP, NMELS = 512, 400, 160, 128
 BUCKET = 2885
 
@@ -105,7 +104,7 @@ async def gpu(path):
     return m.load_function("main")
 
 
-async def run_e2e(enc_fn, pf, jf, mel_np) -> list[int]:
+async def run_e2e(enc_fn, pf, jf, mel_np, blank, durations) -> list[int]:
     r = await enc_fn({"mel": rt.NDArray(mel_np.astype(np.float16))})
     enc_proj = torch.from_numpy(r["enc_proj"].numpy().astype(np.float32))[0]
     T = enc_proj.shape[0]
@@ -123,23 +122,32 @@ async def run_e2e(enc_fn, pf, jf, mel_np) -> list[int]:
                 torch.from_numpy(o["dur_logits"].numpy().astype(np.float32)))
 
     h = torch.zeros(NL, 1, HID); c = torch.zeros(NL, 1, HID)
-    dec, h, c = await step_p(torch.tensor([[BLANK]]), h, c)
+    dec, h, c = await step_p(torch.tensor([[blank]]), h, c)
     frame, emitted = 0, []
     while frame < T and len(emitted) < 12 * T:
         tl, dl = await step_j(dec, enc_proj[frame:frame + 1])
-        token = int(tl.argmax()); dur = DURATIONS[int(dl.argmax())]
-        if token == BLANK and dur == 0:
+        token = int(tl.argmax()); dur = durations[int(dl.argmax())]
+        if token == blank and dur == 0:
             dur = 1
         frame += dur
-        if token != BLANK:
+        if token != blank:
             emitted.append(token)
             dec, h, c = await step_p(torch.tensor([[token]]), h, c)
     return emitted
 
 
 async def main():
-    d = np.load(HERE / "oracle_30s.npz")
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--oracle", default="oracle_30s.npz")
+    ap.add_argument("--artifacts", default="artifacts", help="bundle dir (relative to this script)")
+    args = ap.parse_args()
+    ART = HERE / args.artifacts
+
+    d = np.load(HERE / args.oracle)
     gold = d["tokens"].tolist()
+    blank = int(d["blank_id"])
+    durations = (d["durations"].tolist() if "durations" in d
+                 else list(range(int(d["n_durations"]))))
 
     # the natural libri1 clip (no manual silence pad) — the realistic app input
     wav, _ = librosa.load(librosa.example("libri1"), sr=16000, mono=True)
@@ -153,7 +161,7 @@ async def main():
     for name, recipe in [("Y per-clip+zero-pad", recipe_Y), ("X oracle-style", recipe_X),
                          ("S manual-DFT swift-sim", recipe_swift)]:
         mel = recipe(wav)
-        emitted = await run_e2e(enc_fn, pf, jf, mel)
+        emitted = await run_e2e(enc_fn, pf, jf, mel, blank, durations)
         exact = emitted == gold
         same = sum(int(a == b) for a, b in zip(emitted, gold))
         txt = d["text"] if exact else "(differs)"
