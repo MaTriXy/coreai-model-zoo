@@ -14,6 +14,7 @@ python3 cli/coreai_doctor.py --rules          # every rule, machine-readable
 python3 cli/coreai_verify.py <bundle-dir> [-n 16] [--prompt "..."] [--transcript out.json]
 python3 cli/coreai_verify.py <bundle-dir> --plan     # what it would do, and what blocks it
 
+python3 cli/coreai_eval.py --run <bundle-dir> --task gsm8k -n 100 --max-new-tokens 2048
 python3 cli/coreai_eval.py --score gen.json --task gsm8k --arm "iphone int8" --max-new-tokens 2048
 python3 cli/coreai_eval.py --compare a.json b.json   # refuses on a protocol mismatch
 python3 cli/coreai_eval.py --tasks
@@ -360,3 +361,24 @@ Two things it refuses that are easy to miss:
 
 Bring your own task with `--task path/to/task.json`; a client's eval set is the point, and
 the harness does not need to know what is in it.
+
+### `--run` records the protocol instead of asking for it
+
+`--run` drives the bundle itself, through `verify`'s drivers — the same `driver_plan` that
+knows a dynamic-logits graph can only go through `llm-runner`, and the same exclusive-GPU
+convention, so a long eval stops rather than contending with whatever else is on the GPU.
+
+The point of the integrated path is that every field `--compare` checks is captured from
+what actually happened rather than typed in afterwards. The template digest in particular is
+taken from the **rendered** prefix, and that is not a formality — measured on Qwen3-0.6B:
+
+| `--thinking` | rendered assistant prefix | digest |
+|---|---|---|
+| `on` | `…<\|im_start\|>assistant\n` | `7e77fde99496` |
+| `off` | `…assistant\n<think>\n\n</think>\n\n` | `5c8507f2b86b` |
+| `default` | same as `on` | `7e77fde99496` |
+
+Two people evaluating "the same model", one passing `--thinking off` and one leaving the
+default, are evaluating a thinking model against a non-thinking one. The digests differ, so
+`--compare` refuses — which is the entire reason the field is recorded from the render and
+not from a flag.

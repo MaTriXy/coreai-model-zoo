@@ -392,6 +392,176 @@ def _text_of(entry: dict, path: Path) -> str:
 # ---------------------------------------------------------------------------
 
 
+
+# ---------------------------------------------------------------------------
+# Running a bundle (the integrated path)
+# ---------------------------------------------------------------------------
+
+# Rendering and tokenising need the model's own chat template, which lives in
+# `transformers` and not in this file. It runs in the same out-of-process shape
+# `coreai_verify.ORACLE_SRC` uses, for the same reason: this stays stdlib, and the heavy
+# dependency stays optional and visible.
+TOKENIZE_SRC = r'''
+import json, sys
+from transformers import AutoTokenizer
+
+hf_id, revision, thinking, path = sys.argv[1], sys.argv[2] or None, sys.argv[3], sys.argv[4]
+prompts = json.load(open(path))
+tok = AutoTokenizer.from_pretrained(hf_id, revision=revision)
+
+kw = {}
+if thinking in ("on", "off"):
+    kw["enable_thinking"] = thinking == "on"
+
+def render(text, tokenize):
+    try:
+        return tok.apply_chat_template([{"role": "user", "content": text}],
+                                       tokenize=tokenize, add_generation_prompt=True, **kw)
+    except TypeError:
+        # Not every template takes enable_thinking. Falling back silently would make the
+        # recorded template digest a lie, so the caller is told which one it got.
+        return tok.apply_chat_template([{"role": "user", "content": text}],
+                                       tokenize=tokenize, add_generation_prompt=True)
+
+probe = render("PROBE", False)
+ids = [render(p, True) for p in prompts]
+took_thinking = "enable_thinking" in (tok.chat_template or "")
+print("<<<JSON>>>" + json.dumps({
+    "probe": probe, "ids": ids, "eos": tok.eos_token_id,
+    "template_honours_thinking": took_thinking,
+}))
+'''
+
+DETOKENIZE_SRC = r'''
+import json, sys
+from transformers import AutoTokenizer
+hf_id, revision, path = sys.argv[1], sys.argv[2] or None, sys.argv[3]
+tok = AutoTokenizer.from_pretrained(hf_id, revision=revision)
+rows = json.load(open(path))
+print("<<<JSON>>>" + json.dumps(
+    {k: tok.decode(v, skip_special_tokens=True) for k, v in rows.items()}))
+'''
+
+
+def _call_helper(python: str, src: str, args: list[str], payload) -> dict:
+    import os
+    import subprocess
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+        json.dump(payload, f)
+        data = f.name
+    with tempfile.NamedTemporaryFile("w", prefix="coreai_eval_", suffix=".py",
+                                     delete=False) as f:
+        f.write(src)
+        script = f.name
+    env = {**os.environ, "HF_HUB_DISABLE_XET": os.environ.get("HF_HUB_DISABLE_XET", "1"),
+           "HF_HUB_DISABLE_PROGRESS_BARS": "1"}
+    try:
+        r = subprocess.run([python, script, *args, data], capture_output=True, text=True,
+                           env=env, cwd=tempfile.gettempdir())
+    finally:
+        Path(script).unlink(missing_ok=True)
+        Path(data).unlink(missing_ok=True)
+    line = next((x for x in r.stdout.splitlines() if x.startswith("<<<JSON>>>")), None)
+    if not line:
+        raise SystemExit("tokenizer helper failed:\n" + r.stdout[-600:] + r.stderr[-1200:])
+    return json.loads(line[len("<<<JSON>>>"):])
+
+
+def cmd_run(args) -> int:
+    """Drive a bundle over a task and score it, recording the protocol as it goes.
+
+    The recording is the point. Every field `--compare` checks is captured from what
+    actually happened — the rendered template, the budget, the stop condition, the driver —
+    instead of relying on whoever ran it to type them in afterwards. An arm nobody had to
+    describe is an arm nobody can describe wrong.
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import coreai_verify as verify  # noqa: E402  (optional: only --run needs it)
+
+    bundle = Path(args.run).expanduser().resolve()
+    task = load_task(args.task)
+    data = resolve_data(task, args.data)
+    items = load_items(task, data, args.n)
+
+    facts = verify.bundle_facts(bundle)
+    hf_id = args.hf_id or facts.get("hf_id")
+    if not hf_id:
+        raise SystemExit(
+            f"{bundle}: the bundle does not record its source model, so there is no "
+            f"tokenizer and no chat template to render with. Pass --hf-id "
+            f"(e.g. --hf-id Qwen/Qwen3-0.6B).")
+
+    runner = verify.resolve_runner(args.runner)
+    driver, blockers = verify.driver_plan(facts, runner)
+    if blockers and not args.ignore_gpu_lock:
+        for b in blockers:
+            print(f"blocked: {b}", file=sys.stderr)
+        return 4
+    print(f"driver {driver}  ·  {len(items)} items  ·  budget {args.max_new_tokens}",
+          file=sys.stderr)
+
+    python = verify.resolve_python(args.python)
+    prompts = [str(item[task["input_field"]]) + task.get("instruction", "")
+               for item in items]
+    tok = _call_helper(python, TOKENIZE_SRC,
+                       [hf_id, facts.get("revision") or "", args.thinking], prompts)
+
+    generations: dict[int, str] = {}
+    pending_ids: dict[str, list[int]] = {}
+    for i, ids in enumerate(tok["ids"]):
+        if driver == "llm-runner":
+            text, tail = verify.run_llm_runner(runner, bundle, ids, args.max_new_tokens,
+                                               bool(facts.get("static_query")))
+            if text is None:
+                print(f"  item {i}: driver produced nothing — {tail[:200]}",
+                      file=sys.stderr)
+            else:
+                generations[i] = text
+        else:
+            out, tail = verify.run_python_cpu(python, bundle, Path(facts["asset"]), ids,
+                                              args.max_new_tokens)
+            if out is None:
+                print(f"  item {i}: driver produced nothing — {tail[:200]}",
+                      file=sys.stderr)
+            else:
+                pending_ids[str(i)] = out
+        print(f"  {i + 1}/{len(items)}", end="\r", file=sys.stderr)
+
+    if pending_ids:
+        # Decoded in one batch, by the same tokenizer that encoded — never by this file.
+        decoded = _call_helper(python, DETOKENIZE_SRC,
+                               [hf_id, facts.get("revision") or ""], pending_ids)
+        generations.update({int(k): v for k, v in decoded.items()})
+
+    score = score_run(task, items, generations)
+    arm = make_arm(task, items, args, {
+        "bundle": str(bundle),
+        "driver": driver,
+        "precision": args.precision,
+        "notes": args.notes,
+        "hf_id": hf_id,
+    })
+    # Recorded from what happened, overriding whatever the flags said.
+    arm["template_digest"] = digest(tok["probe"]) + f"/thinking={args.thinking}"
+    arm["stop"] = f"eos={tok['eos']},budget"
+    transcript = {"arm": arm, "score": score, "data": str(data),
+                  "template_probe": tok["probe"]}
+
+    print()
+    print(f"{arm['arm']}: {score['correct']}/{score['n']} ({score['accuracy']:.1%})")
+    if score["missing"]:
+        print(f"  {score['missing']} items produced nothing — the run is incomplete and "
+              f"this number is a floor")
+    if score["unmarked"]:
+        print(f"  {score['unmarked']} of {score['n']} ({score['unmarked_rate']:.0%}) "
+              f"never reached {task.get('answer_marker')!r} at this budget")
+    if args.transcript:
+        Path(args.transcript).write_text(json.dumps(transcript, indent=1))
+        print(f"  wrote {args.transcript}")
+    return 0
+
+
 def cmd_tasks() -> int:
     for name, task in BUILTIN_TASKS.items():
         print(f"{name:<12} {task['description']}")
@@ -452,6 +622,15 @@ def main() -> int:
     p.add_argument("--tasks", action="store_true", help="list the built-in tasks")
     p.add_argument("--score", metavar="GEN.JSON",
                    help="score a file of generations produced by any driver")
+    p.add_argument("--run", metavar="BUNDLE",
+                   help="drive this bundle over the task, then score it")
+    p.add_argument("--hf-id", help="source model, for the tokenizer and chat template")
+    p.add_argument("--thinking", choices=["on", "off", "default"], default="default",
+                   help="enable_thinking on the chat template — it changes the answer, so "
+                        "it is part of the recorded protocol")
+    p.add_argument("--runner", help="path to llm-runner")
+    p.add_argument("--python", help="python with transformers, for tokenizing")
+    p.add_argument("--ignore-gpu-lock", action="store_true")
     p.add_argument("--compare", nargs=2, metavar=("A.JSON", "B.JSON"),
                    help="compare two transcripts, refusing on a protocol mismatch")
     p.add_argument("--task", default="gsm8k", help="built-in name or path to a task file")
@@ -477,6 +656,12 @@ def main() -> int:
         return cmd_tasks()
     if args.compare:
         return cmd_compare(args)
+    if args.run:
+        if args.max_new_tokens is None:
+            print("--max-new-tokens is required: the generation budget is a protocol field "
+                  "and there is no safe default.", file=sys.stderr)
+            return 2
+        return cmd_run(args)
     if args.score:
         if args.max_new_tokens is None:
             print("--max-new-tokens is required: it is the protocol field that has already "
