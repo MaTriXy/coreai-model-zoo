@@ -151,7 +151,8 @@ def extract(text: str | None, pattern: str | None) -> str | None:
     return found[-1] if found else None
 
 
-def score_one(task: dict, generated: str | None, gold_raw: str) -> dict:
+def score_one(task: dict, generated: str | None, gold_raw: str,
+              capped: bool | None = None) -> dict:
     gold = normalize(
         extract(gold_raw, task.get("gold_extract")), task.get("normalize", "none"))
     pred = normalize(
@@ -165,29 +166,45 @@ def score_one(task: dict, generated: str | None, gold_raw: str) -> dict:
         # asked. Distinct from `unmarked`: absence of a run is not truncation of one, and
         # conflating them makes a half-finished arm look like a budget problem.
         "missing": generated is None,
-        # A marker the model was asked for and did not emit means it never got to the
-        # answer — almost always the budget running out mid-reasoning. Counted separately
-        # because it is a protocol failure, not a wrong answer.
+        # No marker: the model was asked for one and did not produce it.
         "unmarked": bool(marker and generated is not None and marker not in generated),
+        # Whether generation stopped because it ran out of budget. `None` means the driver
+        # did not report a token count, which is the usual case for `--score`.
+        #
+        # This split matters and was missing until a real run exposed it. Qwen3-0.6B answered
+        # a GSM8K item correctly-shaped in 162 tokens of a 512 budget and wrote `\boxed{0}`
+        # instead of `#### 0`. Unmarked, but not truncated — and the two have opposite fixes:
+        # raise the budget, or fix the prompt. Reporting "raise the budget" there is exactly
+        # the misattribution this file exists to stop, committed by this file.
+        "truncated": capped,
     }
 
 
-def score_run(task: dict, items: list[dict], generations: dict[int, str]) -> dict:
-    rows, correct, unmarked, missing = [], 0, 0, 0
+def score_run(task: dict, items: list[dict], generations: dict[int, str],
+              capped: dict[int, bool] | None = None) -> dict:
+    rows, correct, unmarked, missing, truncated = [], 0, 0, 0, 0
     for i, item in enumerate(items):
-        row = score_one(task, generations.get(i), str(item[task["gold_field"]]))
+        row = score_one(task, generations.get(i), str(item[task["gold_field"]]),
+                        (capped or {}).get(i))
         row["i"] = i
         correct += row["ok"]
         unmarked += row["unmarked"]
         missing += row["missing"]
+        truncated += bool(row["truncated"])
         rows.append(row)
     n = len(items)
+    # Unmarked AND not truncated: the model finished and ignored the requested format. A
+    # different problem from running out of room, and a different fix.
+    offformat = sum(1 for r in rows if r["unmarked"] and r["truncated"] is False)
     return {
         "n": n,
         "correct": correct,
         "accuracy": correct / n if n else 0.0,
         "unmarked": unmarked,
         "unmarked_rate": unmarked / n if n else 0.0,
+        "truncated": truncated,
+        "truncated_rate": truncated / n if n else 0.0,
+        "offformat": offformat,
         "missing": missing,
         "rows": rows,
     }
@@ -318,22 +335,36 @@ def compare(a: dict, b: dict) -> tuple[int, list[str]]:
 
     # Equal budgets do not mean equal truncation. An arm that runs out of room more often is
     # being scored on a harder task, and the delta is partly measuring that.
-    ua, ub = a["score"]["unmarked_rate"], b["score"]["unmarked_rate"]
-    if abs(ua - ub) >= 0.05:
+    ta = a["score"].get("truncated_rate", 0.0)
+    tb = b["score"].get("truncated_rate", 0.0)
+    if abs(ta - tb) >= 0.05:
         lines += [
             "",
-            f"WARNING — truncation differs: A {ua:.0%} of items produced no answer marker, "
-            f"B {ub:.0%}.",
+            f"WARNING — truncation differs: A ran out of budget on {ta:.0%} of items, "
+            f"B on {tb:.0%}.",
             "    The budgets match, so one arm is spending more of it before answering. "
             "Part of",
             "    this delta is that, not quality. Raise --max-new-tokens for both and re-run.",
         ]
-    elif max(ua, ub) >= 0.05:
+    elif max(ta, tb) >= 0.05:
         lines += [
             "",
-            f"NOTE — both arms leave {max(ua, ub):.0%} of items unanswered at this budget. "
-            "The delta",
-            "    is comparable, but both numbers are below what these models can do.",
+            f"NOTE — both arms run out of budget on {max(ta, tb):.0%} of items. The delta is",
+            "    comparable, but both numbers are below what these models can do.",
+        ]
+
+    # Off-format is a different fault with a different fix, and if it is large the task is
+    # not measuring what it claims to on either arm.
+    oa, ob = a["score"].get("offformat", 0), b["score"].get("offformat", 0)
+    if max(oa, ob) >= 0.1 * a["score"]["n"]:
+        lines += [
+            "",
+            f"NOTE — {oa} of A and {ob} of B finished without the answer marker and were "
+            f"not truncated.",
+            "    That is the model ignoring the requested format, not running out of room. "
+            "Raising",
+            "    the budget will not move it; the instruction or the extraction pattern is "
+            "what to fix.",
         ]
 
     # Where they actually differ, so the next question ("is it the same items?") is one
@@ -468,6 +499,14 @@ def _call_helper(python: str, src: str, args: list[str], payload) -> dict:
     return json.loads(line[len("<<<JSON>>>"):])
 
 
+def _hit_budget(tail: str, budget: int) -> bool | None:
+    """Did generation stop at the budget, or on its own? llm-runner prints the count in its
+    summary — 'Generation: 466.0ms, 162 tokens, …'. Without it, this stays unknown rather
+    than guessing, because guessing is what turns a format problem into a budget problem."""
+    m = re.search(r"Generation:\s*[\d.]+ms,\s*(\d+)\s*tokens", tail or "")
+    return int(m.group(1)) >= budget if m else None
+
+
 def cmd_run(args) -> int:
     """Drive a bundle over a task and score it, recording the protocol as it goes.
 
@@ -508,6 +547,7 @@ def cmd_run(args) -> int:
                        [hf_id, facts.get("revision") or "", args.thinking], prompts)
 
     generations: dict[int, str] = {}
+    capped: dict[int, bool] = {}
     pending_ids: dict[str, list[int]] = {}
     for i, ids in enumerate(tok["ids"]):
         if driver == "llm-runner":
@@ -518,6 +558,7 @@ def cmd_run(args) -> int:
                       file=sys.stderr)
             else:
                 generations[i] = text
+                capped[i] = _hit_budget(tail, args.max_new_tokens)
         else:
             out, tail = verify.run_python_cpu(python, bundle, Path(facts["asset"]), ids,
                                               args.max_new_tokens)
@@ -526,6 +567,7 @@ def cmd_run(args) -> int:
                       file=sys.stderr)
             else:
                 pending_ids[str(i)] = out
+                capped[i] = len(out) >= args.max_new_tokens
         print(f"  {i + 1}/{len(items)}", end="\r", file=sys.stderr)
 
     if pending_ids:
@@ -534,7 +576,7 @@ def cmd_run(args) -> int:
                                [hf_id, facts.get("revision") or ""], pending_ids)
         generations.update({int(k): v for k, v in decoded.items()})
 
-    score = score_run(task, items, generations)
+    score = score_run(task, items, generations, capped)
     arm = make_arm(task, items, args, {
         "bundle": str(bundle),
         "driver": driver,
@@ -553,9 +595,12 @@ def cmd_run(args) -> int:
     if score["missing"]:
         print(f"  {score['missing']} items produced nothing — the run is incomplete and "
               f"this number is a floor")
-    if score["unmarked"]:
-        print(f"  {score['unmarked']} of {score['n']} ({score['unmarked_rate']:.0%}) "
-              f"never reached {task.get('answer_marker')!r} at this budget")
+    if score["truncated"]:
+        print(f"  {score['truncated']} of {score['n']} ran out of budget mid-answer")
+    if score["offformat"]:
+        print(f"  {score['offformat']} of {score['n']} finished without "
+              f"{task.get('answer_marker')!r} — the model is not following the requested "
+              f"format, which raising the budget will not fix")
     if args.transcript:
         Path(args.transcript).write_text(json.dumps(transcript, indent=1))
         print(f"  wrote {args.transcript}")

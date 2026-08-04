@@ -382,3 +382,20 @@ Two people evaluating "the same model", one passing `--thinking off` and one lea
 default, are evaluating a thinking model against a non-thinking one. The digests differ, so
 `--compare` refuses — which is the entire reason the field is recorded from the render and
 not from a flag.
+
+### Validation
+
+End to end on `qwen3-0.6b` (4-bit, macOS bundle, `llm-runner`), GSM8K, `--thinking off`:
+
+| check | result |
+|---|---|
+| same settings twice | every row identical, `delta B - A = +0.0%`, protocol matched |
+| `--max-new-tokens 512` vs `256` | **REFUSED**, naming `max_new_tokens` |
+| halving the budget | truncated items 1 → 2, as it should |
+
+The accuracy itself was 0/10, and the interesting part is *why* the tool says so: **1 item ran
+out of budget and 7 finished without the marker.** Qwen3-0.6B answers in `\boxed{0}`, not
+`#### 0`, in a third of its budget. Raising the budget would not move that number by one
+item, and an earlier version of this file said "raise the budget" anyway — it counted every
+missing marker as truncation. A real run is what exposed it; the split between `truncated`
+and off-format exists because of that run.

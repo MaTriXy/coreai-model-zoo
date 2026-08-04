@@ -89,13 +89,16 @@ def check_eval() -> int:
         base.update(over)
         return base
 
-    def side(correct, unmarked=0, missing=0, **over):
-        rows = [{"i": i, "ok": i < correct, "unmarked": i >= 10 - unmarked,
-                 "missing": False, "pred": None, "gold": None} for i in range(10)]
+    def side(correct, truncated=0, offformat=0, missing=0, **over):
+        rows = [{"i": i, "ok": i < correct, "unmarked": i >= 10 - truncated,
+                 "truncated": i >= 10 - truncated, "missing": False,
+                 "pred": None, "gold": None} for i in range(10)]
         return {"arm": arm(**over),
                 "score": {"n": 10, "correct": correct, "accuracy": correct / 10,
-                          "unmarked": unmarked, "unmarked_rate": unmarked / 10,
-                          "missing": missing, "rows": rows}}
+                          "unmarked": truncated + offformat,
+                          "unmarked_rate": (truncated + offformat) / 10,
+                          "truncated": truncated, "truncated_rate": truncated / 10,
+                          "offformat": offformat, "missing": missing, "rows": rows}}
 
     cases = [
         ("matched protocol compares", side(8), side(9), 0),
@@ -118,12 +121,21 @@ def check_eval() -> int:
 
     # Truncation is reported even when the protocol matches: equal budgets do not mean
     # equal room to answer, and the delta is partly measuring the difference.
-    _code, lines = ev.compare(side(8), side(7, unmarked=3))
+    _code, lines = ev.compare(side(8), side(7, truncated=3))
     if not any("truncation differs" in x for x in lines):
         failures.append("eval.compare — a 30% truncation gap went unreported")
     _code, lines = ev.compare(side(8), side(9))
     if any("truncation differs" in x for x in lines):
         failures.append("eval.compare — warned about truncation when there was none")
+
+    # An arm that finished and ignored the answer format must NOT be told to raise its
+    # budget: it did not run out of one. Found by a real run answering in \boxed{} at a
+    # third of its budget, and reported by this tool as a budget problem.
+    _code, lines = ev.compare(side(8), side(5, offformat=5))
+    if any("truncation differs" in x for x in lines):
+        failures.append("eval.compare — called an off-format arm truncated")
+    if not any("ignoring the requested format" in x for x in lines):
+        failures.append("eval.compare — an off-format arm went unreported")
 
     # Scoring: formatting is not disagreement, and a missing marker is not a wrong answer.
     task = ev.BUILTIN_TASKS["gsm8k"]
@@ -146,11 +158,22 @@ def check_eval() -> int:
     if not absent["missing"] or absent["unmarked"]:
         failures.append("eval.score_one — a missing generation was counted as truncated")
 
+    # The real case: finished, wrong format, well under budget.
+    boxed = ev.score_one(task, "the answer is \\boxed{0}", "x\n#### 18", capped=False)
+    if boxed["truncated"] is not False or not boxed["unmarked"]:
+        failures.append("eval.score_one — an off-format finish was called truncated")
+    cut = ev.score_one(task, "we start by computing the", "x\n#### 18", capped=True)
+    if cut["truncated"] is not True:
+        failures.append("eval.score_one — a budget-capped generation was not marked")
+    unknown = ev.score_one(task, "the answer is \\boxed{0}", "x\n#### 18")
+    if unknown["truncated"] is not None:
+        failures.append("eval.score_one — guessed truncation with no token count")
+
     for f in failures:
         print(f"FAIL {f}")
     if failures:
         raise SystemExit(1)
-    return len(cases) + 8
+    return len(cases) + 13
 
 
 def main() -> int:
