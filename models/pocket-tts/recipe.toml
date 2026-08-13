@@ -1,0 +1,26 @@
+# Recipe for pocket-tts: the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["pocket-tts"]
+card = "README.md"
+hf_repo = "rahulrachuri/pocket-tts-coreai"
+source_hf_id = "kyutai/pocket-tts-without-voice-cloning"
+status = "verified"
+steps = [
+  { script = "pocket-tts/export_mimi_decoder.py", args = ["--upsample", "outer", "--fold-quantizer", "--graph-state"], bundle = "mimi_decoder_float32_ring272_outer_q_gs.aimodel" },
+  { script = "pocket-tts/export_flowlm.py", args = [], bundle = "flowlm_float32_s512.aimodel" },
+  { script = "pocket-tts/export_flowlm.py", args = ["--dtype", "float16"], bundle = "flowlm_float16_s512.aimodel" },
+  { script = "pocket-tts/export_flow_decoder.py", args = [], bundle = "flow_decoder_float32_lsd1.aimodel" },
+  { script = "pocket-tts/export_flow_decoder.py", args = ["--dtype", "float16"], bundle = "flow_decoder_float16_lsd1.aimodel" },
+]
+notes = [
+  "Prerequisite: an oracle capture. Run pocket-tts/gen_oracle.py --tag orc_a first (needs the",
+  "pocket_tts pip package and HF_HOME pointing at a cache holding the Kyutai checkpoint); every",
+  "exporter gates against oracle/orc_a.npz (eager, cpu_only, gpu) before writing its bundle.",
+  "Exports need DEVELOPER_DIR pointing at the Xcode 27 beta. S_MAX = 512 is derived inside",
+  "flowlm_graphs.py from the model's own generation bound (162 voice + 50 text + 234 frames),",
+  "not passed as a flag. The Mimi decoder ships fp32 only; fp16 covers the flow-LM and the",
+  "flow decoder. The Mimi flags fold the rescale + k=1 quantizer in-graph (--fold-quantizer)",
+  "and hold the 12 streaming-state tensors as in-graph Core AI state (--graph-state).",
+]
