@@ -1,6 +1,6 @@
 """Phase 1 — Parakeet TDT 0.6B golden oracle (run in the ISOLATED transformers-5.x env).
 
-Loads nvidia/parakeet-tdt-0.6b-v3, runs it on a real English clip, and saves a golden
+Loads a Parakeet TDT checkpoint, runs it on a real English clip, and saves a golden
 bundle that the Core-AI export/gate (main coreai-torch venv) compares against:
 
   oracle.npz
@@ -11,11 +11,14 @@ bundle that the Core-AI export/gate (main coreai-torch venv) compares against:
     step_frames      [S]           encoder frame index at each decode step
     step_tokens      [S]           argmax token at each step (incl. blanks)
     step_durations   [S]           argmax duration at each step
-    step_logits      [S,8198]      reference joint logits (token 0..8192 + dur 8193..8197)
+    step_logits      [S,V+D]       reference joint logits (V token logits, then D duration ones)
     text             ()            reference transcript (str)
-  + scalars: blank_id, start_token, vocab_size, n_durations, T_valid
+  + scalars: blank_id, start_token, vocab_size, n_durations, T_valid, source
+  + durations [D]  the duration values themselves — v2 and v3 agree, the exporters don't assume it
 
-Also asserts our hand-rolled greedy TDT loop == model.generate() (the loop we port to Swift).
+`--hf-id` also accepts a local directory in HF layout, which is how v2 is obtained:
+nvidia/parakeet-tdt-0.6b-v2 ships only the .nemo archive, so it has to be converted first
+with transformers' `models/parakeet/convert_nemo_to_hf.py` (main branch, not in the wheel).
 
 Run:  ~/code/coreai/_parakeet_oracle/.venv/bin/python gen_oracle.py [--seconds 16]
 """
@@ -27,7 +30,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-MODEL = "nvidia/parakeet-tdt-0.6b-v3"
+DEFAULT_HF_ID = "nvidia/parakeet-tdt-0.6b-v3"
 OUT = Path(__file__).resolve().parent / "oracle.npz"
 
 
@@ -44,6 +47,7 @@ def load_clip(seconds: float, pad_seconds: float = 0.0, sr: int = 16000) -> np.n
 @torch.no_grad()
 def main() -> None:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--hf-id", default=DEFAULT_HF_ID, help="HF repo id, or a local dir in HF layout")
     ap.add_argument("--seconds", type=float, default=16.0)
     ap.add_argument("--pad-seconds", type=float, default=0.0, help="trailing silence to a fixed bucket")
     ap.add_argument("--out", default="oracle.npz")
@@ -53,18 +57,23 @@ def main() -> None:
 
     from transformers import AutoProcessor, ParakeetForTDT
 
-    processor = AutoProcessor.from_pretrained(MODEL)
-    model = ParakeetForTDT.from_pretrained(MODEL, dtype=torch.float32).eval()
+    processor = AutoProcessor.from_pretrained(args.hf_id)
+    model = ParakeetForTDT.from_pretrained(args.hf_id, dtype=torch.float32).eval()
     cfg = model.config
     blank = cfg.blank_token_id
     vocab = cfg.vocab_size
     durations = list(cfg.durations)
+    # The joint head emits the token logits first, then one logit per duration. v2's vocab is
+    # 1025 (blank 1024) against v3's 8193 (blank 8192), so the split point is read, never assumed.
+    assert model.joint.head.out_features == vocab + len(durations), (
+        f"joint head {model.joint.head.out_features} != vocab {vocab} + durations {len(durations)}")
     start = model.generation_config.decoder_start_token_id
     if start is None:
         start = blank
     # The joint network's activation is the TOP-level config.hidden_act (ReLU here),
     # NOT the encoder's silu — getting this wrong silently garbles the transcript.
     joint_act = torch.nn.functional.relu if cfg.hidden_act == "relu" else torch.nn.functional.silu
+    print(f"[model] {args.hf_id}")
     print(f"blank={blank} vocab={vocab} durations={durations} start_token={start} joint_act={cfg.hidden_act}")
 
     wav = load_clip(args.seconds, args.pad_seconds)
@@ -103,7 +112,7 @@ def main() -> None:
     step_frames, step_tokens, step_durs, step_logits = [], [], [], []
     max_steps = cfg.max_symbols_per_step * T + 16
     while frame < T and len(step_tokens) < max_steps:
-        logits = head(joint_act(enc_proj[frame] + dec_out))     # [8198]
+        logits = head(joint_act(enc_proj[frame] + dec_out))     # [vocab + n_durations]
         token = int(logits[:vocab].argmax())
         dur_idx = int(logits[vocab:].argmax())
         dur = durations[dur_idx]
@@ -138,7 +147,8 @@ def main() -> None:
         text=np.array(ref_text),
         blank_id=np.array(blank), start_token=np.array(start),
         vocab_size=np.array(vocab), n_durations=np.array(len(durations)),
-        T_valid=np.array(T),
+        durations=np.array(durations, dtype=np.int64),
+        T_valid=np.array(T), source=np.array(args.hf_id),
     )
     sz = OUT.stat().st_size / 1e6
     print(f"[save] {OUT} ({sz:.1f} MB)  {'✅ loop matches generate()' if match else '❌ MISMATCH'}")

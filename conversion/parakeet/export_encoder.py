@@ -13,6 +13,10 @@ Rel-pos attention is Transformer-XL (bias_u/bias_v + relative_k_proj + rel_shift
 positional table is a constant baked for the bucket length. Single full-length clip -> no
 attention mask (the golden clip fills the bucket exactly, L=1485 -> T=186).
 
+v2 and v3 share this encoder byte-for-byte in shape — only the tokenizer/vocab differ — so
+`--hf-id` (an HF repo id, or a local dir in HF layout for v2) is the only knob that changes
+between them, alongside `--artifacts` to keep the two variants' bundles apart.
+
 Run (MAIN venv; _GPU_LOCK held for the engine gate):
     coreai-models/.venv/bin/python export_encoder.py [--dtype float16] [--skip-export]
 """
@@ -28,6 +32,7 @@ import torch
 import torch.nn as nn
 
 HERE = Path(__file__).resolve().parent
+DEFAULT_HF_ID = "nvidia/parakeet-tdt-0.6b-v3"
 HID, HEADS, HDIM, FF, NLAYERS = 1024, 8, 128, 4096, 24
 MEL, SUB_CH, VOCAB_PROJ = 128, 256, 640
 CONV_K = 9
@@ -174,10 +179,20 @@ class Encoder(nn.Module):
         return self.projector(x)
 
 
-def load_weights(enc: Encoder):
-    from safetensors import safe_open
+def weights_file(hf_id: str) -> str:
+    """model.safetensors for an HF repo id, or for a local dir in HF layout (how v2 arrives:
+    nvidia/parakeet-tdt-0.6b-v2 publishes only the .nemo, converted with transformers'
+    models/parakeet/convert_nemo_to_hf.py)."""
+    local = Path(hf_id) / "model.safetensors"
+    if local.is_file():
+        return str(local)
     from huggingface_hub import hf_hub_download
-    p = hf_hub_download("nvidia/parakeet-tdt-0.6b-v3", "model.safetensors")
+    return hf_hub_download(hf_id, "model.safetensors")
+
+
+def load_weights(enc: Encoder, hf_id: str):
+    from safetensors import safe_open
+    p = weights_file(hf_id)
     sd = {}
     with safe_open(p, framework="pt") as f:
         for k in f.keys():
@@ -197,8 +212,10 @@ def load_weights(enc: Encoder):
 # --------------------------------------------------------------------------- gate/export
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--hf-id", default=DEFAULT_HF_ID, help="HF repo id, or a local dir in HF layout")
     ap.add_argument("--dtype", choices=["float16", "float32"], default="float16")
     ap.add_argument("--oracle", default="oracle.npz")
+    ap.add_argument("--artifacts", default="artifacts", help="output dir (relative to this script)")
     ap.add_argument("--skip-export", action="store_true")
     args = ap.parse_args()
 
@@ -207,10 +224,15 @@ def main():
     golden = torch.from_numpy(d["enc_proj"]).float()       # [T,640]
     L = mel.shape[1]
     mel_in = mel.transpose(1, 2).contiguous()              # [1,128,L]
+    print(f"[model] {args.hf_id}")
     print(f"mel {tuple(mel_in.shape)} L={L} golden enc_proj {tuple(golden.shape)}")
+    # An oracle from a different checkpoint would gate the wrong weights against the wrong golden.
+    src = str(d["source"]) if "source" in d else None
+    if src and src != args.hf_id:
+        print(f"⚠️  {args.oracle} was generated from {src!r}, not {args.hf_id!r}")
 
     enc = Encoder(L).eval()
-    load_weights(enc)
+    load_weights(enc, args.hf_id)
     assert enc.T == golden.shape[0], f"T mismatch {enc.T} vs {golden.shape[0]}"
 
     with torch.no_grad():
@@ -240,7 +262,7 @@ def main():
         input_names=("mel",), output_names=("enc_proj",),
         state_names=None, externalize_modules=[])
     prog.optimize()
-    art = HERE / "artifacts"
+    art = HERE / args.artifacts
     art.mkdir(exist_ok=True)
     aimodel = art / f"parakeet_encoder_{args.dtype}_L{L}.aimodel"
     shutil.rmtree(aimodel, ignore_errors=True)

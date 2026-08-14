@@ -7,6 +7,7 @@ held:
 """
 from __future__ import annotations
 
+import argparse
 import asyncio
 from pathlib import Path
 
@@ -16,9 +17,7 @@ import torch
 import coreai.runtime as rt
 
 HERE = Path(__file__).resolve().parent
-ART = HERE / "artifacts"
-HID, NL, VOCAB, BLANK = 640, 2, 8193, 8192
-DURATIONS = [0, 1, 2, 3, 4]
+HID, NL = 640, 2
 
 
 async def gpu(path):
@@ -27,17 +26,25 @@ async def gpu(path):
 
 
 async def main():
-    import sys
-    oracle = sys.argv[1] if len(sys.argv) > 1 else "oracle.npz"
-    d = np.load(HERE / oracle)
+    ap = argparse.ArgumentParser()
+    ap.add_argument("oracle", nargs="?", default="oracle.npz")
+    ap.add_argument("--artifacts", default="artifacts", help="bundle dir (relative to this script)")
+    args = ap.parse_args()
+    art = HERE / args.artifacts
+
+    d = np.load(HERE / args.oracle)
     mel = torch.from_numpy(d["input_features"]).float().transpose(1, 2).contiguous()  # [1,128,L]
     L = mel.shape[2]
     gold_tokens = d["tokens"].tolist()
     text = str(d["text"])
+    # v2 and v3 differ only here: blank 1024 / 8192, and the durations the joint indexes.
+    blank = int(d["blank_id"])
+    durations = (d["durations"].tolist() if "durations" in d
+                 else list(range(int(d["n_durations"]))))
 
-    enc_fn = await gpu(ART / f"parakeet_encoder_float16_L{L}.aimodel")
-    pf = await gpu(ART / "parakeet_predict_float32.aimodel")
-    jf = await gpu(ART / "parakeet_joint_float32.aimodel")
+    enc_fn = await gpu(art / f"parakeet_encoder_float16_L{L}.aimodel")
+    pf = await gpu(art / "parakeet_predict_float32.aimodel")
+    jf = await gpu(art / "parakeet_joint_float32.aimodel")
 
     # encoder (fp16) -> enc_proj
     r = await enc_fn({"mel": rt.NDArray(mel.half().numpy())})
@@ -58,15 +65,15 @@ async def main():
                 torch.from_numpy(o["dur_logits"].numpy().astype(np.float32)))
 
     h = torch.zeros(NL, 1, HID); c = torch.zeros(NL, 1, HID)
-    dec, h, c = await step_p(torch.tensor([[BLANK]]), h, c)
+    dec, h, c = await step_p(torch.tensor([[blank]]), h, c)
     frame, emitted = 0, []
     while frame < T and len(emitted) < 12 * T:
         tl, dl = await step_j(dec, enc_proj[frame:frame + 1])
-        token = int(tl.argmax()); dur = DURATIONS[int(dl.argmax())]
-        if token == BLANK and dur == 0:
+        token = int(tl.argmax()); dur = durations[int(dl.argmax())]
+        if token == blank and dur == 0:
             dur = 1
         frame += dur
-        if token != BLANK:
+        if token != blank:
             emitted.append(token)
             dec, h, c = await step_p(torch.tensor([[token]]), h, c)
 

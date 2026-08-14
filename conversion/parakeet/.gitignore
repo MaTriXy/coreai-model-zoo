@@ -2,4 +2,5 @@
 # `artifacts` is a symlink to artifacts_hf, so it needs the no-slash form.
 artifacts
 artifacts_hf/
+artifacts_*/
 *.npz
