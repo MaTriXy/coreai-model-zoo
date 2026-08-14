@@ -110,8 +110,9 @@ Core ML and Core AI are the only phone routes for this model today.
 
 ## The port in five Core AI bugs
 
-All five are verified with minimal repros and drafted as Feedback Assistant reports, held
-by the contributor pending filing. Repros are available on request.
+All five are verified with minimal repros. Two are filed with Apple — the ConvTranspose
+`cpu_only` defect (1) and the Python bindings' IOSurface leak (2); the other three are written
+up and not yet submitted. Repros are available on request.
 
 1. **ConvTranspose1d is numerically wrong on the `cpu_only` delegate** at stride >= 8
    and kernel >= 16 (the same asset is correct on gpu). Mimi's k=32/s=16/groups=512
@@ -134,7 +135,18 @@ by the contributor pending filing. Repros are available on request.
    convention. ANE work is parked behind this bug.
 5. **`preferredComputeUnitKind: .cpu` silently returns wrong numerics**; the same asset
    is correct with `.cpuOnly` and with `.gpu`. Parity work must use `.cpuOnly`, and
-   `.cpu` should not appear in a host at all.
+   `.cpu` should not appear in a host at all. **The trigger is a preference expressed over
+   a heterogeneous allowed set, not an op.** `.gpu` and `.cpu` report identical
+   `allowedComputeUnitKinds` of `[cpu, gpu, neuralEngine]` and differ only in which unit is
+   preferred; `.cpuOnly` collapses that set to one and is exact. It scales with how much
+   graph there is to partition — a 6-layer prefill over 16 positions and a multi-stage
+   convolutional decoder both fail, the same transformer at 1 position and a small stateless
+   function are correct. What settles it as placement rather than arithmetic: under `.cpu`
+   the first four samples of a 1920-sample frame are bit-identical to `.gpu` and `.cpuOnly`,
+   and the divergence starts later in that same frame — precision loss does not leave a
+   bit-identical prefix. Blast radius here is cos mean 0.501 / min 0.222 with 27 of 32 EOS
+   decisions flipped, on fp32 assets. Bug 4 may be the same mechanism: it fires under the
+   same condition and also disappears under `.cpuOnly`.
 
 ## Bundle
 

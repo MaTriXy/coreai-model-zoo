@@ -131,6 +131,13 @@ JIT-specializes for minutes/stalls on-device — see lesson 4). The whole transd
    and the bucket is filled by **silence-padding the audio** (the trailing-silence frames are
    normalized in place), **not** by padding the mel with a constant. Padding the mel with raw zeros
    instead makes the decoder hallucinate extra tokens over the tail.
+
+   **The bucket length is therefore baked into the feature values, so it is not a free knob.**
+   [Rahul Rachuri](https://github.com/RahulRachuri) exported the encoder at L=2880 instead of
+   2885 while porting [v2](../parakeet-v2/README.md): it gates clean per-token (cos mean
+   0.999996) and still fails end to end, 131/152 chunks. The normalization spans the whole
+   padded window, so a mel produced at one bucket and truncated to another is not the mel that
+   bucket's pipeline would have seen. Changing L means regenerating the golden, not reslicing it.
 3. **fp16 encoder, fp32 decoder, all on GPU.** The 24-layer FastConformer ships fp16 (GPU cos
    0.999995; CPU fp16 is noisier, min ~0.95). The small predictor/joint stay fp32.
 4. **iOS ships the AOT-compiled encoder; the tokenizer is retagged for swift-transformers.** The
