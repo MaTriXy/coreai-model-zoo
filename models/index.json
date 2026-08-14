@@ -791,7 +791,9 @@
       "gpu-pipelined/lfm2_5_2_6b_decode_int4lin",
       "gpu-pipelined/lfm2_5_2_6b_decode_int8hu_block32_sym"
      ],
-     "tier1": {}
+     "tier1": {
+      "PASS": 2
+     }
     }
    ]
   },
@@ -870,7 +872,9 @@
       "ios-h18p/lfm2_5_vl_450m_decode_int8lin",
       "ios-h18p/lfm2_5_vl_450m_decode_int8lin_textcore"
      ],
-     "tier1": {}
+     "tier1": {
+      "PASS": 5
+     }
     }
    ]
   },
@@ -1249,6 +1253,38 @@
    "repos": [
     {
      "id": "mlboydaisuke/Parakeet-TDT-0.6B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "parakeet_encoder_float16_L2885.aimodel",
+      "parakeet_joint_float32.aimodel",
+      "parakeet_predict_float32.aimodel"
+     ],
+     "tier1": {
+      "PASS": 3
+     }
+    }
+   ]
+  },
+  {
+   "family": "parakeet-v2",
+   "card": "models/parakeet-v2/README.md",
+   "recipes": [
+    {
+     "name": "parakeet-tdt-0.6b-v2",
+     "status": "verified",
+     "source_model": null,
+     "source_model_from": null,
+     "hf_repo": "rahulrachuri/parakeet-tdt-0.6b-v2-coreai",
+     "bundle": null,
+     "steps": 2,
+     "run": "python3 conversion/zoo_convert.py run parakeet-tdt-0.6b-v2",
+     "gate_transcript": null,
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "rahulrachuri/parakeet-tdt-0.6b-v2-coreai",
      "downloads_30d": 0,
      "bundles": [
       "parakeet_encoder_float16_L2885.aimodel",

@@ -15,12 +15,12 @@ configuration; a single bundle answers that question by itself.
 
 | metric | count |
 | --- | --- |
-| published repos | 176 |
-| Core AI repos | 73 |
-| Core AI bundles inside them | 250 |
-| Core AI repos with a `models/<family>/` card | 63 |
-| repos covered by a recipe | 63 |
-| Core AI repos with 0 downloads in the last 30 days | 58 |
+| published repos | 177 |
+| Core AI repos | 74 |
+| Core AI bundles inside them | 253 |
+| Core AI repos with a `models/<family>/` card | 64 |
+| repos covered by a recipe | 64 |
+| Core AI repos with 0 downloads in the last 30 days | 59 |
 
 ## All repos, by 30-day downloads
 
@@ -151,10 +151,10 @@ configuration; a single bundle answers that question by itself.
 | [mlboydaisuke/Holo2-4B-CoreAI](https://huggingface.co/mlboydaisuke/Holo2-4B-CoreAI) | 0 | 2 | coreai | port | 2 | 1 pass 1 skipped | [holo2](holo2/README.md) | `holo2-4b` | `holo2-4b` |
 | [mlboydaisuke/Kokoro-82M-CoreAI](https://huggingface.co/mlboydaisuke/Kokoro-82M-CoreAI) | 0 | 1 | coreai | port | 3 | 3 skipped | [kokoro-82m](kokoro-82m/README.md) | `kokoro-82m` | `kokoro-82m` |
 | [mlboydaisuke/LFM2.5-1.2B-Instruct-ExecuTorch](https://huggingface.co/mlboydaisuke/LFM2.5-1.2B-Instruct-ExecuTorch) | 0 | 0 | other | port | 0 | — | — | — | — |
-| [mlboydaisuke/LFM2.5-2.6B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-2.6B-CoreAI) | 0 | 0 | coreai | port | 2 | — | [lfm2.5-2.6b](lfm2.5-2.6b/README.md) | `lfm2.5-2.6b`, `lfm2.5-2.6b-int4` | `lfm2.5-2.6b` |
+| [mlboydaisuke/LFM2.5-2.6B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-2.6B-CoreAI) | 0 | 0 | coreai | port | 2 | 2 pass | [lfm2.5-2.6b](lfm2.5-2.6b/README.md) | `lfm2.5-2.6b`, `lfm2.5-2.6b-int4` | `lfm2.5-2.6b` |
 | [mlboydaisuke/lfm2.5-350m-coreml](https://huggingface.co/mlboydaisuke/lfm2.5-350m-coreml) | 0 | 0 | coreml | port | 0 | — | — | — | — |
 | [mlboydaisuke/LFM2.5-350M-ExecuTorch](https://huggingface.co/mlboydaisuke/LFM2.5-350M-ExecuTorch) | 0 | 0 | other | port | 0 | — | — | — | — |
-| [mlboydaisuke/LFM2.5-VL-450M-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-VL-450M-CoreAI) | 0 | 0 | coreai | port | 5 | — | [lfm2.5-vl](lfm2.5-vl/README.md) | `lfm2.5-vl-450m`, `lfm2.5-vl-450m-textcore` | `lfm2.5-vl-450m` |
+| [mlboydaisuke/LFM2.5-VL-450M-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-VL-450M-CoreAI) | 0 | 0 | coreai | port | 5 | 5 pass | [lfm2.5-vl](lfm2.5-vl/README.md) | `lfm2.5-vl-450m`, `lfm2.5-vl-450m-textcore` | `lfm2.5-vl-450m` |
 | [mlboydaisuke/LLaDA-8B-dLLM-CoreAI](https://huggingface.co/mlboydaisuke/LLaDA-8B-dLLM-CoreAI) | 0 | 2 | coreai | port | 1 | 1 pass | [llada-8b](llada-8b/README.md) | `llada-8b-dllm` | `llada-8b` |
 | [mlboydaisuke/LTX-Video-2B-CoreAI](https://huggingface.co/mlboydaisuke/LTX-Video-2B-CoreAI) | 0 | 2 | coreai | port | 3 | 3 pass | [ltxvideo](ltxvideo/README.md) | `ltx-video-2b` | — |
 | [mlboydaisuke/magenta-arbitrary-style-transfer-litert](https://huggingface.co/mlboydaisuke/magenta-arbitrary-style-transfer-litert) | 0 | 0 | other | port | 0 | — | — | — | — |
@@ -200,12 +200,13 @@ configuration; a single bundle answers that question by itself.
 | [mlboydaisuke/YOLOX-CoreAI](https://huggingface.co/mlboydaisuke/YOLOX-CoreAI) | 0 | 1 | coreai | port | 1 | 1 pass | [yolox](yolox/README.md) | `yolox-s` | `yolox-s` |
 | [mlboydaisuke/YOLOX-s-ExecuTorch](https://huggingface.co/mlboydaisuke/YOLOX-s-ExecuTorch) | 0 | 0 | other | port | 0 | — | — | — | — |
 | [mlboydaisuke/Z-Image-Turbo-CoreAI](https://huggingface.co/mlboydaisuke/Z-Image-Turbo-CoreAI) | 0 | 0 | coreai | port | 6 | 6 pass | [z-image-turbo](z-image-turbo/README.md) | `z-image-turbo` | — |
+| [rahulrachuri/parakeet-tdt-0.6b-v2-coreai](https://huggingface.co/rahulrachuri/parakeet-tdt-0.6b-v2-coreai) | 0 | 0 | coreai | port | 3 | 3 pass | [parakeet-v2](parakeet-v2/README.md) | `parakeet-tdt-0.6b-v2` | — |
 | [rahulrachuri/pocket-tts-coreai](https://huggingface.co/rahulrachuri/pocket-tts-coreai) | 0 | 0 | coreai | port | 5 | 5 pass | [pocket-tts](pocket-tts/README.md) | `pocket-tts` | — |
 | [ukint-vs/Nanbeige4.2-3B-CoreAI](https://huggingface.co/ukint-vs/Nanbeige4.2-3B-CoreAI) | 0 | 1 | coreai | port | 1 | 1 pass | [nanbeige4.2-3b](nanbeige4.2-3b/README.md) | `nanbeige4.2-3b` | `nanbeige4.2-3b` |
 
 ## Tier-1 defects
 
-From `conversion/zoo_verify.py --all` over 227 published bundles: the
+From `conversion/zoo_verify.py --all` over 237 published bundles: the
 bundle's own tokenizer, chat template, context length and declared precision
 compared against the source repository it names in its `metadata.json`. No
 oracle, no device, no weights.
@@ -214,7 +215,7 @@ oracle, no device, no weights.
 recorded reason; record the expectation in `models/<family>/verify.toml` and it
 becomes the bar instead of the deviation.
 
-**None.** All 227 bundles either agree with their source or carry a
+**None.** All 237 bundles either agree with their source or carry a
 declared expectation in `models/<family>/verify.toml`.
 
 ## Needs owner input
@@ -239,7 +240,7 @@ published configuration. **Do not guess their `args`.**
 
 ### 3. Recipes recorded, shipped configuration unknown
 
-2 of the 70 recipes carry `status = "unverified"`:
+2 of the 71 recipes carry `status = "unverified"`:
 the script is known, the arguments that produced the published bundle are not,
 and nothing in the repo records them. `zoo_convert.py` refuses to run these
 without `--force`. Each needs one answer from the owner.

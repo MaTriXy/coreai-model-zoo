@@ -6,6 +6,11 @@ attention decoders (Whisper, Qwen3-ASR). [`nvidia/parakeet-tdt-0.6b-v3`](https:/
 stateless `.aimodel` graphs + a host-driven greedy loop** — no LLM runtime, just CoreAIKit's
 `GraphModel`.
 
+English only? [**parakeet-v2**](../parakeet-v2/README.md) is the same architecture trained on
+English alone (vocab 1025, blank 1024), ported by
+[Rahul Rachuri](https://github.com/RahulRachuri) and exported by these same two scripts through
+`--hf-id`.
+
 A **token-and-duration transducer (TDT)**: a **FastConformer encoder** streams acoustic frames, an
 **LSTM predictor** carries the text state, and a **joint network** decides, at each (frame, token)
 pair, both the next token and **how many frames to skip** (the "duration" head — the TDT speedup
