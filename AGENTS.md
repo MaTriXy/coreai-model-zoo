@@ -99,6 +99,12 @@ Then open a PR. [`CONTRIBUTING.md`](CONTRIBUTING.md) has the acceptance bars;
 [PR #6](https://github.com/john-rocky/coreai-model-zoo/pull/6) is the worked reference for what a
 contributed port looks like.
 
+**Don't hold a working port back to polish it.** Only three things block a merge — the licence,
+that it works, and a published bundle with a revision to pin. Card structure, `recipe.toml`
+exactness, indexes, kit enrollment and `knowledge/` notes are maintainer work
+([what blocks a merge](CONTRIBUTING.md#what-blocks-a-merge-and-what-does-not)). Open the PR when
+the model runs and the numbers are real.
+
 ## The step you cannot do, and don't have to
 
 Everything above runs on any Apple silicon Mac. What needs an iOS 27 device — AOT load, thermals,

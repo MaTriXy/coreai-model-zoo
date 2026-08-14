@@ -27,6 +27,28 @@ Export with **coreai-core ≥ 1.0.0b2**. Bundles exported with earlier wheels ar
 Xcode 27 beta 3+ SDK loader (`Failed to convert to versioned IR` — tracked as FB23666783); the
 zoo's own pre-b2 artifacts are being migrated for the same reason.
 
+## What blocks a merge, and what does not
+
+Three things block, and they are the three bars above: the licence permits it, the model
+demonstrably works, and the bundle is published somewhere with a revision to pin.
+
+Nothing else does. **A port that works and is legal gets merged, and the rest is ours** —
+
+- **the card's shape.** Send what you measured, in prose if that is easier. Matching the house
+  structure is an edit, and edits are cheaper for the person who wrote the other sixty cards.
+- **`recipe.toml` exactness.** If `zoo_convert.py show <name>` prints something a person could
+  run, that is enough to merge on.
+- **the indexes** — `models/index.json`, `models/_INVENTORY.md`, the README tables, the
+  cross-links from neighbouring cards. All generated or maintainer-owned.
+- **CoreAIKit enrollment** and the card's generated "Use it" block.
+- **`knowledge/` notes.** If your port taught you something, say it in the PR in whatever form
+  it comes out. Turning that into a note is a maintainer job.
+- **CI red that comes from generated files, or from a fork's first workflow run waiting on
+  approval.** Both are ours; see step 4.
+
+If a reviewer asks you for something before merge that is on this list, that is the reviewer
+failing to absorb it. Say so, and it gets absorbed.
+
 ## Process
 
 1. **Open (or claim) a [model request](../../issues/new?template=model-request.yml)** so work
@@ -51,10 +73,15 @@ zoo's own pre-b2 artifacts are being migrated for the same reason.
    (`scripts/gen_inventory.py`) — a maintainer regenerates them when your PR lands, so the
    catalog check failing with *model directories missing from the index* is expected and not
    yours to fix. Everything else that check reports is.
-5. **Review + enrollment** — after review, the model is enrolled in the
-   [coreai-kit](https://github.com/john-rocky/coreai-kit) catalog with its revision pin (plus
-   engine/runtime glue if it's a new capability kind), and the card gets its generated
-   "Use it" block.
+5. **Review + enrollment** — review is a read, not a checklist you have to pass. If the port
+   works, it merges, and anything cosmetic gets fixed on `main` afterwards rather than bounced
+   back to you. Enrollment in the [coreai-kit](https://github.com/john-rocky/coreai-kit) catalog
+   with its revision pin (plus engine/runtime glue if it's a new capability kind) and the card's
+   generated "Use it" block happen after the merge, on our side.
+
+   You are welcome to write the kit pipeline for your own model — one contributor has, and the
+   review that comes back is about kit conventions you cannot see from outside. It is an
+   invitation, never a condition, and you can hand it back at any point without explaining why.
 
 ## Device gate — the step you don't have to own
 
