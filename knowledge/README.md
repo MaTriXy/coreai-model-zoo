@@ -148,6 +148,12 @@ For the long-form version of the same material, read
   foundation model (stateless graph + host RevIN DSP).
 - [`esam3-port.md`](esam3-port.md) — EfficientSAM3: a **dropped** port (device-verified but redundant
   vs the official SAM 3) — kept for what transferred.
+- [`shieldstral-port.md`](shieldstral-port.md) — Shieldstral-1.0-3B: why a model that answers
+  with **one token** should not ship as a decoder (bake the tail, keep two rows of the head), how
+  to port a checkpoint your **export venv cannot load** — build the oracle in the venv that
+  supports it natively, then *measure* the substitute (`ministral3` = Mistral + YARN, cos
+  1.000000) instead of forcing a config — and the two numbers that invert decode-loop intuition:
+  quantization buys **size, not speed**, and a verdict costs the **grid, not the text**.
 - [`north-micro-vision-port.md`](north-micro-vision-port.md) — Cohere's `cohere_compass`: how to
   notice in a minute that a new checkpoint's **vision tower is one you already have** (load it
   strict=False and print missing/unexpected), the four decoder details that run fine when done

@@ -1,0 +1,54 @@
+# Recipe for shieldstral — the configuration that produced each bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["shieldstral-s512"]
+script = "export_shieldstral.py"
+args = ["int4lin", "--seq-len", "512"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Shieldstral-CoreAI"
+source_hf_id = "mistralai/Shieldstral-1.0-3B"
+source_revision = "003ec7e2b0bab5f0e6307edbaf186fa5822b76f5"
+bundle = "gpu-classify/shieldstral_1_0_3b_classify_int4lin_s512"
+status = "verified"
+overlay = false
+notes = [
+  "A CLASSIFIER graph, not a decoder: (input_ids[1,S], attention_mask[1,S]) -> probs[1,2] =",
+  "softmax([no, yes]). No KV cache, no loop, no sampling. The head is TWO ROWS of the tied",
+  "embedding (the full 131072x3072 head is 805 MB a classifier never reads).",
+  "The port's premise -- that ministral3 is Mistral + YARN, so the 4.57.6 conversion venv can",
+  "build it although it cannot load the checkpoint -- is MEASURED, not assumed: cos 1.000000 on",
+  "last-position logits and |dP| = 0.00000 vs HF git main's native ministral3, all 9 cases.",
+  "M4 Max: 232.5 ms per verdict, 9/9 verdicts vs fp32, worst |dP| 0.030. fp16 baseline 230.5 ms",
+  "/ 0.00056; int8lin 253.8 ms / 0.00220. Quantization buys SIZE, NOT SPEED here -- one forward",
+  "over a padded grid is compute-bound, the inverse of the decode loop.",
+  "Host owns the prompt: <s>[SYSTEM_PROMPT]..[/SYSTEM_PROMPT][INST]<Instruct>/<Query>/<Document>",
+  "[/INST], add_special_tokens=False, right-pad with id 11. reference.json ships with the bundle.",
+]
+open_questions = [
+  "int4's error is concentrated on the one case fp32 did not saturate (JA violence 0.9011 ->",
+  "0.9315). Verdicts at a 0.5 threshold are unaffected; a 0.9 threshold would be. Tune against",
+  "the shipped bundle, not fp32.",
+  "The checkpoint's Pixtral vision tower (image_size 1540) is NOT ported -- text only.",
+  "NO DEVICE GATE YET: the h18p AOT build is 2.336 GiB (under the 2.39 GiB North-Micro-Vision",
+  "loads on an iPhone 17 Pro) so it is expected to fit, but no phone has run it. The gate is",
+  "written (PB_SHIELD in PipelinedBench + _smoke/shieldstral_ref/); the phone was on Wi-Fi",
+  "(transport localNetwork) and the tunnel would not hold a run.",
+]
+
+["shieldstral-s256"]
+script = "export_shieldstral.py"
+args = ["int4lin", "--seq-len", "256"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Shieldstral-CoreAI"
+source_hf_id = "mistralai/Shieldstral-1.0-3B"
+source_revision = "003ec7e2b0bab5f0e6307edbaf186fa5822b76f5"
+bundle = "gpu-classify/shieldstral_1_0_3b_classify_int4lin_s256"
+status = "verified"
+overlay = false
+notes = [
+  "Same weights, same 2.53 GB, same numerics (worst |dP| 0.03037 to five places) -- 123.6 ms per",
+  "verdict instead of 232.5. The cost of a verdict is the GRID, not the text: every gate case is",
+  "83-96 tokens and the padding is computed either way. Measured at S=128 too (73.6 ms) but not",
+  "shipped: the prompt scaffolding alone is ~60 tokens, leaving ~68 for the document.",
+]

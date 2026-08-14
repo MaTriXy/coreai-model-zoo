@@ -123,6 +123,15 @@ Apple's repo; each recipe names the script it runs.
   tokenizer prepends BOS (the 3B's does not, and without it the model answers ' F, F, F, F'). See
   [`../models/lfm2.5-vl/README.md`](../models/lfm2.5-vl/README.md) and
   [`../knowledge/lfm2.5-vl-port.md`](../knowledge/lfm2.5-vl-port.md).
+- **Shieldstral (in this dir): `export_shieldstral.py [int4lin] [--seq-len 512]`** — Mistral's 3B
+  safety model as a **stateless classifier graph**: `(input_ids[1,S], attention_mask[1,S]) ->
+  probs[1,2] = softmax([no, yes])`. No KV cache, no loop, and the head is **two rows** of the tied
+  embedding (the full 131k-row head is 805 MB a classifier never reads). Same archetype as
+  `export_qwen3_reranker.py`. The conversion venv (4.57.6) **cannot load this checkpoint**, so the
+  oracle runs on transformers git main and the exporter's premise — `ministral3` is Mistral +
+  YARN — is gated at cos 1.000000 / |ΔP| 0.00000 rather than assumed. **9/9 verdicts vs fp32** at
+  every precision; **232.5 ms/verdict at S=512, 123.6 ms at S=256**, 2.53 GB. See
+  [`../models/shieldstral/README.md`](../models/shieldstral/README.md).
 - **North-Micro-Vision (in this dir): `export_northmv_pipelined.py [int8lin]`** — Cohere's 2.4B
   multilingual VLM. The vision half needed **no code**: its tower is the Qwen3-VL visual encoder
   at SigLIP2-SO400M dimensions, so `vision_encoder_from_hf` is a config shim over the existing
