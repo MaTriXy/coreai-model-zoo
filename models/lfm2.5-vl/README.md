@@ -19,7 +19,7 @@ prefix. Only the tower and the projector were authored fresh —
 [mlboydaisuke/LFM2.5-VL-450M-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-VL-450M-CoreAI)** —
 `gpu-pipelined/lfm2_5_vl_450m_vision_fp16/` + `gpu-pipelined/lfm2_5_vl_450m_decode_int8lin/`
 (the pair), `…_textcore/` (the same decoder with no image input), and `ios-h18p/` AOT variants of
-both decoders. LFM Open License v1.0.
+all three, each gated on an iPhone 17 Pro. LFM Open License v1.0.
 
 ## What it is for
 
@@ -50,6 +50,12 @@ bundle's `image_embeds` buffer, so the text core is the Mac proxy — the same s
 | **`decode_int8lin` (the VLM bundle, image bound)** | **123.2** | **112.0** | nat 16/16 + **image oracle 24/24** |
 | `decode_int8lin_textcore` | 122.1 | 110.6 | nat 16/16 + oracle 16/16 |
 | `decode_int8lin`, `PB_G=1024` | 122.4 | 108.6 | nat 16/16, no collapse |
+| **`vision_fp16`** | — | **33.6 ms**/image | **cos 0.999995** vs the Mac tower's own output |
+
+The tower's first-ever encode costs **~860 ms** of on-device MPSGraph compile; every encode
+after that is 33.6 ms (medians of 9 and 15 runs across two launches: 33.6 / 36.3). Warm it with
+a dummy encode at load and the user's first photo is the warm number — the same lesson the
+MiniCPM-V-4.6 port wrote down at ~2.7 s. Mac is 18.0 ms, so a phone pays 1.9x.
 
 `xcrun coreai-build compile … --platform iOS --preferred-compute gpu --architecture h18p`
 (**no** `--expect-frequent-reshapes`: on iOS it makes the runtime discard the AOT specialization
@@ -72,9 +78,9 @@ gate therefore checks the **device-verified** sequence (recorded in PipelinedBen
 one beside it in `_smoke/lfm25vl_ref/vl_ref.json`), which is the same thing the MiniCPM-V-4.6
 card does for the same class of fp16 near-tie.
 
-Still unmeasured: the **vision tower on device**. It is compiled for h18p but nothing has run it
-on a phone yet — PipelinedBench feeds pre-dumped embeds — so the 18.0 ms/image number is Mac
-only, and no iOS tower is published.
+The tower is gated on device against **its own Mac output**, not against fp32: what the phone
+has to reproduce is the encode the decoder was gated with. cos 0.999995 says the h18p tower and
+the h16c one compute the same image.
 
 ## Gates
 

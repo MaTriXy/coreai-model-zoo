@@ -48,11 +48,12 @@ BUNDLES = [
     "lfm2_5_vl_450m_decode_int8lin",
     "lfm2_5_vl_450m_decode_int8lin_textcore",
 ]
-# The two decoders were gated on an iPhone 17 Pro; the vision tower has no iOS
-# AOT variant here because nothing has run it on device yet.
+# All three were gated on an iPhone 17 Pro (PipelinedBench): the decoders for
+# tokens and tok/s, the tower for encode latency and cos vs its own Mac output.
 IOS_BUNDLES = [
     "lfm2_5_vl_450m_decode_int8lin",
     "lfm2_5_vl_450m_decode_int8lin_textcore",
+    "lfm2_5_vl_450m_vision_fp16",
 ]
 CARD = Path(__file__).parents[1] / "models" / "lfm2.5-vl" / "HF_README.md"
 STAGE = Path(os.environ.get("ZOO_STAGE", "/tmp")) / "lfm25vl_hf"
@@ -80,10 +81,14 @@ def stage() -> Path:
         dst = STAGE / "ios-h18p" / name
         dst.mkdir(parents=True)
         shutil.copytree(aotc, dst / aotc.name)
-        meta = json.loads((exports_dir() / name / "metadata.json").read_text())
-        meta["assets"]["main"] = aotc.name
-        (dst / "metadata.json").write_text(json.dumps(meta, indent=1))
-        shutil.copytree(exports_dir() / name / "tokenizer", dst / "tokenizer")
+        meta_path = exports_dir() / name / "metadata.json"
+        if meta_path.exists():  # the vision tower is a bare .aimodel, no bundle metadata
+            meta = json.loads(meta_path.read_text())
+            meta["assets"]["main"] = aotc.name
+            (dst / "metadata.json").write_text(json.dumps(meta, indent=1))
+        tokenizer = exports_dir() / name / "tokenizer"
+        if tokenizer.is_dir():
+            shutil.copytree(tokenizer, dst / "tokenizer")
         print(f"  staged ios-h18p/{name}")
 
     snap = Path(hf_snapshot(SOURCE))

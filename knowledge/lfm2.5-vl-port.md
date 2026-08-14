@@ -167,5 +167,10 @@ two forks identical. Record the DEVICE sequence as the gate and keep the fp32 on
 the same thing the MiniCPM-V-4.6 port did for the same class of fp16 near-tie. A device gate
 that demands fp32-exactness on a VLM will fail on wording and teach you nothing.
 
-**The vision tower is still unmeasured on device.** It compiles for h18p, but PipelinedBench
-feeds pre-dumped embeds, so 18.0 ms/image is a Mac number and no iOS tower is published.
+The tower on device: **33.6 ms/image** (median of 9; 36.3 on a second launch's median of 15)
+against 18.0 on the M4 Max, and **cos 0.999995 vs its own Mac output** — gate a tower against
+the encode the decoder was gated with, not against fp32, or you are measuring two things at
+once. The **first-ever** encode costs ~860 ms of on-device MPSGraph compile, which a dummy
+encode at load moves off the user's first photo (MiniCPM-V-4.6 saw ~2.7 s for the same reason).
+`PB_VISION=<dir>` in PipelinedBench runs this: it shapes everything from the graph's own
+descriptors, so it fits any single-input/single-output tower.

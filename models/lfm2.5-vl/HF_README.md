@@ -55,6 +55,7 @@ also a usable 350M LFM2 text model on its own.
 | **`decode_int8lin`, image bound** | **123.2** | **112.0** | nat 16/16 + image oracle 24/24 |
 | `decode_int8lin_textcore` | 122.1 | 110.6 | nat 16/16 + oracle 16/16 |
 | `decode_int8lin`, g=1024 | 122.4 | 108.6 | no collapse |
+| **`vision_fp16`** | — | **33.6 ms**/image | cos 0.999995 vs the same tower on Mac |
 
 Binding the 256×1024 fp16 image buffer costs nothing per step — the VLM bundle and the text core
 measure the same speed within noise. Engine ready in 0.5 s warm.
@@ -64,8 +65,8 @@ one adjective at a near-tie (*"two tabby cats … stretched out on its side"* �
 on its side"*), with the tokens between the two forks identical. That is the fp16 near-tie class,
 not an image-path error.
 
-The **vision tower has not been run on a phone** — only on Mac — so no iOS variant of it is
-published here.
+The tower's **first** encode pays ~860 ms of on-device compile; warm it with a dummy encode at
+load and the user's first photo gets the 33.6 ms number instead.
 
 ## What it is good at, and what it is not
 

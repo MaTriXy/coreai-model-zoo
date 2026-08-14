@@ -107,7 +107,8 @@ Apple's repo; each recipe names the script it runs.
   [`../knowledge/lfm2.5-2.6b-port.md`](../knowledge/lfm2.5-2.6b-port.md).
 - **LFM2.5-VL (in this dir): `export_lfm25vl_pipelined.py [int8lin] [--vision-mode fp16]`** — one
   run emits both halves of the zoo's smallest VLM (658 MB): a fixed-grid **SigLIP2-NaFlex** tower
-  (`patches [1024,768] → image_embeds [256,1024]`, 181 MB fp16, **18.0 ms/image** on M4 Max) and the
+  (`patches [1024,768] → image_embeds [256,1024]`, 181 MB fp16, **18.0 ms/image** on M4 Max,
+  **33.6 ms on an iPhone 17 Pro**) and the
   LFM2 decoder above with an `image_embeds` static input and extension ids `V+slot` (477 MB
   int8lin, **112.0 tok/s decode on iPhone 17 Pro** via the `ios-h18p` AOT variant). The decoder is the *same* module — the VL checkpoint keeps it under
   `model.language_model.` — so the new overlay code (`models/macos/lfm2_vl.py`) is the tower, the

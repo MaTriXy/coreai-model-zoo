@@ -25,14 +25,17 @@ notes = [
   "Decoder = the shipped LFM2 hybrid reached by a model.language_model. key prefix, plus an",
   "image_embeds static input and extension ids V+slot.",
   "M4 Max: vision 18.0 ms/image; text core 609.2 prefill / 387.2 decode tok/s.",
-  "iPhone 17 Pro (AOT h18p, PipelinedBench): 123.2 prefill / 112.0 decode with the image\n   buffer bound, nat 16/16 + image oracle 24/24; PB_G=1024 clean (dynamic-KV compiler check).",
+  "iPhone 17 Pro (AOT h18p, PipelinedBench): 123.2 prefill / 112.0 decode with the image",
+  "buffer bound, nat 16/16 + image oracle 24/24; PB_G=1024 clean (dynamic-KV check).",
+  "Vision tower on the same phone: 33.6 ms/image, cos 0.999995 vs its own Mac output;",
+  "the first-ever encode pays ~860ms of on-device compile, so warm it at load.",
   "Gates: fp32 torch ladder cos 1.000000 at every seam + 48/48; engine fp16 logits cos 0.999994;",
   "9-case suite 7/9 token-exact at int8lin (fp16 baseline is 8/9 -- greedy near-ties, not damage);",
   "coreai_gate.py PASS 16/16 on the text core.",
 ]
 open_questions = [
-  "The vision tower is unmeasured on device: PipelinedBench feeds pre-dumped embeds, so\n   18.0 ms/image is a Mac number and no iOS tower is published.",
-  "On device the image path drops one adjective vs fp32 at a near-tie (same picture, same\n   middle ten tokens); the device gate checks the device-verified sequence.",
+  "On device the image path drops one adjective vs fp32 at a near-tie (same picture, same",
+  "middle ten tokens); the device gate checks the device-verified sequence.",
   "The baked square grid stretches non-square images, which is the one thing NaFlex avoids.",
   "No gate here can see that cost: the fixed-grid oracle is captured through the same stretch.",
 ]

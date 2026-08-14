@@ -257,7 +257,7 @@ Third-party apps running zoo models. Built something? Open a
 | **Gemma 4 E4B** (official QAT) | **15.1** | — | **55.8** |
 | **Gemma 4 E2B VL** (image+text, official QAT) | **25.5** | — | **82.4** |
 | **MiniCPM-V 4.6** (vision-language, sub-2B) | **53.4** | — | **224.3** |
-| **LFM2.5-VL-450M** (vision-language, int8lin — image buffer bound; vision encode 18.0 ms/image on Mac) | **112.0** | — | **387.2** |
+| **LFM2.5-VL-450M** (vision-language, int8lin — image buffer bound; vision encode 33.6 ms/image on iPhone, 18.0 on Mac) | **112.0** | — | **387.2** |
 | **Qwen3.6-35B-A3B** (MoE, 35B/~3B active, Mac-only) | — | — | **64.9** † |
 | **Qwen3.6-27B** (dense, Mac-only) | — | — | **15.9** |
 | **GLM-4.7-Flash** (MoE + MLA, 30B/~3B active, Mac-only) | — | — | **52.4** † |

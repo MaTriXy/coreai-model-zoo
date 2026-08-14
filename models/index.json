@@ -840,8 +840,8 @@
      "run": "python3 conversion/zoo_convert.py run lfm2.5-vl-450m",
      "gate_transcript": null,
      "open_questions": [
-      "The vision tower is unmeasured on device: PipelinedBench feeds pre-dumped embeds, so\n   18.0 ms/image is a Mac number and no iOS tower is published.",
-      "On device the image path drops one adjective vs fp32 at a near-tie (same picture, same\n   middle ten tokens); the device gate checks the device-verified sequence.",
+      "On device the image path drops one adjective vs fp32 at a near-tie (same picture, same",
+      "middle ten tokens); the device gate checks the device-verified sequence.",
       "The baked square grid stretches non-square images, which is the one thing NaFlex avoids.",
       "No gate here can see that cost: the fixed-grid oracle is captured through the same stretch."
      ]

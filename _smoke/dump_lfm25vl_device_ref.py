@@ -12,6 +12,8 @@ so a fixture built from fp32 would be gating a chain that never runs.
 
 Writes (default `_smoke/lfm25vl_ref/`):
     image_embeds.f16.bin   [256, 1024] fp16, row-major (what the app binds)
+    patches.f16.bin        [1024, 768] fp16 — the tower's INPUT, so a device gate can rerun
+                           the encode and check its own output against the Mac's
     vl_ref.json            prompt ids, expected ids, shapes, provenance
 
 and prints the two Swift `ModelSpec` arrays to paste into PipelinedBench.
@@ -87,6 +89,9 @@ async def main() -> int:
 
     (out / "image_embeds.f16.bin").write_bytes(
         np.ascontiguousarray(embeds).tobytes())
+    # The tower's INPUT too, so the fixture is a complete encode: a device gate can run the
+    # tower on the same patches and check its output against this Mac one.
+    (out / "patches.f16.bin").write_bytes(np.ascontiguousarray(patches).tobytes())
 
     ids = ref["input_ids"][0].astype(np.int64).copy()
     img_pos = np.nonzero(ids == image_token_id)[0]
@@ -98,6 +103,7 @@ async def main() -> int:
     meta = {
         "hf_id": args.hf_id,
         "vision_bundle": vis_name,
+        "patches_shape": [int(v) for v in patches.shape],
         "image_tokens": int(n_img),
         "hidden": int(hidden),
         "vocab_size": int(cfg.vocab_size),
@@ -108,7 +114,8 @@ async def main() -> int:
         "prompt": str(ref["_meta_prompt"]),
     }
     (out / "vl_ref.json").write_text(json.dumps(meta, indent=1))
-    print(f"wrote {out}/image_embeds.f16.bin ({embeds.nbytes} bytes) + vl_ref.json")
+    print(f"wrote {out}/image_embeds.f16.bin ({embeds.nbytes} bytes) "
+          f"+ patches.f16.bin ({patches.nbytes} bytes) + vl_ref.json")
 
     print("\n--- paste into PipelinedBench ModelSpec ---")
     print(swift_array("oraclePrompt", ids))

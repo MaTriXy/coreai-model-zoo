@@ -154,7 +154,7 @@ configuration; a single bundle answers that question by itself.
 | [mlboydaisuke/LFM2.5-2.6B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-2.6B-CoreAI) | 0 | 0 | coreai | port | 2 | — | [lfm2.5-2.6b](lfm2.5-2.6b/README.md) | `lfm2.5-2.6b`, `lfm2.5-2.6b-int4` | `lfm2.5-2.6b` |
 | [mlboydaisuke/lfm2.5-350m-coreml](https://huggingface.co/mlboydaisuke/lfm2.5-350m-coreml) | 0 | 0 | coreml | port | 0 | — | — | — | — |
 | [mlboydaisuke/LFM2.5-350M-ExecuTorch](https://huggingface.co/mlboydaisuke/LFM2.5-350M-ExecuTorch) | 0 | 0 | other | port | 0 | — | — | — | — |
-| [mlboydaisuke/LFM2.5-VL-450M-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-VL-450M-CoreAI) | 0 | 0 | coreai | port | 5 | — | [lfm2.5-vl](lfm2.5-vl/README.md) | `lfm2.5-vl-450m`, `lfm2.5-vl-450m-textcore` | — |
+| [mlboydaisuke/LFM2.5-VL-450M-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-VL-450M-CoreAI) | 0 | 0 | coreai | port | 5 | — | [lfm2.5-vl](lfm2.5-vl/README.md) | `lfm2.5-vl-450m`, `lfm2.5-vl-450m-textcore` | `lfm2.5-vl-450m` |
 | [mlboydaisuke/LLaDA-8B-dLLM-CoreAI](https://huggingface.co/mlboydaisuke/LLaDA-8B-dLLM-CoreAI) | 0 | 2 | coreai | port | 1 | 1 pass | [llada-8b](llada-8b/README.md) | `llada-8b-dllm` | `llada-8b` |
 | [mlboydaisuke/LTX-Video-2B-CoreAI](https://huggingface.co/mlboydaisuke/LTX-Video-2B-CoreAI) | 0 | 2 | coreai | port | 3 | 3 pass | [ltxvideo](ltxvideo/README.md) | `ltx-video-2b` | — |
 | [mlboydaisuke/magenta-arbitrary-style-transfer-litert](https://huggingface.co/mlboydaisuke/magenta-arbitrary-style-transfer-litert) | 0 | 0 | other | port | 0 | — | — | — | — |
