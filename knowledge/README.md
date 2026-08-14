@@ -148,6 +148,12 @@ For the long-form version of the same material, read
   foundation model (stateless graph + host RevIN DSP).
 - [`esam3-port.md`](esam3-port.md) — EfficientSAM3: a **dropped** port (device-verified but redundant
   vs the official SAM 3) — kept for what transferred.
+- [`north-micro-vision-port.md`](north-micro-vision-port.md) — Cohere's `cohere_compass`: how to
+  notice in a minute that a new checkpoint's **vision tower is one you already have** (load it
+  strict=False and print missing/unexpected), the four decoder details that run fine when done
+  wrong (parallel block, mean-subtracting LayerNorm, a quarter of the layers with **no**
+  positional encoding, logit_scale), and the iOS load wall measured 2.39 GiB further out than
+  this repo believed.
 - [`lfm2.5-vl-port.md`](lfm2.5-vl-port.md) — LFM2.5-VL (450M + 3B): **SigLIP2 NaFlex** (a Linear patch embedding
   over host-flattened patches, a 16×16 position grid resized per image), what baking a square grid
   costs a NaFlex model, the antialiased resize a GPU "bilinear" is not — and why judging a

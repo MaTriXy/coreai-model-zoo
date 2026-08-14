@@ -147,13 +147,15 @@ divisible by 32). Everything below is what did NOT transfer.
 - **int4 is not a family property.** The 450M craters (0/9, fluent drift); the 3B does not move
   (7/9 — the same cases as its own fp16 baseline). Same recipe, same suite, opposite verdict.
   The 2.6B text sibling behaved like the 3B. Read the generations of the model in front of you.
-- **The 3B does not fit iOS.** Its int8lin AOT `resources.bin` measures 3.13 GiB and int4lin's
-  2.03 GiB — measure the compiled artifact, not the `.aimodel`, since AOT expands it. Against the
-  2 GiB (2^31) load wall that is a fail for int8 by a mile and for int4 by **30 MiB**, though the
-  int4 case is inference from the earlier bracket (0.80 ✅ / 1.96 ✅ / 3.92 ❌) rather than a
-  device run — worth actually trying, because 30 MiB is inside the noise of where that wall was
-  ever pinned. The remaining lever is the 524 MB fp16 embedding, tied to the head and so not
-  quantizable in place; past that it is a split graph.
+- **The 3B fits iOS at int4, and the wall was in the wrong place.** Its int8lin AOT
+  `resources.bin` measures 3.13 GiB (does not load) and int4lin's **2.03 GiB — which loads**:
+  engine ready in 0.5 s warm, nat 16/16 + image oracle 24/24, 27.5 prefill / 19.3–22.8 decode
+  tok/s on an iPhone 17 Pro, clean at `PB_G=1024`. This repo's note had the wall at 2 GiB (2^31)
+  from a 1.96 ✅ / 3.92 ❌ bracket, and 2.03 GiB was written up as expected-to-fail before anyone
+  tried it. **Measure the compiled artifact, then try the phone — do not infer a 30 MiB verdict
+  from a bracket with a 2 GiB gap in it.** (The remaining size lever, if a bundle really is over,
+  is the 524 MB fp16 embedding: tied to the head, so not quantizable in place; past that it is a
+  split graph.)
 
 Measured (M4 Max): vision 75.7 ms/image at cos 0.999995, text core 120.9 prefill / 105.3 decode
 tok/s, decoder int8lin 3.1 GB / int4lin 2.0 GB / fp16 5.2 GB, tower fp16 815 MB.

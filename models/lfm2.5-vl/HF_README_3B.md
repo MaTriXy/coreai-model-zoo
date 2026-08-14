@@ -17,7 +17,7 @@ pipeline_tag: image-text-to-text
 # LFM2.5-VL-3B — Apple Core AI (`.aimodel`)
 
 **LiquidAI's LFM2.5-VL-3B converted to Apple's Core AI** (the Core ML successor announced at
-WWDC26), for macOS 27. The detail tier of this family: where the
+WWDC26), for macOS 27 and iOS 27. The detail tier of this family: where the
 [450M](https://huggingface.co/mlboydaisuke/LFM2.5-VL-450M-CoreAI) answers *"two cats on a pink
 couch"*, the 3B answers *"the cat on the left is smaller, with a gray and black striped coat,
 while the cat on the right is larger with a brown and black striped pattern."*
@@ -28,7 +28,7 @@ hybrid decoder** (hidden 2048, 30 layers = 22 short-conv + 8 GQA attention, voca
 head), with the image tokens spliced in through a static `image_embeds` input. No recurrent
 scan, so decode is loop-free on Apple's `coreai-pipelined` GPU engine with no custom kernels.
 
-> Requires macOS 27 (Core AI ships with the OS). Conversion code, gates and knowledge base:
+> Requires macOS 27 / iOS 27 (Core AI ships with the OS). Conversion code, gates and knowledge base:
 > **[coreai-model-zoo](https://github.com/john-rocky/coreai-model-zoo)**.
 
 ## Bundles
@@ -50,12 +50,17 @@ greedy decoding turns any near-tie into a different tail, and the fp16 bundle it
 — int8lin and int4lin both reproduce that 7/9. The divergences are wording: *"sleeping
 peacefully on a bright pink couch"* → *"sleeping on a pink couch"*.
 
-**No iPhone numbers are published here because none were measured**, and the reason is
-mechanical: the int8lin bundle's AOT `resources.bin` is **3.13 GiB**, past the iOS runtime's
-2 GiB load wall. int4lin brings that to 2.03 GiB — still ~30 MiB over — so the phone path for
-this size needs either a split graph or a smaller embedding (the 128k × 2048 table is 524 MB
-and stays fp16 because it is tied to the head). The 450M is the phone-sized member of this
-family.
+### iPhone 17 Pro — `ios-h18p/lfm2_5_vl_3b_decode_int4lin` + the fp16 tower
+
+**27.5 prefill / 19.3–22.8 decode tok/s**, nat 16/16 and image oracle 24/24, clean at a
+1024-token generation. int8lin does **not** load on iOS (its AOT `resources.bin` is 3.13 GiB);
+int4lin's is 2.03 GiB and does — which is worth stating because the note this port was written
+against put the load wall at 2 GiB, and 2.03 GiB was written up as expected-to-fail before a
+phone was asked. It loaded. Use int8lin on a Mac and int4lin on a phone; on this model int4
+costs nothing (7/9 on the suite, the same cases as fp16).
+
+On device the description matches fp32's picture and diverges at the same near-tie the Mac
+bundles take ("sleeping peacefully" → "sleeping"), then onto an equally accurate branch.
 
 ## Run it
 

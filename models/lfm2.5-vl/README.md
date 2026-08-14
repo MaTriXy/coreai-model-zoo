@@ -6,7 +6,8 @@ ports of [`LiquidAI/LFM2.5-VL-450M`](https://huggingface.co/LiquidAI/LFM2.5-VL-4
 [pipelined-engine fast path](../../knowledge/pipelined-engine.md).
 
 **Which one**: the **450M** (658 MB, iPhone-gated at 112 tok/s) is the one that fits *beside* an
-app — every other VLM here starts at ~2 GB resident. The **3B** (3.9 GB, Mac) is the one that
+app — every other VLM here starts at ~2 GB resident. The **3B** (int8 3.9 GB on Mac, int4 2.8 GB
+on iPhone at ~20 tok/s) is the one that
 answers with detail: where the 450M says *"two cats on a pink couch"*, the 3B says *"the cat on
 the left is smaller, with a gray and black striped coat, while the cat on the right is larger
 with a brown and black striped pattern."* One exporter builds both.
@@ -188,12 +189,16 @@ and at fp16, and the NumPy host path is 48/48 too.
 (0/9, fluent drift). Same family, same recipe, opposite verdict: int4 tolerance is a property of
 the model's size, and the only way to know is to read the generations of the one in front of you.
 
-**The 3B ships Mac-only.** Its int8lin AOT `resources.bin` measures **3.13 GiB** and int4lin's
-**2.03 GiB**, against the iOS runtime's 2 GiB (2^31) load wall — the wall itself is a bracket
-measured on earlier ports (0.80 GiB loads, 1.96 GiB loads, 3.92 GiB does not), so int4 at 30 MiB
-over is *expected* to fail rather than *observed* to: the device was disconnected when this was
-written and no iPhone has tried it. The remaining lever is the 524 MB fp16 embedding
-(128k × 2048), tied to the head and so not quantizable in place; past that it is a split graph.
+**The 3B reaches a phone, at int4.** Its int8lin AOT `resources.bin` measures **3.13 GiB** and
+does not load; int4lin's measures **2.03 GiB** and **does** — 24/24 on the image oracle, nat
+16/16, **27.5 prefill / 19.3–22.8 decode tok/s** on an iPhone 17 Pro, clean at `PB_G=1024`.
+That is worth spelling out because this repo's own note put the wall at 2 GiB (2^31) from an
+earlier 1.96 ✅ / 3.92 ❌ bracket, and 2.03 GiB was written up here as *expected to fail*. It
+did not. The bracket is now 2.03 ✅ / 3.92 ❌ and the lesson is to try the phone rather than
+infer from 30 MiB.
+
+int8lin remains the Mac ship (bigger and no wall to clear there); **int4lin is the iPhone
+build**, and it costs nothing on the suite (7/9, the same cases as fp16).
 
 ```bash
 python conversion/export_lfm25vl_pipelined.py int8lin --hf-id LiquidAI/LFM2.5-VL-3B

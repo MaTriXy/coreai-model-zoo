@@ -358,7 +358,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/gemma-4-E2B-CoreAI",
-     "downloads_30d": 184,
+     "downloads_30d": 95,
      "bundles": [
       "gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl",
       "gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl_aotc_h18p",
@@ -442,7 +442,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/gemma-4-E2B-CoreAI",
-     "downloads_30d": 184,
+     "downloads_30d": 95,
      "bundles": [
       "gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl",
       "gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl_aotc_h18p",
@@ -641,7 +641,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/granite-4.0-h-CoreAI",
-     "downloads_30d": 50,
+     "downloads_30d": 47,
      "bundles": [
       "gpu-pipelined-b2/granite_4_0_h_1b_decode_int8hu_block32_sym",
       "gpu-pipelined/granite_4_0_h_1b_decode_int8hu_block32_sym",
@@ -738,7 +738,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/LFM2.5-1.2B-CoreAI",
-     "downloads_30d": 285,
+     "downloads_30d": 200,
      "bundles": [
       "gpu-pipelined-b2/lfm2_5_1_2b_instruct_decode_int8hu_block32_sym",
       "gpu-pipelined/lfm2_5_1_2b_instruct_decode_int8hu_block32_sym",
@@ -817,7 +817,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/LFM2.5-8B-A1B-CoreAI",
-     "downloads_30d": 84,
+     "downloads_30d": 80,
      "bundles": [
       "gpu-pipelined/lfm2_5_8b_a1b_decode_sym8_gather"
      ],
@@ -871,9 +871,10 @@
      "run": "python3 conversion/zoo_convert.py run lfm2.5-vl-3b",
      "gate_transcript": null,
      "open_questions": [
-      "Mac-only: the int8lin AOT resources.bin is 3.13 GiB and int4lin 2.03 GiB, both past the",
-      "iOS 2 GiB load wall. The remaining lever is the 524MB fp16 embedding, tied to the head and",
-      "so not quantizable in place; after that it is a split graph. No iPhone number exists.",
+      "int8lin is the Mac ship (AOT resources.bin 3.13 GiB, does not load on iOS); int4lin at",
+      "2.03 GiB DOES load -- iPhone 17 Pro 27.5 prefill / 19.3-22.8 decode, nat 16/16 + image",
+      "oracle 24/24, PB_G=1024 clean. The repo note had the wall at 2 GiB; 2.03 was expected to",
+      "fail and did not, so the bracket is now 2.03 OK / 3.92 not.",
       "The baked square grid stretches non-square images, as on the 450M, and no gate sees it."
      ]
     },
@@ -910,7 +911,9 @@
       "gpu-pipelined/lfm2_5_vl_3b_decode_int4lin",
       "gpu-pipelined/lfm2_5_vl_3b_decode_int8lin",
       "gpu-pipelined/lfm2_5_vl_3b_decode_int8lin_textcore",
-      "gpu-pipelined/lfm2_5_vl_3b_vision_fp16/lfm2_5_vl_3b_vision_fp16.aimodel"
+      "gpu-pipelined/lfm2_5_vl_3b_vision_fp16/lfm2_5_vl_3b_vision_fp16.aimodel",
+      "ios-h18p/lfm2_5_vl_3b_decode_int4lin",
+      "ios-h18p/lfm2_5_vl_3b_vision_fp16/lfm2_5_vl_3b_vision_fp16.h18p.aimodelc"
      ],
      "tier1": {}
     },
@@ -1256,6 +1259,54 @@
    ]
   },
   {
+   "family": "north-micro-vision",
+   "card": "models/north-micro-vision/README.md",
+   "recipes": [
+    {
+     "name": "north-micro-vision",
+     "status": "verified",
+     "source_model": "CohereLabs/North-Micro-Vision-Instruct",
+     "source_model_from": "exporter",
+     "hf_repo": "mlboydaisuke/North-Micro-Vision-CoreAI",
+     "bundle": "gpu-pipelined/north_micro_vision_instruct_decode_int8lin",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run north-micro-vision",
+     "gate_transcript": null,
+     "open_questions": [
+      "The baked square grid stretches non-square images; upstream is native-resolution and kept",
+      "the fixture's own 30x40 grid. No gate here sees that cost.",
+      "int4lin is NOT published: 0/9 suite cases with repetition and instruction-boilerplate leaks."
+     ]
+    },
+    {
+     "name": "north-micro-vision-textcore",
+     "status": "verified",
+     "source_model": "CohereLabs/North-Micro-Vision-Instruct",
+     "source_model_from": "exporter",
+     "hf_repo": "mlboydaisuke/North-Micro-Vision-CoreAI",
+     "bundle": "gpu-pipelined/north_micro_vision_instruct_decode_int8lin_textcore",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run north-micro-vision-textcore",
+     "gate_transcript": null,
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/North-Micro-Vision-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu-pipelined/north_micro_vision_instruct_decode_int8lin",
+      "gpu-pipelined/north_micro_vision_instruct_decode_int8lin_textcore",
+      "gpu-pipelined/north_micro_vision_instruct_vision_fp16/north_micro_vision_instruct_vision_fp16.aimodel",
+      "ios-h18p/north_micro_vision_instruct_decode_int8lin/north_micro_vision_instruct_decode_int8lin.h18p.aimodelc",
+      "ios-h18p/north_micro_vision_instruct_vision_fp16/north_micro_vision_instruct_vision_fp16.h18p.aimodelc"
+     ],
+     "tier1": {}
+    }
+   ]
+  },
+  {
    "family": "ornith-1.0-9b",
    "card": "models/ornith-1.0-9b/README.md",
    "recipes": [
@@ -1586,7 +1637,7 @@
     },
     {
      "id": "mlboydaisuke/Qwen3-VL-2B-CoreAI",
-     "downloads_30d": 57,
+     "downloads_30d": 56,
      "bundles": [
       "gpu-pipelined/qwen3_vl_2b_instruct_decode_int8hu_s1",
       "gpu-pipelined/qwen3_vl_2b_instruct_decode_int8lin_s1",
@@ -1644,7 +1695,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/qwen3.5-0.8B-CoreAI",
-     "downloads_30d": 285,
+     "downloads_30d": 201,
      "bundles": [
       "gpu-pipelined-b2/qwen3_5_0_8b_decode_int8hu_block32_sym",
       "gpu-pipelined/qwen3_5_0_8b_decode_int8hu_block32_sym",
@@ -1663,7 +1714,7 @@
     },
     {
      "id": "mlboydaisuke/qwen3.5-2B-CoreAI",
-     "downloads_30d": 46,
+     "downloads_30d": 44,
      "bundles": [
       "gpu-pipelined-b2/qwen3_5_2b_decode_int8hu_block32_sym",
       "gpu-pipelined/qwen3_5_2b_decode_int8hu_block32_sym",
@@ -1726,7 +1777,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/Qwen3.6-35B-A3B-CoreAI",
-     "downloads_30d": 71,
+     "downloads_30d": 72,
      "bundles": [
       "gpu-pipelined/qwen3_6_35b_a3b_decode_sym8_gather"
      ],
@@ -1786,7 +1837,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/RF-DETR-CoreAI",
-     "downloads_30d": 144,
+     "downloads_30d": 145,
      "bundles": [
       "rfdetr-large_float32.aimodel",
       "rfdetr-medium_float32.aimodel",
@@ -2236,7 +2287,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/Youtu-LLM-2B-CoreAI",
-     "downloads_30d": 21,
+     "downloads_30d": 19,
      "bundles": [
       "gpu-pipelined-b2/youtu_llm_2b_decode_absorbed_int8_msdpa_g32",
       "gpu-pipelined/youtu_llm_2b_decode_absorbed_int8_msdpa",

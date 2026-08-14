@@ -123,6 +123,15 @@ Apple's repo; each recipe names the script it runs.
   tokenizer prepends BOS (the 3B's does not, and without it the model answers ' F, F, F, F'). See
   [`../models/lfm2.5-vl/README.md`](../models/lfm2.5-vl/README.md) and
   [`../knowledge/lfm2.5-vl-port.md`](../knowledge/lfm2.5-vl-port.md).
+- **North-Micro-Vision (in this dir): `export_northmv_pipelined.py [int8lin]`** — Cohere's 2.4B
+  multilingual VLM. The vision half needed **no code**: its tower is the Qwen3-VL visual encoder
+  at SigLIP2-SO400M dimensions, so `vision_encoder_from_hf` is a config shim over the existing
+  `Qwen3VLVisionEncoder` (zero missing keys, every seam cos 1.000000). The new module
+  (`models/macos/cohere_compass.py`) is the decoder: parallel Cohere block, mean-subtracting
+  LayerNorm, `SSSF x 7` layer types where the full-attention layers have **no positional
+  encoding**, logit_scale 0.25, 262k tied vocab. **145.3/118.6 tok/s M4 Max, 21.5/18.2 on an
+  iPhone 17 Pro with the image oracle 24/24**; suite 9/9 at int8, 0/9 at int4 (not published).
+  The oracle needs transformers git main. See [`../models/north-micro-vision/README.md`](../models/north-micro-vision/README.md).
 - **Gemma 4 E2B / E4B pipelined fast path (in this dir): `export_gemma4_decode_pipelined.py [int4lin]`** —
   decode-only S=1 bundle whose per-layer-embedding rows arrive as a per-token INPUT (the 9.4 GB
   PLE table stays a host mmap): in-graph embed + softcapped head, ONE unified padded KV pair,

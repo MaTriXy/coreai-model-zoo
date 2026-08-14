@@ -1,0 +1,52 @@
+# Recipe for north-micro-vision — the configuration that produced each bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["north-micro-vision"]
+script = "export_northmv_pipelined.py"
+args = ["int8lin"]
+card = "README.md"
+hf_repo = "mlboydaisuke/North-Micro-Vision-CoreAI"
+source_hf_id = "CohereLabs/North-Micro-Vision-Instruct"
+source_revision = "373bda96ac70bf89f99f7048f420cf00dc07c149"
+bundle = "gpu-pipelined/north_micro_vision_instruct_decode_int8lin"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-static-inputs.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "One run emits both bundles: the fp16 vision tower (1.0GB) and the int8lin decoder (2.4GB).",
+  "The tower is the zoo's EXISTING Qwen3VLVisionEncoder with a config shim -- this checkpoint's",
+  "visual encoder is that architecture at SigLIP2-SO400M dimensions, and it loads with zero",
+  "missing/unexpected keys and reproduces every seam at cos 1.000000. Only the decoder is new:",
+  "parallel Cohere block, mean-subtracting LayerNorm, SSSF x 7 layer types where the 7 full",
+  "layers have NO positional encoding, logit_scale 0.25, 262k tied vocab.",
+  "M4 Max: vision 83.4 ms/image; text core 145.3 prefill / 118.6 decode tok/s.",
+  "iPhone 17 Pro (ios-h18p AOT): 21.5 prefill / 18.2 decode, nat 16/16 + image oracle 24/24",
+  "vs fp32, PB_G=1024 clean. Its AOT resources.bin is 2.39 GiB -- past where the repo note put",
+  "the iOS load wall, and it loads.",
+  "Gates: fp32 ladder cos 1.000000 at every seam (native 30x40 grid AND the baked 16x16);",
+  "host preprocessing bit-exact; engine chain 46/46; 9-case suite 9/9 (338/338 tokens).",
+  "The oracle needs transformers GIT MAIN -- 5.15.0 does not know cohere_compass.",
+]
+open_questions = [
+  "The baked square grid stretches non-square images; upstream is native-resolution and kept",
+  "the fixture's own 30x40 grid. No gate here sees that cost.",
+  "int4lin is NOT published: 0/9 suite cases with repetition and instruction-boilerplate leaks.",
+]
+
+["north-micro-vision-textcore"]
+script = "export_northmv_pipelined.py"
+args = ["int8lin", "--text-core", "--skip-vision"]
+card = "README.md"
+hf_repo = "mlboydaisuke/North-Micro-Vision-CoreAI"
+source_hf_id = "CohereLabs/North-Micro-Vision-Instruct"
+source_revision = "373bda96ac70bf89f99f7048f420cf00dc07c149"
+bundle = "gpu-pipelined/north_micro_vision_instruct_decode_int8lin_textcore"
+status = "verified"
+overlay = true
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "The same decoder with no image inputs: a 2B Cohere text bundle, and the only configuration",
+  "llm-benchmark can drive (145.3 prefill / 118.6 decode tok/s on an M4 Max).",
+]

@@ -1,6 +1,6 @@
 """Stage + upload the LFM2.5-VL Core AI bundles to HF. USER-GATED.
 
-Run: `python _lfm25vl_hf_upload.py [450m|3b] [--dry-run]`.
+Run: `python _lfm25vl_hf_upload.py [450m|3b] [--ios-only] [--dry-run]`.
 
 Publishes three bundles: the fp16 vision tower, the int8lin VLM decoder (the pair
 that IS the model), and the text core -- the same decoder weights with no image
@@ -77,19 +77,62 @@ SIZES = {
             "lfm2_5_vl_3b_decode_int4lin",
             "lfm2_5_vl_3b_decode_int8lin_textcore",
         ],
-        "ios": [],  # nothing until a phone has run it
+        # int4lin + the tower: device-gated on an iPhone 17 Pro (the int8 AOT is 3.13 GiB
+        # and does not load; int4's 2.03 GiB does).
+        "ios": ["lfm2_5_vl_3b_decode_int4lin", "lfm2_5_vl_3b_vision_fp16"],
         "message": ("LFM2.5-VL-3B -> Core AI: fp16 SigLIP2-NaFlex tower + int8lin/int4lin "
                     "decoders + text core; fp32 ladder cos 1.000000, suite 7/9 = fp16 baseline"),
     },
 }
 
-def stage(cfg: dict, stage_dir: Path) -> Path:
+def _bundle_metadata(cfg: dict, name: str, asset: str) -> dict | None:
+    """metadata.json for an iOS variant, from the local export or the published repo.
+
+    The local Mac export is the normal source, but it is also the first thing a
+    session deletes once the bundles are on HF — and an iOS bundle without
+    metadata.json fails at load with `BundleError` rather than anything that
+    names the cause, so fall back to the repo instead of shipping it missing.
+    """
+    local = exports_dir() / name / "metadata.json"
+    if local.exists():
+        meta = json.loads(local.read_text())
+    else:
+        from huggingface_hub import hf_hub_download
+
+        try:
+            path = hf_hub_download(cfg["repo"], f"gpu-pipelined/{name}/metadata.json")
+        except Exception as exc:  # noqa: BLE001
+            print(f"  WARNING no metadata for {name}: {exc}")
+            return None
+        meta = json.loads(Path(path).read_text())
+    meta["assets"]["main"] = asset
+    return meta
+
+
+def _tokenizer_dir(cfg: dict, name: str, dst: Path) -> None:
+    local = exports_dir() / name / "tokenizer"
+    if local.is_dir():
+        shutil.copytree(local, dst)
+        return
+    from huggingface_hub import hf_hub_download
+
+    dst.mkdir(parents=True, exist_ok=True)
+    for f in ("tokenizer.json", "tokenizer_config.json",
+              "special_tokens_map.json", "chat_template.jinja"):
+        try:
+            path = hf_hub_download(cfg["repo"], f"gpu-pipelined/{name}/tokenizer/{f}")
+        except Exception:  # noqa: BLE001, S112
+            continue
+        (dst / f).write_bytes(Path(path).read_bytes())
+
+
+def stage(cfg: dict, stage_dir: Path, ios_only: bool = False) -> Path:
     STAGE = stage_dir
     if STAGE.exists():
         shutil.rmtree(STAGE)
     (STAGE / "gpu-pipelined").mkdir(parents=True)
 
-    for name in cfg["bundles"]:
+    for name in [] if ios_only else cfg["bundles"]:
         src = exports_dir() / name
         if not src.is_dir():
             raise SystemExit(f"missing bundle {src} -- export it first")
@@ -106,14 +149,12 @@ def stage(cfg: dict, stage_dir: Path) -> Path:
         dst = STAGE / "ios-h18p" / name
         dst.mkdir(parents=True)
         shutil.copytree(aotc, dst / aotc.name)
-        meta_path = exports_dir() / name / "metadata.json"
-        if meta_path.exists():  # the vision tower is a bare .aimodel, no bundle metadata
-            meta = json.loads(meta_path.read_text())
-            meta["assets"]["main"] = aotc.name
-            (dst / "metadata.json").write_text(json.dumps(meta, indent=1))
-        tokenizer = exports_dir() / name / "tokenizer"
-        if tokenizer.is_dir():
-            shutil.copytree(tokenizer, dst / "tokenizer")
+        # The vision tower is a bare .aimodel with no bundle metadata; decoders need it.
+        if "vision" not in name:
+            meta = _bundle_metadata(cfg, name, aotc.name)
+            if meta is not None:
+                (dst / "metadata.json").write_text(json.dumps(meta, indent=1))
+            _tokenizer_dir(cfg, name, dst / "tokenizer")
         print(f"  staged ios-h18p/{name}")
 
     snap = Path(hf_snapshot(cfg["source"]))
@@ -134,8 +175,11 @@ def stage(cfg: dict, stage_dir: Path) -> Path:
 
 def main() -> None:
     size = next((a for a in sys.argv[1:] if a in SIZES), "450m")
+    ios_only = "--ios-only" in sys.argv
     cfg = SIZES[size]
-    folder = stage(cfg, Path(os.environ.get("ZOO_STAGE", "/tmp")) / f"lfm25vl_hf_{size}")
+    folder = stage(
+        cfg, Path(os.environ.get("ZOO_STAGE", "/tmp")) / f"lfm25vl_hf_{size}", ios_only
+    )
     if "--dry-run" in sys.argv:
         print("dry run -- not uploading")
         for p in sorted(folder.rglob("*")):
