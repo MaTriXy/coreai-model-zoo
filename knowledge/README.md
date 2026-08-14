@@ -204,6 +204,15 @@ For the long-form version of the same material, read
 
 - [`voxcpm-tts.md`](voxcpm-tts.md) — VoxCPM-0.5B, the zoo's first **diffusion TTS**: a family of
   graphs (LM + diffusion + VAE + vocoder) resolved as one catalog model.
+- [`pocket-tts-port.md`](pocket-tts-port.md) — pocket-tts (Kyutai), the zoo's first **Kyutai model**
+  and first **Mimi conversion**: why a fixed-capacity KV cache must be **zero-initialised, never
+  NaN-initialised** (`0 * NaN = NaN` survives a masked SDPA, and a fixed graph cannot slice the
+  unwritten tail off the way upstream does); `preferredComputeUnitKind: .cpu` as a **partitioning
+  hazard rather than a compute-unit choice** (`.cpu` and `.gpu` declare the same allowed set and
+  differ only in preference — verified on two unrelated models, blast radius from rounding-scale
+  to anti-correlated); deriving `S_MAX` from the model's own generation bound instead of the
+  fixtures; windowed prefill as a **second escape** from the large-query SDPA lowering crash; and
+  gating TTS with an **ASR round trip** because tensor cosine passes on unintelligible audio.
 - [`chatterbox-port.md`](chatterbox-port.md) — Chatterbox: the zoo's first **zero-shot voice-cloning
   TTS** and first multi-network port.
 - [`music-generation-stable-audio.md`](music-generation-stable-audio.md) — Stable Audio Open:

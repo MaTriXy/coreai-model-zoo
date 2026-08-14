@@ -45,6 +45,55 @@
 - **Chunked prefill** (S_q=64) for long prompts — fp16 per-token decode drifts ~5–10 dB/50 tokens.
   `neural_engine_rules.md:451-465`.
 
+## What following every ANE rule actually buys — measured, on a non-LLM encoder
+
+The rules above are Apple's. Until now nothing here recorded what happens when someone follows
+*all* of them on a model that is not an LLM. [Rahul Rachuri](https://github.com/RahulRachuri)
+re-authored the 600M Parakeet FastConformer encoder on the iOS/ANE track — BC1S between blocks,
+every `nn.Linear` a 1×1 `Conv2d`, per-head sequential attention, the mel image transposed so
+**time** is the width axis (the GPU track's freq-last subsampling ends at width 16, under the 64 B
+granule), the two fp32 literals folded into weights, BatchNorm folded into the depthwise conv, and
+`relative_k_proj(pos_emb)` baked at build time since it depends only on constants. Same fp16
+weights, no quantization, no approximation. It gates: eager fp32 per-token cos mean 1.000000
+against the GPU track's own re-author, engine cos 0.999833 on ANE against the fp32 oracle.
+
+**It does not buy throughput.** iPhone 17 Pro, iOS 27, Release, AOT `h18p`, L=2885 fp16, warm
+median of 20 passes, runs interleaved (a locked screen caps the GPU, so order must not decide it):
+
+| encoder / unit | warm median | bundle | load (cold / warm) |
+|---|---:|---:|---:|
+| GPU-authored, `gpu` (what ships) | **113.5 / 113.9 / 114.8 ms** | 1.1 GB | 4.9 s / 1.3 s |
+| GPU-authored, `neural_engine` | 180.7 / 197.9 ms | 2.3 GB | 65.7 s / 2.2 s |
+| ANE-authored, `neural_engine` | 204.5 / 207.4 ms | 2.2 GB | 11.9 s / 0.59 s |
+
+Both ANE routes lose to the GPU one by ~1.7×, and the ANE-authored graph is not faster on the ANE
+than simply compiling the GPU-authored graph for it — the two ANE rows are within noise.
+
+**It buys load.** Compiled with `--preferred-compute neural-engine`, the GPU-authored graph forms
+**49 ANE regions**; the ANE-authored one forms **25**. That halving does not show up as steady-state
+speed; it shows up as **65.7 s → 11.9 s cold and 2.2 s → 0.59 s warm**, which for a 1 GB encoder is
+the difference between a cold start you can ship and one you cannot. Count regions with
+`find <.aimodelc> -name '*ANE_region_*.mlir.bc' | wc -l`.
+
+Measure this on a phone, not a Mac: the same bundles JIT-loaded on an M4 Max give 49.2 ms on gpu
+against 183.9 ms ANE-authored on ane, a 3.7× gap against 1.8× on the phone. Harness:
+`ENCBENCH_SELFTEST` in [`apps/coreai-audio`](../apps/coreai-audio) times any single-input
+`.aimodelc` and reports load, first call and warm median separately.
+
+## Never express a preference over a heterogeneous allowed set
+
+`SpecializationOptions(preferredComputeUnitKind: .cpu)` and `.gpu` declare the **same**
+`allowedComputeUnitKinds` — `[cpu, gpu, neuralEngine]` — and differ only in which unit is
+preferred. That preference is a partitioning input, and on some graphs it places a region on a
+different unit and silently changes the numbers. `cpu_only()` collapses the allowed set to one
+unit and is exact. It scales with fragmentation rather than model size, and the blast radius runs
+from rounding-scale to anti-correlated. Full evidence, from two unrelated models, in
+[`pocket-tts-port.md`](pocket-tts-port.md#preferredcomputeunitkind-cpu-is-a-partitioning-hazard-not-a-compute-unit-choice).
+
+Two consequences: **use `cpu_only()` for parity work, never preferred `.cpu`**, and note that
+CoreAIKit's `GraphModel(computeUnits:)` exposes only `.neuralEngine / .gpu / .cpu`, so `cpuOnly`
+is not currently expressible through the kit.
+
 ## GPU authoring rules
 - Standard layout, `nn.Linear`, **fused QKV** (`gpu_rules.md:132-154`).
 - **Native fused SDPA** `F.scaled_dot_product_attention(...)` (`gpu_rules.md:50-65`, `primitives/macos/sdpa.py:13-28`).
