@@ -158,6 +158,7 @@ different questions, kept as two fields so neither has to be inferred from prose
 | 🔧 [**Gemma 4 12B**](models/gemma4-12b/README.md) (dense, Mac-only — custom flash-decode kernel) | [🤗 Gemma-4-12B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-12B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Gemma |
 | 🔧 [**Gemma 4 31B**](models/gemma4-31b/README.md) (dense, Mac-only — custom flash-decode kernel) | [🤗 Gemma-4-31B-CoreAI](https://huggingface.co/mlboydaisuke/Gemma-4-31B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Gemma |
 | [**LFM2.5-1.2B-Instruct**](models/lfm2.5/README.md) | [🤗 LFM2.5-1.2B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-1.2B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | LFM Open License v1.0 |
+| [**LFM2.5-2.6B**](models/lfm2.5-2.6b/README.md) (reasoning; int4lin clears the cliff this family usually hits) | [🤗 LFM2.5-2.6B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-2.6B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | LFM Open License v1.0 |
 | [**LFM2.5-8B-A1B**](models/lfm2.5-8b-a1b-moe/README.md) (MoE, custom `gather_qmm` kernel — first iPhone MoE) | [🤗 LFM2.5-8B-A1B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-8B-A1B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | LFM Open License v1.0 |
 | [**Granite 4.0-H 1B / 350M**](models/granite-4.0-h/README.md) | [🤗 granite-4.0-h-CoreAI](https://huggingface.co/mlboydaisuke/granite-4.0-h-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) (1B) · 350M: [CoreAIChat](apps/CoreAIChat) | Apache-2.0 |
 | [**Nanbeige4.1-3B**](models/nanbeige4.1-3b/README.md) (dense reasoning/agentic, iPhone — 32B-class @ 3.93B) | [🤗 Nanbeige4.1-3B-CoreAI](https://huggingface.co/mlboydaisuke/Nanbeige4.1-3B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Apache-2.0 |
@@ -229,6 +230,7 @@ Third-party apps running zoo models. Built something? Open a
 | **Qwen3.5-0.8B** | **71.9** | 14.7 | **210** |
 | **Qwen3.5-2B** | **29** | — | **161** |
 | **LFM2.5-1.2B** | **45.4** | — | **276.5** |
+| **LFM2.5-2.6B** (reasoning; int8hu / int4lin 2.0 GB) | not measured | — | **116.7** / **139.2** |
 | **Granite 4.0-H 1B** | **36.3** | — | **136.5** |
 | **Nanbeige4.1-3B** | **15.9** | — | **114.5** |
 | **Nanbeige4.2-3B** (22 physical / 44 executed+cache layers; int8) | pending | — | **46.4** |

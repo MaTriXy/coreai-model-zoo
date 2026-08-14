@@ -97,6 +97,14 @@ Apple's repo; each recipe names the script it runs.
   two macOS-27-beta GPU-delegate workarounds (fused single conv-state write; fp32 attention
   projections). Same engine patch + `COREAI_CHUNK_THRESHOLD=1` run contract. See
   [`../models/lfm2.5/README.md`](../models/lfm2.5/README.md).
+  **The same script converts LFM2.5-2.6B** — `--hf-id LiquidAI/LFM2.5-2.6B` and nothing else; the
+  module reads `config.json` generically, so 30 layers (22 conv / 8 attn) and a 10752 MLP come for
+  free → **116.7 tok/s int8hu / 139.2 int4lin (2.0 GB)**, oracle gate 16/16 both. That checkpoint is
+  transformers-v5 era and needed two silent fixes that now live in the script: RoPE theta read from
+  `rope_parameters` as well as the flat key, and `save_tokenizer()` for a
+  `tokenizer_class: "TokenizersBackend"` that 4.x cannot resolve (it raises *after* the .aimodel is
+  written). See [`../models/lfm2.5-2.6b/README.md`](../models/lfm2.5-2.6b/README.md) and
+  [`../knowledge/lfm2.5-2.6b-port.md`](../knowledge/lfm2.5-2.6b-port.md).
 - **Gemma 4 E2B / E4B pipelined fast path (in this dir): `export_gemma4_decode_pipelined.py [int4lin]`** —
   decode-only S=1 bundle whose per-layer-embedding rows arrive as a per-token INPUT (the 9.4 GB
   PLE table stays a host mmap): in-graph embed + softcapped head, ONE unified padded KV pair,
