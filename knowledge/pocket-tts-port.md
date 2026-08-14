@@ -64,11 +64,14 @@ heterogeneous allowed set, not an op.**
   `Allowed: [CPU, GPU, Neural Engine] / Preferred: CPU`, the same with `Preferred: GPU`, and
   `Allowed: [CPU] / Preferred: None`.
 - It scales with **how much there is to partition**, not with size or dtype. In the pocket-tts
-  repro a 6-layer prefill over 16 positions and a multi-stage convolutional decoder both fail,
-  while the same transformer at 1 position and a small stateless function are correct.
+  repro the two failing graphs are the flow-LM prefill (6 layers at d_model 1024, 16 heads of 64,
+  over 16 positions) and Mimi's SEANet decoder (upsampling ratios [6,5,4]), while the same
+  transformer at 1 position and a small stateless function are correct.
 - What settles placement over arithmetic: under `.cpu` the first four samples of a 1920-sample
   frame are **bit-identical** to `.gpu` and `.cpuOnly`, and the divergence starts later in the
-  same frame. Precision loss does not leave a bit-identical prefix.
+  same frame. Precision loss does not leave a bit-identical prefix. That frame is the SEANet
+  decoder's own output frame — one call produces exactly those 1920 PCM samples — rather than an
+  arbitrary window.
 
 **Blast radius varies enormously.** On pocket-tts's fp32 assets it reaches cosine mean 0.501,
 min 0.222, max abs 2.117, with 27 of 32 end-of-sequence decisions flipped — anti-correlated, not
@@ -95,16 +98,20 @@ collapses to a single unit.
 
 ## The other Core AI defects this port found
 
-All verified with minimal repros. Two are filed with Apple (1, 2); the rest are written up.
+All verified with minimal repros, and all five are filed with Apple: FB24322424 (1), FB24322437 (2),
+FB24322585 (3), FB24322596 (4), FB24322605 (5).
 
 1. **`ConvTranspose1d` is numerically wrong on the `cpu_only` delegate** at stride ≥ 8 and
    kernel ≥ 16 — the same asset is correct on gpu. Mimi's k=32/s=16/groups=512 upsample hit it at
    cos −0.01. Escape: at T=1 with `groups == channels` the op degenerates to a per-channel outer
-   product, and re-authoring it that way is bit-exact on `cpu_only`. *(Filed.)*
+   product, `out[c,:] = x[c,0] * W[c,0,:]`, and re-authoring it that way is bit-exact on
+   `cpu_only`. **T=1 is what makes that escape available, not a condition of the defect** —
+   T=1, T=4 and T=64 all fail, so a reader who takes T=1 for the trigger will wrongly conclude
+   they are safe at larger T.
 2. **The Python `coreai.runtime` bindings leak one IOSurface per call** — with this pipeline's
    state sizes the process dies at ~2,250 calls, climbing 1.9 MB per call to ~3 GB. Run Python
    harnesses in subprocess workers on a call budget. The Swift `CoreAI` framework does not leak:
-   4,773 calls flat at 300 MB. *(Filed.)*
+   4,773 calls flat at 300 MB.
 3. **coreai-torch lowers ConvTranspose `output_padding` by padding the input**, silently producing
    the wrong output length. A converter defect, distinct from the *symbolic* output length
    [`kokoro-tts.md`](kokoro-tts.md) records for the same op.
