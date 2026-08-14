@@ -85,6 +85,7 @@
 - [gemma4-ple-static-input-fm-stack.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/gemma4-ple-static-input-fm-stack.html): Gemma 4's per-layer-embedding table as a static graph input, loaded behind FoundationModels
 - [timesfm-port.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/timesfm-port.html): TimesFM 2.5: the zoo's first time-series forecasting foundation model (stateless graph + host RevIN DSP)
 - [esam3-port.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/esam3-port.html): EfficientSAM3: a dropped port (device-verified but redundant vs the official SAM 3) — kept for what transferred
+- [lfm2.5-vl-port.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/lfm2.5-vl-port.html): LFM2.5-VL: SigLIP2 NaFlex (a Linear patch embedding over host-flattened patches, a 16×16 position grid resized per image), what baking a square grid costs a NaFlex model, the antialiased resize a GPU "bilinear" is not — and why judging a compressed VLM needs an fp16 baseline, because greedy decoding turns any near-tie into a different tail
 - [lfm2.5-2.6b-port.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/lfm2.5-2.6b-port.html): LFM2.5-2.6B, where the port was a config change and the work was surviving a transformers-v5-era checkpoint: a RoPE key that moved, a tokenizer class that does not exist yet, and a 4.x modeling file that silently ignores a config flag and would certify a wrong oracle as PASS
 
 ## Image generation & editing (diffusion)

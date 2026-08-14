@@ -105,6 +105,18 @@ Apple's repo; each recipe names the script it runs.
   `tokenizer_class: "TokenizersBackend"` that 4.x cannot resolve (it raises *after* the .aimodel is
   written). See [`../models/lfm2.5-2.6b/README.md`](../models/lfm2.5-2.6b/README.md) and
   [`../knowledge/lfm2.5-2.6b-port.md`](../knowledge/lfm2.5-2.6b-port.md).
+- **LFM2.5-VL (in this dir): `export_lfm25vl_pipelined.py [int8lin] [--vision-mode fp16]`** — one
+  run emits both halves of the zoo's smallest VLM (658 MB): a fixed-grid **SigLIP2-NaFlex** tower
+  (`patches [1024,768] → image_embeds [256,1024]`, 181 MB fp16, **18.0 ms/image** on M4 Max) and the
+  LFM2 decoder above with an `image_embeds` static input and extension ids `V+slot` (477 MB
+  int8lin, **112.0 tok/s decode on iPhone 17 Pro** via the `ios-h18p` AOT variant). The decoder is the *same* module — the VL checkpoint keeps it under
+  `model.language_model.` — so the new overlay code (`models/macos/lfm2_vl.py`) is the tower, the
+  projector, and the splice. `--text-core` exports the decoder with no image input: **387.2 tok/s
+  M4 Max**, and the only way to benchmark or `coreai_gate.py` this port, because `llm-runner`
+  cannot bind the VLM bundle's image buffer. int4 is a no-go here (0/9 suite cases). Host
+  preprocessing is gated in NumPy first (`_smoke/lfm25vl_preprocess.py`). See
+  [`../models/lfm2.5-vl/README.md`](../models/lfm2.5-vl/README.md) and
+  [`../knowledge/lfm2.5-vl-port.md`](../knowledge/lfm2.5-vl-port.md).
 - **Gemma 4 E2B / E4B pipelined fast path (in this dir): `export_gemma4_decode_pipelined.py [int4lin]`** —
   decode-only S=1 bundle whose per-layer-embedding rows arrive as a per-token INPUT (the 9.4 GB
   PLE table stays a host mmap): in-graph embed + softcapped head, ONE unified padded KV pair,

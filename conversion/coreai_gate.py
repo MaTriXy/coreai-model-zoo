@@ -64,6 +64,7 @@ HERE = Path(__file__).resolve().parent
 ARCH = {
     "qwen3.5": {},
     "lfm2_5": {},
+    "lfm2_5_vl": {},
     "granite": {},
     "youtu": {},
     "nanbeige": {},
@@ -72,7 +73,11 @@ ARCH = {
 }
 # Dense Qwen3.6-27B reuses the qwen3.5 overlay; the 35B-A3B is MoE (own overlay). Match the
 # MoE substrings before the generic qwen3.6->qwen3.5 fallback.
+# lfm2_5_vl must beat the generic lfm2_5 substring: the VL checkpoint keeps its decoder
+# under `model.language_model.`, so lfm2_from_hf finds no weights at all.
 ALIASES = {"ornith": "qwen3.5", "lfm2_moe": "lfm2_moe", "a1b": "lfm2_moe",
+           "vl_450m": "lfm2_5_vl", "vl-450m": "lfm2_5_vl", "vl_3b": "lfm2_5_vl",
+           "vl-3b": "lfm2_5_vl",
            "35b_a3b": "qwen3_6_moe", "35b-a3b": "qwen3_6_moe", "a3b": "qwen3_6_moe",
            "qwen3_6": "qwen3.5", "qwen3.6": "qwen3.5"}
 
@@ -161,6 +166,14 @@ def build(arch, hf_id):
     elif arch == "lfm2_5":
         from coreai_models.models.macos.lfm2 import lfm2_from_hf, build_decode_state
         m = lfm2_from_hf(hf_id, target_dtype=FP32, stateful=True)
+        st = build_decode_state(m.config, max_seq_len=CTX, dtype=FP32); order = ["k_cache","v_cache","conv_state"]
+    elif arch == "lfm2_5_vl":
+        # The TEXT CORE of an LFM2.5-VL checkpoint. The VLM bundle itself cannot be
+        # gated here: llm-runner has no way to bind its image_embeds buffer, so the
+        # image path is gated by _smoke/test_lfm25vl_suite_gate.py instead.
+        from coreai_models.models.macos.lfm2 import build_decode_state
+        from coreai_models.models.macos.lfm2_vl import lfm2_text_core_from_hf
+        m = lfm2_text_core_from_hf(hf_id, target_dtype=FP32, fp32_attn_proj=False)
         st = build_decode_state(m.config, max_seq_len=CTX, dtype=FP32); order = ["k_cache","v_cache","conv_state"]
     elif arch == "granite":
         from coreai_models.models.macos.granite4h import Granite4HForCausalLMStateful, build_decode_state

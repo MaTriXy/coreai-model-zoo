@@ -358,7 +358,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/gemma-4-E2B-CoreAI",
-     "downloads_30d": 395,
+     "downloads_30d": 184,
      "bundles": [
       "gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl",
       "gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl_aotc_h18p",
@@ -410,7 +410,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/gemma-4-E4B-CoreAI",
-     "downloads_30d": 163,
+     "downloads_30d": 58,
      "bundles": [
       "gpu-pipelined/gemma4_e4b_qat_decode_int4lin",
       "gpu-pipelined/gemma4_e4b_qat_decode_int4lin_aotc_h18p",
@@ -442,7 +442,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/gemma-4-E2B-CoreAI",
-     "downloads_30d": 395,
+     "downloads_30d": 184,
      "bundles": [
       "gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl",
       "gpu-pipelined-b2/gemma4_e2b_qat_decode_int4lin_tbl_aotc_h18p",
@@ -641,7 +641,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/granite-4.0-h-CoreAI",
-     "downloads_30d": 104,
+     "downloads_30d": 50,
      "bundles": [
       "gpu-pipelined-b2/granite_4_0_h_1b_decode_int8hu_block32_sym",
       "gpu-pipelined/granite_4_0_h_1b_decode_int8hu_block32_sym",
@@ -738,7 +738,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/LFM2.5-1.2B-CoreAI",
-     "downloads_30d": 771,
+     "downloads_30d": 285,
      "bundles": [
       "gpu-pipelined-b2/lfm2_5_1_2b_instruct_decode_int8hu_block32_sym",
       "gpu-pipelined/lfm2_5_1_2b_instruct_decode_int8hu_block32_sym",
@@ -783,7 +783,17 @@
      ]
     }
    ],
-   "repos": []
+   "repos": [
+    {
+     "id": "mlboydaisuke/LFM2.5-2.6B-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu-pipelined/lfm2_5_2_6b_decode_int4lin",
+      "gpu-pipelined/lfm2_5_2_6b_decode_int8hu_block32_sym"
+     ],
+     "tier1": {}
+    }
+   ]
   },
   {
    "family": "lfm2.5-8b-a1b-moe",
@@ -805,13 +815,62 @@
    "repos": [
     {
      "id": "mlboydaisuke/LFM2.5-8B-A1B-CoreAI",
-     "downloads_30d": 699,
+     "downloads_30d": 84,
      "bundles": [
       "gpu-pipelined/lfm2_5_8b_a1b_decode_sym8_gather"
      ],
      "tier1": {
       "PASS": 1
      }
+    }
+   ]
+  },
+  {
+   "family": "lfm2.5-vl",
+   "card": "models/lfm2.5-vl/README.md",
+   "recipes": [
+    {
+     "name": "lfm2.5-vl-450m",
+     "status": "verified",
+     "source_model": "LiquidAI/LFM2.5-VL-450M",
+     "source_model_from": "exporter",
+     "hf_repo": "mlboydaisuke/LFM2.5-VL-450M-CoreAI",
+     "bundle": "gpu-pipelined/lfm2_5_vl_450m_decode_int8lin",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run lfm2.5-vl-450m",
+     "gate_transcript": null,
+     "open_questions": [
+      "The vision tower is unmeasured on device: PipelinedBench feeds pre-dumped embeds, so\n   18.0 ms/image is a Mac number and no iOS tower is published.",
+      "On device the image path drops one adjective vs fp32 at a near-tie (same picture, same\n   middle ten tokens); the device gate checks the device-verified sequence.",
+      "The baked square grid stretches non-square images, which is the one thing NaFlex avoids.",
+      "No gate here can see that cost: the fixed-grid oracle is captured through the same stretch."
+     ]
+    },
+    {
+     "name": "lfm2.5-vl-450m-textcore",
+     "status": "verified",
+     "source_model": "LiquidAI/LFM2.5-VL-450M",
+     "source_model_from": "exporter",
+     "hf_repo": "mlboydaisuke/LFM2.5-VL-450M-CoreAI",
+     "bundle": "gpu-pipelined/lfm2_5_vl_450m_decode_int8lin_textcore",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run lfm2.5-vl-450m-textcore",
+     "gate_transcript": null,
+     "open_questions": []
+    }
+   ],
+   "repos": [
+    {
+     "id": "mlboydaisuke/LFM2.5-VL-450M-CoreAI",
+     "downloads_30d": 0,
+     "bundles": [
+      "gpu-pipelined/lfm2_5_vl_450m_decode_int8lin",
+      "gpu-pipelined/lfm2_5_vl_450m_decode_int8lin_textcore",
+      "gpu-pipelined/lfm2_5_vl_450m_vision_fp16/lfm2_5_vl_450m_vision_fp16.aimodel",
+      "ios-h18p/lfm2_5_vl_450m_decode_int8lin",
+      "ios-h18p/lfm2_5_vl_450m_decode_int8lin_textcore"
+     ],
+     "tier1": {}
     }
    ]
   },
@@ -1159,7 +1218,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/Ornith-1.0-9B-CoreAI",
-     "downloads_30d": 490,
+     "downloads_30d": 66,
      "bundles": [
       "gpu-pipelined/ornith_1_0_9b_decode_int4lin",
       "gpu-pipelined/ornith_1_0_9b_decode_int8hu_block32_sym"
@@ -1425,7 +1484,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/Qwen3-VL-4B-CoreAI",
-     "downloads_30d": 96,
+     "downloads_30d": 63,
      "bundles": [
       "gpu-pipelined/qwen3_vl_4b_instruct_decode_int8hu_s1",
       "gpu-pipelined/qwen3_vl_4b_instruct_decode_int8lin_s1",
@@ -1438,7 +1497,7 @@
     },
     {
      "id": "mlboydaisuke/Qwen3-VL-2B-CoreAI",
-     "downloads_30d": 92,
+     "downloads_30d": 57,
      "bundles": [
       "gpu-pipelined/qwen3_vl_2b_instruct_decode_int8hu_s1",
       "gpu-pipelined/qwen3_vl_2b_instruct_decode_int8lin_s1",
@@ -1451,7 +1510,7 @@
     },
     {
      "id": "mlboydaisuke/Qwen3-VL-8B-CoreAI",
-     "downloads_30d": 89,
+     "downloads_30d": 47,
      "bundles": [
       "gpu-pipelined/qwen3_vl_8b_instruct_decode_int8hu_s1",
       "gpu-pipelined/qwen3_vl_8b_instruct_decode_int8lin_s1",
@@ -1496,7 +1555,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/qwen3.5-0.8B-CoreAI",
-     "downloads_30d": 559,
+     "downloads_30d": 285,
      "bundles": [
       "gpu-pipelined-b2/qwen3_5_0_8b_decode_int8hu_block32_sym",
       "gpu-pipelined/qwen3_5_0_8b_decode_int8hu_block32_sym",
@@ -1515,7 +1574,7 @@
     },
     {
      "id": "mlboydaisuke/qwen3.5-2B-CoreAI",
-     "downloads_30d": 114,
+     "downloads_30d": 46,
      "bundles": [
       "gpu-pipelined-b2/qwen3_5_2b_decode_int8hu_block32_sym",
       "gpu-pipelined/qwen3_5_2b_decode_int8hu_block32_sym",
@@ -1578,7 +1637,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/Qwen3.6-35B-A3B-CoreAI",
-     "downloads_30d": 385,
+     "downloads_30d": 71,
      "bundles": [
       "gpu-pipelined/qwen3_6_35b_a3b_decode_sym8_gather"
      ],
@@ -1608,7 +1667,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/Qwen3.6-27B-CoreAI",
-     "downloads_30d": 393,
+     "downloads_30d": 61,
      "bundles": [
       "gpu-pipelined/qwen3_6_27b_decode_int8hu_block32_sym"
      ],
@@ -1638,7 +1697,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/RF-DETR-CoreAI",
-     "downloads_30d": 179,
+     "downloads_30d": 144,
      "bundles": [
       "rfdetr-large_float32.aimodel",
       "rfdetr-medium_float32.aimodel",
@@ -2088,7 +2147,7 @@
    "repos": [
     {
      "id": "mlboydaisuke/Youtu-LLM-2B-CoreAI",
-     "downloads_30d": 64,
+     "downloads_30d": 21,
      "bundles": [
       "gpu-pipelined-b2/youtu_llm_2b_decode_absorbed_int8_msdpa_g32",
       "gpu-pipelined/youtu_llm_2b_decode_absorbed_int8_msdpa",

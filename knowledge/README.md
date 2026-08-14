@@ -148,6 +148,11 @@ For the long-form version of the same material, read
   foundation model (stateless graph + host RevIN DSP).
 - [`esam3-port.md`](esam3-port.md) — EfficientSAM3: a **dropped** port (device-verified but redundant
   vs the official SAM 3) — kept for what transferred.
+- [`lfm2.5-vl-port.md`](lfm2.5-vl-port.md) — LFM2.5-VL: **SigLIP2 NaFlex** (a Linear patch embedding
+  over host-flattened patches, a 16×16 position grid resized per image), what baking a square grid
+  costs a NaFlex model, the antialiased resize a GPU "bilinear" is not — and why judging a
+  compressed VLM needs an **fp16 baseline**, because greedy decoding turns any near-tie into a
+  different tail.
 - [`lfm2.5-2.6b-port.md`](lfm2.5-2.6b-port.md) — LFM2.5-2.6B, where the port was a config change and
   the work was surviving a **transformers-v5-era checkpoint**: a RoPE key that moved, a tokenizer
   class that does not exist yet, and a 4.x modeling file that silently ignores a config flag and

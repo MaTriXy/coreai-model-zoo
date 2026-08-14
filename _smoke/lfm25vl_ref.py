@@ -49,6 +49,18 @@ def main() -> None:
     ap.add_argument("--hf-id", default=DEFAULT_ID)
     ap.add_argument("--out", default=None, help="output .npz (default: _smoke/<slug>_ref.npz)")
     ap.add_argument("--max-new-tokens", type=int, default=48)
+    ap.add_argument(
+        "--resize",
+        default=None,
+        metavar="WxH",
+        help="pre-resize the fixture image before the processor sees it, with the "
+        "resampler the processor itself uses (processor_config resample: 2 = PIL "
+        "BILINEAR, antialiased on downscale). "
+        "512x512 makes the processor emit exactly one 32x32-patch tile with no "
+        "padding -- the FIXED GRID the Core AI bundle bakes -- so the port can be "
+        "gated at the configuration it actually ships, not only at the native "
+        "NaFlex grid. Written to <slug>_ref_<WxH>.npz.",
+    )
     args = ap.parse_args()
 
     import transformers
@@ -65,10 +77,15 @@ def main() -> None:
     from transformers import AutoModelForImageTextToText, AutoProcessor
 
     slug = args.hf_id.rsplit("/", 1)[-1].lower().replace(".", "_").replace("-", "_")
-    out = Path(args.out or Path(__file__).parent / f"{slug}_ref.npz")
+    suffix = f"_{args.resize}" if args.resize else ""
+    out = Path(args.out or Path(__file__).parent / f"{slug}_ref{suffix}.npz")
 
     image = Image.open(requests.get(IMAGE_URL, stream=True, timeout=60).raw).convert("RGB")
     print(f"image {image.size} from {IMAGE_URL}")
+    if args.resize:
+        w, h = (int(v) for v in args.resize.lower().split("x"))
+        image = image.resize((w, h), Image.BILINEAR)
+        print(f"  pre-resized to {image.size} (PIL BILINEAR; the host does this resize)")
 
     processor = AutoProcessor.from_pretrained(args.hf_id)
     print(f"loading {args.hf_id} fp32 ...")

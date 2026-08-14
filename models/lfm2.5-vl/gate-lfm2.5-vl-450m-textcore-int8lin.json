@@ -1,0 +1,100 @@
+{
+  "result": "PASS",
+  "arch": "lfm2_5_vl",
+  "bundle": "lfm2_5_vl_450m_decode_int8lin_textcore",
+  "artifact": null,
+  "source_model": {
+    "hf_id": "LiquidAI/LFM2.5-VL-450M",
+    "revision": null,
+    "weights_pinned": false,
+    "note": "the oracle loads the source repo's default branch; the recipe's revision pins the export, not this comparison"
+  },
+  "protocol": {
+    "prompt": "The alphabet begins A, B, C, D, E, F,",
+    "max_new_tokens": 16,
+    "greedy": true,
+    "oracle_dtype": "fp32",
+    "engine_variant": "coreai-pipelined",
+    "warmup": "off",
+    "env": {
+      "COREAI_CHUNK_THRESHOLD": "1"
+    },
+    "tie_rule": "a first divergence passes only where the oracle's top-2 margin < 0.1"
+  },
+  "input_ids": [
+    1,
+    1098,
+    27118,
+    10309,
+    835,
+    521,
+    879,
+    521,
+    841,
+    521,
+    889,
+    521,
+    908,
+    521,
+    911,
+    521
+  ],
+  "oracle": {
+    "gen_ids": [
+      918,
+      521,
+      904,
+      521,
+      859,
+      521,
+      962,
+      521,
+      984,
+      521,
+      903,
+      521,
+      857,
+      521,
+      928,
+      521
+    ],
+    "gen_text": " G, H, I, J, K, L, M, N,",
+    "top2_margins": [
+      0.9995341897010803,
+      0.9960752725601196,
+      0.9987943172454834,
+      0.9964966773986816,
+      0.9996947050094604,
+      0.9990373849868774,
+      0.9995184540748596,
+      0.9963769912719727,
+      0.9969193339347839,
+      0.9937001466751099,
+      0.9993816614151001,
+      0.9936057329177856,
+      0.9963026642799377,
+      0.992123007774353,
+      0.9984353184700012,
+      0.9934445023536682
+    ]
+  },
+  "engine": {
+    "gen_text": " G, H, I, J, K, L, M, N,"
+  },
+  "match": {
+    "exact_prefix": 16,
+    "of": 16,
+    "first_divergence": null
+  },
+  "schema": "coreai-gate-transcript/1",
+  "generated_at": "2026-08-14T03:46:43+00:00",
+  "environment": {
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+    "python": "3.14.6",
+    "runner": "/Users/majimadaisuke/code/coreai/coreai-models/.build/out/Products/Release/llm-runner"
+  },
+  "recheck": {
+    "engine_side_only": "Download the bundle at the pinned revision, then feed the recorded input_ids to llm-runner with the protocol above (greedy, warmup off, coreai-pipelined, COREAI_CHUNK_THRESHOLD=1). The output must equal engine.gen_text. No oracle, no fp32 weights, no GPU beyond the one running the bundle.",
+    "full_gate": "python3 conversion/coreai_gate.py <bundle> LiquidAI/LFM2.5-VL-450M --arch lfm2_5_vl --prompt 'The alphabet begins A, B, C, D, E, F,' -n 16"
+  }
+}
