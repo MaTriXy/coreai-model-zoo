@@ -42,7 +42,22 @@ from _hf_catalog import Catalog, bundles_of, bundle_paths, repo_format  # noqa: 
 
 REPO = Path(__file__).resolve().parents[1]
 AUTHORS = ["mlboydaisuke"]
-EXTRA_REPOS = ["ukint-vs/Nanbeige4.2-3B-CoreAI"]
+# Escape hatch for a published repo no recipe names; contributor-hosted ports come from
+# their recipes (contributor_repos), so `--all` covers a contributed port the day its PR
+# lands instead of the day someone remembers to add it here.
+EXTRA_REPOS: list[str] = []
+
+
+def contributor_repos() -> list[str]:
+    """`hf_repo` values in models/*/recipe.toml that belong to someone else's account."""
+    ours = {a.lower() for a in AUTHORS}
+    named: set[str] = set()
+    for path in sorted((REPO / "models").glob("*/recipe.toml")):
+        with open(path, "rb") as fh:
+            for entry in tomllib.load(fh).values():
+                if repo := entry.get("hf_repo"):
+                    named.add(repo)
+    return sorted(r for r in named if r.split("/")[0].lower() not in ours)
 
 PRECISION = re.compile(
     r"(?<![a-z0-9])(int2|int4km|int4lin(?:sym)?|int4hu|int4|int8hu|int8lin|int8sym|int8|"
@@ -237,7 +252,7 @@ def targets(cat: Catalog, names: list[str], include_official: bool) -> list[tupl
         repos = [cat.repo(n) for n in names]
     else:
         repos = [m for a in AUTHORS for m in cat.repos_by_author(a)]
-        repos += [cat.repo(r) for r in EXTRA_REPOS]
+        repos += [cat.repo(r) for r in dict.fromkeys(contributor_repos() + EXTRA_REPOS)]
     out = []
     for m in repos:
         if not m:

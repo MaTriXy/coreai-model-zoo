@@ -44,6 +44,13 @@ zoo's own pre-b2 artifacts are being migrated for the same reason.
    command), the conversion script under `conversion/`, and the gate outputs (parity numbers +
    measured speed, environment noted). `python3 conversion/zoo_verify.py <your-hf-repo>` should
    report no FAIL.
+
+   Two things about that PR's CI are ours, not yours. A first PR from a fork waits for a
+   maintainer to approve the workflow run, so "no checks reported" means we haven't pressed the
+   button yet. And `models/index.json` and `models/_INVENTORY.md` are **generated**
+   (`scripts/gen_inventory.py`) — a maintainer regenerates them when your PR lands, so the
+   catalog check failing with *model directories missing from the index* is expected and not
+   yours to fix. Everything else that check reports is.
 5. **Review + enrollment** — after review, the model is enrolled in the
    [coreai-kit](https://github.com/john-rocky/coreai-kit) catalog with its revision pin (plus
    engine/runtime glue if it's a new capability kind), and the card gets its generated

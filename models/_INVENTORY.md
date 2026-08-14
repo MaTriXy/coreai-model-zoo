@@ -15,12 +15,12 @@ configuration; a single bundle answers that question by itself.
 
 | metric | count |
 | --- | --- |
-| published repos | 123 |
-| Core AI repos | 70 |
-| Core AI bundles inside them | 238 |
-| Core AI repos with a `models/<family>/` card | 60 |
-| repos covered by a recipe | 60 |
-| Core AI repos with 0 downloads in the last 30 days | 55 |
+| published repos | 124 |
+| Core AI repos | 71 |
+| Core AI bundles inside them | 243 |
+| Core AI repos with a `models/<family>/` card | 61 |
+| repos covered by a recipe | 61 |
+| Core AI repos with 0 downloads in the last 30 days | 56 |
 
 ## All repos, by 30-day downloads
 
@@ -148,11 +148,12 @@ configuration; a single bundle answers that question by itself.
 | [mlboydaisuke/whisper-large-v3-turbo-CoreAI-official](https://huggingface.co/mlboydaisuke/whisper-large-v3-turbo-CoreAI-official) | 0 | 0 | coreai | official | 3 | — | [whisper-large-v3-turbo](whisper-large-v3-turbo/README.md) | `whisper-large-v3-turbo` | `whisper-large-v3-turbo` |
 | [mlboydaisuke/YOLOX-CoreAI](https://huggingface.co/mlboydaisuke/YOLOX-CoreAI) | 0 | 0 | coreai | port | 1 | 1 pass | [yolox](yolox/README.md) | `yolox-s` | `yolox-s` |
 | [mlboydaisuke/Z-Image-Turbo-CoreAI](https://huggingface.co/mlboydaisuke/Z-Image-Turbo-CoreAI) | 0 | 0 | coreai | port | 6 | 6 pass | [z-image-turbo](z-image-turbo/README.md) | `z-image-turbo` | — |
+| [rahulrachuri/pocket-tts-coreai](https://huggingface.co/rahulrachuri/pocket-tts-coreai) | 0 | 0 | coreai | port | 5 | 5 pass | [pocket-tts](pocket-tts/README.md) | `pocket-tts` | — |
 | [ukint-vs/Nanbeige4.2-3B-CoreAI](https://huggingface.co/ukint-vs/Nanbeige4.2-3B-CoreAI) | 0 | 1 | coreai | port | 1 | 1 pass | [nanbeige4.2-3b](nanbeige4.2-3b/README.md) | `nanbeige4.2-3b` | `nanbeige4.2-3b` |
 
 ## Tier-1 defects
 
-From `conversion/zoo_verify.py --all` over 222 published bundles: the
+From `conversion/zoo_verify.py --all` over 227 published bundles: the
 bundle's own tokenizer, chat template, context length and declared precision
 compared against the source repository it names in its `metadata.json`. No
 oracle, no device, no weights.
@@ -161,7 +162,7 @@ oracle, no device, no weights.
 recorded reason; record the expectation in `models/<family>/verify.toml` and it
 becomes the bar instead of the deviation.
 
-**None.** All 222 bundles either agree with their source or carry a
+**None.** All 227 bundles either agree with their source or carry a
 declared expectation in `models/<family>/verify.toml`.
 
 ## Needs owner input
@@ -186,7 +187,7 @@ published configuration. **Do not guess their `args`.**
 
 ### 3. Recipes recorded, shipped configuration unknown
 
-2 of the 67 recipes carry `status = "unverified"`:
+2 of the 68 recipes carry `status = "unverified"`:
 the script is known, the arguments that produced the published bundle are not,
 and nothing in the repo records them. `zoo_convert.py` refuses to run these
 without `--force`. Each needs one answer from the owner.

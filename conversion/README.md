@@ -278,6 +278,27 @@ Apple's repo; each recipe names the script it runs.
   (waveform 0.98 = bounded pad-boundary effect). `pip install kokoro misaki soundfile`,
   torch ≤ 2.11. See [`../models/kokoro-82m/README.md`](../models/kokoro-82m/README.md).
 
+- **pocket-tts (Kyutai text-to-speech, the zoo's first Kyutai model and first Mimi
+  conversion, in [`pocket-tts/`](pocket-tts/)): `export_flowlm.py`, `export_flow_decoder.py`,
+  `export_mimi_decoder.py`** — an AR flow-matching LM over Mimi latents at 12.5 Hz, a
+  one-step flow decoder, and a streaming Mimi decoder to 24 kHz PCM. The flow-LM ships as
+  **two functions over one shared rank-5 KV state**: `prefill` at a static width of 16
+  tokens applied as a sliding window, and `step`. That windowing is also why the
+  large-prefill SDPA lowering crash from the LFM2-Audio notes never fires here — the query
+  block never gets big enough to stress the composite. `S_MAX = 512` is **derived** inside
+  `flowlm_graphs.py` from the model's own generation bound (162 voice + 50 text + 234
+  frames = 446) rather than configured; a fixture-sized 256 silently truncated real
+  sentences and only an end-to-end sweep saw it. The Mimi decoder folds the rescale and the
+  k=1 quantizer in-graph (`--fold-quantizer`) and holds its 12 streaming-state tensors as
+  in-graph Core AI state (`--graph-state`), never reset across chunks. **Fixed-capacity KV
+  caches for this family must be zero-initialised, never NaN-initialised**: upstream fills
+  with `float("NaN")` and gets away with it by slicing the unwritten tail off before
+  attention, which a fixed-capacity graph cannot do — a masked SDPA still multiplies V by a
+  zero weight, so `0 * NaN = NaN` poisons the cache, silently. Each exporter gates its graph
+  against the oracle capture (`gen_oracle.py --tag orc_a`) on eager, `cpu_only` and `gpu`
+  before writing a bundle. Ported by [Rahul Rachuri](https://github.com/RahulRachuri). See
+  [`../models/pocket-tts/README.md`](../models/pocket-tts/README.md).
+
 ## Reproduce (env)
 
 Convert/verify needs the `coreai-core` + `coreai-torch` + `coreai-opt` Python env (macOS; the

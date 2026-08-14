@@ -34,9 +34,11 @@ from _hf_catalog import Catalog, bundles_of, repo_format  # noqa: E402
 from _recipe import source_model  # noqa: E402
 
 AUTHORS = ["mlboydaisuke"]
-# Ports published under a contributor's own account (zoo PR #6 and successors) — the
-# zoo links them, so they belong in the inventory even though we do not own them.
-EXTRA_REPOS = ["ukint-vs/Nanbeige4.2-3B-CoreAI"]
+# Escape hatch: a published repo the zoo links but no recipe names. Contributor-hosted ports
+# are picked up from their recipes instead (see contributor_repos), because a hand-kept list
+# is a list someone outside this repo cannot know to append to — and a port whose bundles
+# live on the author's own account is the normal case, not the exception.
+EXTRA_REPOS: list[str] = []
 
 HF_LINK = re.compile(r"https://huggingface\.co/([\w.-]+/[\w.-]+)")
 CARD_LINK = re.compile(r"\([\w./-]*models/([\w.-]+)/README\.md\)")
@@ -125,11 +127,23 @@ def verify_results() -> dict[str, list[dict]]:
     return out
 
 
-def collect(cat: Catalog) -> list[dict]:
-    published = [m for a in AUTHORS for m in cat.repos_by_author(a)]
-    published += [m for m in (cat.repo(r) for r in EXTRA_REPOS) if m]
+def contributor_repos(all_recipes: dict[str, dict]) -> list[str]:
+    """Published repos a recipe names that we do not own — a contributor's own account.
 
+    The recipe already carries `hf_repo`, so the inventory learns about a contributed port
+    from the PR that adds it rather than from a maintainer remembering to register it.
+    """
+    ours = {a.lower() for a in AUTHORS}
+    named = {r["hf_repo"] for r in all_recipes.values() if r.get("hf_repo")}
+    return sorted(r for r in named if r.split("/")[0].lower() not in ours)
+
+
+def collect(cat: Catalog) -> list[dict]:
     all_recipes = recipes()
+    published = [m for a in AUTHORS for m in cat.repos_by_author(a)]
+    published += [m for m in (cat.repo(r) for r in
+                              dict.fromkeys(contributor_repos(all_recipes) + EXTRA_REPOS)) if m]
+
     by_repo = repo_to_family(all_recipes)
     by_family_recipes: dict[str, list[str]] = defaultdict(list)
     for name, r in all_recipes.items():
