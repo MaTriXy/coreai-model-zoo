@@ -80,6 +80,36 @@ against 183.9 ms ANE-authored on ane, a 3.7× gap against 1.8× on the phone. Ha
 `ENCBENCH_SELFTEST` in [`apps/coreai-audio`](../apps/coreai-audio) times any single-input
 `.aimodelc` and reports load, first call and warm median separately.
 
+### Why it buys load and not throughput: 25 regions are 25 submissions
+
+Instruments `ane-hw-intervals` traces of the same encoder, one phone, same fp16 weights, same
+authoring — Core AI against a Core ML conversion of the same network, exported and measured by
+[Rahul Rachuri](https://github.com/RahulRachuri) ([traces](https://gist.github.com/RahulRachuri/6761fdb6eb940bd25e4b55926925fbb4)):
+
+| per encoder pass | Core AI, ANE-authored | Core ML, converted |
+|---|---:|---:|
+| ANE submissions | **25.0** | **1.0** |
+| mean submission | 5.906 ms | 150.4 ms |
+| ANE busy | 147.6 ms | 150.4 ms |
+| median inter-submission gap | 1.125 ms | 0.569 ms |
+| ANE idle across the timed window | 28.7 % | 0.4 % |
+
+**Both routes give the ANE the same work — 147.6 ms against 150.4 ms, within 2 %. What differs is
+delivery.** Core ML hands the hardware the whole graph as one job and holds 99.6 % residency. Core
+AI issues one submission per conformer layer and spends ~48 ms per pass in the round trips between
+them; that is where the idle 28.7 % goes. Rahul ties the gap size to the ~2.3 ms IOSurface
+round-trip reported in arXiv 2603.06728, paid 25 times instead of once.
+
+**The submission count is the region count.** 25 regions measured statically in the bundle is
+exactly what the runtime issues at inference, which makes the 49 → 25 halving above one mechanism
+rather than two coincidences: half the regions to specialize is the load win, and 25 submissions
+instead of 1 is why there is no throughput win. It is also the ceiling on this track — an ANE
+authoring pass can remove regions, but nothing available to us fuses the graph into one submission.
+
+OS control: 26A5388g and 26A5406e are identical here — 25.0 submissions per pass, 5.922 against
+5.906 ms mean. Nothing in beta 5 fuses the graph. The exports carry interval timings and one model
+filename; the full `.trace` bundles are not published.
+
 ## Never express a preference over a heterogeneous allowed set
 
 `SpecializationOptions(preferredComputeUnitKind: .cpu)` and `.gpu` declare the **same**
