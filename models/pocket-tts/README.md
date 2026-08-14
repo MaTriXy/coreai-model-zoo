@@ -58,8 +58,8 @@ upstream, seed-matched); on matched rows longer than 6 words the two are 2.22 % 
 (+0.09 pp per decile against 4.7 pp decile spread), all 96 stitch points below the
 in-audio p99.9 step, no crossfade needed.
 
-Device transfer (iPhone 17 Pro Max, A19 Pro, iOS 27.0, Release): under `cpuOnly` all 8
-per-graph probe dumps are bit-identical to the M4 Pro, including post-run KV and Mimi
+Device transfer (iPhone 17 Pro Max, A19 Pro, iOS 27 beta 5 (24A5408d), Release): under
+`cpuOnly` all 8 per-graph probe dumps are bit-identical to the M4 Pro, including post-run KV and Mimi
 state. On gpu the oracle-prompt wav scores cos 1.000000, max abs 4.3e-5, and the ASR
 numbers reproduce the Mac's exactly (0.00 % and 1.38 %). fp16 does not transfer bit-wise
 across chips (A19 Pro against M4 Pro), and gpu fp32 is not bit-transferable across GPU
@@ -68,7 +68,8 @@ correctness is carried by the oracle-prompt cosine, the framing, and the ASR gat
 
 ## Speed
 
-Mac, M4 Pro, 148-word paragraph, voice alba, load excluded, 1 warmup + 3 timed, medians.
+Mac, M4 Pro, macOS 27 Golden Gate beta 5 (26A5406e), 148-word paragraph, voice alba, load
+excluded, 1 warmup + 3 timed, medians.
 The quiet-machine ladder (M1-era assets, fresh subprocess per run):
 
 | stack | RTF | x realtime |
@@ -84,14 +85,26 @@ remaining wall is the flow-LM step graph itself. Honest framing: faster than ups
 PyTorch on the same Mac, behind Metal-native MLX; the case for this port is the phone
 and the Swift host, not Mac headline speed.
 
-Device, iPhone 17 Pro Max (A19 Pro), iOS 27.0, Release build, JIT `.aimodel`, charging,
-thermal nominal before and after every run, same paragraph and protocol:
+Device, iPhone 17 Pro Max (A19 Pro), iOS 27 beta 5 (24A5408d), Release build, JIT
+`.aimodel`, charging, thermal nominal before and after every run, same paragraph and protocol:
 
 | config | RTF median | x realtime | peak RSS | load |
 |---|---:|---:|---:|---:|
 | fp32 gpu | 0.1646 | 6.1x | 202 MB | 0.7 s |
 | fp16 gpu | 0.1281 | 7.8x | 169 MB | 0.4 s |
 | fp32 cpuOnly (spot check) | 0.5324 | 1.9x | 225 MB | 0.02 s |
+
+Those two beta 5 builds are load-bearing, and more than they should be. On an iPhone 17
+Pro running an earlier iOS 27 build (24A5380h), these bundles do not load at all: SIGSEGV
+inside `MPSGraph GPU::AssignVariableOpHandler` during `GPURegionRuntime::initializeOps()`
+under `.gpu`, `failedToSpecialize` under `.cpuOnly`, fp32 and fp16 alike, and the same
+after AOT-compiling them for h18p locally. Re-exporting this recipe with a different
+toolchain reproduces the other half of it: the two graphs that carry in-graph state
+(`flowlm`, `mimi`) then fail to load even on a Mac with `AIModelError error 1`, while the
+stateless `flow_decoder` exports and gates clean on both cpu and gpu. So loadability of a
+stateful bundle appears coupled to the OS and SDK build pair rather than to anything in
+the recipe, and the builds above are a floor rather than a note on provenance. Both halves
+of that were reported by @john-rocky.
 
 gpu is 3.2x faster than cpuOnly on device, measured rather than assumed from the Mac.
 Warmup (first-call specialization) is about 0.3 s on device against about 4.5 s on the
@@ -110,15 +123,15 @@ Core ML and Core AI are the only phone routes for this model today.
 
 ## The port in five Core AI bugs
 
-All five are verified with minimal repros. Two are filed with Apple — the ConvTranspose
-`cpu_only` defect (1) and the Python bindings' IOSurface leak (2); the other three are written
-up and not yet submitted. Repros are available on request.
+All five are verified with minimal repros, and all five are filed with Apple: FB24322424 (1),
+FB24322437 (2), FB24322585 (3), FB24322596 (4), FB24322605 (5). Repros are available on request.
 
 1. **ConvTranspose1d is numerically wrong on the `cpu_only` delegate** at stride >= 8
    and kernel >= 16 (the same asset is correct on gpu). Mimi's k=32/s=16/groups=512
    upsample hit it at cos -0.01. Workaround: at T=1 with groups == channels the op
-   degenerates to a per-channel outer product, and re-authoring it that way takes
-   `cpu_only` to bit-exact.
+   degenerates to a per-channel outer product (`out[c,:] = x[c,0] * W[c,0,:]`), and
+   re-authoring it that way takes `cpu_only` to bit-exact. T=1 is what makes that escape
+   available, not a condition of the defect: T=1, T=4 and T=64 all fail.
 2. **The Python `coreai.runtime` bindings leak one IOSurface per call.** With this
    pipeline's state sizes the process dies at about 2,250 calls, climbing 1.9 MB per
    call to about 3 GB. Every Python harness runs generation in subprocess workers on a
