@@ -54,8 +54,8 @@ def main() -> None:
         default=None,
         metavar="WxH",
         help="pre-resize the fixture image before the processor sees it, with the "
-        "resampler the processor itself uses (processor_config resample: 2 = PIL "
-        "BILINEAR, antialiased on downscale). "
+        "resampler the processor itself declares (processor_config `resample`; the "
+        "450M ships PIL BILINEAR and the 3B BICUBIC, both antialiased on downscale). "
         "512x512 makes the processor emit exactly one 32x32-patch tile with no "
         "padding -- the FIXED GRID the Core AI bundle bakes -- so the port can be "
         "gated at the configuration it actually ships, not only at the native "
@@ -80,14 +80,18 @@ def main() -> None:
     suffix = f"_{args.resize}" if args.resize else ""
     out = Path(args.out or Path(__file__).parent / f"{slug}_ref{suffix}.npz")
 
+    processor = AutoProcessor.from_pretrained(args.hf_id)
     image = Image.open(requests.get(IMAGE_URL, stream=True, timeout=60).raw).convert("RGB")
     print(f"image {image.size} from {IMAGE_URL}")
     if args.resize:
+        # The checkpoint's OWN resampler, read off its processor config: the 450M ships
+        # 2 (BILINEAR) and the 3B ships 3 (BICUBIC), and using one for the other silently
+        # feeds the tower a different image than the host will.
+        resample = int(processor.image_processor.resample)
         w, h = (int(v) for v in args.resize.lower().split("x"))
-        image = image.resize((w, h), Image.BILINEAR)
-        print(f"  pre-resized to {image.size} (PIL BILINEAR; the host does this resize)")
+        image = image.resize((w, h), resample)
+        print(f"  pre-resized to {image.size} (PIL resample {resample}; the host does this)")
 
-    processor = AutoProcessor.from_pretrained(args.hf_id)
     print(f"loading {args.hf_id} fp32 ...")
     model = AutoModelForImageTextToText.from_pretrained(args.hf_id, dtype=FP32)
     model.eval()

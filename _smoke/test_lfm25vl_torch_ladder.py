@@ -85,9 +85,15 @@ def main() -> int:
         import sys
 
         sys.path.insert(0, str(Path(__file__).parent))
-        from lfm25vl_preprocess import _fixture_image, preprocess  # noqa: E402
+        from lfm25vl_preprocess import (  # noqa: E402
+            _fixture_image,
+            _processor_resample,
+            preprocess,
+        )
 
-        host = preprocess(_fixture_image())
+        # The checkpoint's own resampler, not the module default: the 450M ships
+        # BILINEAR and the 3B BICUBIC.
+        host = preprocess(_fixture_image(), resample=_processor_resample(args.hf_id))
         if host.shape[0] != n_patch:
             raise SystemExit(
                 f"host emits {host.shape[0]} patches, this oracle is {n_patch} "

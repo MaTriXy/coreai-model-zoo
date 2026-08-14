@@ -128,6 +128,36 @@ of 7/9. At this size the tower is not bandwidth-bound on an M4 Max, so dequant o
 net loss. It stays exported because a phone's bandwidth budget is a different question — but
 that question needs a device measurement, not this one.
 
+## What the 3B adds (same exporter, `--hf-id`)
+
+The model code needed nothing: hidden 1152 / 27 tower layers and a 30-layer 128k-vocab decoder
+come off the config, and int8 on the tower drops to per-block-16 by itself (4304 is not
+divisible by 32). Everything below is what did NOT transfer.
+
+- **The host resize filter is per-checkpoint.** The 450M declares `resample: 2` (PIL BILINEAR),
+  the 3B `resample: 3` (BICUBIC). Read it; do not inherit it. And bicubic's negative lobes ring
+  past both ends on hard edges, where **Pillow clips because it writes uint8** — a float
+  implementation that does not clip agrees to cos 0.999997 and still differs by 15 levels at the
+  ringing pixels.
+- **BOS is not guaranteed by the tokenizer.** The chat template starts with `bos_token`, but
+  whether `encode()` reproduces it depends on the post-processor: the 450M's is a `Sequence`
+  that prepends it, the 3B's is a plain `ByteLevel` that does not. Prompt the 3B without
+  `<|startoftext|>` and it answers `" F, F, F, F"` — fluent degeneracy, no error, and it looks
+  exactly like a broken port. A host should add the BOS when the tokenizer did not.
+- **int4 is not a family property.** The 450M craters (0/9, fluent drift); the 3B does not move
+  (7/9 — the same cases as its own fp16 baseline). Same recipe, same suite, opposite verdict.
+  The 2.6B text sibling behaved like the 3B. Read the generations of the model in front of you.
+- **The 3B does not fit iOS.** Its int8lin AOT `resources.bin` measures 3.13 GiB and int4lin's
+  2.03 GiB — measure the compiled artifact, not the `.aimodel`, since AOT expands it. Against the
+  2 GiB (2^31) load wall that is a fail for int8 by a mile and for int4 by **30 MiB**, though the
+  int4 case is inference from the earlier bracket (0.80 ✅ / 1.96 ✅ / 3.92 ❌) rather than a
+  device run — worth actually trying, because 30 MiB is inside the noise of where that wall was
+  ever pinned. The remaining lever is the 524 MB fp16 embedding, tied to the head and so not
+  quantizable in place; past that it is a split graph.
+
+Measured (M4 Max): vision 75.7 ms/image at cos 0.999995, text core 120.9 prefill / 105.3 decode
+tok/s, decoder int8lin 3.1 GB / int4lin 2.0 GB / fp16 5.2 GB, tower fp16 815 MB.
+
 ## Runtime notes
 
 - **Driving decode from the Python runtime needs an AOT bundle.** The raw `.aimodel`

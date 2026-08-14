@@ -186,6 +186,7 @@ in. [`CONTRIBUTING.md`](CONTRIBUTING.md) is the path to the next row.
 | **Holo2-4B** (GUI-grounding / computer-use VLM — screenshot + instruction → click coordinates; Qwen3-VL-4B backbone, H Company; zoo's first computer-use model) | [🤗 Holo2-4B-CoreAI](https://huggingface.co/mlboydaisuke/Holo2-4B-CoreAI) | [VLChat ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/VLChat) | Apache-2.0 |
 | **MiniCPM-V 4.6** (vision-language, sub-2B — strongest tiny VLM) | [🤗 MiniCPM-V-4.6-CoreAI](https://huggingface.co/mlboydaisuke/MiniCPM-V-4.6-CoreAI) | [VLChat ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/VLChat) | Apache-2.0 |
 | [**LFM2.5-VL-450M**](models/lfm2.5-vl/README.md) (vision-language, **658 MB** — the smallest VLM here; SigLIP2-NaFlex + the shipped LFM2 decoder, 112 tok/s on iPhone 17 Pro) | [🤗 LFM2.5-VL-450M-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-VL-450M-CoreAI) | [VLChat ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/VLChat) | LFM Open License v1.0 |
+| [**LFM2.5-VL-3B**](models/lfm2.5-vl/README.md) (vision-language, Mac-only — the detail tier of the same family; int4 costs it nothing, unlike the 450M) | [🤗 LFM2.5-VL-3B-CoreAI](https://huggingface.co/mlboydaisuke/LFM2.5-VL-3B-CoreAI) | [VLChat ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/VLChat) | LFM Open License v1.0 |
 | 🔧 **Gemma 4 E2B vision (VL)** (image+text) | `vl/` in [🤗 gemma-4-E2B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI) | [CoreAIChat](apps/CoreAIChat) | Gemma |
 | **Unlimited-OCR** (document OCR → markdown: tables→HTML, formulas→LaTeX; zoo's first doc-OCR — **stock runtime, no patch**, flat-latency R-SWA) | [🤗 Unlimited-OCR-CoreAI](https://huggingface.co/mlboydaisuke/Unlimited-OCR-CoreAI) | [ReadDoc ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ReadDoc) | MIT |
 | [**GLM-OCR**](models/glm-ocr/README.md) (document OCR → Markdown; GLM-4.V small **0.9B**, single-pass, tables→Markdown; iPhone + Mac, ~4 s/page) | [🤗 GLM-OCR-CoreAI](https://huggingface.co/mlboydaisuke/GLM-OCR-CoreAI) | [ReadDoc ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ReadDoc) | MIT |
@@ -260,6 +261,7 @@ Third-party apps running zoo models. Built something? Open a
 | **Gemma 4 E2B VL** (image+text, official QAT) | **25.5** | — | **82.4** |
 | **MiniCPM-V 4.6** (vision-language, sub-2B) | **53.4** | — | **224.3** |
 | **LFM2.5-VL-450M** (vision-language, int8lin — image buffer bound; vision encode 33.6 ms/image on iPhone, 18.0 on Mac) | **112.0** | — | **387.2** |
+| **LFM2.5-VL-3B** (vision-language, int8lin text core — Mac-only, AOT past the iOS 2 GiB wall; vision 75.7 ms/image) | — | — | **105.3** |
 | **Qwen3.6-35B-A3B** (MoE, 35B/~3B active, Mac-only) | — | — | **64.9** † |
 | **Qwen3.6-27B** (dense, Mac-only) | — | — | **15.9** |
 | **GLM-4.7-Flash** (MoE + MLA, 30B/~3B active, Mac-only) | — | — | **52.4** † |

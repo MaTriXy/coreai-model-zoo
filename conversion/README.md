@@ -115,7 +115,12 @@ Apple's repo; each recipe names the script it runs.
   projector, and the splice. `--text-core` exports the decoder with no image input: **387.2 tok/s
   M4 Max**, and the only way to benchmark or `coreai_gate.py` this port, because `llm-runner`
   cannot bind the VLM bundle's image buffer. int4 is a no-go here (0/9 suite cases). Host
-  preprocessing is gated in NumPy first (`_smoke/lfm25vl_preprocess.py`). See
+  preprocessing is gated in NumPy first (`_smoke/lfm25vl_preprocess.py`).
+  **`--hf-id LiquidAI/LFM2.5-VL-3B` converts the 3B** with no code change (vision 75.7 ms/image,
+  text core 105.3 tok/s, suite 7/9 at int8 **and** int4 — the opposite of the 450M's int4 cliff);
+  it is Mac-only because its AOT `resources.bin` is 3.13 GiB against the iOS 2 GiB load wall.
+  Two host details are per-checkpoint: `resample` (450M BILINEAR / 3B BICUBIC) and whether the
+  tokenizer prepends BOS (the 3B's does not, and without it the model answers ' F, F, F, F'). See
   [`../models/lfm2.5-vl/README.md`](../models/lfm2.5-vl/README.md) and
   [`../knowledge/lfm2.5-vl-port.md`](../knowledge/lfm2.5-vl-port.md).
 - **Gemma 4 E2B / E4B pipelined fast path (in this dir): `export_gemma4_decode_pipelined.py [int4lin]`** —

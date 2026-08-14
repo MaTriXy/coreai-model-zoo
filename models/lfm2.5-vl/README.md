@@ -1,12 +1,17 @@
-# LFM2.5-VL-450M (vision-language) — Core AI
+# LFM2.5-VL (450M / 3B, vision-language) — Core AI
 
-**The smallest VLM in this catalog by a factor of three.** A Core AI port of
-[`LiquidAI/LFM2.5-VL-450M`](https://huggingface.co/LiquidAI/LFM2.5-VL-450M): image + text → text
-on the [pipelined-engine fast path](../../knowledge/pipelined-engine.md), 658 MB for the pair.
-Every other vision-language model here starts at ~2 GB resident, which is the difference between
-a model an app *is* and a model an app *has*.
+**The smallest VLM in this catalog by a factor of three, and its detail-tier sibling.** Core AI
+ports of [`LiquidAI/LFM2.5-VL-450M`](https://huggingface.co/LiquidAI/LFM2.5-VL-450M) and
+[`-3B`](https://huggingface.co/LiquidAI/LFM2.5-VL-3B): image + text → text on the
+[pipelined-engine fast path](../../knowledge/pipelined-engine.md).
 
-Architecture (`model_type: lfm2_vl`): a **SigLIP2-NaFlex tower** (hidden 768, 12 layers) whose
+**Which one**: the **450M** (658 MB, iPhone-gated at 112 tok/s) is the one that fits *beside* an
+app — every other VLM here starts at ~2 GB resident. The **3B** (3.9 GB, Mac) is the one that
+answers with detail: where the 450M says *"two cats on a pink couch"*, the 3B says *"the cat on
+the left is smaller, with a gray and black striped coat, while the cat on the right is larger
+with a brown and black striped pattern."* One exporter builds both.
+
+Architecture (`model_type: lfm2_vl`), 450M: a **SigLIP2-NaFlex tower** (hidden 768, 12 layers) whose
 patch embedding is a **Linear over pre-flattened 16×16×3 patches** and whose 16×16 position table
 is **bilinearly resized to the actual patch grid**; a 2-layer projector
 (`pixel_unshuffle(2) → linear_1 → gelu → linear_2`, **no LayerNorm**); and the **LFM2 hybrid text
@@ -161,7 +166,41 @@ python _smoke/test_lfm25vl_suite_gate.py --mode int8lin --show-text
 python conversion/coreai_gate.py <text-core bundle> LiquidAI/LFM2.5-VL-450M -n 16
 ```
 
-The 3B sibling shares this exporter (`--hf-id LiquidAI/LFM2.5-VL-3B`) but has **not** been
-converted or gated here: its tower is wider (hidden 1152, 27 layers, MLP intermediate 4304 —
-which forces int8 block 16, the same rule the MiniCPM-V SigLIP export hit) and its decoder is
-30 layers over a 128k vocab. Nothing in this card transfers to it unmeasured.
+## The 3B
+
+Same command with `--hf-id LiquidAI/LFM2.5-VL-3B`, and the model code needed no change: a wider
+tower (hidden 1152, 27 layers) and a 30-layer 128k-vocab decoder come off the config, and
+`vision_block_size` drops int8 to per-block-16 on its own because the tower's 4304-wide MLP is
+not divisible by 32.
+
+| artifact | size | measured (M4 Max) | numerics |
+|---|---:|---|---|
+| **vision fp16** | **815 MB** | **75.7 ms**/image | `image_embeds` cos **0.999995** vs fp32 HF |
+| **decoder int8lin (Mac ship)** | **3.1 GB** | — | suite **7/9**; `logits_last` cos 0.999970 |
+| decoder int4lin | **2.0 GB** | — | suite **7/9** — same as int8 *and* as the fp16 baseline |
+| decoder fp16 (baseline) | 5.2 GB | — | 48/48 on the fixture, cos 0.999999; suite 7/9 |
+| text core int8lin | 3.1 GB | **120.9 prompt / 105.3 decode tok/s** | the Mac speed proxy |
+
+The torch ladder is cos **1.000000** at every seam with **48/48** token-exact greedy, at fp32
+and at fp16, and the NumPy host path is 48/48 too.
+
+**int4 costs the 3B nothing** — 7/9, the same cases as fp16 — which is the opposite of the 450M
+(0/9, fluent drift). Same family, same recipe, opposite verdict: int4 tolerance is a property of
+the model's size, and the only way to know is to read the generations of the one in front of you.
+
+**The 3B ships Mac-only.** Its int8lin AOT `resources.bin` measures **3.13 GiB** and int4lin's
+**2.03 GiB**, against the iOS runtime's 2 GiB (2^31) load wall — the wall itself is a bracket
+measured on earlier ports (0.80 GiB loads, 1.96 GiB loads, 3.92 GiB does not), so int4 at 30 MiB
+over is *expected* to fail rather than *observed* to: the device was disconnected when this was
+written and no iPhone has tried it. The remaining lever is the 524 MB fp16 embedding
+(128k × 2048), tied to the head and so not quantizable in place; past that it is a split graph.
+
+```bash
+python conversion/export_lfm25vl_pipelined.py int8lin --hf-id LiquidAI/LFM2.5-VL-3B
+python conversion/export_lfm25vl_pipelined.py int4lin --hf-id LiquidAI/LFM2.5-VL-3B --skip-vision
+```
+
+Two host details do **not** carry over from the 450M, and both are silent when wrong: the 3B
+declares `resample: 3` (PIL BICUBIC) where the 450M declares 2 (BILINEAR), and the 3B
+tokenizer's post-processor does not prepend `<|startoftext|>` while the chat template starts
+with it — without BOS the 3B answers `" F, F, F, F"`.

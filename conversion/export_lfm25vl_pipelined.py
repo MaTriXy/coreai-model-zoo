@@ -14,7 +14,8 @@
   ``(input_ids [1,1] static, position_ids [1,total] dyn, image_embeds [256,h],
      keyCache/valueCache/convState) -> logits``
 
-  The host rewrites the prompt's ``<image>`` ids (id 396) to EXTENSION ids
+  The host rewrites the prompt's ``<image>`` ids (``config.image_token_id``:
+  396 on the 450M, 124907 on the 3B — read it, do not hardcode) to EXTENSION ids
   ``V + slot``, slot 0..255 in the encoder's row-major token order; in-graph
   ``embedding = ids < V ? embed_tokens[ids] : image_embeds[ids - V]``. With
   zero image embeds and no extension ids the graph IS the LFM2 text decoder,
@@ -34,6 +35,14 @@ rides as a fixed-shape extra state).
 
 Run:  python export_lfm25vl_pipelined.py [fp16|int8lin|int8hu|int4lin] \
           [--hf-id LiquidAI/LFM2.5-VL-450M] [--vision-mode fp16|int8lin]
+
+The 3B is the same command with `--hf-id LiquidAI/LFM2.5-VL-3B`: the modules read
+the checkpoint's config, so 27 tower layers at hidden 1152 and a 30-layer 128k-vocab
+decoder come for free, and `vision_block_size` drops int8 to per-block-16 by itself
+(the 3B tower's 4304-wide MLP is not divisible by 32). What does NOT transfer is the
+HOST: the 450M declares `resample: 2` (PIL BILINEAR) and the 3B `resample: 3`
+(BICUBIC), so read it off `processor_config.json` rather than assuming — see
+`_smoke/lfm25vl_preprocess.py`.
 
 Modes are the LFM2 ship recipe (see export_lfm2_decode_pipelined.py): the
 attention projections and the embedding stay high precision, the MLP and

@@ -60,6 +60,77 @@ notes = [
   "coreai_gate.py PASS 16/16, transcript at gate-lfm2.5-vl-450m-textcore-int8lin.json.",
 ]
 
+["lfm2.5-vl-3b"]
+script = "export_lfm25vl_pipelined.py"
+args = ["int8lin", "--hf-id", "LiquidAI/LFM2.5-VL-3B", "--vision-mode", "fp16"]
+card = "README.md"
+hf_repo = "mlboydaisuke/LFM2.5-VL-3B-CoreAI"
+source_hf_id = "LiquidAI/LFM2.5-VL-3B"
+source_revision = "5a414ead75d45db003906d06fb62bd5b6846cec0"
+bundle = "gpu-pipelined/lfm2_5_vl_3b_decode_int8lin"
+status = "verified"
+overlay = true
+runtime_patches = [
+  "apps/coreai-pipelined-extra-states.patch",
+  "apps/coreai-pipelined-static-inputs.patch",
+]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "HF-id swap only: the wider tower (hidden 1152, 27L) and the 30L/128k decoder come off the",
+  "config, and vision_block_size picks int8 per-block-16 by itself (the tower's MLP is 4304).",
+  "M4 Max: vision 75.7 ms/image; text core 120.9 prefill / 105.3 decode tok/s.",
+  "Gates: fp32 torch ladder cos 1.000000 at every seam + 48/48 (fp16 too, and the NumPy host);",
+  "engine vision cos 0.999995, decoder fp16 48/48 cos 0.999999; 9-case suite 7/9 at int8lin,",
+  "int4lin and fp16 alike -- int4 costs this size nothing, unlike the 450M (0/9).",
+  "Two host details differ from the 450M: resample 3 (BICUBIC) and a tokenizer that does NOT",
+  "prepend <|startoftext|> (without it the model answers ' F, F, F, F').",
+]
+open_questions = [
+  "Mac-only: the int8lin AOT resources.bin is 3.13 GiB and int4lin 2.03 GiB, both past the",
+  "iOS 2 GiB load wall. The remaining lever is the 524MB fp16 embedding, tied to the head and",
+  "so not quantizable in place; after that it is a split graph. No iPhone number exists.",
+  "The baked square grid stretches non-square images, as on the 450M, and no gate sees it.",
+]
+
+["lfm2.5-vl-3b-int4"]
+script = "export_lfm25vl_pipelined.py"
+args = ["int4lin", "--hf-id", "LiquidAI/LFM2.5-VL-3B", "--skip-vision"]
+card = "README.md"
+hf_repo = "mlboydaisuke/LFM2.5-VL-3B-CoreAI"
+source_hf_id = "LiquidAI/LFM2.5-VL-3B"
+source_revision = "5a414ead75d45db003906d06fb62bd5b6846cec0"
+bundle = "gpu-pipelined/lfm2_5_vl_3b_decode_int4lin"
+status = "verified"
+overlay = true
+runtime_patches = [
+  "apps/coreai-pipelined-extra-states.patch",
+  "apps/coreai-pipelined-static-inputs.patch",
+]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "2.0GB and 7/9 on the suite -- identical to int8lin and to the fp16 baseline. Published",
+  "because it is free here, and because it is the variant whose AOT comes closest to the iOS",
+  "2 GiB wall (2.03 GiB, still over).",
+  "Pair it with the fp16 vision tower from the lfm2.5-vl-3b recipe.",
+]
+
+["lfm2.5-vl-3b-textcore"]
+script = "export_lfm25vl_pipelined.py"
+args = ["int8lin", "--hf-id", "LiquidAI/LFM2.5-VL-3B", "--text-core", "--skip-vision"]
+card = "README.md"
+hf_repo = "mlboydaisuke/LFM2.5-VL-3B-CoreAI"
+source_hf_id = "LiquidAI/LFM2.5-VL-3B"
+source_revision = "5a414ead75d45db003906d06fb62bd5b6846cec0"
+bundle = "gpu-pipelined/lfm2_5_vl_3b_decode_int8lin_textcore"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "The same decoder with no image input: a 2.6B LFM2 text bundle, and the only configuration",
+  "llm-benchmark can drive (120.9 prefill / 105.3 decode tok/s on an M4 Max).",
+]
+
 # int4lin is deliberately NOT a recipe entry: a recipe records what produced a PUBLISHED
 # bundle, and int4 must not be published here (0/9 suite cases; the failure mode is fluent
 # drift, not repetition). The measurement and its evidence live in README.md and in

@@ -74,9 +74,13 @@ def main() -> None:
     saved: dict[str, np.ndarray] = {}
     texts: list[str] = []
     case = 0
+    # The checkpoint's own resampler (450M: BILINEAR, 3B: BICUBIC) — the host will use
+    # the same one, so the fixture has to.
+    resample = int(processor.image_processor.resample)
+    print(f"resample {resample} (from processor_config)")
     for url in IMAGES:
         raw = Image.open(requests.get(url, stream=True, timeout=60).raw).convert("RGB")
-        image = raw.resize((args.tile, args.tile), Image.BILINEAR)
+        image = raw.resize((args.tile, args.tile), resample)
         for prompt in PROMPTS:
             conversation = [{"role": "user", "content": [
                 {"type": "image", "image": image},
@@ -113,6 +117,7 @@ def main() -> None:
     saved["_meta_transformers"] = np.array(transformers.__version__)
     saved["_meta_tile"] = np.array(args.tile)
     saved["_meta_cases"] = np.array(case)
+    saved["_meta_resample"] = np.array(resample)
     saved["_meta_texts"] = np.array(texts)
     np.savez(out, **saved)
     print(f"\nwrote {out} ({out.stat().st_size / 1e6:.1f} MB, {case} cases)")
