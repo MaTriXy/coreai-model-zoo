@@ -15,8 +15,8 @@ which hardware (iPhone tier is device-measured; the large models are Mac-only an
 strong that model's parity proof is, because it differs per model.
 Where the shipped configuration could not be recovered from the repository, the recipe says so
 rather than guessing. Model ports are open to everyone — the catalog serves
-community ports from the contributor's own Hugging Face namespace (first:
-[Nanbeige4.2-3B](models/nanbeige4.2-3b/README.md) by [@ukint-vs](https://github.com/ukint-vs)).
+community ports from the contributor's own Hugging Face namespace, credited by name
+([who](#community-ports)).
 Successor to [`CoreML-Models`](https://github.com/john-rocky/CoreML-Models).
 
 **The `from_pretrained` of Core AI** — one line, any zoo model, via
@@ -143,6 +143,19 @@ there carries `status` (does the repository record what produced this bundle) an
 different questions, kept as two fields so neither has to be inferred from prose.
 
 ## Models
+
+### Community ports
+
+Ported by people outside this repo, published under their own Hugging Face namespace, and
+carrying their name on the card, on the row below, and in the release notes:
+
+| Port | Contributor | PR |
+|---|---|---|
+| [**pocket-tts**](models/pocket-tts/README.md) — Kyutai's streaming TTS; the zoo's **first Kyutai model** and **first Mimi conversion**, 7.8× real-time on iPhone 17 Pro Max at 169 MB | [Rahul Rachuri](https://github.com/RahulRachuri) | [#12](https://github.com/john-rocky/coreai-model-zoo/pull/12) |
+| [**Nanbeige4.2-3B**](models/nanbeige4.2-3b/README.md) — looped Llama, 22 physical blocks × 2 passes; the zoo's **first community port** | [Vadim Smirnov](https://github.com/ukint-vs) | [#6](https://github.com/john-rocky/coreai-model-zoo/pull/6) |
+
+Thank you both — each of these arrived gated, and each one found a bug in this repo on the way
+in. [`CONTRIBUTING.md`](CONTRIBUTING.md) is the path to the next row.
 
 | Model | Download (`.aimodel`) | Run in app | License |
 |---|---|---|---|
@@ -352,13 +365,18 @@ itself (authoring, export, compression). These two cover this catalog; install b
 
 ## Contributing
 
-Every model in the table is a conversion recipe anyone could have written — and from now on,
-some are. [Nanbeige4.2-3B](models/nanbeige4.2-3b/README.md)
+Every model in the table is a conversion recipe anyone could have written — and some are, by
+[people who are not me](#community-ports). [Nanbeige4.2-3B](models/nanbeige4.2-3b/README.md)
 ([PR #6](https://github.com/john-rocky/coreai-model-zoo/pull/6), by
 [@ukint-vs](https://github.com/ukint-vs)) is the reference for what a contributed port looks
-like: pinned checkpoint + immutable bundle revision, the overlay/recipe/gates in the PR, the
-bundle published under the **contributor's own HF namespace** (you keep ownership and credit),
-and the maintainer runs the iPhone hardware gate for you if you don't have the device.
+like, and [pocket-tts](models/pocket-tts/README.md)
+([PR #12](https://github.com/john-rocky/coreai-model-zoo/pull/12), by
+[@RahulRachuri](https://github.com/RahulRachuri)) is the reference for how far the gates can be
+taken — an ASR round trip and a 302-sentence sweep, because tensor cosine can pass while the
+audio is unintelligible. The shape of both: pinned checkpoint + immutable bundle revision, the
+overlay/recipe/gates in the PR, the bundle published under the **contributor's own HF
+namespace** (you keep ownership and credit), and the maintainer runs the iPhone hardware gate
+for you if you don't have the device.
 
 - **Port a model** — [`PORTING.md`](PORTING.md) walks the whole path (oracle → export → gates →
   publish); PRs welcome.
