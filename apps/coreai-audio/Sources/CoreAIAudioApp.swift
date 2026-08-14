@@ -38,6 +38,9 @@ struct CoreAIAudioApp: App {
         if ProcessInfo.processInfo.environment["DIALOGUE_SELFTEST"] != nil {
             Task.detached { await runDialogueSelfTest() }
         }
+        if ProcessInfo.processInfo.environment["ENCBENCH_SELFTEST"] != nil {
+            Task.detached { await runEncoderBenchSelfTest() }
+        }
     }
 
     var body: some Scene {
