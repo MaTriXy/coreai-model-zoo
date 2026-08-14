@@ -1,0 +1,45 @@
+# Recipe for lfm2.5-2.6b — the configuration that produced each bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["lfm2.5-2.6b"]
+script = "export_lfm2_decode_pipelined.py"
+args = ["int8hu", "--head-sym"]
+card = "README.md"
+hf_repo = "mlboydaisuke/LFM2.5-2.6B-CoreAI"
+source_hf_id = "LiquidAI/LFM2.5-2.6B"
+source_revision = "ab00687315bc1298e9d54e9c4b611dde9867ccc2"
+bundle = "gpu-pipelined/lfm2_5_2_6b_decode_int8hu_block32_sym"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch", "apps/coreai-shared-product.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "Same conv+attention hybrid as lfm2.5-1.2b, scaled to 30 layers (22 conv / 8 attn). Loop-free decode.",
+  "Oracle gate 16/16 token-exact. M4 Max 139.5 prefill / 116.7 decode tok/s.",
+  "Reasoning model: the chat template opens <think>; short max-tokens ends mid-thought.",
+  "int8hu beats int8lin by 8.6% decode -- the 128k x 2048 head is 524MB of fp16 reads per token.",
+]
+open_questions = [
+  "No iPhone measurement. int4lin is 2.0GB of which 524MB is the still-fp16 embedding.",
+]
+
+["lfm2.5-2.6b-int4"]
+script = "export_lfm2_decode_pipelined.py"
+args = ["int4lin"]
+card = "README.md"
+hf_repo = "mlboydaisuke/LFM2.5-2.6B-CoreAI"
+source_hf_id = "LiquidAI/LFM2.5-2.6B"
+source_revision = "ab00687315bc1298e9d54e9c4b611dde9867ccc2"
+bundle = "gpu-pipelined/lfm2_5_2_6b_decode_int4lin"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch", "apps/coreai-shared-product.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+  "2.0GB, M4 Max 170.6 prefill / 139.2 decode tok/s, oracle gate 16/16.",
+  "No int4 cliff observed across four long greedy generations read in full -- unusual for this family.",
+]
+open_questions = [
+  "Four prompts is not a quality benchmark. 'No cliff observed', not 'int4 is free'.",
+]

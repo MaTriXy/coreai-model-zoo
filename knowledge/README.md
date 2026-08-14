@@ -148,6 +148,10 @@ For the long-form version of the same material, read
   foundation model (stateless graph + host RevIN DSP).
 - [`esam3-port.md`](esam3-port.md) — EfficientSAM3: a **dropped** port (device-verified but redundant
   vs the official SAM 3) — kept for what transferred.
+- [`lfm2.5-2.6b-port.md`](lfm2.5-2.6b-port.md) — LFM2.5-2.6B, where the port was a config change and
+  the work was surviving a **transformers-v5-era checkpoint**: a RoPE key that moved, a tokenizer
+  class that does not exist yet, and a 4.x modeling file that silently ignores a config flag and
+  would certify a wrong oracle as PASS.
 
 ## Image generation & editing (diffusion)
 - [`zimage-port.md`](zimage-port.md) — Z-Image-Turbo, a 6B Single-Stream DiT text-to-image — and why

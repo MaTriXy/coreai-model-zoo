@@ -1,5 +1,5 @@
 {
- "generated": "2026-07-28",
+ "generated": "2026-08-14",
  "how_to_use": {
   "list": "python3 conversion/zoo_convert.py list",
   "show": "python3 conversion/zoo_convert.py show <recipe>",
@@ -749,6 +749,41 @@
      }
     }
    ]
+  },
+  {
+   "family": "lfm2.5-2.6b",
+   "card": "models/lfm2.5-2.6b/README.md",
+   "recipes": [
+    {
+     "name": "lfm2.5-2.6b",
+     "status": "verified",
+     "source_model": "LiquidAI/LFM2.5-1.2B-Instruct",
+     "source_model_from": "exporter",
+     "hf_repo": "mlboydaisuke/LFM2.5-2.6B-CoreAI",
+     "bundle": "gpu-pipelined/lfm2_5_2_6b_decode_int8hu_block32_sym",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run lfm2.5-2.6b",
+     "gate_transcript": null,
+     "open_questions": [
+      "No iPhone measurement. int4lin is 2.0GB of which 524MB is the still-fp16 embedding."
+     ]
+    },
+    {
+     "name": "lfm2.5-2.6b-int4",
+     "status": "verified",
+     "source_model": "LiquidAI/LFM2.5-1.2B-Instruct",
+     "source_model_from": "exporter",
+     "hf_repo": "mlboydaisuke/LFM2.5-2.6B-CoreAI",
+     "bundle": "gpu-pipelined/lfm2_5_2_6b_decode_int4lin",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run lfm2.5-2.6b-int4",
+     "gate_transcript": null,
+     "open_questions": [
+      "Four prompts is not a quality benchmark. 'No cliff observed', not 'int4 is free'."
+     ]
+    }
+   ],
+   "repos": []
   },
   {
    "family": "lfm2.5-8b-a1b-moe",

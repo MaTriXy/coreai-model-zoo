@@ -21,7 +21,7 @@ plus the pipelined-engine extra-states patch on the Swift side to RUN the
 bundle (the engine carries the conv state as a fixed-shape extra state).
 
 Run:  python export_lfm2_decode_pipelined.py [fp16|int8lin|int8hu|int4lin] \
-          [--hf-id LiquidAI/LFM2.5-1.2B-Instruct] [--out-dir exports]
+          [--hf-id LiquidAI/LFM2.5-1.2B-Instruct] [--out-dir DIR]
 
 Modes: fp16 - baseline; int8lin - per-block-32 linear int8 (the qwen3.5 ship
 recipe: scale-multiply dequant, no LUT — 256-entry LUT gathers are slow on the
@@ -43,6 +43,7 @@ from pathlib import Path
 
 import torch
 from _bundle import head_quant_spec, write_bundle_metadata
+from _paths import exports_dir
 
 from coreai_models.export._constants import TRACE_KV_CACHE_SEQ_LEN
 from coreai_models.export.macos import _EXTERNALIZE_SPECS, export_to_coreai
@@ -100,12 +101,59 @@ def linear_quant_config(dtype: str = "int8", rescue_int8_regex: str | None = Non
     }
 
 
+def save_tokenizer(hf_id: str, dest: Path) -> None:
+    """Write the source tokenizer into the bundle, transformers version regardless.
+
+    The transformers-v5-era LFM2.5 checkpoints (2.6B, VL-3B, VL-450M) declare
+    `tokenizer_class: "TokenizersBackend"`, which a 4.x `AutoTokenizer` refuses
+    to resolve -- it raises after the .aimodel is already written, so the bundle
+    ends up one directory short of usable. The tokenizer itself is the ordinary
+    `tokenizer.json` sitting next to that config, so load it directly and
+    re-declare the class. Those checkpoints also keep the chat template in its
+    own `chat_template.jinja`; it has to be carried across by hand or the bundle
+    ships without one (`zoo_verify.py` fails the published repo for exactly that).
+    """
+    from transformers import AutoTokenizer
+
+    try:
+        AutoTokenizer.from_pretrained(hf_id).save_pretrained(dest)
+        return
+    except ValueError as exc:
+        if "TokenizersBackend" not in str(exc):
+            raise
+        print(f"  AutoTokenizer: {exc}\n  -> loading tokenizer.json directly")
+
+    import json
+
+    from huggingface_hub import snapshot_download
+    from transformers import PreTrainedTokenizerFast
+
+    snap = Path(snapshot_download(hf_id, allow_patterns=[
+        "tokenizer*", "chat_template.jinja", "special_tokens_map.json", "added_tokens.json",
+    ]))
+    raw = json.loads((snap / "tokenizer_config.json").read_text())
+    carried = ("bos_token", "eos_token", "pad_token", "unk_token", "model_max_length",
+               "clean_up_tokenization_spaces")
+    tok = PreTrainedTokenizerFast(
+        tokenizer_file=str(snap / "tokenizer.json"),
+        **{k: raw[k] for k in carried if k in raw},
+    )
+    template = snap / "chat_template.jinja"
+    if template.exists():
+        tok.chat_template = template.read_text()
+    else:
+        print("  WARNING: no chat_template.jinja in the source repo")
+    tok.save_pretrained(dest)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("mode", nargs="?", default="int8lin",
                     choices=["fp16", "int8lin", "int8hu", "int4lin", "int4lin8"])
     ap.add_argument("--hf-id", default="LiquidAI/LFM2.5-1.2B-Instruct")
-    ap.add_argument("--out-dir", default="exports")
+    # Default through _paths, not a bare relative "exports": run from conversion/
+    # the old default dropped multi-GB bundles inside the repo working tree.
+    ap.add_argument("--out-dir", default=None)
     ap.add_argument("--max-ctx", type=int, default=4096)
     ap.add_argument("--head-quant", default="block32",
                     choices=["block32", "block16", "block8", "perchan"],
@@ -200,7 +248,7 @@ def main() -> None:
     print("optimizing ...")
     prog.optimize()
 
-    out_dir = Path(args.out_dir) / name
+    out_dir = (Path(args.out_dir) if args.out_dir else exports_dir()) / name
     if out_dir.exists():
         shutil.rmtree(out_dir)
     out_dir.mkdir(parents=True)
@@ -212,9 +260,7 @@ def main() -> None:
     prog.save_asset(aimodel, rt.AIModelAssetMetadata())
 
     write_bundle_metadata(out_dir, name, args.hf_id, cfg.vocab_size, args.max_ctx)
-    from transformers import AutoTokenizer
-
-    AutoTokenizer.from_pretrained(args.hf_id).save_pretrained(out_dir / "tokenizer")
+    save_tokenizer(args.hf_id, out_dir / "tokenizer")
     print(f"bundle ready: {out_dir}")
     print(f"run: COREAI_CHUNK_THRESHOLD=1 llm-benchmark --model {out_dir} -p 128 -g 256 -n 3")
 
