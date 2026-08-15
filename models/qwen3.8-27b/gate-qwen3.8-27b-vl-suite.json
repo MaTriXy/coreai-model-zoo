@@ -1,0 +1,28 @@
+{
+  "gate": "vision-path suite (image -> NumPy preprocess -> vision fp16 .aimodel -> embed splice + host mRoPE -> embeds decoder int8hu pf32 .aimodelc h16c, python runtime, greedy)",
+  "oracle": "HF bf16 eager (transformers 5.12.1), 6 cases (3 COCO images x 2 prompts, one text-before-image), 512x512 tile, 24 greedy tokens",
+  "fixture": "_smoke/qwen38vl_suite_512.npz (qwen38vl_suite_ref.py)",
+  "date": "2026-08-15",
+  "machine": "M4 Max 128GB, macOS 27 beta (26A5378n)",
+  "results": {
+    "cases_token_exact": "5/6",
+    "tokens_matched": "140/144 (97.2%)",
+    "divergence": "case 2 @ token 20, oracle top-2 margin 0.055 (< 0.1 knife-edge rule) \u2014 greedy near-tie, not a confident flip; both continuations are coherent scene-reasoning text",
+    "eager_fp16_mixed_gate": "32/32 exact (case 0 image-first + case 3 text-BEFORE-image, 16 teacher-forced steps each, cos >= 0.9906)",
+    "tower_gate_torch_fp32": "cos 1.000000 min-row 1.000000 vs HF fp32 tower, all 3 images",
+    "tower_gate_aimodel_fp16": "cos >= 0.999996 min-row >= 0.999886, all 3 images",
+    "preprocess_gate": "NumPy host path == HF processor pixel_values, max|d| 5.9e-8, 6/6 cases",
+    "host_mrope_contract": "planes + rope_delta == oracle-captured positions, 6/6 cases"
+  },
+  "measured": {
+    "vision_tower_ms_per_image": 111,
+    "prefill_tok_s": 80.2,
+    "decode_tok_s": 14.9,
+    "note": "python-runtime driver on the AOT h16c .aimodelc; prefill = S=32 chunks + S=1 remainder"
+  },
+  "runtime_notes": [
+    "JIT-loading the multifunction .aimodel in the python runtime asserts in MPSGraph ANERegionFormationPass (operand-dominance, prefill fn) \u2014 AOT h16c is the python-driver path:",
+    "xcrun coreai-build compile <bundle>.aimodel --platform macOS --preferred-compute gpu --expect-frequent-reshapes --architecture h16c",
+    "llm-runner/llm-benchmark cannot drive this bundle (inputs_embeds + 3 rope planes are not engine inputs); the text bundle covers engine benches"
+  ]
+}

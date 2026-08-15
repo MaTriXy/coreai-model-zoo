@@ -32,8 +32,8 @@ use), so `uv run conversion/export_da3.py --variant small --dtype float16 --res 
 whole story for those ports. The rest import re-authored model code and need the overlay
 environment — `zoo_convert.py doctor` checks it.
 
-Unlike Apple's repo, several families share one exporter (Qwen3.5's drives Ornith and
-Qwen3.6-27B too), so the export scripts stay in [`../conversion/`](../conversion/) and
+Unlike Apple's repo, several families share one exporter (Qwen3.5's drives Ornith,
+Qwen3.6-27B and Qwen3.8-27B too), so the export scripts stay in [`../conversion/`](../conversion/) and
 `recipe.toml` names the one to run. A recipe marked `status = "unverified"` will not run
 without `--force`: the repo does not record which configuration produced the published bundle,
 and a wrong recipe is worse than a missing one.

@@ -1818,6 +1818,54 @@
    ]
   },
   {
+   "family": "qwen3.8-27b",
+   "card": "models/qwen3.8-27b/README.md",
+   "recipes": [
+    {
+     "name": "qwen3.8-27b",
+     "status": "verified",
+     "source_model": "Qwen/Qwen3.8-27B",
+     "source_model_from": "recipe",
+     "hf_repo": "mlboydaisuke/Qwen3.8-27B-CoreAI",
+     "bundle": "gpu-pipelined/qwen3_8_27b_decode_int8hu_block32_sym",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run qwen3.8-27b",
+     "gate_transcript": null,
+     "open_questions": []
+    },
+    {
+     "name": "qwen3.8-27b-vl",
+     "status": "verified",
+     "source_model": "Qwen/Qwen3.8-27B",
+     "source_model_from": "exporter",
+     "hf_repo": "mlboydaisuke/Qwen3.8-27B-CoreAI",
+     "bundle": "gpu-pipelined/qwen3_8_27b_vl_decode_int8hu_block32_sym_pf32",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run qwen3.8-27b-vl",
+     "gate_transcript": null,
+     "open_questions": [
+      "The baked 512x512 square grid stretches non-square images (same trade as LFM2.5-VL);",
+      "the fixed-grid oracle cannot see that cost.",
+      "Decode via the VLM bundle measures 14.9 tok/s vs 15.7 on the text bundle \u2014 python-",
+      "driver step overhead, not graph cost; an engine-side host would close it."
+     ]
+    },
+    {
+     "name": "qwen3.8-27b-vision",
+     "status": "verified",
+     "source_model": "Qwen/Qwen3.8-27B",
+     "source_model_from": "exporter",
+     "hf_repo": "mlboydaisuke/Qwen3.8-27B-CoreAI",
+     "bundle": "gpu-pipelined/qwen3_8_27b_vision_fp16",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run qwen3.8-27b-vision",
+     "gate_transcript": null,
+     "open_questions": []
+    }
+   ],
+   "repos": []
+  },
+  {
    "family": "rf-detr",
    "card": "models/rf-detr/README.md",
    "recipes": [

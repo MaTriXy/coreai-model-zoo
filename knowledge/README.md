@@ -171,6 +171,16 @@ For the long-form version of the same material, read
   the work was surviving a **transformers-v5-era checkpoint**: a RoPE key that moved, a tokenizer
   class that does not exist yet, and a 4.x modeling file that silently ignores a config flag and
   would certify a wrong oracle as PASS.
+- [`qwen3.8-27b-port.md`](qwen3.8-27b-port.md) — Qwen3.8-27B, a **generation bump that was a
+  verified weight swap** (config + weight map byte-identical to 3.6-27B), and what a
+  **release-day download** actually costs: HF CDN at ~0.15 MB/s per connection with a ~2.7 MiB/s
+  per-IP ceiling, XET stalling live, and the fix — sha256-verified ModelScope through aria2c at
+  ~20 MB/s, seeded into the hub cache by LFS oid. Phase 2 adds the **vision path** and four
+  durable lessons: a bf16 full-model oracle is not a valid tower target (gate vs an fp32 tower
+  ref); the chunked GDN scan overflows past S≈300 even in fp32 under real weak decays (chunked
+  prefill is mandatory semantics); multifunction bundles can assert in MPSGraph's ANE region
+  pass under JIT (AOT h16c is the python-driver path); capture the oracle's mRoPE positions with
+  a hook instead of re-deriving them.
 
 ## Image generation & editing (diffusion)
 - [`zimage-port.md`](zimage-port.md) — Z-Image-Turbo, a 6B Single-Stream DiT text-to-image — and why

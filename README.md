@@ -164,6 +164,7 @@ in. [`CONTRIBUTING.md`](CONTRIBUTING.md) is the path to the next row.
 | [**Qwen3.5-2B**](models/qwen3.5/README.md) | [🤗 qwen3.5-2B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-2B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Apache-2.0 |
 | [**Qwen3.6-35B-A3B**](models/qwen3.6/README.md) (MoE, Mac-only) | [🤗 Qwen3.6-35B-A3B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-35B-A3B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Apache-2.0 |
 | [**Qwen3.6-27B**](models/qwen3.6-27b/README.md) (dense, Mac-only) | [🤗 Qwen3.6-27B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.6-27B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Apache-2.0 |
+| [**Qwen3.8-27B**](models/qwen3.8-27b/README.md) (dense **VLM**, Mac-only — the Qwen3.8 generation's only open compact model, text ported on release day + full vision path: fp16 ViT tower, embeddings-input mRoPE decoder, S=32 chunked prefill at 80 tok/s) | [🤗 Qwen3.8-27B-CoreAI](https://huggingface.co/mlboydaisuke/Qwen3.8-27B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Apache-2.0 |
 | [**Ornith-1.0-9B**](models/ornith-1.0-9b/README.md) (zoo's first **agentic-coding** model — self-scaffolding coder, Qwen3.5 arch, DeepReinforce; Mac-only, 48 tok/s int8 / 59 int4) | [🤗 Ornith-1.0-9B-CoreAI](https://huggingface.co/mlboydaisuke/Ornith-1.0-9B-CoreAI) | [CoreAIChatMac](apps/CoreAIChatMac) | MIT |
 | [**GLM-4.7-Flash**](models/glm-4.7-flash/README.md) (MoE + MLA, Mac-only — zoo's first MLA) | [🤗 GLM-4.7-Flash-CoreAI](https://huggingface.co/mlboydaisuke/GLM-4.7-Flash-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | MIT |
 | 🔧 **Gemma 4 E2B** (text, incl. official-QAT int4) | [🤗 gemma-4-E2B-CoreAI](https://huggingface.co/mlboydaisuke/gemma-4-E2B-CoreAI) | [ChatDemo ↗](https://github.com/john-rocky/coreai-kit/tree/main/Examples/ChatDemo) | Gemma |
@@ -267,6 +268,7 @@ Third-party apps running zoo models. Built something? Open a
 | **North-Micro-Vision** (vision-language 2.4B, int8lin — image bound; vision 83.4 ms/image on Mac) | **18.2** | — | **118.6** |
 | **Qwen3.6-35B-A3B** (MoE, 35B/~3B active, Mac-only) | — | — | **64.9** † |
 | **Qwen3.6-27B** (dense, Mac-only) | — | — | **15.9** |
+| **Qwen3.8-27B** (dense VLM, Mac-only; vision 111 ms/image, VLM prefill 80.2 tok/s via pf32) | — | — | **15.7** |
 | **GLM-4.7-Flash** (MoE + MLA, 30B/~3B active, Mac-only) | — | — | **52.4** † |
 | **Gemma 4 12B** (dense, Mac-only) | — | — | **23** int8 / **33** int4 ‡ |
 | **Gemma 4 31B** (dense, Mac-only) | — | — | **17.2** int4 ‡ |

@@ -15,6 +15,7 @@ weights/
 # Oracle reference dumps — regenerate with the _smoke/*_ref.py that wrote them
 _smoke/*.npz
 _smoke/*.npy
+_smoke/qwen38vl_images/
 # Swift / Xcode
 .build/
 DerivedData/

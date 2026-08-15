@@ -1,0 +1,74 @@
+# Recipe for qwen3.8-27b — the configuration that produced each published bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["qwen3.8-27b"]
+script = "export_qwen3_5_decode_pipelined.py"
+args = ["int8hu", "--head-sym", "--hf-id", "Qwen/Qwen3.8-27B"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Qwen3.8-27B-CoreAI"
+source_hf_id = "Qwen/Qwen3.8-27B"
+bundle = "gpu-pipelined/qwen3_8_27b_decode_int8hu_block32_sym"
+status = "verified"
+overlay = true
+runtime_patches = ["apps/coreai-pipelined-extra-states.patch"]
+runtime_env = { COREAI_CHUNK_THRESHOLD = "1" }
+notes = [
+    "Dense 27B on the Qwen3.5 graph; Mac-only. Text decoder of the Qwen3.8 VLM checkpoint.",
+    "Config + text weight map byte-identical to Qwen3.6-27B — same overlay, new weights.",
+]
+
+["qwen3.8-27b-vl"]
+script = "export_qwen38vl_pipelined.py"
+args = ["int8hu"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Qwen3.8-27B-CoreAI"
+source_hf_id = "Qwen/Qwen3.8-27B"
+source_revision = "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0"
+bundle = "gpu-pipelined/qwen3_8_27b_vl_decode_int8hu_block32_sym_pf32"
+status = "verified"
+overlay = true
+notes = [
+  "One run emits BOTH vision-path bundles: the fp16 tower (0.9 GB) and this int8hu",
+  "EMBEDDINGS-INPUT VLM decoder (28 GB, multifunction: 'main' S=1 decode + 'prefill' S=32",
+  "chunked GDN scan) + embed_tokens.safetensors (2.5 GB fp16, the host-side gather table).",
+  "NOT engine-drivable: inputs are inputs_embeds + 3 interleaved-mRoPE position planes;",
+  "the reference driver is _smoke/test_qwen38vl_suite_gate.py (python runtime), and the",
+  "python runtime needs the AOT h16c compile — JIT specialization asserts in MPSGraph",
+  "ANERegionFormationPass on the prefill function (operand dominance, macOS 27 beta):",
+  "xcrun coreai-build compile <bundle>.aimodel --platform macOS --preferred-compute gpu",
+  "  --expect-frequent-reshapes --architecture h16c",
+  "M4 Max measured (AOT, python driver): tower 111 ms/image; prefill 80.2 tok/s (5x the",
+  "S=1 text bundle); decode 14.9 tok/s.",
+  "Gates: tower fp32 cos 1.000000 vs HF-fp32 tower (bf16 full-model oracle is NOT a valid",
+  "tower target); NumPy preprocess byte-equal to the HF processor; eager fp16 mixed",
+  "text+image 32/32 token-exact; full-chain int8hu suite 5/6 cases token-exact 140/144,",
+  "the miss a 0.055-margin knife-edge tie. Transcript: gate-qwen3.8-27b-vl-suite.json.",
+  "Chunk size 32 is a cliff edge, not a tuning knob: S=64 NaNs in fp16 in-graph, and the",
+  "chunk scan overflows even in fp32 at S~300 under real (weak) decays — never one-shot",
+  "a long prompt through the chunked GDN path.",
+]
+open_questions = [
+  "The baked 512x512 square grid stretches non-square images (same trade as LFM2.5-VL);",
+  "the fixed-grid oracle cannot see that cost.",
+  "Decode via the VLM bundle measures 14.9 tok/s vs 15.7 on the text bundle — python-",
+  "driver step overhead, not graph cost; an engine-side host would close it.",
+]
+
+["qwen3.8-27b-vision"]
+script = "export_qwen38vl_pipelined.py"
+args = ["fp16", "--skip-decoder"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Qwen3.8-27B-CoreAI"
+source_hf_id = "Qwen/Qwen3.8-27B"
+source_revision = "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0"
+bundle = "gpu-pipelined/qwen3_8_27b_vision_fp16"
+status = "verified"
+overlay = true
+notes = [
+  "The 458M ViT tower alone (patches [1024,1536] -> image_embeds [256,5120], baked 512x512",
+  "grid, block-major patch order, NO deepstack). Runs one shot per image as a plain",
+  ".aimodel; feed the rows to the qwen3.8-27b-vl decoder. 111 ms/image on M4 Max.",
+  "Host preprocessing spec (NumPy, gated byte-equal vs the HF processor):",
+  "_smoke/qwen38vl_preprocess.py.",
+]

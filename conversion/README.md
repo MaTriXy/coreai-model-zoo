@@ -235,6 +235,30 @@ Apple's repo; each recipe names the script it runs.
   confident oracle disagreement is an fp16-identical bf16 artifact). Mac-only (28 GB > iPhone
   jetsam). No MoE files — reuses `models/macos/qwen3_5.py` directly. See
   [`../models/qwen3.6-27b/README.md`](../models/qwen3.6-27b/README.md).
+- **Qwen3.8-27B pipelined — the same script, next generation: `export_qwen3_5_decode_pipelined.py int8hu --head-sym --hf-id Qwen/Qwen3.8-27B`** —
+  the Qwen3.8 flagship generation's only open compact model (dense 27B VLM checkpoint; this
+  is its text decoder), architecturally **byte-identical to Qwen3.6-27B** (same config, same
+  851-key text weight map) — **zero new export code**, ported on release day. `int8hu
+  --head-sym` = **28 GB bundle, 15.7 tok/s decode / 16.2 prefill on M4 Max** (bandwidth-bound
+  dense 27B, matches the 3.6 within noise). Gate: fp16 control **16/16 exact** vs the bf16
+  oracle (cleaner than 3.6 — no bf16 artifact), int8hu 15/16 with zero confident flips (the
+  miss is a 0.061-margin tie). `mtp.*` deliberately skipped (GDN-hybrid spec-decode caps at
+  ~1.2–1.3× so the MTP head isn't worth a graph). Release-day HF CDN crawl routed via
+  sha256-verified ModelScope — see
+  [`../knowledge/qwen3.8-27b-port.md`](../knowledge/qwen3.8-27b-port.md) and
+  [`../models/qwen3.8-27b/README.md`](../models/qwen3.8-27b/README.md).
+- **Qwen3.8-27B VISION path — `export_qwen38vl_pipelined.py int8hu`** — the qwen3.5 family's
+  first vision authoring (`models/macos/qwen3_5_vision.py`, no deepstack): one run emits the
+  **fp16 ViT tower** (0.9 GB, `patches [1024,1536] → image_embeds [256,5120]` at a baked
+  512×512 grid) and the **embeddings-input VLM decoder** (28 GB int8hu, multifunction "main"
+  S=1 + "prefill" S=32 chunked GDN — **80.2 prefill tok/s vs 16.2** for the S=1 text bundle)
+  plus the host-side `embed_tokens.safetensors`. Interleaved mRoPE from three host-fed
+  position planes (host contract: `_smoke/qwen38vl_host.py`, asserted vs oracle-captured
+  positions). Not engine-drivable; the python driver needs the AOT h16c compile (JIT asserts
+  in MPSGraph's ANE region pass). Gates: tower **cos 1.000000 vs an fp32 tower reference**
+  (a bf16 full-model oracle is NOT a valid tower target), eager fp16 mixed text+image
+  **32/32**, full-chain int8hu suite **5/6 token-exact** (140/144; the miss a 0.055-margin
+  tie).
 - **Ornith-1.0-9B (agentic coding) pipelined — reuse the qwen3.5 script: `export_qwen3_5_decode_pipelined.py int8hu --head-sym --hf-id deepreinforce-ai/Ornith-1.0-9B --max-ctx 8192`** —
   DeepReinforce's self-scaffolding agentic coder is a **stock Qwen3.5 hybrid decoder**
   (`model_type qwen3_5`, 32 layers, GVA 32v/16k, GQA 16/4 hd256, untied 248320 head at the

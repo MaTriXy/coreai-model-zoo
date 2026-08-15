@@ -79,7 +79,10 @@ ALIASES = {"ornith": "qwen3.5", "lfm2_moe": "lfm2_moe", "a1b": "lfm2_moe",
            "vl_450m": "lfm2_5_vl", "vl-450m": "lfm2_5_vl", "vl_3b": "lfm2_5_vl",
            "vl-3b": "lfm2_5_vl",
            "35b_a3b": "qwen3_6_moe", "35b-a3b": "qwen3_6_moe", "a3b": "qwen3_6_moe",
-           "qwen3_6": "qwen3.5", "qwen3.6": "qwen3.5"}
+           "qwen3_6": "qwen3.5", "qwen3.6": "qwen3.5",
+           # Qwen3.8-27B: text_config byte-identical to Qwen3.6-27B (same 851-key
+           # text weight map); dense, same overlay.
+           "qwen3_8": "qwen3.5", "qwen3.8": "qwen3.5"}
 
 
 def resolve_python(flag: str | None) -> str:

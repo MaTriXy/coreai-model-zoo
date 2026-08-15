@@ -1,0 +1,99 @@
+{
+  "result": "PASS",
+  "arch": "qwen3.5",
+  "bundle": "qwen3_8_27b_decode_int8hu_block32_sym",
+  "artifact": null,
+  "source_model": {
+    "hf_id": "Qwen/Qwen3.8-27B",
+    "revision": null,
+    "weights_pinned": false,
+    "note": "the oracle loads the source repo's default branch; the recipe's revision pins the export, not this comparison"
+  },
+  "protocol": {
+    "prompt": "The alphabet begins A, B, C, D, E, F,",
+    "max_new_tokens": 16,
+    "greedy": true,
+    "oracle_dtype": "fp16",
+    "engine_variant": "coreai-pipelined",
+    "warmup": "off",
+    "env": {
+      "COREAI_CHUNK_THRESHOLD": "1"
+    },
+    "tie_rule": "a first divergence passes only where the oracle's top-2 margin < 0.1"
+  },
+  "input_ids": [
+    760,
+    26887,
+    11690,
+    357,
+    11,
+    417,
+    11,
+    351,
+    11,
+    414,
+    11,
+    458,
+    11,
+    426,
+    11
+  ],
+  "oracle": {
+    "gen_ids": [
+      469,
+      11,
+      462,
+      11,
+      353,
+      11,
+      604,
+      11,
+      710,
+      11,
+      436,
+      11,
+      380,
+      11,
+      443,
+      11
+    ],
+    "gen_text": " G, H, I, J, K, L, M, N,",
+    "top2_margins": [
+      0.8295259475708008,
+      0.8205196261405945,
+      0.8667735457420349,
+      0.9400555491447449,
+      0.9569351077079773,
+      0.9624402523040771,
+      0.9655447006225586,
+      0.9623875617980957,
+      0.9733267426490784,
+      0.9713045358657837,
+      0.9766214489936829,
+      0.9759314656257629,
+      0.980746865272522,
+      0.928969144821167,
+      0.9492902159690857,
+      0.9840866327285767
+    ]
+  },
+  "engine": {
+    "gen_text": " G, H, I, J, K, L, M, N,"
+  },
+  "match": {
+    "exact_prefix": 16,
+    "of": 16,
+    "first_divergence": null
+  },
+  "schema": "coreai-gate-transcript/1",
+  "generated_at": "2026-08-14T20:10:09+00:00",
+  "environment": {
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+    "python": "3.14.6",
+    "runner": "/Users/majimadaisuke/code/coreai/coreai-models/.build/release/llm-runner"
+  },
+  "recheck": {
+    "engine_side_only": "Download the bundle at the pinned revision, then feed the recorded input_ids to llm-runner with the protocol above (greedy, warmup off, coreai-pipelined, COREAI_CHUNK_THRESHOLD=1). The output must equal engine.gen_text. No oracle, no fp32 weights, no GPU beyond the one running the bundle.",
+    "full_gate": "python3 conversion/coreai_gate.py <bundle> Qwen/Qwen3.8-27B --arch qwen3.5 --prompt 'The alphabet begins A, B, C, D, E, F,' -n 16"
+  }
+}
