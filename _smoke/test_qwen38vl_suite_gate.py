@@ -64,8 +64,13 @@ async def main() -> int:
                          "prefill graph under default options)")
     ap.add_argument("--decoder-asset", default=None,
                     help="explicit decoder asset path (e.g. an AOT .aimodelc)")
+    ap.add_argument("--pf", type=int, default=None,
+                    help="prefill chunk size (default: module PF)")
     args = ap.parse_args()
 
+    global PF
+    if args.pf:
+        PF = args.pf
     root = exports_dir()
     vis_dir = Path(args.vision) if args.vision else root / "qwen3_8_27b_vision_fp16"
     dec_dir = (Path(args.decoder) if args.decoder

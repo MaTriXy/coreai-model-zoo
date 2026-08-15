@@ -25,12 +25,12 @@ card = "README.md"
 hf_repo = "mlboydaisuke/Qwen3.8-27B-CoreAI"
 source_hf_id = "Qwen/Qwen3.8-27B"
 source_revision = "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0"
-bundle = "gpu-pipelined/qwen3_8_27b_vl_decode_int8hu_block32_sym_pf32"
+bundle = "gpu-pipelined/qwen3_8_27b_vl_decode_int8hu_block32_sym_pf16"
 status = "verified"
 overlay = true
 notes = [
   "One run emits BOTH vision-path bundles: the fp16 tower (0.9 GB) and this int8hu",
-  "EMBEDDINGS-INPUT VLM decoder (28 GB, multifunction: 'main' S=1 decode + 'prefill' S=32",
+  "EMBEDDINGS-INPUT VLM decoder (28 GB, multifunction: 'main' S=1 decode + 'prefill' S=16",
   "chunked GDN scan) + embed_tokens.safetensors (2.5 GB fp16, the host-side gather table).",
   "NOT engine-drivable: inputs are inputs_embeds + 3 interleaved-mRoPE position planes;",
   "the reference driver is _smoke/test_qwen38vl_suite_gate.py (python runtime), and the",
@@ -38,20 +38,22 @@ notes = [
   "ANERegionFormationPass on the prefill function (operand dominance, macOS 27 beta):",
   "xcrun coreai-build compile <bundle>.aimodel --platform macOS --preferred-compute gpu",
   "  --expect-frequent-reshapes --architecture h16c",
-  "M4 Max measured (AOT, python driver): tower 111 ms/image; prefill 80.2 tok/s (5x the",
-  "S=1 text bundle); decode 14.9 tok/s.",
+  "M4 Max measured (AOT, python driver): tower 111 ms/image; prefill 86.0 tok/s (5.3x the",
+  "S=1 text bundle); decode 15.2 tok/s.",
   "Gates: tower fp32 cos 1.000000 vs HF-fp32 tower (bf16 full-model oracle is NOT a valid",
   "tower target); NumPy preprocess byte-equal to the HF processor; eager fp16 mixed",
   "text+image 32/32 token-exact; full-chain int8hu suite 5/6 cases token-exact 140/144,",
   "the miss a 0.055-margin knife-edge tie. Transcript: gate-qwen3.8-27b-vl-suite.json.",
-  "Chunk size 32 is a cliff edge, not a tuning knob: S=64 NaNs in fp16 in-graph, and the",
-  "chunk scan overflows even in fp32 at S~300 under real (weak) decays — never one-shot",
-  "a long prompt through the chunked GDN path.",
+  "Chunk size 16 is a safety bound: the fp16 doubling-inverse's worst-case intermediate",
+  "is ~6e3 at S=16 vs ~3e8 at S=32. An S=32 build PASSED the 6-case oracle suite and then",
+  "collapsed to '!' spam on the next two real photos (content-dependent weak-decay spans;",
+  "one failed only through the app's CGContext resize). Regression gate for the class:",
+  "_smoke/test_qwen38vl_chunk_consistency.py (chunked vs S=1 greedy tokens, agree 1.00).",
 ]
 open_questions = [
   "The baked 512x512 square grid stretches non-square images (same trade as LFM2.5-VL);",
   "the fixed-grid oracle cannot see that cost.",
-  "Decode via the VLM bundle measures 14.9 tok/s vs 15.7 on the text bundle — python-",
+  "Decode via the VLM bundle measures 15.2 tok/s vs 15.7 on the text bundle — python-",
   "driver step overhead, not graph cost; an engine-side host would close it.",
 ]
 

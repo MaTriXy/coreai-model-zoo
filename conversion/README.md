@@ -251,7 +251,9 @@ Apple's repo; each recipe names the script it runs.
   first vision authoring (`models/macos/qwen3_5_vision.py`, no deepstack): one run emits the
   **fp16 ViT tower** (0.9 GB, `patches [1024,1536] → image_embeds [256,5120]` at a baked
   512×512 grid) and the **embeddings-input VLM decoder** (28 GB int8hu, multifunction "main"
-  S=1 + "prefill" S=32 chunked GDN — **80.2 prefill tok/s vs 16.2** for the S=1 text bundle)
+  S=1 + "prefill" S=16 chunked GDN — **86.0 prefill tok/s vs 16.2** for the S=1 text bundle;
+  S=32 passed the suite then collapsed on real photos: fp16 doubling-inverse overflow, see the
+  port note)
   plus the host-side `embed_tokens.safetensors`. Interleaved mRoPE from three host-fed
   position planes (host contract: `_smoke/qwen38vl_host.py`, asserted vs oracle-captured
   positions). Not engine-drivable; the python driver needs the AOT h16c compile (JIT asserts

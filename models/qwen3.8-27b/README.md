@@ -34,7 +34,7 @@ Weights were pulled through ModelScope (HF CDN was crawling on release day) and 
 tokenizer + chat template; decode-only loop-free for the
 [pipelined engine](../../knowledge/pipelined-engine.md)) ·
 `gpu-pipelined/qwen3_8_27b_vision_fp16/` (0.9 GB ViT tower, one shot per image) ·
-`gpu-pipelined/qwen3_8_27b_vl_decode_int8hu_block32_sym_pf32/` (28 GB embeddings-input VLM
+`gpu-pipelined/qwen3_8_27b_vl_decode_int8hu_block32_sym_pf16/` (28 GB embeddings-input VLM
 decoder, multifunction S=1 decode + S=32 chunked prefill, + `embed_tokens.safetensors`).
 *HF upload user-gated.*
 
@@ -92,12 +92,18 @@ NumPy: `_smoke/qwen38vl_host.py`, asserted against the oracle's **captured** rot
 positions, 6/6 prompts; preprocessing is `_smoke/qwen38vl_preprocess.py`, byte-equal to
 the HF processor (max|d| 5.9e-8, 6/6).
 
-It is a `_pf32` **multifunction bundle**: "main" = static S=1 decode, "prefill" = static
-S=32 chunk (the loop-free chunked GDN scan; S=64 is the known fp16 in-graph NaN cliff, and
-the doubling-inverse overflows even in fp32 at S≈300 with the weak decays real prompts
-produce — chunked prefill is *mandatory*, not an optimization). Prefill at S=32 chunks
-measures **80.2 tok/s vs 16.2** for the S=1 text bundle — the difference between ~4 s and
-~20 s to first token on a ~316-token image prompt.
+It is a `_pf16` **multifunction bundle**: "main" = static S=1 decode, "prefill" = static
+S=16 chunk. The chunk size is a safety bound, not a tuning knob: the chunked GDN scan's
+doubling-inverse runs in fp16 in-graph, and its worst-case intermediate growth is
+~C(S−1, S/2−1) — ~6·10³ at S=16 (inside fp16's 65504) vs ~3·10⁸ at S=32. An S=32 build
+passed this 6-case oracle suite and then collapsed to "!" spam on the next two real
+photos (weak-decay image spans; one only failed through the app's CGContext resize —
+that is how content-marginal S=32 is). The regression gate for this class is
+`_smoke/test_qwen38vl_chunk_consistency.py`: chunked vs S=1-only prefill must produce
+identical greedy tokens on real images, no oracle needed — pf16 agrees 1.00 on all 5
+gate images including both S=32 breakers. Prefill at S=16 chunks measures **86.0 tok/s
+vs 16.2** for the S=1 text bundle — the difference between ~4 s and ~20 s to first token
+on a ~316-token image prompt.
 
 | stage | gate | result |
 |---|---|---|
@@ -107,6 +113,7 @@ measures **80.2 tok/s vs 16.2** for the S=1 text bundle — the difference betwe
 | host mRoPE planes | vs oracle-captured positions, 6 prompts | **equal**, delta −240 everywhere |
 | decoder eager fp16, mixed text+image | teacher-forced 16 steps × 2 cases (image-first + text-first) | **32/32 exact** |
 | full chain, int8hu `.aimodelc` (GPU) | 6-case suite, greedy 24 tokens vs bf16 oracle | **5/6 token-exact, 140/144 tokens**; the miss is a 0.055-margin knife-edge tie |
+| chunked vs S=1 prefill | 5 real images (3 suite tiles + the 2 S=32 breakers), 48 greedy tokens | **agree 1.00 on all 5**, no degeneration |
 
 Transcript: `gate-qwen3.8-27b-vl-suite.json` in this directory. Two things the gates
 taught, worth keeping: the **bf16 full-model oracle is not a valid tower target** (HF-fp32
@@ -117,14 +124,14 @@ operand-dominance bug on the prefill function; `--preferred-compute gpu` at load
 avoid it):
 
 ```bash
-xcrun coreai-build compile qwen3_8_27b_vl_decode_int8hu_block32_sym_pf32.aimodel \
+xcrun coreai-build compile qwen3_8_27b_vl_decode_int8hu_block32_sym_pf16.aimodel \
     --platform macOS --preferred-compute gpu --expect-frequent-reshapes --architecture h16c
 ```
 
 Measured on the AOT compile (M4 Max, python-runtime driver
 `_smoke/test_qwen38vl_suite_gate.py` — `llm-runner` cannot bind an embeddings input, so
-the text bundle covers engine benches): **tower 111 ms/image, prefill 80.2 tok/s, decode
-14.9 tok/s.**
+the text bundle covers engine benches): **tower 111 ms/image, prefill 86.0 tok/s, decode
+15.2 tok/s.**
 
 **Dense means no MoE speed trick:** decode reads the whole model per token — ~28 GB/token
 at int8 → 15.7 tok/s is memory-bandwidth-bound on M4 Max, matching the 3.6-27B (15.9)

@@ -49,7 +49,12 @@ from coreai_models.models.macos.qwen3_5 import DECODE_STATE_NAMES, Qwen3_5VLStat
 from coreai_models.models.macos.qwen3_5_vision import Qwen3_5VisionEncoder
 
 DTYPE = torch.float16
-PF = 32
+# PF chunk 16, not 32: the in-graph doubling-inverse runs in fp16 on the GPU
+# delegate, and its worst-case intermediate growth is ~C(PF-1, PF/2-1) — ~6e3 at
+# PF=16 (inside fp16's 65504) vs ~3e8 at PF=32. PF=32 passed the 6-case suite
+# but collapses CONTENT-DEPENDENTLY on real images (weak-decay image spans;
+# reproduced 2026-08-15 on two Pexels photos — "!" spam from the first token).
+PF = 16
 GRID = 16  # merged grid side: 16x16 = 256 tokens = a 512x512 tile
 
 

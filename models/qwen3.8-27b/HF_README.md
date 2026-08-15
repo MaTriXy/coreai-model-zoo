@@ -40,7 +40,7 @@ whole 27B is read per token — memory-bandwidth-bound by construction.
 |---|---:|---:|---:|---|
 | `gpu-pipelined/qwen3_8_27b_decode_int8hu_block32_sym` (text) | 28 GB | 16.2 | **15.7** | int8 = 0 confident flips vs bf16 oracle (fp16 control 16/16) |
 | `gpu-pipelined/qwen3_8_27b_vision_fp16` (ViT tower) | 0.9 GB | — | 111 ms/image | cos ≥ 0.999996 vs HF fp32 tower |
-| `gpu-pipelined/qwen3_8_27b_vl_decode_int8hu_block32_sym_pf32` (VLM decoder) | 28 GB | **80.2** | 14.9 | 5/6 suite cases token-exact, 140/144 tokens; the one miss is a 0.055-margin knife-edge tie |
+| `gpu-pipelined/qwen3_8_27b_vl_decode_int8hu_block32_sym_pf16` (VLM decoder) | 28 GB | **86.0** | 15.2 | 5/6 suite cases token-exact (140/144; the miss is a 0.055-margin tie); chunked-vs-S=1 prefill agree 1.00 on 5 real images |
 
 Text row: M4 Max 128 GB, macOS 27 beta, release `llm-benchmark -p 64 -g 128 -n 3`,
 `COREAI_CHUNK_THRESHOLD=1`. Eager quant gate: teacher-forced single-step argmax vs the HF
@@ -49,9 +49,12 @@ knife-edge tie; the fp16 full-precision control is 16/16. Engine transcript in t
 [zoo card directory](https://github.com/john-rocky/coreai-model-zoo/tree/main/models/qwen3.8-27b).
 
 Vision rows: same machine, python runtime on the AOT `h16c` compile (command below).
-Prefill is **5× the text bundle's** because the VLM decoder is a `_pf32` multifunction
-bundle — a static S=32 "prefill" function chunks the prompt while "main" (S=1) decodes;
-image prompts are ~316 tokens, so this is what makes the image path usable. Suite gate:
+Prefill is **5× the text bundle's** because the VLM decoder is a `_pf16` multifunction
+bundle — a static S=16 "prefill" function chunks the prompt while "main" (S=1) decodes;
+image prompts are ~316 tokens, so this is what makes the image path usable. S=16 is a
+safety bound, not a tuning knob: the chunked GDN scan's fp16 doubling-inverse overflows
+content-dependently at S=32 (passed the oracle suite, then collapsed on the next two
+real photos), so the ship chunk stays inside the provable fp16 range. Suite gate:
 6 cases (3 COCO images × 2 coarse prompts, one text-before-image) against the bf16 HF
 oracle, greedy 24 tokens, full-chain (NumPy preprocess → tower → embed splice → decoder).
 The fp16 eager control on the mixed text+image sequences is 32/32 token-exact.
@@ -84,7 +87,7 @@ Driving it from the python runtime needs the AOT compile (the JIT path asserts i
 MPSGraph's ANE region pass on this multifunction graph):
 
 ```bash
-xcrun coreai-build compile qwen3_8_27b_vl_decode_int8hu_block32_sym_pf32.aimodel \
+xcrun coreai-build compile qwen3_8_27b_vl_decode_int8hu_block32_sym_pf16.aimodel \
     --platform macOS --preferred-compute gpu --expect-frequent-reshapes --architecture h16c
 ```
 
@@ -115,6 +118,6 @@ python3 conversion/zoo_convert.py run qwen3.8-27b
 Recipe (text): `export_qwen3_5_decode_pipelined.py int8hu --head-sym --hf-id
 Qwen/Qwen3.8-27B` — the same verified recipe as Qwen3.6-27B (the two generations are
 architecturally byte-identical; only the weights changed). Recipe (vision path):
-`export_qwen38vl_pipelined.py int8hu` — one run emits the fp16 tower AND the pf32 VLM
+`export_qwen38vl_pipelined.py int8hu` — one run emits the fp16 tower AND the pf16 VLM
 decoder (+ `embed_tokens.safetensors`). Port write-up:
 [`knowledge/qwen3.8-27b-port.md`](https://github.com/john-rocky/coreai-model-zoo/blob/main/knowledge/qwen3.8-27b-port.md).

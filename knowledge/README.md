@@ -177,8 +177,9 @@ For the long-form version of the same material, read
   per-IP ceiling, XET stalling live, and the fix — sha256-verified ModelScope through aria2c at
   ~20 MB/s, seeded into the hub cache by LFS oid. Phase 2 adds the **vision path** and four
   durable lessons: a bf16 full-model oracle is not a valid tower target (gate vs an fp32 tower
-  ref); the chunked GDN scan overflows past S≈300 even in fp32 under real weak decays (chunked
-  prefill is mandatory semantics); multifunction bundles can assert in MPSGraph's ANE region
+  ref); the chunked GDN scan's fp16 doubling-inverse overflows content-dependently at S=32 — it
+  passed the oracle suite then collapsed on the next real photo, so ship the chunk the dtype
+  can prove (S=16) and gate chunked-vs-S=1 token equality; multifunction bundles can assert in MPSGraph's ANE region
   pass under JIT (AOT h16c is the python-driver path); capture the oracle's mRoPE positions with
   a hook instead of re-deriving them.
 

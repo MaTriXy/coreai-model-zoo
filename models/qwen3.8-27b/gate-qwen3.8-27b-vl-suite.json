@@ -1,5 +1,5 @@
 {
-  "gate": "vision-path suite (image -> NumPy preprocess -> vision fp16 .aimodel -> embed splice + host mRoPE -> embeds decoder int8hu pf32 .aimodelc h16c, python runtime, greedy)",
+  "gate": "vision-path suite (image -> NumPy preprocess -> vision fp16 .aimodel -> embed splice + host mRoPE -> embeds decoder int8hu pf16 .aimodelc h16c, python runtime, greedy)",
   "oracle": "HF bf16 eager (transformers 5.12.1), 6 cases (3 COCO images x 2 prompts, one text-before-image), 512x512 tile, 24 greedy tokens",
   "fixture": "_smoke/qwen38vl_suite_512.npz (qwen38vl_suite_ref.py)",
   "date": "2026-08-15",
@@ -12,13 +12,15 @@
     "tower_gate_torch_fp32": "cos 1.000000 min-row 1.000000 vs HF fp32 tower, all 3 images",
     "tower_gate_aimodel_fp16": "cos >= 0.999996 min-row >= 0.999886, all 3 images",
     "preprocess_gate": "NumPy host path == HF processor pixel_values, max|d| 5.9e-8, 6/6 cases",
-    "host_mrope_contract": "planes + rope_delta == oracle-captured positions, 6/6 cases"
+    "host_mrope_contract": "planes + rope_delta == oracle-captured positions, 6/6 cases",
+    "chunk_consistency_gate": "chunked (pf16) vs S=1-only prefill: greedy tokens agree 1.00 on 5 real images (3 suite tiles + the 2 photos that broke pf32), no degeneration \u2014 _smoke/test_qwen38vl_chunk_consistency.py",
+    "pf32_postmortem": "the first ship was pf32: it passed this same 6-case suite, then collapsed to '!' spam on the next two real photos (fp16 doubling-inverse overflow on weak-decay image spans, content-dependent; one repro only through CGContext resize). pf16's worst-case intermediate ~6e3 is inside fp16 range; replaced on HF same day"
   },
   "measured": {
     "vision_tower_ms_per_image": 111,
-    "prefill_tok_s": 80.2,
-    "decode_tok_s": 14.9,
-    "note": "python-runtime driver on the AOT h16c .aimodelc; prefill = S=32 chunks + S=1 remainder"
+    "prefill_tok_s": 86.0,
+    "decode_tok_s": 15.2,
+    "note": "python-runtime driver on the AOT h16c .aimodelc; prefill = S=16 chunks + S=1 remainder"
   },
   "runtime_notes": [
     "JIT-loading the multifunction .aimodel in the python runtime asserts in MPSGraph ANERegionFormationPass (operand-dominance, prefill fn) \u2014 AOT h16c is the python-driver path:",

@@ -82,7 +82,7 @@ combined release. Design: fixed-grid one-shot tower (`qwen3_5_vision.py`, 512×5
 **no deepstack** — `deepstack_visual_indexes: []` makes this strictly simpler than the
 Qwen3-VL tower it was patterned on) + `Qwen3_5VLStatefulEmbeds` (same hybrid graph,
 `inputs_embeds` input, three host-fed interleaved-mRoPE position planes, multifunction
-S=1 decode / S=32 chunked prefill). Host contract in NumPy: `_smoke/qwen38vl_preprocess.py`
+S=1 decode / S=16 chunked prefill). Host contract in NumPy: `_smoke/qwen38vl_preprocess.py`
 (byte-equal to the HF processor) + `_smoke/qwen38vl_host.py` (mRoPE planes + embed splice).
 Full gate chain in `models/qwen3.8-27b/gate-qwen3.8-27b-vl-suite.json`: tower fp32 cos
 1.000000, eager mixed text+image 32/32, int8hu full chain 5/6 suite cases token-exact
@@ -97,12 +97,19 @@ Four lessons that will outlive this port:
    tower is small enough to run fp32; gate each stage against the strongest oracle that
    stage affords (`_smoke/qwen38vl_tower_fp32_ref.npz`), keep bf16 only where fp32 is
    physically impossible (the 27.8B decoder).
-2. **The loop-free chunked GDN scan has an overflow cliff, and real prompts sit past it.**
-   Known: fp16 in-graph NaNs at chunk ≥ 64. New: the doubling-inverse overflows **even in
-   fp32** at S≈300 when decays are weak (`g ≈ 0`, exactly what image-token spans produce)
-   — first symptom is layer-0 GDN NaN on real embeds while random-tensor unit tests pass.
-   Chunked prefill (S=32) + S=1 remainder is *mandatory decoder semantics*, not a speed
-   option; the S=1 entrypoint statically short-circuits to the single-step scan.
+2. **The loop-free chunked GDN scan has an overflow cliff, and "passed the suite" does
+   not clear it.** The doubling-inverse's worst-case intermediate grows ~C(S−1, S/2−1):
+   ~6·10³ at S=16, ~3·10⁸ at S=32, and real image spans (weak decays, `g ≈ 0`) sit near
+   the worst case. The pf32 build passed the 6-case oracle suite and then collapsed to
+   "!" spam on the next two real photos — one of them only through the app's CGContext
+   resize, i.e. the margin was thinner than a resize filter. In fp32 the same inverse
+   dies at S≈300 (first symptom: layer-0 GDN NaN on real embeds while random-tensor
+   unit tests pass). Two rules fall out: ship the chunk size the DTYPE can prove
+   (S=16 for fp16), and gate the class oracle-free — chunked vs S=1-only prefill must
+   produce identical greedy tokens on real images
+   (`_smoke/test_qwen38vl_chunk_consistency.py`). Chunked prefill + S=1 remainder is
+   *mandatory decoder semantics*, not a speed option; the S=1 entrypoint statically
+   short-circuits to the single-step scan.
 3. **Multifunction bundles can be un-JIT-able on the python runtime.** Loading the pf32
    bundle asserts in MPSGraph `ANERegionFormationPass` ("operand #0 does not dominate this
    use", on the prefill function's state slice-update); `preferred-compute gpu` at load
