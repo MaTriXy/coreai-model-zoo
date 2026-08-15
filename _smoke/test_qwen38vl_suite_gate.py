@@ -5,7 +5,7 @@ Runs the ENTIRE shipped chain per case, on the python runtime:
 
     uint8 image -> NumPy preprocess (qwen38vl_preprocess) -> vision .aimodel
     -> embed splice + host mRoPE planes (qwen38vl_host)
-    -> embeddings decoder .aimodel ("prefill" S=32 chunks + "main" S=1)
+    -> embeddings decoder .aimodel ("prefill" S=16 chunks + "main" S=1)
     -> greedy tokens, compared against the bf16 HF oracle's
 
 Cosine is deliberately NOT the criterion (single-position summary; hides argmax
@@ -39,7 +39,7 @@ from qwen38vl_preprocess import preprocess  # noqa: E402
 
 DEFAULT_SUITE = Path(__file__).parent / "qwen38vl_suite_512.npz"
 KV_SEQ = 2048
-PF = 32
+PF = 16  # ship chunk; 32 overflows fp16 content-dependently (see chunk_consistency gate)
 # hybrid state shapes (Qwen3.8-27B text config)
 N_FULL, N_LIN = 16, 48
 N_KV_HEADS, HEAD_DIM = 4, 256

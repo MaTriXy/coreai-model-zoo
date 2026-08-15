@@ -109,7 +109,7 @@ def main() -> int:
         # stable for short chunks; at S~300 with the weak decays real prompts
         # produce (g ~ 0 on image spans) it overflows even in fp32 (isolated
         # 2026-08-15: layer-0 GDN NaN on real embeds, finite at S<=64).
-        PF = 32
+        PF = 16  # mirror the ship bundle's chunk
         o = 0
         while o + PF <= S:
             row = step(embeds[o:o + PF], o + PF, pos[:, o:o + PF])

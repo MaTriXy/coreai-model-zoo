@@ -35,7 +35,7 @@ tokenizer + chat template; decode-only loop-free for the
 [pipelined engine](../../knowledge/pipelined-engine.md)) ·
 `gpu-pipelined/qwen3_8_27b_vision_fp16/` (0.9 GB ViT tower, one shot per image) ·
 `gpu-pipelined/qwen3_8_27b_vl_decode_int8hu_block32_sym_pf16/` (28 GB embeddings-input VLM
-decoder, multifunction S=1 decode + S=32 chunked prefill, + `embed_tokens.safetensors`).
+decoder, multifunction S=1 decode + S=16 chunked prefill, + `embed_tokens.safetensors`).
 *HF upload user-gated.*
 
 ## Verified

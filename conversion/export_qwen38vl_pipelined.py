@@ -8,11 +8,10 @@ unchanged next to these — combined release):
   canonical 512x512 grid (32x32 patches, 2x2 merge). Host preprocessing spec:
   ``_smoke/qwen38vl_preprocess.py`` (gated vs the HF processor).
 
-* ``qwen3_8_27b_vl_decode_<mode>_pf32/`` — the text decoder as an
+* ``qwen3_8_27b_vl_decode_<mode>_pf16/`` — the text decoder as an
   EMBEDDINGS-INPUT multifunction bundle (`Qwen3_5VLStatefulEmbeds`): "main" =
-  static S=1 decode, "prefill" = static S=32 chunk (chunked GDN scan — S=64
-  NaNs in fp16 in-graph, the qwen3_5.py `use_metal_chunk` note), shared
-  weights. Interleaved mRoPE from three host-fed position planes; host contract
+  static S=1 decode, "prefill" = static S=16 chunk (chunked GDN scan — see the
+  PF constant below for why 16 and not 32), shared weights. Interleaved mRoPE from three host-fed position planes; host contract
   in ``_smoke/qwen38vl_host.py``. int8hu = the text bundle's ship recipe
   (per-block-32 linear int8 body + absmax-sym int8 untied head).
 

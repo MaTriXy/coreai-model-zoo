@@ -123,6 +123,19 @@ Four lessons that will outlive this port:
    positions, `rope_delta = −240`" became a checked fact rather than a reading of
    modeling code.
 
+**A Swift host for the embeds decoder needs no engine.** The pattern is
+`CoreAISpeech/SpeechDecoder.swift`, not the engine-based VL backends: load the AOT
+`.aimodelc` with `AIModel(contentsOf:)`, `loadFunction("main"/"prefill")`, build the four
+state NDArrays from `stateDescriptor(of:)` + `resolvingDynamicDimensions`, pass them via
+`InferenceFunction.MutableViews` every call, argmax the logits view. The fp16 embed table
+mmaps straight from `embed_tokens.safetensors` (8-byte LE header length + JSON header +
+raw rows — ~20 lines of Swift). A working chat app on this pattern measures within ~15%
+of the python driver (prefill 78.6 / decode 12.9 tok/s vs 86.0 / 15.2) — host overhead,
+not graph cost. One trap the app run caught that the python gates could not: the app's
+CGContext resize produces slightly different patches than the gated PIL path, and that
+difference alone was enough to tip the pf32 chunk over its fp16 cliff — host-side image
+resampling is part of the numerics surface, not cosmetics.
+
 ## Not ported, deliberately
 
 - **`mtp.*` (15 tensors, MTP draft head).** Settled conclusion from the spec-decode work:
