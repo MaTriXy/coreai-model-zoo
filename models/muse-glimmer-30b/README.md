@@ -66,6 +66,30 @@ a single token despite `--ignore_eos=true`; that is a runner behaviour, not a sp
 is not counted as a win. And ExecuTorch's ~20% prompt-to-prompt variance is unexplained here —
 decode on a dense model should not depend on generated content, and Core AI's does not.
 
+### Raw MLX is the third arm, and it changes what the ExecuTorch result means
+
+ExecuTorch's `metal` backend is MLX-native, so beating it could mean beating MLX or beating
+the wrapper around MLX. Only raw MLX separates the two. Same machine, same prompts, greedy,
+192 tokens, interleaved CA/ET/MLX with a 45 s cooldown between every run:
+
+| | p1 r1 | p1 r2 | p2 r1 | p2 r2 | mean |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| **Core AI** `int4hu`, 16.35 GB | 27.5 | 27.1 | 27.5 | 27.6 | **27.43** |
+| **MLX** `mlx-community/…-4bit`, 18 GB | 27.18 | 27.38 | 27.50 | 27.37 | **27.36** |
+| **ExecuTorch** `k-quant-17G…metal`, 17.9 GB | 24.0 | 23.8 | 24.1 | 24.1 | **24.00** |
+
+**Core AI and raw MLX are indistinguishable (+0.3%). Both beat Meta's own build by ~14%.**
+
+So the honest reading is not "Core AI is fast here" — it is that **Meta's shipped on-device
+artifact leaves ~14% on the table against the runtime it is built on**. Core AI matching MLX
+at 27.9 B dense is what [`coreai-vs-mlx-speed.md`](../../knowledge/coreai-vs-mlx-speed.md)
+already predicts: Core AI ≥ MLX on small dense, converging to a tie as the model grows and
+MLX's 4-bit byte advantage cashes in. This is the largest dense point on that curve so far,
+and it lands on the tie.
+
+Prompt processing is not matched here and no claim is made from it (Core AI 269 tok/s at 512
+prompt tokens, MLX 128–136 at 77–81 — different lengths, different batching).
+
 **Not claimed.** Their published quality figure (1.0% degradation across 15 benchmarks for the
 17G quant) has no matched counterpart here; this port has a token-exact gate and read
 generations, not a benchmark suite.

@@ -21,7 +21,20 @@ causal decomposition of the gap. All LLM rows are **same M4 Max, same protocol**
 | 9 | LFM2.5-8B-A1B | MoE (32e/top-4) | 39 → **141** | — | — | (3.6× self) | stock → gather_qmm | same over-read fix |
 | 10| GLM-4.7-Flash | **MoE + MLA** | 20.3 → **52.4** | — | — | (2.6× self) | stock → gather_qmm | MoE fixed by kernel; **MLA on all 47 layers keeps it < qwen3.6** |
 | 11| Qwen3-Coder-Next-80B-A3B | MoE (512e) | ~24 | "MLX-competitive" | ~1.0 | tie | gather_qmm | BW-bound on 79GB cold weight, not GDN |
+| 13| **Muse-Glimmer-30B** (text tower) | dense | **27.4** | 27.4 | 1.00 | tie | pipelined | **largest dense measured — the tie the curve predicts.** Vendor's own ExecuTorch-Metal build (MLX-native) is 24.0 = **14% behind BOTH** |
 | 12| Qwen3-ASR-1.7B (audio) | dense decoder, **ANE** | WhisperKit-ANE | **MLX 2.6×** | — | **MLX** | ANE (CoreML) | ANE = energy-not-speed; MLX-GPU wins raw tok/s + WER (1.52 vs 1.71) |
+
+Row 13 protocol differs and is stated rather than folded in: 192 generated tokens, greedy,
+batch 1, **interleaved CA/ET/MLX with a 45 s cooldown between every run**, MLX side is
+`mlx-vlm` 0.6.13 (`mlx-lm` 0.31.3 does not know `muse_glimmer`). Interleaving is not optional
+at this size — a block-ordered first attempt had ExecuTorch decaying 23.5 → 17.4 tok/s inside
+its own block, which measures the order rather than the engine. Bytes: Core AI int4hu 16.35 GB,
+MLX 4-bit 18 GB, ExecuTorch k-quant-17G 17.9 GB.
+
+**The new fact in row 13 is not the tie — it is the third column.** ExecuTorch's `metal`
+backend is MLX-native by its own README, so a vendor's shipped on-device artifact running 14%
+behind the runtime it wraps is the finding. "The vendor ships it, so it is the fast path" does
+not hold; measure it.
 
 Sources: rows 1–7 `apple-models-bench.md` (head-to-head matrix); 8–11 `project_gather_qmm_kernel.md`,
 `project_qwen36_moe_port.md`, `project_gather_qmm_next_target.md`; 12 `project_audio_understanding_qwen_omni.md`.
