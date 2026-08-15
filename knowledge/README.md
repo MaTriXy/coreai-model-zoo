@@ -68,6 +68,10 @@ For the long-form version of the same material, read
   bundles: the only lever past the decode bandwidth wall (verify K tokens per forward); design +
   feasibility. GDN-hybrid (Qwen3.5/3.6) static-S verify companion:
   [`spec-decode-hybrid-verify-design.md`](spec-decode-hybrid-verify-design.md).
+- [`spec-decode-ngram-dense.md`](spec-decode-ngram-dense.md) — the **dense** case, measured:
+  training-free n-gram drafting at **1.34–1.96× lossless** on a shipped 30B bundle, no
+  re-export and no drafter. Verify cost is a **staircase** (S≤3 free, S=4–8 ~1.47×, S≥9 ~2.3×),
+  so K belongs at the top of a plateau — the wrong K turns the same drafter into a slowdown.
 - [`tensorops-zoo-impact-and-kernel-wins.md`](tensorops-zoo-impact-and-kernel-wins.md) — applied
   survey: where TensorOps quantized kernels and pure custom-Metal wins actually pay across the zoo.
 

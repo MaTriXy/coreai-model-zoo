@@ -66,11 +66,44 @@ a single token despite `--ignore_eos=true`; that is a runner behaviour, not a sp
 is not counted as a win. And ExecuTorch's ~20% prompt-to-prompt variance is unexplained here —
 decode on a dense model should not depend on generated content, and Core AI's does not.
 
-**Not claimed.** Meta's **DFlash** speculative figure (37.8 tok/s) is a different weight class
-— it runs a 5.1 GB block-diffusion drafter that predicts 16 tokens per pass, and nothing here
-speculates. Their published quality figure (1.0% degradation across 15 benchmarks for the 17G
-quant) has no matched counterpart here; this port has a token-exact gate and read generations,
-not a benchmark suite.
+**Not claimed.** Their published quality figure (1.0% degradation across 15 benchmarks for the
+17G quant) has no matched counterpart here; this port has a token-exact gate and read
+generations, not a benchmark suite.
+
+## Speculative decoding: 1.3–2.0×, lossless, and it needs no drafter
+
+Meta's **DFlash** figure (37.8 tok/s) buys speculation with a separate **5.1 GB** block-diffusion
+drafter — a 31% surcharge on a 16.35 GB artifact. The same lever is available here for **zero
+extra bytes**: this decode graph already runs its head on every position and takes a dynamic
+`input_ids`, so K drafted tokens can be verified in one forward, and an **n-gram (prompt-lookup)
+drafter needs no weights at all**. Same bundle, no re-export — the only new thing is a host loop.
+
+256 generated tokens, greedy, batch 1, best draft length per workload:
+
+| workload | spec off | spec on | | vs DFlash 37.8 |
+| --- | ---: | ---: | ---: | ---: |
+| free chat | 27.31 | **36.65** | 1.34× | 0.97× |
+| code rewrite | 27.37 | **53.71** | 1.96× | **1.42×** |
+| tool calling (ATEM, 3 tools) | 27.25 | **50.19** | 1.84× | **1.33×** |
+
+Every committed token is the target model's own greedy argmax, so this changes speed and
+nothing else — **46 A/B runs, 46/46 byte-identical** to the same loop with drafting switched
+off. `spec off` is that loop, run seconds before each `on` run so a warming GPU can only work
+against the ratio, and it reproduces the shipped engine's output character-for-character at
+27.2 vs 27.6 tok/s.
+
+Three things that do not favour this and are stated anyway. **It is workload-bound**: n-gram
+pays where the continuation is already in the context, and these three prompts are not a
+distribution — Meta's 37.8 is an average over a prompt set they do not publish, so the
+comparison is directional, not matched. **It decays with generation length**: at 512 tokens
+instead of 256, code falls to 1.40× and free chat to 1.10× (**30.10 tok/s — below their
+number**) as the model leaves the phase where it is restating its input. Tool calling is the
+exception and holds at 1.85×, because the ATEM protocol keeps echoing prompt values for the
+whole turn. **And the draft length is not a free parameter**: verify cost on this bundle is a
+staircase, not a slope — S ≤ 3 is free (the forward is bandwidth-bound on 16.35 GB), S = 4…8
+costs ~1.47×, S ≥ 9 costs ~2.3× — so K=8 turns free chat into a 5% *loss* while K=2 makes it a
+1.34× win with the same drafter. Method, the full sweep, and the tuning rule that falls out of
+it are in [`knowledge/spec-decode-ngram-dense.md`](../../knowledge/spec-decode-ngram-dense.md).
 
 ## Gates
 

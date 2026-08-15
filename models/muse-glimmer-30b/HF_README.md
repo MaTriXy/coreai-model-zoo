@@ -53,9 +53,36 @@ cache with 17.9 GB) and is discarded on the strength of round 2; on prompt 3 the
 runner emitted one token despite `--ignore_eos=true`, which is a runner behaviour and is not
 counted as a win.
 
-**Not claimed here:** Meta's **DFlash** speculative figure (37.8 tok/s) is a different weight
-class; it runs a separate 5.1 GB block-diffusion drafter that predicts 16 tokens per pass, and
-nothing in this bundle speculates.
+## Speculative decoding on this bundle: 1.3–2.0×, lossless, no drafter
+
+Meta's **DFlash** figure (37.8 tok/s) buys speculation with a separate **5.1 GB** block-diffusion
+drafter — 31% more bytes. The same lever works on this bundle for **zero extra bytes**: the
+decode graph runs its head on every position and takes a dynamic `input_ids`, so K drafted
+tokens verify in one forward, and an **n-gram (prompt-lookup) drafter needs no weights at all**.
+No re-export; the bundle you download is the one these numbers were measured on.
+
+256 generated tokens, greedy, batch 1, best draft length per workload:
+
+| workload | spec off | spec on | | vs DFlash 37.8 |
+| --- | ---: | ---: | ---: | ---: |
+| free chat | 27.31 | **36.65** | 1.34× | 0.97× |
+| code rewrite | 27.37 | **53.71** | 1.96× | **1.42×** |
+| tool calling (ATEM, 3 tools) | 27.25 | **50.19** | 1.84× | **1.33×** |
+
+Every committed token is the model's own greedy argmax, so output is unchanged — **46 A/B
+runs, 46/46 byte-identical** to the same loop with drafting off.
+
+Stated plainly, because n-gram drafting is workload-bound: these three prompts are not a
+distribution, and Meta's 37.8 is an average over a prompt set they do not publish, so treat the
+comparison as directional. The advantage also decays with generation length — at 512 tokens
+code falls to 1.40× and free chat to **30.10 tok/s, below their number**; tool calling holds
+(1.85×) because the ATEM protocol keeps quoting the prompt for the whole turn. Draft length
+matters more than acceptance does: verify cost here is a staircase (S ≤ 3 free, S = 4…8 ~1.47×,
+S ≥ 9 ~2.3×), so K=8 makes free chat 5% *slower* while K=2 makes it 34% faster.
+
+**Not claimed here:** Meta's published quality figure (1.0% degradation across 15 benchmarks
+for the 17G quant) has no matched counterpart; this port has a token-exact gate and read
+generations, not a benchmark suite.
 
 ## The architecture, and what the port had to do about it
 
