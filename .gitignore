@@ -53,3 +53,6 @@ apps/coreai-audio/Sources/VoxCPMAssets
 
 # uv writes these next to a PEP-723 script when resolving (uv lock --script)
 *.py.lock
+cli/build/
+cli/*.egg-info/
+cli/dist/

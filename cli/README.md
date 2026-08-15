@@ -4,6 +4,33 @@ Four commands for the part of a Core AI port that is knowledge rather than code:
 route a model has, which known trap an artifact is standing on, whether the bundle still
 speaks, and whether it still does the job.
 
+## Install
+
+```
+pip install coreai-cli
+```
+
+The same four commands, one word in front:
+
+```
+coreai export Qwen/Qwen3-0.6B --device iphone
+coreai doctor <bundle>
+coreai verify <bundle> --plan
+coreai eval --tasks
+```
+
+The wheel carries the router, the lint, both gates, and a dated snapshot of the zoo's
+recorded routes, so `export` answers the routing question without this checkout. Two
+things still need more than the wheel: converting a checkpoint needs Apple's
+`coreai_models` toolchain, and running a zoo recipe needs the checkout — `export`
+prints the clone line when it routes to one. `pip install 'coreai-cli[hf]'` adds
+`huggingface_hub` for `org/name` targets. Community tool; not an Apple product.
+
+After editing a `recipe.toml`, regenerate the snapshot with
+`python3 cli/make_zoo_routes.py` and commit both.
+
+## From this checkout
+
 ```
 python3 cli/coreai_export.py <hf-id | short-name | checkpoint-dir> [--device mac|iphone] [--run]
 python3 cli/coreai_export.py --list           # the whole support matrix
@@ -273,8 +300,9 @@ standalone repo would be a thinner front door than this one.
 ## Status
 
 All three commands run, and the chain has been exercised end to end on one model: Qwen3-0.6B
-exported through the router, linted clean, gated 16/16 against its fp32 reference. Nothing
-here is published.
+exported through the router, linted clean, gated 16/16 against its fp32 reference. The
+standalone path is `pip install coreai-cli` — the wheel ships these same files plus the
+dated zoo-routes snapshot, nothing else.
 
 The honest boundary on `export`: it routes over the set Apple already supports plus the
 zoo's recorded recipes. It does **not** widen that set, and the kickoff's framing of

@@ -171,11 +171,21 @@ def apple_presets(python: str) -> list[dict]:
 
 
 
-def zoo_recipes() -> tuple[dict[str, dict], Path | None]:
-    """Every models/<family>/recipe.toml, keyed by recipe name, plus the source hf id."""
+def zoo_recipes() -> tuple[dict[str, dict], Path | None, str]:
+    """Every models/<family>/recipe.toml, keyed by recipe name, plus the source hf id.
+
+    Without a checkout — a pip install — the bundled snapshot still answers the routing
+    question. *Running* a zoo recipe needs the checkout either way, and main() says so
+    rather than executing a command that has no working directory to run in.
+    """
     root = find_zoo_root()
     if root is None:
-        return {}, None
+        try:
+            import coreai_zoo_routes
+        except ImportError:
+            return {}, None, "no zoo checkout and no bundled snapshot"
+        return (coreai_zoo_routes.ROUTES, None,
+                f"SNAPSHOT {coreai_zoo_routes.DATE} (no zoo checkout — may be stale)")
     out: dict[str, dict] = {}
     for path in sorted((root / "models").glob("*/recipe.toml")):
         with open(path, "rb") as fh:
@@ -185,7 +195,7 @@ def zoo_recipes() -> tuple[dict[str, dict], Path | None]:
                 recipe["source_kind"], recipe["source_hf_id"] = kind, (ident if kind == "hf" else None)
                 recipe["source_id"] = ident
                 out[name] = recipe
-    return out, root
+    return out, root, f"live ({root})"
 
 
 HF_URL = re.compile(r"huggingface\.co/([A-Za-z0-9][\w.\-]*/[\w.\-]+)")
@@ -291,7 +301,8 @@ class Route:
 
 
 def route(target: str, model_type: str | None, device: Device, tables: dict,
-          presets: list[dict], recipes: dict, python: str, out_dir: str | None) -> Route:
+          presets: list[dict], recipes: dict, python: str, out_dir: str | None,
+          zoo_root: Path | None) -> Route:
     registry, remap = tables["registry"], tables["remapping"]
     resolved = remap.get(model_type or "", model_type)
 
@@ -370,6 +381,12 @@ def route(target: str, model_type: str | None, device: Device, tables: dict,
             r.caveats = [f"Apple's stock exporter has no route here — {b}" for b in r.blockers] \
                 + r.caveats
             r.blockers = []
+            if zoo_root is None:
+                r.caveats.append(
+                    "this route comes from the bundled snapshot — running it needs the zoo "
+                    "checkout: git clone https://github.com/john-rocky/coreai-model-zoo, "
+                    "then run the command from that directory."
+                )
             recipe = recipes[zoo_hits[0]]
             if recipe.get("status") == "unverified":
                 r.blockers.append(
@@ -408,7 +425,9 @@ def route(target: str, model_type: str | None, device: Device, tables: dict,
         "— token-exact against the HF oracle on a prompt whose fp32 top-2 margin clears 0.1 at "
         "every position. An export that has not been gated is not a port."
     )
-    r.followups.append(f"Lint the result: python3 {HERE / 'coreai_doctor.py'} <bundle> "
+    doctor = ("coreai doctor" if Path(sys.argv[0]).name.startswith("coreai ")
+              else f"python3 {HERE / 'coreai_doctor.py'}")
+    r.followups.append(f"Lint the result: {doctor} <bundle> "
                        f"--profile {'iphone' if device.platform == 'iOS' else 'mac'}")
     return r
 
@@ -574,8 +593,11 @@ def main() -> None:
             model_type, config_dir, how = read_model_type(named["hf_id"], python)
             how += f" (via preset short-name {args.target!r})"
 
-    recipes, zoo_root = zoo_recipes()
-    r = route(args.target, model_type, device, tables, presets, recipes, python, args.out)
+    recipes, zoo_root, zoo_prov = zoo_recipes()
+    if zoo_root is None:
+        provenance += f"; zoo routes {zoo_prov}"
+    r = route(args.target, model_type, device, tables, presets, recipes, python, args.out,
+              zoo_root)
     findings = preflight(config_dir, args.target)
 
     if args.json:
@@ -593,6 +615,11 @@ def main() -> None:
     if args.run:
         if r.blockers:
             raise SystemExit("refusing to run: see BLOCKED above")
+        if r.backend == "zoo" and zoo_root is None:
+            raise SystemExit(
+                "refusing to run: this is a zoo recipe and there is no zoo checkout to run "
+                "it in. git clone https://github.com/john-rocky/coreai-model-zoo, then from "
+                "that directory: " + " ".join(r.command))
         if fatal:
             raise SystemExit(
                 "refusing to run: the checkpoint pre-flight found a fatal or silent-corruption "
