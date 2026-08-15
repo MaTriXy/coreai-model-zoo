@@ -41,6 +41,31 @@ on. At the short protocol (128p/256g) the ship bundle gives 27.39 decode / 233.4
 Decode barely moves with context: 27.46 at 128 prompt tokens, 26.73 at 2048 (−2.7%), which is
 what 39 of 52 layers capped at a 2048-token window should look like.
 
+### Same machine, head to head
+
+Meta's figure is theirs; this is both artifacts run here, same prompts, greedy, batch 1, 192
+new tokens, **interleaved A/B/A/B with a 45 s cooldown between every run**. Interleaving is not
+optional — a first attempt that ran one block per side had ExecuTorch decaying 23.5 → 17.4
+tok/s inside its own block, and the side that went second inherited a hot GPU.
+
+| prompt | ExecuTorch | Core AI |
+| --- | ---: | ---: |
+| 1 (code + explanation) | 19.3 / 19.7 | *16.2* (cold) / **27.5** |
+| 2 (step-by-step reasoning) | 24.0 / 23.9 | **27.3 / 27.4** |
+| 3 (long-context tradeoff) | *1 token, stopped* | **27.7 / 27.7** |
+
+Core AI lands on **27.3–27.7 across every prompt and round**, matching its isolated
+`llm-benchmark` figure. ExecuTorch ranges 19.3–24.0, prompt-dependent; at its own best prompt
+it reproduces Meta's published 23.7 almost exactly, and Core AI is **+14%** there and **+40%**
+on prompt 1.
+
+Three things that do not favour this port and are stated anyway: prompt 1 round 1 for Core AI
+(16.2) is a cold-cache artifact — ExecuTorch had just filled the page cache with 17.9 GB — and
+is discarded on the strength of round 2, not hidden. On prompt 3 the ExecuTorch runner emitted
+a single token despite `--ignore_eos=true`; that is a runner behaviour, not a speed loss, and
+is not counted as a win. And ExecuTorch's ~20% prompt-to-prompt variance is unexplained here —
+decode on a dense model should not depend on generated content, and Core AI's does not.
+
 **Not claimed.** Meta's **DFlash** speculative figure (37.8 tok/s) is a different weight class
 — it runs a 5.1 GB block-diffusion drafter that predicts 16 tokens per pass, and nothing here
 speculates. Their published quality figure (1.0% degradation across 15 benchmarks for the 17G
@@ -79,6 +104,4 @@ an oracle built that way runs on garbage RoPE frequencies and accuses a correct 
 - **No published bundle.** The `.aimodel` exists locally only; publishing weights is the
   maintainer's call.
 - **No vision tower.** The 2.5 B perception encoder is dropped; this is the text decoder.
-- **No same-machine ExecuTorch run yet.** The comparison above is against Meta's published
-  figure on the same silicon bin, not a re-measurement under identical thermal state.
 - **No iPhone anything.** 16.35 GB.

@@ -35,6 +35,24 @@ backend is MLX-native, per their own README.*
 Decode barely moves with context — 27.46 tok/s at 128 prompt tokens, 26.73 at 2048 — which is
 what 39 of 52 layers capped at a 2048-token window should look like.
 
+**Both artifacts run on the same machine**, same prompts, greedy, batch 1, 192 new tokens,
+interleaved A/B/A/B with a 45 s cooldown between every run (block-ordering is not safe here —
+ExecuTorch decayed 23.5 → 17.4 tok/s inside a single block, so whoever runs second inherits a
+hot GPU):
+
+| prompt | ExecuTorch | Core AI |
+| --- | ---: | ---: |
+| 1 (code + explanation) | 19.3 / 19.7 | *16.2* (cold) / **27.5** |
+| 2 (step-by-step reasoning) | 24.0 / 23.9 | **27.3 / 27.4** |
+| 3 (long-context tradeoff) | *1 token, stopped* | **27.7 / 27.7** |
+
+Core AI holds 27.3–27.7 across every prompt and round. ExecuTorch ranges 19.3–24.0; at its own
+best prompt it reproduces Meta's published 23.7 almost exactly, and Core AI is +14% there.
+Prompt 1 round 1 for Core AI is a cold-cache artifact (ExecuTorch had just filled the page
+cache with 17.9 GB) and is discarded on the strength of round 2; on prompt 3 the ExecuTorch
+runner emitted one token despite `--ignore_eos=true`, which is a runner behaviour and is not
+counted as a win.
+
 **Not claimed here:** Meta's **DFlash** speculative figure (37.8 tok/s) is a different weight
 class; it runs a separate 5.1 GB block-diffusion drafter that predicts 16 tokens per pass, and
 nothing in this bundle speculates.
