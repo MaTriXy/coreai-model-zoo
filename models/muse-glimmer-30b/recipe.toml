@@ -1,0 +1,21 @@
+# Recipe for muse-glimmer-30b — the configuration that produced the local bundle.
+# Schema and the rules for `status`: ../README.md.
+# Run it with:  python3 ../../conversion/zoo_convert.py run <name>
+
+["muse-glimmer-30b"]
+script = "export_muse_glimmer_decode_pipelined.py"
+args = ["int4hu", "--head-sym"]
+card = "README.md"
+hf_repo = "mlboydaisuke/Muse-Glimmer-30B-CoreAI"
+source_hf_id = "meta-models/Muse-Glimmer-30B"
+bundle = "gpu-pipelined/muse_glimmer_30b_decode_int4hu_block32_sym"
+status = "verified"
+overlay = true
+notes = [
+  "Dynamic input_ids on purpose: --static-ids buys 1.5% decode (27.09 vs 26.69) and costs 9.3x prefill (28.9 vs 269.0 tok/s), because every step including the prompt then runs at S=1. The static variant is the iPhone-class shape and needs COREAI_CHUNK_THRESHOLD=1 at runtime; this is a Mac-only model, so it ships dynamic.",
+  "The text tower is loaded with hf_state_dict_prefix='model.language_' — not the full 'model.language_model.' — because only keys that read 'model.layers.N.*' after the strip take the per-layer streaming path, which is the only path that runs the Q/K/V/gate fusion.",
+  "The untied lm_head sits outside that prefix and is declared via _HF_EXTRA_ROOT_KEYS.",
+]
+
+# Gates green: authoring cos 1.0 vs transformers 5.15 (fp32, real weights, 8 layers incl. two
+# NoPE); bundle token-exact vs the fp16 oracle (gate-muse-glimmer-30b-int4hu.json).

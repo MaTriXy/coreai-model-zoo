@@ -1126,6 +1126,25 @@
    ]
   },
   {
+   "family": "muse-glimmer-30b",
+   "card": "models/muse-glimmer-30b/README.md",
+   "recipes": [
+    {
+     "name": "muse-glimmer-30b",
+     "status": "verified",
+     "source_model": "meta-models/Muse-Glimmer-30B",
+     "source_model_from": "exporter",
+     "hf_repo": "mlboydaisuke/Muse-Glimmer-30B-CoreAI",
+     "bundle": "gpu-pipelined/muse_glimmer_30b_decode_int4hu_block32_sym",
+     "steps": 1,
+     "run": "python3 conversion/zoo_convert.py run muse-glimmer-30b",
+     "gate_transcript": null,
+     "open_questions": []
+    }
+   ],
+   "repos": []
+  },
+  {
    "family": "nanbeige4.1-3b",
    "card": "models/nanbeige4.1-3b/README.md",
    "recipes": [
