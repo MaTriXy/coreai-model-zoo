@@ -25,11 +25,11 @@ so this is Core AI against MLX-inside-ExecuTorch on hardware they name.
 
 **+12.6% decode on 8.7% fewer bytes**, on the stock pipelined engine with no custom kernels.
 
-*Measured on MacBook Pro M4 Max (40-core GPU, 128 GB, macOS 27.0 26A5406e), 512 prompt / 1024
+*Measured on Mac Studio M4 Max (40-core GPU, 128 GB, macOS 27.0 26A5406e), 512 prompt / 1024
 generation / 3 trials, `llm-benchmark`. Trial spread is negligible (the static-ids variant
 gives 27.436 / 27.469 / 27.468 at 128p/256g). Meta's number is theirs, not a re-measurement:
 batch 1, greedy, averaged over a prompt set they do not publish. Their M4 Max is the same
-546 GB/s bin — 23.7 × 17.9 GB is 424 GB/s of traffic, which the 410 GB/s bin cannot produce.*
+546 GB/s bin — 23.7 × 17.9 GB is 424 GB/s of traffic, which the 410 GB/s bin cannot produce. Chassis differs and is worth stating in a thermal-aware comparison: theirs is a MacBook, this is a Mac Studio — same chip, better sustained cooling here. The same-machine table below is unaffected (every arm ran on this Mac Studio); only the row against their published figure carries that asymmetry.*
 
 The two variants are the same weights and the same decode graph; only the `input_ids`
 dimension differs. Fixing it at [1, 1] (`--static-ids`) buys **1.5% decode** and costs **9.3×

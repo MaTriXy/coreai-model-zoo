@@ -26,10 +26,10 @@ the perception encoder is not included.
 **+12.6% decode on 8.7% fewer bytes**, on Apple's stock `coreai-pipelined` GPU engine with no
 custom Metal kernels.
 
-*MacBook Pro M4 Max (40-core GPU, 128 GB, macOS 27.0 26A5406e), 512 prompt / 1024 generation /
+*Mac Studio M4 Max (40-core GPU, 128 GB, macOS 27.0 26A5406e), 512 prompt / 1024 generation /
 3 trials, `llm-benchmark`. Meta's figure is theirs, not a re-measurement: batch 1, greedy,
 averaged over a prompt set they do not publish. Their M4 Max is the same 546 GB/s bin —
-23.7 × 17.9 GB is 424 GB/s of traffic, which the 410 GB/s bin cannot produce. Their `metal`
+23.7 × 17.9 GB is 424 GB/s of traffic, which the 410 GB/s bin cannot produce. Chassis differs and is worth stating in a thermal-aware comparison: theirs is a MacBook, this is a Mac Studio — same chip, better sustained cooling here. The same-machine table below is unaffected (every arm ran on this Mac Studio); only the row against their published figure carries that asymmetry. Their `metal`
 backend is MLX-native, per their own README.*
 
 Decode barely moves with context — 27.46 tok/s at 128 prompt tokens, 26.73 at 2048 — which is
