@@ -33,6 +33,7 @@ Run:  cd ~/code/coreai/coreai-models && .venv/bin/python \
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 from pathlib import Path
 
@@ -86,6 +87,36 @@ def linear_quant_config(dtype: str = "int8") -> dict:
         },
         "module_name_configs": {r".*lm_head$": None},
     }
+
+
+def declare_turn_end_token(out_dir: Path) -> None:
+    """Make `<|eot|>` a stop token in the bundle's tokenizer config.
+
+    Without this the bundle never stops. The runtime resolves extra stop tokens
+    from `tokenizer_config.json` — `additional_special_tokens`, an array-valued
+    `eos_token`, or `added_tokens_decoder` entries matching known turn-end
+    patterns (`end_of_turn`, `im_end`, `eot_id`, `endoftext`, `eot_token`). This
+    checkpoint offers none of them: its `eos_token` is the plain string
+    `<|end_of_text|>`, and its turn actually ends with **`<|eot|>` (200008)**,
+    which matches no pattern in that list.
+
+    The information is upstream — `generation_config.json` declares
+    `eos_token_id: [200001, 200008]` — but that file is not part of a bundle and
+    the runtime does not read it. So the generation runs to the token budget:
+    the model answers correctly, emits `<|eot|>`, and then loops
+    `to=self`/`to=user` re-emitting the same answer until the budget is gone.
+
+    `<|eom|>` (200007) is deliberately NOT added. It ends a *message*, not a
+    turn; stopping there would cut the answer off in the reasoning channel.
+    """
+    path = out_dir / "tokenizer" / "tokenizer_config.json"
+    config = json.loads(path.read_text())
+    extras = list(config.get("additional_special_tokens") or [])
+    if "<|eot|>" not in extras:
+        extras.append("<|eot|>")
+    config["additional_special_tokens"] = extras
+    path.write_text(json.dumps(config, ensure_ascii=False, indent=1))
+    print(f"declared <|eot|> as a stop token in {path.name}", flush=True)
 
 
 def build_kv_reference(cfg, max_ctx: int, static_ids: bool = False):
@@ -253,6 +284,7 @@ def main() -> None:
     # cannot instantiate — the raw-file copy is the only path that runs, and it
     # also keeps `chat_template.jinja` verbatim.
     save_tokenizer(args.hf_id, out_dir, via_transformers=False)
+    declare_turn_end_token(out_dir)
     if quant_mmap is not None:
         shutil.rmtree(quant_mmap, ignore_errors=True)
     print(f"bundle ready: {out_dir}", flush=True)

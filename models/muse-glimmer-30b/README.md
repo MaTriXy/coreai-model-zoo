@@ -129,6 +129,30 @@ costs ~1.47×, S ≥ 9 costs ~2.3× — so K=8 turns free chat into a 5% *loss* 
 1.34× win with the same drafter. Method, the full sweep, and the tuning rule that falls out of
 it are in [`knowledge/spec-decode-ngram-dense.md`](../../knowledge/spec-decode-ngram-dense.md).
 
+## The bundle needed a stop token declared
+
+Shipped and then fixed: the first published bundle **never terminated**. The model
+answers correctly, emits `<|eot|>`, and then loops `to=self`/`to=user` re-emitting
+the same answer until the token budget runs out — 2048 tokens where 491 were needed.
+
+The runtime resolves extra stop tokens from `tokenizer_config.json`
+(`additional_special_tokens`, an array-valued `eos_token`, or `added_tokens_decoder`
+entries matching `end_of_turn` / `im_end` / `eot_id` / `endoftext` / `eot_token`).
+This checkpoint offers none of them: its `eos_token` is the plain string
+`<|end_of_text|>` and its turn ends with **`<|eot|>` (200008)**, which matches no
+pattern in that list. The fact is upstream — `generation_config.json` declares
+`eos_token_id: [200001, 200008]` — but that file is not part of a bundle and the
+runtime does not read it.
+
+The exporter now declares `<|eot|>` in the bundle's tokenizer config.
+`<|eom|>` (200007) is deliberately **not** a stop token: it ends a message, not a
+turn, and stopping there would cut the answer off inside the reasoning channel.
+
+*Generalization:* a chat model whose turn-end token is not one of the five known
+spellings will run to the budget on every request, and it looks like a verbose
+model rather than a broken bundle. Check `generation_config.json`'s `eos_token_id`
+against what the bundle actually declares.
+
 ## Gates
 
 | stage | result |
