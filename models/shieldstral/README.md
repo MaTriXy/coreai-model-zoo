@@ -37,10 +37,20 @@ forward. Dropping the head to two rows is also 805 MB of fp16 that a classifier 
 
 Median of 10 warm forwards; engine ready in ~2 s.
 
-**No iPhone row.** The `h18p` AOT build is 2.336 GiB, under the 2.39 GiB North-Micro-Vision loads
-on an iPhone 17 Pro, so it is expected to fit — and that is a prediction, not a measurement. The
-gate exists (`PB_SHIELD` in PipelinedBench, fixture in `_smoke/shieldstral_ref/`); the phone was
-on Wi-Fi rather than USB and the tunnel would not hold a run.
+### iPhone 17 Pro (`ios-h18p`, AOT `--architecture h18p`, PipelinedBench `PB_SHIELD`)
+
+| bundle | verdict latency | cold | engine ready | verdicts vs fp32 |
+|---|---:|---:|---:|---|
+| `int4lin_s512` | **624.7 ms** | 1500 ms | 10.9 s | **9/9**, worst \|ΔP\| 0.03037 |
+| `int4lin_s256` | **371.9 ms** | 1136 ms | 5.3 s | **9/9**, worst \|ΔP\| 0.03037 |
+
+Median of 5 warm forwards. Both AOT builds are **2.336 GiB** — over the 2 GiB this repo once
+called the iOS load wall, and the third bundle in a week to clear it.
+
+The phone's probabilities are the Mac's **to four decimals** (0.9988 / 0.9315 / 0.9967 / 0.0004),
+so the |ΔP| column is identical on both machines: what int4 costs this model is a property of the
+weights, not of where they run. The phone is 2.7x slower than the M4 Max at S=512 and 3.0x at
+S=256 — and the grid still buys more than anything else, exactly as it does on the Mac.
 
 **Two things those rows say that are easy to miss.**
 

@@ -1,5 +1,5 @@
 {
- "generated": "2026-08-15",
+ "generated": "2026-08-16",
  "how_to_use": {
   "list": "python3 conversion/zoo_convert.py list",
   "show": "python3 conversion/zoo_convert.py show <recipe>",
@@ -1977,11 +1977,7 @@
       "int4's error is concentrated on the one case fp32 did not saturate (JA violence 0.9011 ->",
       "0.9315). Verdicts at a 0.5 threshold are unaffected; a 0.9 threshold would be. Tune against",
       "the shipped bundle, not fp32.",
-      "The checkpoint's Pixtral vision tower (image_size 1540) is NOT ported -- text only.",
-      "NO DEVICE GATE YET: the h18p AOT build is 2.336 GiB (under the 2.39 GiB North-Micro-Vision",
-      "loads on an iPhone 17 Pro) so it is expected to fit, but no phone has run it. The gate is",
-      "written (PB_SHIELD in PipelinedBench + _smoke/shieldstral_ref/); the phone was on Wi-Fi",
-      "(transport localNetwork) and the tunnel would not hold a run."
+      "The checkpoint's Pixtral vision tower (image_size 1540) is NOT ported -- text only."
      ]
     },
     {

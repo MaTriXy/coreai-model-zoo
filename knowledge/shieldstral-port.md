@@ -78,6 +78,12 @@ M4 Max, `S=512`: fp16 6.88 GB / 230.5 ms, int8lin 4.04 GB / 253.8 ms, int4lin 2.
 
 The practical consequence for anyone using it: **tune the threshold against the bundle you ship.**
 
+iPhone 17 Pro (`ios-h18p`, 2.336 GiB `resources.bin`): 9/9 at both grids, 624.7 ms (S=512) and
+371.9 ms (S=256) per verdict, engine ready in 10.9 / 5.3 s. The phone's probabilities match the
+Mac's **to four decimals**, so the |ΔP| column is the same number on both — what int4 costs this
+model is a property of the weights, not of where they run. The phone is 2.7-3.0x slower than the
+M4 Max, and the grid is still the bigger lever.
+
 ## Environment
 
 Oracle: `~/code/litertlm-convert/.venv-vl0930-t515` (transformers git main). Export, gates and
