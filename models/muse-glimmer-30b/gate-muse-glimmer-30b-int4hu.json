@@ -1,0 +1,115 @@
+{
+  "result": "PASS",
+  "arch": "muse_glimmer",
+  "bundle": "muse_glimmer_30b_decode_int4hu_block32_sym",
+  "artifact": null,
+  "source_model": {
+    "hf_id": "meta-models/Muse-Glimmer-30B",
+    "revision": null,
+    "weights_pinned": false,
+    "note": "the oracle loads the source repo's default branch; the recipe's revision pins the export, not this comparison"
+  },
+  "protocol": {
+    "prompt": "List the first six prime numbers, separated by commas, then stop.",
+    "max_new_tokens": 24,
+    "greedy": true,
+    "oracle_dtype": "fp16",
+    "engine_variant": "coreai-pipelined",
+    "warmup": "off",
+    "env": {
+      "COREAI_CHUNK_THRESHOLD": "1"
+    },
+    "tie_rule": "a first divergence passes only where the oracle's top-2 margin < 0.1"
+  },
+  "input_ids": [
+    200000,
+    1084,
+    290,
+    1660,
+    5544,
+    7186,
+    4428,
+    24,
+    24791,
+    618,
+    109291,
+    24,
+    1740,
+    5705,
+    26
+  ],
+  "oracle": {
+    "gen_ids": [
+      430,
+      141026,
+      1127,
+      198,
+      1084,
+      290,
+      1660,
+      5544,
+      7186,
+      4428,
+      24,
+      24791,
+      618,
+      109291,
+      24,
+      1740,
+      5705,
+      335,
+      954,
+      1660,
+      5544,
+      7186,
+      4428,
+      583
+    ],
+    "gen_text": " - brainly.com\nList the first six prime numbers, separated by commas, then stop.\nThe first six prime numbers are",
+    "top2_margins": [
+      0.07434696704149246,
+      0.36495381593704224,
+      0.9999533891677856,
+      0.9960373044013977,
+      0.9947583675384521,
+      0.9999765753746033,
+      0.9999991655349731,
+      0.9999752044677734,
+      0.9999822378158569,
+      0.9999983906745911,
+      0.9999557733535767,
+      0.9999991655349731,
+      0.9999980926513672,
+      0.9999896883964539,
+      0.9999369978904724,
+      0.9999722838401794,
+      0.9999945163726807,
+      0.9984380602836609,
+      0.5067136287689209,
+      0.9513120651245117,
+      0.9657524228096008,
+      0.9911900162696838,
+      0.9988091588020325,
+      0.9047750234603882
+    ]
+  },
+  "engine": {
+    "gen_text": " - brainly.com\nList the first six prime numbers, separated by commas, then stop.\nThe first six prime numbers are"
+  },
+  "match": {
+    "exact_prefix": 24,
+    "of": 24,
+    "first_divergence": null
+  },
+  "schema": "coreai-gate-transcript/1",
+  "generated_at": "2026-08-15T09:40:09+00:00",
+  "environment": {
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+    "python": "3.14.6",
+    "runner": "/Users/majimadaisuke/code/coreai/coreai-models/.build/release/llm-runner"
+  },
+  "recheck": {
+    "engine_side_only": "Download the bundle at the pinned revision, then feed the recorded input_ids to llm-runner with the protocol above (greedy, warmup off, coreai-pipelined, COREAI_CHUNK_THRESHOLD=1). The output must equal engine.gen_text. No oracle, no fp32 weights, no GPU beyond the one running the bundle.",
+    "full_gate": "python3 conversion/coreai_gate.py <bundle> meta-models/Muse-Glimmer-30B --arch muse_glimmer --prompt 'List the first six prime numbers, separated by commas, then stop.' -n 24"
+  }
+}

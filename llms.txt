@@ -45,6 +45,7 @@
 - [tensorops-quantized-kernels.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/tensorops-quantized-kernels.html): the layer UNDER custom kernels (WWDC 330): TensorOps quantized matmul (int4/int8 = OS 26; fp4/fp8/int2 + E8M0 scale planes = OS 27), cooperative tensors, the FlashAttention recipe, and the M5/A19 GPU neural accelerator — the compute-bound/prefill lever hand-rolled MSL can't reach
 - [prefix-cache-kv-reuse.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/prefix-cache-kv-reuse.html): cross-turn KV reuse: turn-2 TTFT 0.23 s vs 23.3 s = 101× at a 4k context, proven lossless (greedy token-identical). The orthogonal speed lever nobody's shipping on-device yet
 - [spec-decode-design.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/spec-decode-design.html): speculative decoding on the pipelined decode bundles: the only lever past the decode bandwidth wall (verify K tokens per forward); design + feasibility. GDN-hybrid (Qwen3.5/3.6) static-S verify companion: [spec-decode-hybrid-verify-design.md](spec-decode-hybrid-verify-design.md)
+- [spec-decode-ngram-dense.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/spec-decode-ngram-dense.html): the dense case, measured: training-free n-gram drafting at 1.34–1.96× lossless on a shipped 30B bundle, no re-export and no drafter. Verify cost is a staircase (S≤3 free, S=4–8 ~1.47×, S≥9 ~2.3×), so K belongs at the top of a plateau — the wrong K turns the same drafter into a slowdown
 - [tensorops-zoo-impact-and-kernel-wins.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/tensorops-zoo-impact-and-kernel-wins.html): applied survey: where TensorOps quantized kernels and pure custom-Metal wins actually pay across the zoo
 
 ## Benchmarks & comparisons
@@ -74,6 +75,7 @@
 
 ## Model port notes (per-architecture lessons)
 
+- [muse-glimmer-port.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/muse-glimmer-port.html): Meta's 30B VLM text tower (NoPE full layers, gated attention, weight-less Q/K norm). Two traps that generalize: _mutate_state_dict never runs on the shared slice (nested text tower + untied head loads to garbage), and hidden_states[-1] is the final norm, not the last layer. Also the EDGE record for a port taken on knowing it is Mac-only against an already-converted MLX build
 - [bitcpm-ternary-1.58bit.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/bitcpm-ternary-1.58bit.html): 1.58-bit ternary MiniCPM4-8B: the zoo's first sub-int8 packed-GEMM Metal kernel; an 8B running in ~2.1 GB on the iPhone GPU
 - [bitvla-1.58bit-vla.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/bitvla-1.58bit-vla.html): 1.58-bit Vision-Language-Action (robotics): image + instruction → 7-DoF actions, fully on-device
 - [minicpm5-1b.md](https://john-rocky.github.io/coreai-model-zoo/knowledge/minicpm5-1b.html): the clean-LlamaForCausalLM recipe done end-to-end (hybrid Think/No-Think, untied head, 128K) — the most reusable conversion template in the zoo

@@ -68,6 +68,10 @@ For the long-form version of the same material, read
   bundles: the only lever past the decode bandwidth wall (verify K tokens per forward); design +
   feasibility. GDN-hybrid (Qwen3.5/3.6) static-S verify companion:
   [`spec-decode-hybrid-verify-design.md`](spec-decode-hybrid-verify-design.md).
+- [`spec-decode-ngram-dense.md`](spec-decode-ngram-dense.md) — the **dense** case, measured:
+  training-free n-gram drafting at **1.34–1.96× lossless** on a shipped 30B bundle, no
+  re-export and no drafter. Verify cost is a **staircase** (S≤3 free, S=4–8 ~1.47×, S≥9 ~2.3×),
+  so K belongs at the top of a plateau — the wrong K turns the same drafter into a slowdown.
 - [`tensorops-zoo-impact-and-kernel-wins.md`](tensorops-zoo-impact-and-kernel-wins.md) — applied
   survey: where TensorOps quantized kernels and pure custom-Metal wins actually pay across the zoo.
 
@@ -122,6 +126,11 @@ For the long-form version of the same material, read
   non-standard architectures, macOS/Xcode 27 setup (incl. running Xcode 27 beta without sudo).
 
 ## Model port notes (per-architecture lessons)
+- [`muse-glimmer-port.md`](muse-glimmer-port.md) — Meta's 30B VLM text tower (NoPE full layers,
+  gated attention, weight-less Q/K norm). Two traps that generalize: `_mutate_state_dict` never
+  runs on the shared slice (nested text tower + untied head loads to garbage), and
+  `hidden_states[-1]` is the final norm, not the last layer. Also the EDGE record for a port
+  taken on knowing it is Mac-only against an already-converted MLX build.
 - [`bitcpm-ternary-1.58bit.md`](bitcpm-ternary-1.58bit.md) — **1.58-bit ternary** MiniCPM4-8B: the
   zoo's first sub-int8 packed-GEMM Metal kernel; an 8B running in ~2.1 GB on the iPhone GPU.
 - [`bitvla-1.58bit-vla.md`](bitvla-1.58bit-vla.md) — 1.58-bit **Vision-Language-Action** (robotics):

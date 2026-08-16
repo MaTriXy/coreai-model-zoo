@@ -6,8 +6,9 @@ gated-delta, partial mRoPE, MTP head). Source: `Qwen/Qwen3.5-0.8B`, `Qwen/Qwen3.
 
 **⬇️ Converted `.aimodel` bundles (ready to run):
 [mlboydaisuke/qwen3.5-0.8B-CoreAI](https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreAI)** —
-`gpu-pipelined/` (**int8lin decode-only loop-free: iPhone 50.3–51.5 / Mac 204 tok/s**, full
-bundle for the pipelined engine), `ios-gpu/` (static ctx-2048: **int8 fused-kernel monolith
+`gpu-pipelined/` (**ship `int8hu --head-sym` decode-only loop-free: iPhone 69.7–74.0 / Mac
+210 tok/s**, full bundle for the pipelined engine; the fp16-head `int8lin` comparison point
+is 50.3–51.5 / 204), `ios-gpu/` (static ctx-2048: **int8 fused-kernel monolith
 42.5–45.4 tok/s** + its q16 chunked-prefill companion **147 tok/s prefill**, plus the previous
 fp16 monolith 27.7), `ios-ane/` + `macos/` (dynamic int8, 14.7 / 58.5 tok/s).
 

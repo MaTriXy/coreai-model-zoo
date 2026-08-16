@@ -70,6 +70,7 @@ ARCH = {
     "nanbeige": {},
     "lfm2_moe": {},
     "qwen3_6_moe": {},
+    "muse_glimmer": {},
 }
 # Dense Qwen3.6-27B reuses the qwen3.5 overlay; the 35B-A3B is MoE (own overlay). Match the
 # MoE substrings before the generic qwen3.6->qwen3.5 fallback.
@@ -82,7 +83,10 @@ ALIASES = {"ornith": "qwen3.5", "lfm2_moe": "lfm2_moe", "a1b": "lfm2_moe",
            "qwen3_6": "qwen3.5", "qwen3.6": "qwen3.5",
            # Qwen3.8-27B: text_config byte-identical to Qwen3.6-27B (same 851-key
            # text weight map); dense, same overlay.
-           "qwen3_8": "qwen3.5", "qwen3.8": "qwen3.5"}
+           "qwen3_8": "qwen3.5", "qwen3.8": "qwen3.5",
+           # The Muse-Glimmer repo id is dashed, so the underscore key never
+           # matches `hf_id` — only the bundle name. Route both spellings.
+           "muse-glimmer": "muse_glimmer", "glimmer": "muse_glimmer"}
 
 
 def resolve_python(flag: str | None) -> str:
@@ -208,6 +212,20 @@ def build(arch, hf_id):
             k, v = create_cache_tensors(m.config, dtype=FP32)
         else:
             k, v = KVCache.create_cache_tensors(m.config, dtype=FP32)
+        m.config.max_position_embeddings = saved
+        st = {"k_cache": k, "v_cache": v}; order = ["k_cache","v_cache"]
+    elif arch == "muse_glimmer":
+        # Plain-KV dense text tower of a multimodal checkpoint: same shape as the
+        # nanbeige/llama branch, but the text config and weights nest under
+        # `text_config` / `model.language_model.` (handled by the model class).
+        # fp32 is ~105 GB for the 26.4 B text tower, so run this with --dtype fp16.
+        from coreai_models.models.macos.muse_glimmer import MuseGlimmerForCausalLM
+        from coreai_models.primitives.macos.cache import KVCache
+        m = MuseGlimmerForCausalLM.from_hf_memory_efficient(
+            hf_id, max_context_length=CTX, target_dtype=FP32, hf_config_attr="text_config"
+        )
+        saved = m.config.max_position_embeddings; m.config.max_position_embeddings = TRACE_KV_CACHE_SEQ_LEN
+        k, v = KVCache.create_cache_tensors(m.config, dtype=FP32)
         m.config.max_position_embeddings = saved
         st = {"k_cache": k, "v_cache": v}; order = ["k_cache","v_cache"]
     elif arch == "lfm2_moe":

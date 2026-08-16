@@ -712,7 +712,7 @@ index 0d13af7..e139199 100644
  
  IOS_PRESETS: dict[str, dict[str, Any]] = {
 diff --git a/python/src/coreai_models/model_registry.py b/python/src/coreai_models/model_registry.py
-index 1a813a6..0ab0bb9 100644
+index 1a813a6..0d48f57 100644
 --- a/python/src/coreai_models/model_registry.py
 +++ b/python/src/coreai_models/model_registry.py
 @@ -14,7 +14,7 @@ CLI:
@@ -767,7 +767,30 @@ index 1a813a6..0ab0bb9 100644
      ModelPreset(
          "mistral-7b-instruct-v0.3",
          "mistralai/Mistral-7B-Instruct-v0.3",
-@@ -138,7 +160,7 @@ LLM_PRESETS: list[ModelPreset] = [
+@@ -129,6 +151,22 @@ LLM_PRESETS: list[ModelPreset] = [
+     ModelPreset(
+         "gpt-oss-20b", "openai/gpt-oss-20b", "gpt-oss", "llm", "macOS", "none", "bfloat16", 32768
+     ),
++    # Muse-Glimmer 30B text decoder (community port). Mac-only: the dense text
++    # tower is ~26.4B params, so even int4 lands near 17 GB of weights — well
++    # over the iPhone ceiling. Context is capped at 8192 rather than the
++    # checkpoint's 131072 because the KV cache is ~53 KB/token across 52 layers
++    # (128k would add ~6.8 GB on top of the weights).
++    ModelPreset(
++        "muse-glimmer-30b",
++        "meta-models/Muse-Glimmer-30B",
++        "muse-glimmer",
++        "llm",
++        "macOS",
++        "4bit",
++        "float16",
++        8192,
++        notes="Text decoder of Meta's Muse-Glimmer 30B VLM; vision tower not exported.",
++    ),
+     # --- iOS (compression = palettized) ---
+     ModelPreset(
+         "qwen3-0.6b",
+@@ -138,7 +176,7 @@ LLM_PRESETS: list[ModelPreset] = [
          "iOS",
          "none",
          "float16",
@@ -776,7 +799,7 @@ index 1a813a6..0ab0bb9 100644
          compression_config="models/qwen3/qwen3_0_6b_mixed_4bit_8bit.yaml",
      ),
      ModelPreset(
-@@ -149,7 +171,7 @@ LLM_PRESETS: list[ModelPreset] = [
+@@ -149,7 +187,7 @@ LLM_PRESETS: list[ModelPreset] = [
          "iOS",
          "4bit_weight_palettized_group8",
          "float16",
@@ -785,7 +808,7 @@ index 1a813a6..0ab0bb9 100644
      ),
      ModelPreset(
          "qwen3-4b",
-@@ -159,7 +181,20 @@ LLM_PRESETS: list[ModelPreset] = [
+@@ -159,7 +197,20 @@ LLM_PRESETS: list[ModelPreset] = [
          "iOS",
          "none",
          "float16",
@@ -806,7 +829,7 @@ index 1a813a6..0ab0bb9 100644
          compression_config="models/qwen3/qwen3_4b_mixed_4bit_8bit.yaml",
      ),
  ]
-@@ -508,6 +543,7 @@ def filter_utility_models(
+@@ -508,6 +559,7 @@ def filter_utility_models(
      *,
      model_type: str | None = None,
      task: str | None = None,
@@ -814,7 +837,7 @@ index 1a813a6..0ab0bb9 100644
  ) -> list[UtilityModel]:
      out: list[UtilityModel] = []
      for u in UTILITY_PRESETS:
-@@ -515,6 +551,8 @@ def filter_utility_models(
+@@ -515,6 +567,8 @@ def filter_utility_models(
              continue
          if task is not None and u.task != task:
              continue
@@ -823,7 +846,7 @@ index 1a813a6..0ab0bb9 100644
          out.append(u)
      return out
  
-@@ -649,7 +687,7 @@ def _build_parser() -> argparse.ArgumentParser:
+@@ -649,7 +703,7 @@ def _build_parser() -> argparse.ArgumentParser:
      parser.add_argument(
          "--platform",
          choices=KNOWN_VARIANTS,
@@ -832,7 +855,7 @@ index 1a813a6..0ab0bb9 100644
          "diffusion entries are excluded when --platform is set.",
      )
      parser.add_argument(
-@@ -757,7 +795,7 @@ def _action_list_families(args: argparse.Namespace) -> None:
+@@ -757,7 +811,7 @@ def _action_list_families(args: argparse.Namespace) -> None:
  
  
  def _action_list_utility_models(args: argparse.Namespace) -> None:
@@ -841,7 +864,7 @@ index 1a813a6..0ab0bb9 100644
      if args.format == "json":
          print(json.dumps([asdict(u) for u in models], indent=2))
      elif args.format == "tsv":
-@@ -801,7 +839,9 @@ def _action_list_models(args: argparse.Namespace) -> None:
+@@ -801,7 +855,9 @@ def _action_list_models(args: argparse.Namespace) -> None:
          if args.type:
              print(json.dumps([asdict(p) for p in presets], indent=2))
          else:
@@ -852,7 +875,7 @@ index 1a813a6..0ab0bb9 100644
              combined = [asdict(p) for p in presets] + [asdict(u) for u in util]
              print(json.dumps(combined, indent=2))
      elif args.format == "tsv":
-@@ -816,7 +856,9 @@ def _action_list_models(args: argparse.Namespace) -> None:
+@@ -816,7 +872,9 @@ def _action_list_models(args: argparse.Namespace) -> None:
              ]
              print("\t".join(cols))
          if not args.type:
@@ -863,7 +886,7 @@ index 1a813a6..0ab0bb9 100644
                  print(
                      "\t".join(
                          [
-@@ -844,7 +886,7 @@ def _action_list_models(args: argparse.Namespace) -> None:
+@@ -844,7 +902,7 @@ def _action_list_models(args: argparse.Namespace) -> None:
  def _print_all_tables(presets: list[ModelPreset], args: argparse.Namespace) -> None:
      llm = [p for p in presets if p.type == "llm"]
      diffusion = [p for p in presets if p.type == "diffusion"]
@@ -872,7 +895,7 @@ index 1a813a6..0ab0bb9 100644
  
      if llm:
          print("=== LLM ===")
-@@ -915,6 +957,9 @@ def _action_utility_model_info(args: argparse.Namespace) -> None:
+@@ -915,6 +973,9 @@ def _action_utility_model_info(args: argparse.Namespace) -> None:
      if not model:
          sys.stderr.write(f"Error: no utility model {args.model_info!r}\n")
          sys.exit(1)
@@ -883,7 +906,7 @@ index 1a813a6..0ab0bb9 100644
          print(" ".join(_utility_to_export_args(model)))
      elif args.format == "json":
 diff --git a/python/src/coreai_models/models/base.py b/python/src/coreai_models/models/base.py
-index ad04c99..8ba31a8 100644
+index ad04c99..72d52b2 100644
 --- a/python/src/coreai_models/models/base.py
 +++ b/python/src/coreai_models/models/base.py
 @@ -159,6 +159,22 @@ def _resolve_safetensors_files(model_dir: str) -> list[str]:
@@ -935,6 +958,39 @@ index ad04c99..8ba31a8 100644
          per_layer_index, shared_index = _build_safetensors_key_index(
              safetensors_files,
              num_layers=num_layers,
+@@ -505,6 +531,32 @@ class BaseForCausalLM(torch.nn.Module):
+             del layer_sd
+             gc.collect()
+ 
++        # Keys that live OUTSIDE `hf_state_dict_prefix`. A multimodal checkpoint
++        # can nest its text tower under a prefix while leaving an untied
++        # `lm_head.weight` at the root, where the prefix filter drops it — the
++        # model then loads, runs, and emits garbage. A model class declares those
++        # keys via `_HF_EXTRA_ROOT_KEYS`; the default is empty, so nothing else
++        # changes behaviour. Only parameters still unbound are filled, which keeps
++        # this a no-op for a tied head.
++        extra_keys = {
++            key
++            for key in getattr(cls, "_HF_EXTRA_ROOT_KEYS", ())
++            if any(name == key and param.is_meta for name, param in model.named_parameters())
++        }
++        if extra_keys:
++            key_to_file: dict[str, str] = {}
++            for path in safetensors_files:
++                with safe_open(path, framework="pt", device="cpu") as f:
++                    for key in f.keys():  # noqa: SIM118
++                        if key in extra_keys:
++                            key_to_file[key] = path
++            if missing := extra_keys - set(key_to_file):
++                raise RuntimeError(f"declared root keys absent from checkpoint: {sorted(missing)}")
++            model.load_state_dict(
++                _load_tensors_for_keys(key_to_file, target_dtype), strict=False, assign=True
++            )
++            gc.collect()
++
+         meta_params = [n for n, p in model.named_parameters() if p.is_meta]
+         if meta_params:
+             raise RuntimeError(f"Parameters not loaded: {meta_params}")
 diff --git a/python/src/coreai_models/models/ios/gemma4.py b/python/src/coreai_models/models/ios/gemma4.py
 new file mode 100644
 index 0000000..b3eb380
@@ -20731,10 +20787,10 @@ index 0000000..91c9ef0
 +        }
 diff --git a/python/src/coreai_models/models/macos/qwen3_5.py b/python/src/coreai_models/models/macos/qwen3_5.py
 new file mode 100644
-index 0000000..8e27f7e
+index 0000000..e24ae10
 --- /dev/null
 +++ b/python/src/coreai_models/models/macos/qwen3_5.py
-@@ -0,0 +1,1084 @@
+@@ -0,0 +1,1165 @@
 +# Qwen3.5 text decoder (hybrid linear/full attention) for the Core AI authoring path.
 +#
 +# Community port — NOT an Apple model.  Authored to be exportable via
@@ -20957,6 +21013,54 @@ index 0000000..8e27f7e
 +    return out.to(input_dtype), state.to(input_dtype)
 +
 +
++def _gated_delta_step_unroll(
++    query: torch.Tensor,
++    key: torch.Tensor,
++    value: torch.Tensor,
++    g: torch.Tensor,
++    beta: torch.Tensor,
++    initial_state: torch.Tensor,
++    use_qk_l2_norm: bool = True,
++) -> tuple[torch.Tensor, torch.Tensor]:
++    """Static-S UNROLLED step-form gated-delta scan — ``_gated_delta_step``'s recurrence
++    repeated S times in-graph (python loop at trace time, so S must be a static int).
++    No ``while_loop`` and no triangular inverse: for a small static-S verify graph this
++    trades the chunk path's fixed doubling-inverse cost for S tiny sequential steps.
++
++    Shapes as ``_gated_delta_chunk``: query/key ``[b,h,S,dk]``, value ``[b,h,S,dv]``,
++    g/beta ``[b,h,S]``, initial_state ``[b,h,dk,dv]``. Returns
++    ``(out [b,S,h,dv], new_state [b,h,dk,dv])``.
++    """
++    input_dtype = query.dtype
++
++    def l2norm(x: torch.Tensor) -> torch.Tensor:
++        return x * torch.rsqrt((x * x).sum(dim=-1, keepdim=True) + 1e-6)
++
++    if use_qk_l2_norm:
++        query = l2norm(query)
++        key = l2norm(key)
++    query, key, value, beta, g = (t.to(torch.float32) for t in (query, key, value, beta, g))
++    query = query * (query.shape[-1] ** -0.5)
++    state = initial_state.to(torch.float32)
++    g_exp = g.exp()
++
++    outs = []
++    for t in range(query.shape[2]):
++        q_t = query[:, :, t, :].unsqueeze(-1)            # [b,h,dk,1]
++        k_t = key[:, :, t, :].unsqueeze(-1)              # [b,h,dk,1]
++        v_t = value[:, :, t, :]                          # [b,h,dv]
++        g_t = g_exp[:, :, t].unsqueeze(-1).unsqueeze(-1)  # [b,h,1,1]
++        beta_t = beta[:, :, t].unsqueeze(-1)             # [b,h,1]
++
++        state = state * g_t
++        kv_mem = (state * k_t).sum(dim=-2)               # [b,h,dv]
++        delta = ((v_t - kv_mem) * beta_t).unsqueeze(-2)  # [b,h,1,dv]
++        state = state + k_t * delta                      # [b,h,dk,dv]
++        outs.append((state * q_t).sum(dim=-2).unsqueeze(1))  # [b,1,h,dv]
++    out = torch.cat(outs, dim=1)                         # [b,S,h,dv]
++    return out.to(input_dtype), state.to(input_dtype)
++
++
 +def _gated_delta_chunk(
 +    query: torch.Tensor,
 +    key: torch.Tensor,
@@ -21071,6 +21175,15 @@ index 0000000..8e27f7e
 +        # chunks (the in-graph fp16 doubling-inverse NaNs at chunk>=64). Takes precedence.
 +        self.use_metal_chunk = False
 +        self.metal_chunk = None
++        # When True and the traced query length is a static int, the scan is the
++        # step recurrence unrolled S times in-graph (`_gated_delta_step_unroll`) —
++        # decode-exact math, no doubling inverse. For static-S verify graphs.
++        # Takes precedence over use_loopfree_chunk.
++        self.use_loopfree_unroll = False
++        # Doubling rounds for the chunk scan's triangular inverse. 12 covers the
++        # 4096 dynamic prefill; a static-S verify graph only needs
++        # ceil(log2(S)) (2**d >= S — M is nilpotent, extra factors are identity).
++        self.chunk_doublings = 12
 +
 +    def forward(
 +        self,
@@ -21127,6 +21240,10 @@ index 0000000..8e27f7e
 +
 +        if self.use_metal_chunk:
 +            out, new_rec = self.metal_chunk(q, k, v, g, beta, initial_state)  # fp32 kernel scan
++        elif self.use_loopfree_unroll and isinstance(s, int):
++            out, new_rec = _gated_delta_step_unroll(
++                q, k, v, g, beta, initial_state, self.gdu.use_qk_l2_norm
++            )  # static-S unrolled step scan (verify graphs)
 +        elif self.use_loopfree_chunk:
 +            if isinstance(s, int) and s == 1:
 +                # Static S=1 trace (multifunction decode entrypoint): the chunk
@@ -21138,7 +21255,8 @@ index 0000000..8e27f7e
 +                )
 +            else:
 +                out, new_rec = _gated_delta_chunk(
-+                    q, k, v, g, beta, initial_state, self.gdu.use_qk_l2_norm
++                    q, k, v, g, beta, initial_state, self.gdu.use_qk_l2_norm,
++                    doublings=self.chunk_doublings,
 +                )  # loop-free chunked scan (chunked prefill + S==1 decode, device-lowerable)
 +        elif self.use_loopfree_step:
 +            out, new_rec = _gated_delta_step(
@@ -21257,6 +21375,7 @@ index 0000000..8e27f7e
 +        kv_cache: KVCache,
 +        conv_cache: SSMState,
 +        rec_cache: SSMState,
++        return_prenorm: bool = False,
 +    ) -> torch.Tensor:
 +        """Stateful prefill/decode. ``input_ids`` carries the query tokens
 +        ([b, query_len]); ``position_ids`` carries the full positions
@@ -21265,7 +21384,8 @@ index 0000000..8e27f7e
 +        counter; linear layers index the SSM caches by linear-layer counter.
 +        """
 +        return self.forward_stateful_core(
-+            self.embed_tokens(input_ids), position_ids, kv_cache, conv_cache, rec_cache
++            self.embed_tokens(input_ids), position_ids, kv_cache, conv_cache, rec_cache,
++            return_prenorm=return_prenorm,
 +        )
 +
 +    def forward_stateful_core(
@@ -21276,6 +21396,7 @@ index 0000000..8e27f7e
 +        conv_cache: SSMState,
 +        rec_cache: SSMState,
 +        cos_sin: "tuple[torch.Tensor, torch.Tensor] | None" = None,
++        return_prenorm: bool = False,
 +    ) -> torch.Tensor:
 +        """Stateful hybrid core on pre-computed embeddings (the head-split path):
 +        the giant tied embed/lm_head table (≈⅓ of this large-vocab model) stays on
@@ -21308,6 +21429,10 @@ index 0000000..8e27f7e
 +                h = layer(h, cos, sin, conv_cache=conv_cache, rec_cache=rec_cache,
 +                          lin_idx=lin_idx)
 +                lin_idx += 1
++        if return_prenorm:
++            # (post-final-norm, pre-final-norm) — the MTP drafter path needs the
++            # raw residual stream alongside the normed head input.
++            return self.norm(h), h
 +        return self.norm(h)
 +
 +
@@ -21376,6 +21501,10 @@ index 0000000..8e27f7e
 +        # generation loop needs and is what makes the dynamic (one-graph) export
 +        # runnable on the Core AI runtime (which can't infer dynamic output shapes).
 +        self.last_token_only = False
++        # None (default) keeps the single-`logits` graph. "pre"/"post" adds a
++        # second `hidden` output ([b, query_len, hidden], pre- or post-final-norm)
++        # for the MTP drafter — additive, logits unchanged.
++        self.emit_hidden: str | None = None
 +
 +    def forward(
 +        self,
@@ -21389,6 +21518,13 @@ index 0000000..8e27f7e
 +        kv = KVCache(k_cache, v_cache)
 +        conv = SSMState(conv_state)
 +        rec = SSMState(rec_state)
++        if self.emit_hidden is not None:
++            post, pre = self.model.forward_stateful(
++                input_ids, position_ids, kv, conv, rec, return_prenorm=True)
++            if self.last_token_only:
++                post, pre = post[:, -1:, :], pre[:, -1:, :]
++            hidden = pre if self.emit_hidden == "pre" else post
++            return self.lm_head(post), hidden
 +        h = self.model.forward_stateful(input_ids, position_ids, kv, conv, rec)
 +        if self.last_token_only:
 +            h = h[:, -1:, :]
@@ -21605,6 +21741,7 @@ index 0000000..8e27f7e
 +        if config.tie_word_embeddings:
 +            self.lm_head.weight = self.model.embed_tokens.weight
 +        self.last_token_only = False
++        self.emit_hidden: str | None = None
 +
 +    def _mutate_state_dict(self, state_dict: dict[str, torch.Tensor]) -> None:
 +        # Param names already match HF (no q/k/v fusion); nothing to rewrite.
@@ -25356,10 +25493,10 @@ index 0000000..df2d155
 +    model.eval()
 +    return model
 diff --git a/python/src/coreai_models/models/registry.py b/python/src/coreai_models/models/registry.py
-index 3e0e738..b6fc4ca 100644
+index 3e0e738..6f8f256 100644
 --- a/python/src/coreai_models/models/registry.py
 +++ b/python/src/coreai_models/models/registry.py
-@@ -10,6 +10,18 @@ from functools import lru_cache
+@@ -10,6 +10,22 @@ from functools import lru_cache
  
  import torch.nn as nn
  
@@ -25375,10 +25512,14 @@ index 3e0e738..b6fc4ca 100644
 +# Ministral-3 (mistral3 multimodal) checkpoint.
 +from coreai_models.models.macos import ministral3_config_shim as _ministral3_config_shim  # noqa: F401
 +
++# Likewise register muse_glimmer* (added in transformers 5.15; 4.57 has neither
++# the config nor the modeling code).
++from coreai_models.models.macos import muse_glimmer_config_shim as _muse_glimmer_config_shim  # noqa: F401
++
  
  @dataclass
  class ModelEntry:
-@@ -31,15 +43,27 @@ class ModelEntry:
+@@ -31,15 +47,28 @@ class ModelEntry:
  def _get_registry() -> dict[str, ModelEntry]:
      """Build the model registry (cached singleton). Lazy imports to avoid circular deps."""
      from coreai_models.models.ios.mistral import MistralForCausalLMForiOS
@@ -25393,6 +25534,7 @@ index 3e0e738..b6fc4ca 100644
 +    from coreai_models.models.macos.ministral3 import Ministral3ForCausalLM
      from coreai_models.models.macos.mistral import MistralForCausalLM
      from coreai_models.models.macos.mixtral import MixtralForCausalLM
++    from coreai_models.models.macos.muse_glimmer import MuseGlimmerForCausalLM
 +    from coreai_models.models.macos.olmo2 import Olmo2ForCausalLM
 +    from coreai_models.models.macos.phi3 import Phi3ForCausalLM
      from coreai_models.models.macos.qwen2 import Qwen2ForCausalLM
@@ -25406,7 +25548,7 @@ index 3e0e738..b6fc4ca 100644
  
      return {
          "gemma3_text": ModelEntry(
-@@ -47,6 +71,15 @@ def _get_registry() -> dict[str, ModelEntry]:
+@@ -47,6 +76,15 @@ def _get_registry() -> dict[str, ModelEntry]:
              hf_config_attr="text_config",
              hf_state_dict_prefix="language_model.",
          ),
@@ -25422,7 +25564,7 @@ index 3e0e738..b6fc4ca 100644
          "gpt_oss": ModelEntry(
              macos_class=GptOssForCausalLM,
          ),
-@@ -57,6 +90,25 @@ def _get_registry() -> dict[str, ModelEntry]:
+@@ -57,6 +95,36 @@ def _get_registry() -> dict[str, ModelEntry]:
          "mixtral": ModelEntry(
              macos_class=MixtralForCausalLM,
          ),
@@ -25432,6 +25574,17 @@ index 3e0e738..b6fc4ca 100644
 +            macos_class=Ministral3ForCausalLM,
 +            hf_config_attr="text_config",
 +            hf_state_dict_prefix="language_model.",
++        ),
++        # Muse-Glimmer text decoder. The prefix stops at `model.language_`
++        # (not the full `model.language_model.`) so that the stripped keys read
++        # `model.layers.N.*` and take the per-layer streaming path — the only
++        # path that runs `_mutate_state_dict`, where the Q/K/V/gate fusion
++        # happens. The untied `lm_head.weight` sits outside the prefix; the
++        # model class overrides `from_hf_memory_efficient` to load it.
++        "muse_glimmer_text": ModelEntry(
++            macos_class=MuseGlimmerForCausalLM,
++            hf_config_attr="text_config",
++            hf_state_dict_prefix="model.language_",
 +        ),
 +        "olmo2": ModelEntry(
 +            macos_class=Olmo2ForCausalLM,
@@ -25448,7 +25601,7 @@ index 3e0e738..b6fc4ca 100644
          "qwen2": ModelEntry(
              macos_class=Qwen2ForCausalLM,
              ios_class=Qwen2ForCausalLMForiOS,
-@@ -68,6 +120,21 @@ def _get_registry() -> dict[str, ModelEntry]:
+@@ -68,6 +136,21 @@ def _get_registry() -> dict[str, ModelEntry]:
          "qwen3_moe": ModelEntry(
              macos_class=Qwen3MoeForCausalLM,
          ),
@@ -25470,7 +25623,7 @@ index 3e0e738..b6fc4ca 100644
      }
  
  
-@@ -75,6 +142,15 @@ def _get_registry() -> dict[str, ModelEntry]:
+@@ -75,6 +158,17 @@ def _get_registry() -> dict[str, ModelEntry]:
  MODEL_TYPE_REMAPPING: dict[str, str] = {
      "gemma3": "gemma3_text",
      "qwen2_5": "qwen2",
@@ -25483,6 +25636,8 @@ index 3e0e738..b6fc4ca 100644
 +    "qwen3_5": "qwen3_5_text",
 +    # Gemma 4's top-level multimodal model_type -> text decoder.
 +    "gemma4": "gemma4_text",
++    # Muse-Glimmer's top-level multimodal model_type -> text decoder.
++    "muse_glimmer": "muse_glimmer_text",
  }
  
  
