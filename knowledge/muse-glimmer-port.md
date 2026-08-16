@@ -48,8 +48,12 @@ keeping as a rule — **"MLX already runs it" is a prediction, not a measurement
 vendor's shipped on-device artifact is a target you can actually beat.
 
 Still open, and not claimed: their **DFlash** speculative number (37.8 tok/s) is a different
-weight class, and their published degradation figure (1.0% across 15 benchmarks for the 17G
-quant) has no matched counterpart here — only a token-exact gate and read generations.
+weight class — and note that both rivals *can* speculate (mlx-vlm ships
+`--draft-kind {dflash,eagle3,mtp}`), so a speculative row here needs all three measured.
+
+Quality is no longer open: **GSM8K over the same 100 questions gives Core AI 98, ExecuTorch
+97, MLX 95** — three apart, which n=100 cannot resolve. The lightest artifact of the three
+did not pay for its size in accuracy, which is the objection the byte column invites. See §9.
 
 ### 0c. What still holds, and what the landscape now looks like
 
@@ -223,3 +227,65 @@ were dead in dyld on this machine:
   from `LanguageModelCapabilities.init`. A binary built before that seed dies at load with
   `Symbol not found: …LanguageModelCapabilitiesV12capabilities…`. One-character fix, but it
   strands every prebuilt tool until someone rebuilds.
+
+## 8. The generation budget is charged whether or not it is used
+
+Measured on the shipped bundle: `llm-runner`'s wall time is
+
+```
+wall ≈ 5 s + 0.037 × max_tokens
+```
+
+**independent of how many tokens are actually generated.** Same prompt, same 532-token
+answer, four budgets: 600 → 26.9 s, 900 → 37.9 s, 1200 → 49.0 s, 1800 → 71.6 s. All four
+fit that line within 1%. The stop token halts *output*, not the decode loop — declaring
+`<|eot|>` (§3b) fixed the garbage, and cost 9% of the time.
+
+ExecuTorch's `solo_runner` does not do this: a 2048 budget that produces 219 tokens costs
+219 tokens' worth of time.
+
+This is invisible in the summary, which reports a healthy 27.4 tok/s regardless — that
+figure is honest for the *decode*, and was confirmed against wall clock by varying the
+trial count (`llm-benchmark -n 1/2/3`: marginal 14.6 s per trial against 14.55 s predicted).
+It simply does not include the budget tax.
+
+**Consequences for anyone benchmarking a Core AI bundle:**
+
+* Set `--max-tokens` to what the task needs, not to a safe ceiling. A 9-hour GSM8K run
+  became 3.5 hours from this alone.
+* If you must allow a large budget, **run two passes** — a low budget, then re-run only
+  the answers that hit it. On this model that changed the GSM8K score from 87 to 98,
+  because a truncated answer scores as a wrong number rather than as a blank.
+* Do not read a wall-clock/report discrepancy as an inflated tok/s. It is the budget.
+
+*Getting here cost seven wrong hypotheses — model load, generation-length variance, the
+tokenizer, `verify()` hashing the asset, chunk threshold, the sampler path, KV-cache
+growth. Each was plausible and each was theory ahead of measurement. What settled it was
+changing one variable at a time and taking wall clock, which is also the only step that
+needed no GPU.*
+
+## 9. Quality: the lightest artifact, and it does not pay for it
+
+| | weights | GSM8K, 100 questions |
+| --- | ---: | ---: |
+| **Core AI** `int4hu` | **16.35 GB** | **98** |
+| ExecuTorch `k-quant-17G` | 17.9 GB | 97 |
+| MLX 4-bit | 18 GB | 95 |
+
+Greedy, same questions, scored by Yardstick's `scripts/parity_gsm8k.py` — **that file was
+not edited**; the two arms it lacks were added around it (ExecuTorch through Meta's own
+`solo_runner`; MLX through `mlx_vlm`, because `mlx_lm` raises `Model type muse_glimmer not
+supported`). Three questions apart is not resolvable at n=100: read it as "no arm is
+meaningfully worse", not as a win.
+
+**The two-pass budget is not optional here, and it is the transferable part.** At a single
+budget of 700 Core AI scores **87**; 32 answers were truncated. Re-running only those at
+2048 gives **98**. A truncated answer is not blank — the extractor falls back to "the last
+number in the text", so it scores a number from the middle of the reasoning, wrong most
+times and right by accident sometimes. Truncation rates differ per arm (32 / 26 / 14), so
+one fixed budget silently penalises whichever arm reasons longer, and a quality table
+becomes a verbosity table.
+
+Residue, stated rather than dropped: 3 / 2 / 1 questions still hit 2048 and are scored from
+truncated output. Core AI and MLX also emit visibly longer answers than ExecuTorch for the
+same questions (median 532 / 453 / 326 tokens) — unexplained, and invisible in the score.

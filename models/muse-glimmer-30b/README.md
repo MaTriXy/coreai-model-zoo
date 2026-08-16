@@ -153,6 +153,50 @@ spellings will run to the budget on every request, and it looks like a verbose
 model rather than a broken bundle. Check `generation_config.json`'s `eos_token_id`
 against what the bundle actually declares.
 
+## Quality: it is the lightest artifact and does not pay for it
+
+The speed table above compares three artifacts at three different weights, and Core AI's
+is the smallest. That invites the obvious objection — some of the speed could just be
+fewer bytes. Measured, it isn't:
+
+| | weights | GSM8K, 100 questions |
+| --- | ---: | ---: |
+| **Core AI** `int4hu` | **16.35 GB** | **98** |
+| ExecuTorch `k-quant-17G` | 17.9 GB | 97 |
+| MLX 4-bit | 18 GB | 95 |
+
+Greedy, same 100 questions, scored by Yardstick's `scripts/parity_gsm8k.py` — the same
+question set, CoT suffix, extractor and scoring the Gemma-4 campaign uses. That file was
+not edited; the two arms it lacks (ExecuTorch via Meta's own `solo_runner`, MLX via
+`mlx_vlm` because `mlx_lm` does not know `muse_glimmer`) are added around it.
+
+**Three questions apart is not a resolvable difference at n=100.** The honest reading is
+"no arm is meaningfully worse", not "Core AI wins". Meta's published 1.0% degradation for
+this quant is below what 100 questions can see at all.
+
+### Two-pass budget, and why a one-pass number would have been wrong
+
+`llm-runner`'s wall time is `5 s + 0.037 x max_tokens` on this bundle — **independent of
+how many tokens are actually generated.** It keeps stepping to the budget after the stop
+token halts output, so a budget wide enough for the longest answer taxes every question.
+(ExecuTorch does not pay for unused budget.)
+
+So pass 1 runs at 700 and pass 2 re-runs only the questions that hit it, at 2048. This is
+not just a speed trick — **it changes the result**. At budget 700 Core AI scored 87/100;
+32 of those answers were truncated, and re-running them un-truncated took it to 98. A
+truncated answer is not blank, it is *a wrong number the extractor picks up from the
+middle of the reasoning* — and sometimes a right one by accident. One-pass at 700 would
+have published 87 and called it accuracy.
+
+Truncation rates differ per arm (Core AI 32, MLX 26, ExecuTorch 14), so a single fixed
+budget would have penalised the arms that reason longer — a quality table measuring
+verbosity.
+
+**Residue, stated:** 3 questions (Core AI), 2 (MLX), 1 (ExecuTorch) still hit 2048 and are
+scored from truncated output. Core AI and MLX also generate noticeably longer answers than
+ExecuTorch for the same questions (median 532 / 453 / 326 tokens); that is unexplained and
+does not show up in the score.
+
 ## Gates
 
 | stage | result |
