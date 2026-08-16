@@ -3,10 +3,9 @@
 Publishes what was gated: the int4lin classifier at two grids (S=512 general, S=256
 for short messages — same 2.53 GB of weights, 232.5 ms vs 123.6 ms per verdict).
 
-NOT published yet: the `ios-h18p/` AOT variant. It compiles to 2.336 GiB, which is
-under a size this zoo has loaded on an iPhone 17 Pro, but no phone has run THIS
-graph — set IOS_BUNDLES back once one has. A bundle nobody measured does not go in
-a repo whose cards claim device gates.
+Both grids also ship as `ios-h18p/` AOT builds, device-gated on an iPhone 17 Pro:
+9/9 verdicts vs fp32 at both, 624.7 ms (S=512) and 371.9 ms (S=256) per verdict,
+resources.bin 2.336 GiB either way.
 
 Deliberately NOT published: fp16 (6.88 GB) and int8lin (4.04 GB). Both are 9/9 like
 int4lin and neither is faster — at this graph shape quantization buys size, not
@@ -47,9 +46,30 @@ BUNDLES = [
     "shieldstral_1_0_3b_classify_int4lin_s512",
     "shieldstral_1_0_3b_classify_int4lin_s256",
 ]
-IOS_BUNDLES = []  # see the docstring: not until a phone has run it
+IOS_BUNDLES = [
+    "shieldstral_1_0_3b_classify_int4lin_s512",
+    "shieldstral_1_0_3b_classify_int4lin_s256",
+]
 CARD = Path(__file__).parents[1] / "models" / "shieldstral" / "HF_README.md"
 STAGE = Path(os.environ.get("ZOO_STAGE", "/tmp")) / "shieldstral_hf"
+
+
+STORE = (Path.home() / "Library/Application Support/CoreAIKit/Models"
+         / REPO.split("/")[0] / REPO.split("/")[1])
+
+
+def bundle_dir(name: str) -> Path:
+    """Where a bundle actually is: fresh out of the exporter, or seeded into the kit's
+    ModelStore. Published bundles get `mv`d there rather than deleted, so re-running an
+    upload after a cleanup should not require re-exporting 2.5 GB."""
+    direct = exports_dir() / name
+    if direct.is_dir():
+        return direct
+    hits = sorted(STORE.glob(f"*/gpu-classify/{name}"))
+    if hits:
+        return hits[-1]
+    raise SystemExit(f"missing bundle {name} -- export it first (looked in {exports_dir()} "
+                     f"and {STORE})")
 
 
 def stage() -> Path:
@@ -58,10 +78,7 @@ def stage() -> Path:
     (STAGE / "gpu-classify").mkdir(parents=True)
 
     for name in BUNDLES:
-        src = exports_dir() / name
-        if not src.is_dir():
-            raise SystemExit(f"missing bundle {src} -- export it first")
-        shutil.copytree(src, STAGE / "gpu-classify" / name)
+        shutil.copytree(bundle_dir(name), STAGE / "gpu-classify" / name)
         print(f"  staged {name}")
 
     for name in IOS_BUNDLES:
@@ -74,8 +91,8 @@ def stage() -> Path:
         shutil.copytree(aotc, dst / aotc.name)
         # The classifier has no bundle metadata.json: the host contract is
         # reference.json, and it is identical for both grids.
-        shutil.copy2(exports_dir() / name / "reference.json", dst / "reference.json")
-        shutil.copytree(exports_dir() / name / "tokenizer", dst / "tokenizer")
+        shutil.copy2(bundle_dir(name) / "reference.json", dst / "reference.json")
+        shutil.copytree(bundle_dir(name) / "tokenizer", dst / "tokenizer")
         print(f"  staged ios-h18p/{name}")
 
     snap = Path(hf_snapshot(SOURCE))

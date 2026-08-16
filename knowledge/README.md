@@ -153,7 +153,8 @@ For the long-form version of the same material, read
   to port a checkpoint your **export venv cannot load** — build the oracle in the venv that
   supports it natively, then *measure* the substitute (`ministral3` = Mistral + YARN, cos
   1.000000) instead of forcing a config — and the two numbers that invert decode-loop intuition:
-  quantization buys **size, not speed**, and a verdict costs the **grid, not the text**.
+  quantization buys **size, not speed**, and a verdict costs the **grid, not the text** — the same
+  |ΔP| on an M4 Max and an iPhone 17 Pro, to four decimals.
 - [`north-micro-vision-port.md`](north-micro-vision-port.md) — Cohere's `cohere_compass`: how to
   notice in a minute that a new checkpoint's **vision tower is one you already have** (load it
   strict=False and print missing/unexpected), the four decoder details that run fine when done

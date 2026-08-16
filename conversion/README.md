@@ -130,7 +130,7 @@ Apple's repo; each recipe names the script it runs.
   `export_qwen3_reranker.py`. The conversion venv (4.57.6) **cannot load this checkpoint**, so the
   oracle runs on transformers git main and the exporter's premise — `ministral3` is Mistral +
   YARN — is gated at cos 1.000000 / |ΔP| 0.00000 rather than assumed. **9/9 verdicts vs fp32** at
-  every precision; **232.5 ms/verdict at S=512, 123.6 ms at S=256**, 2.53 GB. See
+  every precision; **232.5 ms/verdict at S=512, 123.6 ms at S=256** on an M4 Max, **624.7 / 371.9 ms on an iPhone 17 Pro** (9/9 on device, 2.336 GiB AOT), 2.53 GB. See
   [`../models/shieldstral/README.md`](../models/shieldstral/README.md).
 - **North-Micro-Vision (in this dir): `export_northmv_pipelined.py [int8lin]`** — Cohere's 2.4B
   multilingual VLM. The vision half needed **no code**: its tower is the Qwen3-VL visual encoder

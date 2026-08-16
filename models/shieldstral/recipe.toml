@@ -24,16 +24,14 @@ notes = [
   "over a padded grid is compute-bound, the inverse of the decode loop.",
   "Host owns the prompt: <s>[SYSTEM_PROMPT]..[/SYSTEM_PROMPT][INST]<Instruct>/<Query>/<Document>",
   "[/INST], add_special_tokens=False, right-pad with id 11. reference.json ships with the bundle.",
+  "iPhone 17 Pro (ios-h18p AOT, 2.336 GiB resources.bin): 9/9 verdicts, 624.7 ms per verdict,",
+  "engine ready 10.9 s. Device probabilities match the Mac's to four decimals.",
 ]
 open_questions = [
   "int4's error is concentrated on the one case fp32 did not saturate (JA violence 0.9011 ->",
   "0.9315). Verdicts at a 0.5 threshold are unaffected; a 0.9 threshold would be. Tune against",
   "the shipped bundle, not fp32.",
   "The checkpoint's Pixtral vision tower (image_size 1540) is NOT ported -- text only.",
-  "NO DEVICE GATE YET: the h18p AOT build is 2.336 GiB (under the 2.39 GiB North-Micro-Vision",
-  "loads on an iPhone 17 Pro) so it is expected to fit, but no phone has run it. The gate is",
-  "written (PB_SHIELD in PipelinedBench + _smoke/shieldstral_ref/); the phone was on Wi-Fi",
-  "(transport localNetwork) and the tunnel would not hold a run.",
 ]
 
 ["shieldstral-s256"]
@@ -51,4 +49,6 @@ notes = [
   "verdict instead of 232.5. The cost of a verdict is the GRID, not the text: every gate case is",
   "83-96 tokens and the padding is computed either way. Measured at S=128 too (73.6 ms) but not",
   "shipped: the prompt scaffolding alone is ~60 tokens, leaving ~68 for the document.",
+  "iPhone 17 Pro: 9/9 verdicts, 371.9 ms per verdict, engine ready 5.3 s. This is the grid the",
+  "kit's iOS variant points at.",
 ]

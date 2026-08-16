@@ -42,13 +42,16 @@ classifier never reads.
 |---|---:|---:|---|
 | `gpu-classify/…_int4lin_s512` | 2.53 GB | **232.5 ms** | **9/9** verdicts vs fp32, worst \|ΔP\| 0.030 |
 | `gpu-classify/…_int4lin_s256` | 2.53 GB | **123.6 ms** | 9/9, numerics identical to S=512 |
+| `ios-h18p/…_int4lin_s512` | 2.336 GiB AOT | 624.7 ms *(iPhone 17 Pro)* | **9/9** on device |
+| `ios-h18p/…_int4lin_s256` | 2.336 GiB AOT | 371.9 ms *(iPhone 17 Pro)* | **9/9** on device |
 
 macOS 27.0 (26A5378n), Xcode 27.0 (27A5218g), `coreai-torch 0.4.1`, median of 10 warm forwards,
 engine ready in ~2 s.
 
-**No iPhone bundle yet.** The AOT build for `h18p` is 2.336 GiB — under the 2.39 GiB that another
-model in this zoo loads on an iPhone 17 Pro — so it is expected to fit, and *expected to fit* is
-not a measurement. It ships when a phone has run it.
+The iPhone rows are an iPhone 17 Pro running PipelinedBench's `PB_SHIELD` gate, median of 5 warm
+forwards, engine ready in 10.9 s (S=512) / 5.3 s (S=256). Its probabilities match the Mac's **to
+four decimals**, so what int4 costs this model is a property of the weights, not of where they
+run.
 
 **Two measurements worth knowing before you pick a bundle.**
 
