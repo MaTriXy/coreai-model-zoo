@@ -140,6 +140,11 @@ it are in [`knowledge/spec-decode-ngram-dense.md`](../../knowledge/spec-decode-n
 
 ## Reproduce
 
+The bundle is published at
+[`mlboydaisuke/Muse-Glimmer-30B-CoreAI`](https://huggingface.co/mlboydaisuke/Muse-Glimmer-30B-CoreAI)
+(16.35 GB, `gpu-pipelined/muse_glimmer_30b_decode_int4hu_block32_sym`), so the numbers above
+can be checked without re-exporting. To rebuild it instead:
+
 ```bash
 cd coreai-models && .venv/bin/python \
     ../coreai-models-community/conversion/export_muse_glimmer_decode_pipelined.py \
@@ -150,6 +155,10 @@ llm-benchmark --model exports/muse_glimmer_30b_decode_int4hu_block32_sym -p 512 
 
 Add `--static-ids` for the S=1 variant; it then wants `COREAI_CHUNK_THRESHOLD=1` at runtime.
 
+The speculative-decoding table has its own driver — `conversion/_muse_specdecode.sh`, which
+runs the logits-path gate, the cost sweep and the three workloads. Run it alone: a second GPU
+job distorts every ratio in it.
+
 Two traps in this port generalize beyond it, and are written up in
 [`knowledge/muse-glimmer-port.md`](../../knowledge/muse-glimmer-port.md): the loader's
 `_mutate_state_dict` never runs on the shared slice (a nested text tower with an untied head
@@ -158,7 +167,5 @@ an oracle built that way runs on garbage RoPE frequencies and accuses a correct 
 
 ## Not done
 
-- **No published bundle.** The `.aimodel` exists locally only; publishing weights is the
-  maintainer's call.
 - **No vision tower.** The 2.5 B perception encoder is dropped; this is the text decoder.
 - **No iPhone anything.** 16.35 GB.
