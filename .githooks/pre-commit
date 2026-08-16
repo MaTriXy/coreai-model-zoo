@@ -1,0 +1,40 @@
+#!/bin/sh
+# Refuse a commit whose generated files no longer match their source.
+#
+# llms.txt is the index agents read to find anything in knowledge/; a note that
+# is not in it is a note nobody finds. It is derived from knowledge/README.md,
+# and the Catalog workflow compares the two. Adding a note without regenerating
+# is how this repo goes red: all 7 failed runs on PR #15 were that one check,
+# each a red push plus another commit to fix it.
+#
+# These are the Catalog workflow's offline checks. Everything here is local —
+# no Hub calls — so the whole hook is a couple of seconds.
+#
+# Install with: scripts/install-hooks.sh
+# Bypass with:  git commit --no-verify
+
+set -e
+
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+failed=""
+
+if ! python3 scripts/validate_catalog.py; then
+	failed="$failed  (fix the catalog/recipe mismatch reported above)\n"
+fi
+
+if ! python3 scripts/gen_llms_txt.py --check; then
+	failed="$failed  python3 scripts/gen_llms_txt.py\n"
+fi
+
+if ! python3 -m compileall -q conversion scripts \
+	-x '(^|/)(\.venv|__pycache__|_smoke)/' >/dev/null; then
+	failed="$failed  (fix the syntax error reported above)\n"
+fi
+
+if [ -n "$failed" ]; then
+	printf '\npre-commit: the Catalog checks would fail on this commit:\n\n'
+	printf "$failed"
+	printf '\n'
+	exit 1
+fi

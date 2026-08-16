@@ -21,6 +21,14 @@ Any model, any modality, if it clears three bars:
    Release. No iOS 27 device? That is the one step you can hand back — see
    [Device gate](#device-gate-the-step-you-dont-have-to-own) below.
 
+## Before you commit
+
+Run `scripts/install-hooks.sh` once per clone. It installs a pre-commit hook that runs the
+Catalog workflow's offline checks — catalog/recipe consistency, `llms.txt` freshness, and
+Python syntax — so a stale generated file costs you two seconds instead of a red CI run. The
+one that bites most often is `llms.txt`: it is generated from `knowledge/README.md`, so adding
+a note means re-running `python3 scripts/gen_llms_txt.py` in the same commit.
+
 ## Toolchain requirement
 
 Export with **coreai-core ≥ 1.0.0b2**. Bundles exported with earlier wheels are rejected by the
