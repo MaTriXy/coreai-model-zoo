@@ -135,6 +135,38 @@ So: a contended run can produce a record that looks like a correctness failure. 
 lossless FAIL until you have re-run it alone; and do not report numbers from a run that shared
 the GPU, in either direction.
 
+## 4d. Which other bundles this can apply to
+
+Three properties decide it, and all three are readable off the export script — no measurement
+needed to rule a model OUT:
+
+| requirement | fails when |
+| --- | --- |
+| dense, **KV pair only** (2 states) | GDN/SSM hybrids need the snapshot + re-anchor discipline AND cap at ~1.2–1.3× (c_v ≈ 1.67, measured on the 27B) |
+| **dynamic `input_ids`** | a `--static-ids` graph is pinned to S=1 and cannot verify at all |
+| head on all positions | no `[1, q, vocab]`, nothing to verify against |
+
+Surveyed against this repo's export scripts (2026-08-15):
+
+* **`--static-ids` in the shipped recipe — cannot verify today**: `bitcpm-8b`,
+  `nanbeige4.1-3b`, `nanbeige4.2-3b` (plus muse-glimmer's `_s1` variant). Worth flagging
+  because these are the **iPhone-class ship shapes** — on-device speculation needs a
+  dynamic-ids export first, i.e. a second bundle, not a runtime flag.
+* **Hybrid / SSM (4 states) — capped**: `lfm2.5*`, `granite-4.0-h`, `minicpm-v-4.6`,
+  `qwen3.5`, `qwen3.6`, `nemotron-h`.
+* **Confirmed KV-only exports**: `muse_glimmer`, `bitcpm8b`, `bitvla_llm`, `nanbeige41`.
+  Other dense families (`glm-4.7-flash` MLA, `shieldstral`, `youtu` MLA, `minicpm5`) declare
+  their states through a different helper and were **not** resolved — check before assuming.
+
+**Hypothesis, not a measurement:** MoE targets may lose the free plateau entirely. The plateau
+exists because the forward is bandwidth-bound on weights, and S > 1 in an MoE activates more
+experts per forward, so the "extra positions are free" premise is the first thing to break.
+One `--mode verify-cost` run on a qwen3.6-27B-class bundle settles it.
+
+And the workload rule bounds it further: n-gram only pays where the continuation is already in
+the context. **OCR / ASR / TTS are structurally out** — the output is not in the prompt tokens,
+so prompt-lookup has nothing to find and a real drafter is the only route.
+
 ## 5. What this does not cover
 
 * **Acceptance is workload-bound, not model-bound.** These three prompts are not a
