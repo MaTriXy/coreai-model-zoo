@@ -108,14 +108,6 @@ final class ChatEngine: ObservableObject {
         else { unsetenv("COREAI_CHUNK_THRESHOLD") }
     }
 
-    /// Length of the longest common prefix of two token sequences.
-    private static func commonPrefixLength(_ a: [Int32], _ b: [Int32]) -> Int {
-        let n = min(a.count, b.count)
-        var i = 0
-        while i < n, a[i] == b[i] { i += 1 }
-        return i
-    }
-
     // MARK: - Model discovery
 
     // Scan `folder` PLUS the app's own download directory, so models pulled via DownloadsView
@@ -270,6 +262,7 @@ final class ChatEngine: ObservableObject {
                 self.stats.footprintBytes = Self.physFootprint()
                 self.status = .ready
             } catch {
+                Self.pfxLog("LOADERR \(entry.name): \(error)")
                 self.status = .error("\(error)")
             }
         }
@@ -318,35 +311,19 @@ final class ChatEngine: ObservableObject {
                 let full = try tokenizer.applyChatTemplate(messages: history).map(Int32.init)
                 if seq == self.genSeq { self.stats.promptTokens = full.count }
 
-                // PREFIX REUSE: keep the KV for the longest common prefix with the tokens
-                // already cached, and prefill only the divergent tail — skipping the
-                // re-processing of the (potentially huge) system prompt + prior turns every
-                // turn. Falls back to reset()+full prefill on engines that can't rewind
-                // (recurrent/SSM) or when the conversation fully diverges.
-                // Cap at full.count-1 so at least one token is always prefilled (the engine
-                // needs a query step to produce the next-token logits).
-                let want = self.prefixCacheEnabled
-                    ? min(Self.commonPrefixLength(full, self.kvTokens), max(0, full.count - 1))
-                    : 0
+                // PREFIX REUSE: since the upstream 0.2.0 merge the engines resolve the
+                // common prefix against their own internal history inside generate() and
+                // prefill only the divergent tail themselves (implicit prefix caching via
+                // reset(to:)/processedTokenCount; recurrent/SSM engines that can't rewind
+                // fall back to a full internal re-prefill). The app-side trimKVCache
+                // primitive is gone — feed the full sequence every turn and reset() only
+                // when reuse is disabled (CHATMAC_NO_PREFIX_CACHE=1 = full re-prefill A/B).
                 let kvCountBefore = self.kvTokens.count
-                var trimResult = -99
-                var reused = 0
-                if want > 0 {
-                    let r = await engine.trimKVCache(to: want)   // actual retained prefix, or <0
-                    trimResult = r
-                    if r >= 0 {
-                        reused = r
-                    } else {
-                        try await engine.reset()
-                    }
-                } else {
+                if !self.prefixCacheEnabled {
                     try await engine.reset()
                 }
-                Self.pfxLog("PFXDBG engine=\(type(of: engine)) full=\(full.count) kv=\(kvCountBefore) want=\(want) trim=\(trimResult) reused=\(reused)")
-                // Sequential slices input[reused...] internally → feed the full sequence.
-                // Pipelined prefills exactly what's passed → feed only the un-cached suffix.
-                let feed = engine.prefixReuseFeedsFullSequence ? full : Array(full[reused...])
-                if seq == self.genSeq { self.stats.reusedPromptTokens = reused }
+                Self.pfxLog("PFXDBG engine=\(type(of: engine)) full=\(full.count) kv=\(kvCountBefore) reuse=\(self.prefixCacheEnabled)")
+                let feed = full
                 // The KV now represents `full`; committed generation is appended below.
                 self.kvTokens = full
 
@@ -378,7 +355,7 @@ final class ChatEngine: ObservableObject {
                 // break-cancelable pipelined path, 256 on the sequential path.
                 let maxTokens = ProcessInfo.processInfo.environment["CHATMAC_MAX_TOKENS"]
                     .flatMap(Int.init) ?? (self.engineStopsOnBreak ? 1024 : 256)
-                for try await output in try engine.generate(
+                for try await output in try await engine.generate(
                     with: feed,
                     samplingConfiguration: SamplingConfiguration(temperature: temp),
                     inferenceOptions: InferenceOptions(maxTokens: maxTokens, includeLogits: false)
@@ -389,6 +366,10 @@ final class ChatEngine: ObservableObject {
                         let ttft = Self.seconds(from: requestStart, to: firstTokenAt!)
                         if seq == self.genSeq { self.stats.ttftSeconds = ttft }
                         // A/B telemetry: prompt length, reused (cached) prefix, and TTFT.
+                        // lastPrefixHitCount is valid once the stream has started (the
+                        // engine resolved the prefix before its first emitted token).
+                        let reused = await engine.lastPrefixHitCount
+                        if seq == self.genSeq { self.stats.reusedPromptTokens = reused }
                         Self.pfxLog(String(format: "PFXCACHE prompt=%d reused=%d feed=%d ttft=%.3f",
                                            full.count, reused, feed.count, ttft))
                     }
@@ -451,6 +432,14 @@ final class ChatEngine: ObservableObject {
                         let genElapsed = Self.seconds(from: first, to: .now)
                         if genElapsed > 0 { self.stats.tokensPerSecond = Double(emitted - 1) / genElapsed }
                     }
+                }
+                // Bench line for scripted runs: decode-only tok/s (excludes TTFT/prefill),
+                // comparable to the SPEC STATS decode_tps of the spec-decode path.
+                if let first = firstTokenAt, emitted > 1 {
+                    let genElapsed = Self.seconds(from: first, to: .now)
+                    Self.pfxLog(String(format: "ARSTATS gen=%d decode_s=%.3f decode_tps=%.2f ms/step=%.1f",
+                                       emitted, genElapsed, Double(emitted - 1) / genElapsed,
+                                       genElapsed * 1000 / Double(emitted - 1)))
                 }
                 Self.pfxLog("PFXANSWER \(reply.content.replacingOccurrences(of: "\n", with: " ").prefix(160))")
                 // Demo/testing hook: dump the full raw answer (newlines intact) so a harness

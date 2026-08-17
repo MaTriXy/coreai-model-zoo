@@ -92,6 +92,17 @@ def main() -> None:
                          "inverse; closes the verify-vs-decode per-forward gap (C1 profile)")
     ap.add_argument("--num-layers", type=int, default=None,
                     help="debug: truncated-layer export")
+    ap.add_argument("--doublings", type=int, default=None,
+                    help="chunk scan only: doubling rounds for the triangular inverse "
+                         "(exact iff 2**d >= S; default keeps the model's 12)")
+    ap.add_argument("--emit-hidden", default=None, choices=["pre", "post"],
+                    help="add a second `hidden` output [1,S,hidden] (pre- or "
+                         "post-final-norm) for the MTP drafter; logits unchanged")
+    ap.add_argument("--scan", default="chunk", choices=["chunk", "unroll", "while"],
+                    help="GDN scan formulation: chunk = loop-free doubling-inverse (ship), "
+                         "unroll = static-S step recurrence unrolled in-graph, "
+                         "while = native GatedDeltaUpdate while_loop composite "
+                         "(Apple 177354777 retest)")
     args = ap.parse_args()
 
     short = args.hf_id.rsplit("/", 1)[-1].lower().replace(".", "_").replace("-", "_")
@@ -100,6 +111,12 @@ def main() -> None:
         name += f"_{args.head_quant}" + ("_sym" if args.head_sym else "")
     if args.metal:
         name += "_metal"
+    if args.scan != "chunk":
+        name += f"_{args.scan}"
+    if args.doublings is not None:
+        name += f"_d{args.doublings}"
+    if args.emit_hidden is not None:
+        name += f"_h{args.emit_hidden}"
     if args.num_layers is not None:
         name += f"_l{args.num_layers}"
 
@@ -108,14 +125,22 @@ def main() -> None:
         args.hf_id, max_context_length=args.max_ctx, target_dtype=DTYPE,
         hf_config_attr="text_config", num_layers=args.num_layers)
     model.eval()
+    model.emit_hidden = args.emit_hidden
     cfg = model.config
+    output_names = ("logits",) if args.emit_hidden is None else ("logits", "hidden")
 
     n_lin = 0
     for layer in model.model.layers:
         if not layer.is_full:
-            layer.linear_attn.use_loopfree_chunk = True
+            if args.scan == "chunk":
+                layer.linear_attn.use_loopfree_chunk = True
+                if args.doublings is not None:
+                    layer.linear_attn.chunk_doublings = args.doublings
+            elif args.scan == "unroll":
+                layer.linear_attn.use_loopfree_unroll = True
+            # "while": leave the GatedDeltaUpdate composite (native while_loop) in place
             n_lin += 1
-    print(f"loop-free CHUNKED scan enabled on {n_lin} linear layers (S={args.s})")
+    print(f"GDN scan={args.scan} on {n_lin} linear layers (S={args.s})")
 
     # Verify trace: S static query, dynamic full-length positions, dynamic KV seq.
     trace_past = 64
@@ -183,7 +208,7 @@ def main() -> None:
             custom_kernels=custom_kernels,
             dynamic_shapes=dynamic_shapes,
             input_names=("input_ids", "position_ids"),
-            output_names=("logits",),
+            output_names=output_names,
             state_names=DECODE_STATE_NAMES,
             externalize_modules=specs,
         )
@@ -193,7 +218,7 @@ def main() -> None:
             reference_inputs,
             dynamic_shapes=dynamic_shapes,
             input_names=("input_ids", "position_ids"),
-            output_names=("logits",),
+            output_names=output_names,
             state_names=DECODE_STATE_NAMES,
             externalize_modules=specs,
         )
@@ -211,8 +236,11 @@ def main() -> None:
     print(f"saving {aimodel} ...")
     prog.save_asset(aimodel, rt.AIModelAssetMetadata())
 
+    extra = {"verify_query_len": args.s}
+    if args.emit_hidden is not None:
+        extra["emit_hidden"] = args.emit_hidden
     write_bundle_metadata(out_dir, name, args.hf_id, cfg.vocab_size, args.max_ctx,
-                          extra={"verify_query_len": args.s})
+                          extra=extra)
     from transformers import AutoTokenizer
 
     AutoTokenizer.from_pretrained(args.hf_id).save_pretrained(out_dir / "tokenizer")

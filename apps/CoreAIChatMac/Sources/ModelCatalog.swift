@@ -87,6 +87,35 @@ enum ModelCatalog {
             repo: "https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreAI",
             remote: "gpu-pipelined/qwen3_5_0_8b_verify_s9_int4lin", approxSizeGB: 1),
         DownloadableModel(
+            id: "qwen38-27b", name: "Qwen3.8-27B", detail: "dense · int8",
+            repo: "https://huggingface.co/mlboydaisuke/Qwen3.8-27B-CoreAI",
+            remote: "gpu-pipelined/qwen3_8_27b_decode_int8hu_block32_sym", approxSizeGB: 28),
+        DownloadableModel(
+            id: "qwen38-27b-int4", name: "Qwen3.8-27B (int4)", detail: "dense · int4 · 22 tok/s — the free-form pick",
+            repo: "https://huggingface.co/mlboydaisuke/Qwen3.8-27B-CoreAI",
+            remote: "gpu-pipelined/qwen3_8_27b_decode_int4lin", approxSizeGB: 18),
+        // 3.8 ⚡Spec set: S=9 d4 hpost int4 verify graph (--emit-hidden post) + the
+        // checkpoint's own MTP head as drafter (S=1) with the S=9 replay sibling;
+        // metadata `spec_draft`/`spec_mtp_replay` auto-pair them (the 0.8B d4 draft
+        // stays a SPEC_DRAFT= A/B option). Code 29.0 tok/s lossless; for free-form
+        // prose use the plain int4 decode bundle (spec loses at c_v 2.43).
+        DownloadableModel(
+            id: "qwen38-27b-spec", name: "Qwen3.8-27B ⚡Spec", detail: "int4 · lossless spec-decode · needs the MTP drafter pair",
+            repo: "https://huggingface.co/mlboydaisuke/Qwen3.8-27B-CoreAI",
+            remote: "gpu-pipelined/qwen3_8_27b_verify_s9_int4lin_d4_hpost", approxSizeGB: 18),
+        DownloadableModel(
+            id: "qwen38-27b-mtp", name: "Qwen3.8-27B (⚡Spec MTP drafter)", detail: "the checkpoint's own 1-layer MTP head · int8",
+            repo: "https://huggingface.co/mlboydaisuke/Qwen3.8-27B-CoreAI",
+            remote: "gpu-pipelined/qwen3_8_27b_mtp_s1_int8hu_block32_sym", approxSizeGB: 5),
+        DownloadableModel(
+            id: "qwen38-27b-mtp-replay", name: "Qwen3.8-27B (⚡Spec replay)", detail: "S=9 batched-replay sibling · +33% on code",
+            repo: "https://huggingface.co/mlboydaisuke/Qwen3.8-27B-CoreAI",
+            remote: "gpu-pipelined/qwen3_8_27b_mtp_s9_int8hu_block32_sym", approxSizeGB: 5),
+        DownloadableModel(
+            id: "qwen35-08b-draft-d4", name: "Qwen3.5-0.8B (⚡Spec d4 draft)", detail: "int4 draft for Qwen3.8-27B ⚡Spec",
+            repo: "https://huggingface.co/mlboydaisuke/qwen3.5-0.8B-CoreAI",
+            remote: "gpu-pipelined/qwen3_5_0_8b_verify_s9_int4lin_d4", approxSizeGB: 1),
+        DownloadableModel(
             id: "glm47", name: "GLM-4.7-Flash", detail: "MoE + MLA · 30B/~3B active",
             repo: "https://huggingface.co/mlboydaisuke/GLM-4.7-Flash-CoreAI",
             remote: "gpu-pipelined/glm_4_7_flash_decode_sym8_gather", approxSizeGB: 30),
