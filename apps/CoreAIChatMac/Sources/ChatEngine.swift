@@ -406,6 +406,12 @@ final class ChatEngine: ObservableObject {
                         lastUIFlush = .now
                         let raw = useIncremental ? stableText + tailText
                                                  : tokenizer.decode(tokens: genTokens)
+                        // Demo/bench hook: mirror the in-flight answer to a file each UI tick
+                        // so a terminal follower can render the stream live (same class as
+                        // CHATMAC_ANSWER_LOG, which only lands after the final token).
+                        if let sp = ProcessInfo.processInfo.environment["CHATMAC_STREAM_LOG"] {
+                            try? raw.write(toFile: sp, atomically: true, encoding: .utf8)
+                        }
                         let parsed = HarmonyParser.parse(raw)
                         reply.thinking = parsed.thinking
                         reply.content = parsed.answer
@@ -562,8 +568,14 @@ final class ChatEngine: ObservableObject {
                     if seq == self.genSeq {
                         self.stats.generatedTokens = st.generated
                         self.stats.specNote = useSpec ? st.note : nil
-                        let elapsed = Self.seconds(from: requestStart, to: .now)
-                        if elapsed > 0 { self.stats.tokensPerSecond = Double(st.generated) / elapsed }
+                        // Generation tps = decode-only (excludes prefill/anchor; TTFT is
+                        // its own stat) — the same definition other stacks report.
+                        if st.decodeSeconds > 0 {
+                            self.stats.tokensPerSecond = Double(st.generated) / st.decodeSeconds
+                        } else {
+                            let elapsed = Self.seconds(from: requestStart, to: .now)
+                            if elapsed > 0 { self.stats.tokensPerSecond = Double(st.generated) / elapsed }
+                        }
                     }
                 }
                 if !self.stopRequested { self.setContent(replyID, result.text) }

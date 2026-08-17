@@ -167,6 +167,9 @@ final class SpecDecodeEngine {
         var acceptedDrafts = 0
         var targetForwards = 0
         var draftForwards = 0
+        // Decode-only elapsed time (excludes prefill/anchor bootstrap) — the
+        // generation-tps denominator, same definition other stacks report.
+        var decodeSeconds = 0.0
         var note: String {
             guard rounds > 0 else { return "" }
             let alpha = Double(acceptedDrafts) / Double(rounds)
@@ -251,9 +254,18 @@ final class SpecDecodeEngine {
             stats.generated = gen.count
             stats.targetForwards = target.forwards
             stats.draftForwards = draft?.forwards ?? mtpDrafter?.forwards ?? 0
+            let decDt = SuspendingClock.now - decodeStart
+            stats.decodeSeconds = Double(decDt.components.seconds)
+                + Double(decDt.components.attoseconds) / 1e18
 
             if SuspendingClock.now - lastEmit >= .milliseconds(40) {
-                onUpdate(decode(gen), stats)
+                let inflight = decode(gen)
+                // Demo/bench hook: mirror the in-flight text to a file so a terminal
+                // follower can render the stream live (bench mode has no UI consumer).
+                if let sp = ProcessInfo.processInfo.environment["CHATMAC_STREAM_LOG"] {
+                    try? inflight.write(toFile: sp, atomically: true, encoding: .utf8)
+                }
+                onUpdate(inflight, stats)
                 lastEmit = SuspendingClock.now
                 await Task.yield()
             }
@@ -280,6 +292,9 @@ final class SpecDecodeEngine {
         }
 
         let text = decode(gen)
+        if let sp = ProcessInfo.processInfo.environment["CHATMAC_STREAM_LOG"] {
+            try? text.write(toFile: sp, atomically: true, encoding: .utf8)
+        }
         if ProcessInfo.processInfo.environment["SPEC_BENCH"] != nil {
             FileHandle.standardError.write(Data("SPEC TEXT[\(specOn ? "on" : "off")]<<<\(text)>>>\n".utf8))
         }
