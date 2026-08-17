@@ -101,6 +101,16 @@ conv.to_coreai().optimize()
 - **`template_dtypes`**: `{"A":"TYPE"}` replaces the placeholder string `"TYPE"` in `src` with input A's Metal dtype at compile time → one kernel serves multiple dtypes. Keys must be real inputs; placeholders must be unique (`metal.py:152-177`).
 - **`torch_defn` validation**: every param annotated `Tensor|int|float|bool`, no `*args/**kwargs`, param count == `len(input_names)`, return `Tensor | list[Tensor] | tuple[Tensor,...]` with concrete length matching `result_names` (`_torch_metal_kernel.py:141-211`).
 - Kernels are pure functions — no shared state / no execution-order dependence.
+- **Never feed a kernel a transpose-derived tensor** (Apple 178056451, beaten 2026-08-17): the
+  runtime binder requires every kernel edge to be an innermost-stride-1 dense MTLTensor, MPSGraph
+  values carry no strides, and the layout planner picks the TRANSPOSED VIEW as the edge layout —
+  an authoring-side `.contiguous()` cannot survive conversion (hard assert
+  `[tensor.strides extentAtDimensionIndex:0] (N) should be 1`, GPUCustomMetalKernelOps.mm). Fix
+  pattern: absorb the transpose into kernel INDEXING — feed the projection/conv-native logical
+  shape (e.g. `[S, h*dk]` straight off a matmul, or `[C, S]` off a conv) and split (head, dim) with
+  baked strides inside the MSL. Safe producer chains: matmul/conv/elementwise/reshape/slice.
+  Worked example: `models/macos/qwen3_5_gdn_metal.py` (GDN scan kernel; also moves qk-l2norm
+  in-kernel so the graph hands over raw activations).
 - **Rank-3 buffer indexing + a DATA-DEPENDENT gather both lower + run on the GPU** (probe
   `ondevice/_moe_kernel_probe.py`). So a kernel can take an index tensor as an INPUT and read only
   the rows it points at — `W[m, n, e]` with `e = uint(IDX[slot])` reads only expert-slab `e` out of
@@ -116,6 +126,9 @@ conv.to_coreai().optimize()
 ## Performance patterns (WWDC 325 + gpu_rules.md + this project's measured results)
 - **The win is killing dispatch overhead via fusion.** Per-op kernelization of small ops does NOT help — measured here: kernelizing attention q/k/v/o was *slower*; any single op-class ≤1.3 ms. The real lever is collapsing ~28 ops/layer into 1–3 mega-kernels (whole-layer fusion). (Detail: `project_macos_speed_state` project memory + `ondevice/_macos_speed_RESULTS.md`.)
 - **Custom int8 wins only on BIG memory-bound matmuls** (FFN, the 262144-vocab head): a fused int8 dequant-LUT matvec (reads only uint8 indices + a tiny per-group codebook, LUT gather fused into the matvec) beat both int8-MPSGraph and fp16-MPSGraph at int8 memory. Don't kernelize small projections (k/v).
+- **Custom-vs-MPS is 0-for-3 whenever the MPS path is good** (2026-08-17/18): A19 matmul2d prefill (above), int4 M=1 gemv (custom matvec 2.02 vs MPS 1.45 ms on an 850M stack), and the static-M=9 quantized-matmul plateau (`qmm_metal.py`: 9 variants, best 3.19 vs stock 3.05 = tie — both sit at this GPU class's ~5 TFLOP/s practical streaming-gemm ceiling). Custom kernels win only where MPS is BAD at the op itself: int8 gemv, MoE dense-overread, numerically unstable fp16 scans.
+- **The Metal compiler's formulation sensitivity is ~2x-level** (measured on `qmm_metal.py`): re-typing the same algorithm with generic index math (`(i & 255, i >> 8)` co-op loads, `m0 + mi` offset guards) cost +65% vs the literal per-loop form (3.19 → 5.33 ms). Micro-benchmark every "cosmetic" rewrite — never trust equivalence by eye.
+- **Runtime-indexed private arrays land in stack memory, not registers.** Keep hot-path state in named half4/float4 vector variables; only literal-bound fully-unrollable loops may index an array (fp32 accumulators). fp16 4-term dots + fp32 accumulation are numerically fine for per-block-32 recipes (abs err ≤0.004 @ rms 1.4/layer) — judge them with a two-axis (rel AND abs) error gate, since pure rel-error gates false-fail on near-zero cancellation.
 - **Prefer native SDPA on GPU** (`F.scaled_dot_product_attention`) — already fused; don't hand-roll it.
 - Compute fp16 for throughput; use fp32 accumulation selectively for numerically sensitive reductions (this is the same fp32-accumulation root cause as the ANE Conv2d-1×1 fix).
 - The "Optimize custom ML operations with Metal tensors" talk (WWDC 330) is the hand-tuned-kernel reference for squeezing a single kernel — TensorOps quantized matmul, cooperative tensors, FlashAttention, and the M5/A19 neural accelerator. Extracted: [`tensorops-quantized-kernels.md`](tensorops-quantized-kernels.md).

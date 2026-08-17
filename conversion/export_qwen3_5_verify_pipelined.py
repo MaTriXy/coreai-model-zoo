@@ -90,6 +90,11 @@ def main() -> None:
                     help="swap the in-graph fp16 chunk-inverse GDN scan for the fp32 sequential "
                          "Metal kernel (qwen3_5_gdn_metal) — decode-exact recurrence, no matrix "
                          "inverse; closes the verify-vs-decode per-forward gap (C1 profile)")
+    ap.add_argument("--qmm-kernel", action="store_true",
+                    help="int4lin only: swap the tax-carrying quantized Linears (MLP + GDN "
+                         "in/out_proj) for the fused dequant-gemm kernel (qmm_metal) — dodges "
+                         "the static-M quantized-matmul plateau (SPEC38 Phase H); weights "
+                         "bit-identical to the stock quantizer output")
     ap.add_argument("--num-layers", type=int, default=None,
                     help="debug: truncated-layer export")
     ap.add_argument("--doublings", type=int, default=None,
@@ -111,6 +116,10 @@ def main() -> None:
         name += f"_{args.head_quant}" + ("_sym" if args.head_sym else "")
     if args.metal:
         name += "_metal"
+    if args.qmm_kernel:
+        if args.mode != "int4lin":
+            raise SystemExit("--qmm-kernel requires mode int4lin (nibble-packed weights)")
+        name += "_qmm"
     if args.scan != "chunk":
         name += f"_{args.scan}"
     if args.doublings is not None:
@@ -199,8 +208,15 @@ def main() -> None:
         custom_kernels = [metalize_gdn_chunk(model)]
         print(f"[metal] GDN fp32 sequential-scan kernel on {n_lin} linear layers (S={args.s})")
 
+    # --qmm-kernel: swap the tax-carrying quantized Linears for the fused dequant-gemm
+    # kernel (AFTER quantization — weights are extracted bit-identical from the coreai-opt
+    # parametrizations, so spec-decode parity vs the stock decode bundle is preserved).
+    if args.qmm_kernel:
+        from coreai_models.models.macos.qmm_metal import metalize_qmm
+        custom_kernels.append(metalize_qmm(model, args.s))
+
     print(f"exporting static S={args.s} verify graph to Core AI dialect ...")
-    if args.metal:
+    if custom_kernels:
         from coreai_models.models.macos.gemma4_metal_mlp import export_to_coreai_with_kernels
         prog = export_to_coreai_with_kernels(
             model,
